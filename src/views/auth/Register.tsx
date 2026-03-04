@@ -3,9 +3,10 @@ import { Checkbox, Form, Typography, Input, Button, Modal, message as antMessage
 import { RiUserLine, RiLockLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
 import ServiceAgreement from '@/components/ServiceAgreement/index';
-import Axios from '@/utils/Axios';
+import { AuthServices } from '@/services/Auth';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import styles from './Auth.module.less';
-import type { RegisterProps } from './index.type.ts';
+import type { RegisterRequest } from '@/services/Auth';
 
 const Register: React.FC = () => {
     const [agreement, setAgreement] = useState(false);
@@ -13,11 +14,11 @@ const Register: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [successModalOpen, setSuccessModalOpen] = useState(false);
 
-    const [form] = Form.useForm<RegisterProps>();
+    const [form] = Form.useForm<RegisterRequest>();
     const [messageApi, contextHolder] = antMessage.useMessage();
     const navigate = useNavigate();
 
-    const onFinish = async (values: RegisterProps) => {
+    const onFinish = async (values: RegisterRequest) => {
 
         if (!agreement) {
             messageApi.error('请接受用户协议');
@@ -26,10 +27,10 @@ const Register: React.FC = () => {
 
         setLoading(true);
         try {
-            await Axios.post('/auth/register', values);
+            await AuthServices.register(values);
             setSuccessModalOpen(true);
-        } catch (err: any) {
-            messageApi.error(err.response?.data?.msg || '注册失败');
+        } catch (err) {
+            messageApi.error(parseErrorMessage(err, '注册失败'));
         } finally {
             setLoading(false);
         }

@@ -4,30 +4,31 @@ import { RiUserLine, RiLockLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
 import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useUserStore } from '@/store/useUserStore';
-import Axios from '@/utils/Axios';
+import { AuthServices } from '@/services/Auth';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import styles from './Auth.module.less';
-import type { LoginProps } from './index.type.ts';
+import type { LoginRequest } from '@/services/Auth';
 
 const Login: React.FC = () => {
     const [contractOpen, setContractOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [form] = Form.useForm<LoginProps>();
+    const [form] = Form.useForm<LoginRequest>();
     const [messageApi, contextHolder] = antMessage.useMessage();
     const navigate = useNavigate();
 
-    const onFinish = async (values: LoginProps) => {
+    const onFinish = async (values: LoginRequest) => {
         if (loading) return; 
         setLoading(true);
         try {
-            await Axios.post('/auth/login', values);
+            await AuthServices.login(values);
             await useUserStore.getState().fetchUserInfo();
             if (!useUserStore.getState().user) {
-                messageApi.error('登录失败');
+                messageApi.error(parseErrorMessage(undefined, '登录失败'));
                 return;
             }
             navigate('/app/drive');
-        } catch (err: any) {
-            messageApi.error(err.response?.data?.msg || '登录失败');
+        } catch (err) {
+            messageApi.error(parseErrorMessage(err, '登录失败'));
         } finally {
             setLoading(false);
         }
@@ -36,7 +37,6 @@ const Login: React.FC = () => {
     return (
         <div className={styles.authContainer}>
             {contextHolder}
-
             <Typography.Title>
                 登录
             </Typography.Title>

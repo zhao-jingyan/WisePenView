@@ -2,23 +2,24 @@ import React, { useState } from 'react';
 import { Alert, Form, Typography, Input, Button, message as antMessage } from 'antd';
 import { RiMailLine } from 'react-icons/ri';
 import { Link } from 'react-router-dom';
-import Axios from '@/utils/Axios';
+import { AuthServices } from '@/services/Auth';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import styles from './Auth.module.less';
-import type { ResetPasswordProps } from './index.type.ts';
+import type { ResetPasswordRequest } from '@/services/Auth';
 
 const ResetPassword: React.FC = () => {
     const [loading, setLoading] = useState(false);
-    const [form] = Form.useForm<ResetPasswordProps>();
+    const [form] = Form.useForm<ResetPasswordRequest>();
     const [messageApi, contextHolder] = antMessage.useMessage();
 
-    const onFinish = async (values: ResetPasswordProps) => {
+    const onFinish = async (values: ResetPasswordRequest) => {
         if (loading) return;
         setLoading(true);
         try {
-            await Axios.post('/auth/forgot-password/email', values);
+            await AuthServices.resetPassword(values);
             messageApi.info("邮件将发送至您的学工号邮箱，请注意查收。");
-        } catch (err: any) {
-            messageApi.error(err.response?.data?.msg || '发送失败');
+        } catch (err) {
+            messageApi.error(parseErrorMessage(err, '发送失败'));
         } finally {
             setLoading(false);
         }

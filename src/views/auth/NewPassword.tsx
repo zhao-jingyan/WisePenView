@@ -2,18 +2,19 @@ import React, { useState } from 'react';
 import { Form, Typography, Input, Button, Modal, message as antMessage } from 'antd';
 import { RiLockLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
-import Axios from '@/utils/Axios';
+import { AuthServices } from '@/services/Auth';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import styles from './Auth.module.less';
-import type { NewPasswordProps } from './index.type.ts';
+import type { NewPasswordRequest } from '@/services/Auth';
 
 const NewPassword: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [successModalOpen, setSuccessModalOpen] = useState(false);
-    const [form] = Form.useForm<NewPasswordProps>();
+    const [form] = Form.useForm<Pick<NewPasswordRequest, 'newPassword'>>();
     const [messageApi, contextHolder] = antMessage.useMessage();
     const navigate = useNavigate();
 
-    const onFinish = async (values: NewPasswordProps) => {
+    const onFinish = async (values: Pick<NewPasswordRequest, 'newPassword'>) => {
         if (loading) return;
 
         //token 在url中，url的格式为/new-pwd?token=xxxx
@@ -26,13 +27,10 @@ const NewPassword: React.FC = () => {
 
         setLoading(true);
         try {
-            await Axios.post('/auth/forgot-password/reset', {
-                newPassword: values.newPassword,
-                token,
-            });
+            await AuthServices.newPassword({ newPassword: values.newPassword, token });
             setSuccessModalOpen(true);
-        } catch (err: any) {
-            messageApi.error(err.response?.data?.msg || '设置失败');
+        } catch (err) {
+            messageApi.error(parseErrorMessage(err, '设置失败'));
         } finally {
             setLoading(false);
         }
