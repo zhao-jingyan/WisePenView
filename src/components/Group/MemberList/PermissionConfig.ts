@@ -3,7 +3,7 @@
 // 注意：组长(OWNER)的权限修改和删除不被允许；配额单独用 editableRolesForQuota，组长可修改自己的配额
 
 import { ROLE_REVERSE_MAP } from '@/types/group';
-import { getGroupTypeStr } from '@/constants/group';
+import { GROUP_TYPE } from '@/constants/group';
 
 export type EditableRole = 'ADMIN' | 'MEMBER';
 
@@ -31,8 +31,9 @@ export interface PermissionConfig {
   canRemoveMember: boolean;
 }
 
-const PermissionConfigs: Record<string, PermissionConfig> = {
-  NORMAL_MEMBER: {
+const PermissionConfigs: Record<string, Record<string, PermissionConfig>> = {
+  NORMAL: {
+    MEMBER: {
     groupType: 1,
     userRole: 'MEMBER',
     showRealName: false,
@@ -43,8 +44,8 @@ const PermissionConfigs: Record<string, PermissionConfig> = {
     canModifyPermission: false,
     canAssignQuota: false,
     canRemoveMember: false,
-  },
-  NORMAL_ADMIN: {
+    },
+    ADMIN: {
     groupType: 1,
     userRole: 'ADMIN',
     showRealName: false,
@@ -55,8 +56,8 @@ const PermissionConfigs: Record<string, PermissionConfig> = {
     canModifyPermission: false,
     canAssignQuota: true,
     canRemoveMember: true,
-  },
-  NORMAL_OWNER: {
+    },
+    OWNER: {
     groupType: 1,
     userRole: 'OWNER',
     showRealName: false,
@@ -67,8 +68,10 @@ const PermissionConfigs: Record<string, PermissionConfig> = {
     canModifyPermission: true,
     canAssignQuota: true,
     canRemoveMember: true,
+    },
   },
-  ADVANCED_MEMBER: {
+  ADVANCED: {
+    MEMBER: {
     groupType: 2,
     userRole: 'MEMBER',
     showRealName: true,
@@ -79,8 +82,8 @@ const PermissionConfigs: Record<string, PermissionConfig> = {
     canModifyPermission: false,
     canAssignQuota: false,
     canRemoveMember: false,
-  },
-  ADVANCED_ADMIN: {
+    },
+    ADMIN: {
     groupType: 2,
     userRole: 'ADMIN',
     showRealName: true,
@@ -91,8 +94,8 @@ const PermissionConfigs: Record<string, PermissionConfig> = {
     canModifyPermission: false,
     canAssignQuota: true,
     canRemoveMember: true,
-  },
-  ADVANCED_OWNER: {
+    },
+    OWNER: {
     groupType: 2,
     userRole: 'OWNER',
     showRealName: true,
@@ -103,8 +106,10 @@ const PermissionConfigs: Record<string, PermissionConfig> = {
     canModifyPermission: true,
     canAssignQuota: true,
     canRemoveMember: true,
+    },
   },
-  PUBLIC_MEMBER: {
+  PUBLIC: {
+    MEMBER: {
     groupType: 3,
     userRole: 'MEMBER',
     showRealName: true,
@@ -115,8 +120,8 @@ const PermissionConfigs: Record<string, PermissionConfig> = {
     canModifyPermission: false,
     canAssignQuota: false,
     canRemoveMember: false,
-  },
-  PUBLIC_ADMIN: {
+    },
+    ADMIN: {
     groupType: 3,
     userRole: 'ADMIN',
     showRealName: true,
@@ -127,8 +132,8 @@ const PermissionConfigs: Record<string, PermissionConfig> = {
     canModifyPermission: false,
     canAssignQuota: true,
     canRemoveMember: true,
-  },
-  PUBLIC_OWNER: {
+    },
+    OWNER: {
     groupType: 3,
     userRole: 'OWNER',
     showRealName: true,
@@ -139,15 +144,15 @@ const PermissionConfigs: Record<string, PermissionConfig> = {
     canModifyPermission: true,
     canAssignQuota: true,
     canRemoveMember: true,
+    },
   },
 };
 
-export const getPermissionConfig = (groupType: number, userRole: string): PermissionConfig => {
-  const groupTypeStr = getGroupTypeStr(groupType);
-  const configKey = `${groupTypeStr}_${userRole}` as keyof typeof PermissionConfigs;
+export const getPermissionConfig = (groupType: string, userRole: string): PermissionConfig => {
+  const config = PermissionConfigs[groupType]?.[userRole];
 
   return (
-    PermissionConfigs[configKey] ?? {
+    config ?? {
       groupType,
       userRole,
       showRealName: false,
@@ -191,16 +196,17 @@ export const canEditSelectedMembersForQuota = (
 /** 选中有不可编辑成员时的提示文案（权限/删除） */
 export const UNAUTHORIZED_TARGET_MESSAGE = '您不能编辑组长/管理员的权限/配额。';
 
-export const PERMISSION_CONFIG_KEYS = [
-  'NORMAL_MEMBER',
-  'NORMAL_ADMIN',
-  'NORMAL_OWNER',
-  'ADVANCED_MEMBER',
-  'ADVANCED_ADMIN',
-  'ADVANCED_OWNER',
-  'PUBLIC_MEMBER',
-  'PUBLIC_ADMIN',
-  'PUBLIC_OWNER',
-] as const;
+/** 用于遍历全部配置（组类型 × 角色） */
+export const PERMISSION_CONFIG_ENTRIES: readonly [number, string][] = [
+  [GROUP_TYPE.NORMAL, 'MEMBER'],
+  [GROUP_TYPE.NORMAL, 'ADMIN'],
+  [GROUP_TYPE.NORMAL, 'OWNER'],
+  [GROUP_TYPE.ADVANCED, 'MEMBER'],
+  [GROUP_TYPE.ADVANCED, 'ADMIN'],
+  [GROUP_TYPE.ADVANCED, 'OWNER'],
+  [GROUP_TYPE.PUBLIC, 'MEMBER'],
+  [GROUP_TYPE.PUBLIC, 'ADMIN'],
+  [GROUP_TYPE.PUBLIC, 'OWNER'],
+];
 
 export default PermissionConfigs;

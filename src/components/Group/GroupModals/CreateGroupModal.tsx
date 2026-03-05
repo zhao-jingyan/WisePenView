@@ -4,14 +4,17 @@ import type { UploadFile } from 'antd';
 import { LuUpload } from 'react-icons/lu';
 import { GroupServices } from '@/services/Group';
 import { useUserStore } from '@/store/useUserStore';
-import { GROUP_TYPE, GROUP_TYPE_OPTIONS, ALLOWED_GROUP_TYPES_MAP } from '@/constants/group';
+import { GROUP_TYPE, GROUP_TYPE_LABELS, ALLOWED_GROUP_TYPES_MAP } from '@/constants/group';
 import type { CreateGroupModalProps } from './index.type';
 import styles from './style.module.less';
 
 const { TextArea } = Input;
 const { Option } = Select;
 
-const groupTypeOptionsBase = GROUP_TYPE_OPTIONS;
+const groupTypeOptionsBase = Object.entries(GROUP_TYPE_LABELS).map(([value, label]) => ({
+  value: Number(value),
+  label,
+}));
 
 const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onSuccess }) => {
   const [form] = Form.useForm();

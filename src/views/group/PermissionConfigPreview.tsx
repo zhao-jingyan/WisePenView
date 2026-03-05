@@ -4,7 +4,7 @@ import type { GroupMember } from '@/types/group';
 import { ROLE_LABEL } from '@/types/group';
 import { getGroupTypeLabel } from '@/constants/group';
 import PermissionConfigs, {
-  PERMISSION_CONFIG_KEYS,
+  PERMISSION_CONFIG_ENTRIES,
   type PermissionConfig,
 } from '@/components/Group/MemberList/PermissionConfig';
 import MemberList from '@/components/Group/MemberList';
@@ -53,17 +53,16 @@ const PermissionConfigPreview: React.FC = () => {
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-        {PERMISSION_CONFIG_KEYS.map((key) => {
-          const config = PermissionConfigs[key] as PermissionConfig;
-          const [groupPart, rolePart] = key.split('_');
-          const title = `${getGroupTypeLabel(groupPart)} - ${ROLE_LABEL[rolePart] ?? rolePart}`;
+        {PERMISSION_CONFIG_ENTRIES.map(([groupType, userRole]) => {
+          const config = PermissionConfigs[groupType]?.[userRole] as PermissionConfig;
+          const title = `${getGroupTypeLabel(groupType)} - ${ROLE_LABEL[userRole] ?? userRole}`;
 
           return (
             <Card
-              key={key}
+              key={`${groupType}_${userRole}`}
               title={
                 <span>
-                  <Tag color="blue">{key}</Tag>
+                  <Tag color="blue">{`${groupType}_${userRole}`}</Tag>
                   {title}
                 </span>
               }
@@ -80,7 +79,7 @@ const PermissionConfigPreview: React.FC = () => {
             >
               <MemberList
                 permissionConfig={config}
-                groupId={`preview-${key}`}
+                groupId={`preview-${groupType}-${userRole}`}
                 inviteCode="MOCK-INVITE"
                 mockMembers={MOCK_MEMBERS}
                 pagination={{
