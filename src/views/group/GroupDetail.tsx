@@ -85,7 +85,13 @@ const GroupDetail: React.FC = () => {
         <div className={styles.headerMeta}>
           {ownerInfo && (
             <div className={styles.headerMetaItem}>
-              <Avatar size={24} src={ownerInfo.avatar} />
+              <Avatar
+                size={24}
+                src={ownerInfo.avatar}
+                alt={ownerInfo.nickname || ownerInfo.realName || '创建者'}
+              >
+                {(ownerInfo.nickname || ownerInfo.realName || '?').charAt(0).toUpperCase()}
+              </Avatar>
               <span>
                 创建者：
                 {group.groupType === GROUP_TYPE.NORMAL

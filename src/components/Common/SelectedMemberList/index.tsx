@@ -24,7 +24,11 @@ const SelectedMemberList: React.FC<SelectedMemberListProps> = ({ members }) => {
         renderItem={(member) => (
           <List.Item>
             <List.Item.Meta
-              avatar={<Avatar src={member.avatar} />}
+              avatar={
+                <Avatar src={member.avatar} alt={member.nickname || member.realname || '成员'}>
+                  {(member.nickname || member.realname || '?').charAt(0).toUpperCase()}
+                </Avatar>
+              }
               title={member.realname}
               description={formatDescription(member)}
             />

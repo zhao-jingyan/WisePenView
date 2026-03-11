@@ -43,7 +43,14 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
           <div className={styles.metaDescription}>
             {ownerInfo && (
               <>
-                <Avatar size={20} src={ownerInfo.avatar} className={styles.creatorAvatar} />
+                <Avatar
+                  size={20}
+                  src={ownerInfo.avatar}
+                  className={styles.creatorAvatar}
+                  alt={ownerInfo.nickname || ownerInfo.realName || '创建者'}
+                >
+                  {(ownerInfo.nickname || ownerInfo.realName || '?').charAt(0).toUpperCase()}
+                </Avatar>
                 <span>
                   {groupType === GROUP_TYPE.NORMAL
                     ? ownerInfo.nickname

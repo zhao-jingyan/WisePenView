@@ -40,7 +40,11 @@ export const getColumns = (
       title: '头像',
       dataIndex: 'avatar',
       width: 80,
-      render: (avatar: string) => <Avatar src={avatar} />,
+      render: (avatar: string, record: MemberRecord) => (
+        <Avatar src={avatar} alt={record.nickname || record.realname || '成员'}>
+          {(record.nickname || record.realname || '?').charAt(0).toUpperCase()}
+        </Avatar>
+      ),
     },
     {
       key: 'realname',
