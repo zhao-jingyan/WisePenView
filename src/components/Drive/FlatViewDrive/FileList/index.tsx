@@ -3,12 +3,12 @@ import { Table, Tag, Dropdown, message } from 'antd';
 import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { AiOutlineFileText } from 'react-icons/ai';
-import { LuEllipsisVertical, LuPencil, LuTrash2 } from 'react-icons/lu';
+import { LuEllipsisVertical, LuPencil, LuTrash2, LuTag } from 'react-icons/lu';
 import { formatSize } from '@/utils/format';
 import type { ResourceItem } from '@/types/resource';
 import { ResourceServices } from '@/services/Resource';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { RenameFileModal, DeleteFileModal } from '@/components/Drive/Modals';
+import { RenameFileModal, DeleteFileModal, AddTagModal } from '@/components/Drive/Modals';
 import { useClickFile } from '@/hooks/drive';
 import type { FileListProps } from './index.type';
 import styles from './style.module.less';
@@ -19,6 +19,8 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50];
 interface ColumnBuildProps {
   onDelete: (record: ResourceItem) => void;
   onRename: (record: ResourceItem) => void;
+  onAddTag: (record: ResourceItem) => void;
+  onCloseDropdown: () => void;
   openDropdownKey: string | null;
   setOpenDropdownKey: (key: string | null) => void;
 }
@@ -37,13 +39,13 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
   },
   {
     title: '标签',
-    dataIndex: 'currentTags',
-    key: 'currentTags',
-    width: 400,
-    render: (tags?: string[]) =>
-      tags?.length ? (
+    dataIndex: 'tagNames',
+    key: 'tagNames',
+    width: 200,
+    render: (tagNames?: string[]) =>
+      tagNames?.length ? (
         <span className={styles.tagList}>
-          {tags.map((t) => (
+          {tagNames.map((t) => (
             <Tag variant="outlined" key={t}>
               {t}
             </Tag>
@@ -75,17 +77,36 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
     render: (_: unknown, record: ResourceItem) => {
       const menuItems: MenuProps['items'] = [
         {
-          key: 'delete',
-          label: '删除',
-          icon: <LuTrash2 size={14} />,
-          danger: true,
-          onClick: () => props.onDelete(record),
+          key: 'addTag',
+          label: '添加标签',
+          icon: <LuTag size={14} />,
+          onClick: (info) => {
+            // 防止点击事件冒泡到父级元素，导致文件打开
+            info.domEvent.stopPropagation();
+            props.onCloseDropdown();
+            props.onAddTag(record);
+          },
         },
         {
           key: 'rename',
           label: '重命名',
           icon: <LuPencil size={14} />,
-          onClick: () => props.onRename(record),
+          onClick: (info) => {
+            info.domEvent.stopPropagation();
+            props.onCloseDropdown();
+            props.onRename(record);
+          },
+        },
+        {
+          key: 'delete',
+          label: '删除',
+          icon: <LuTrash2 size={14} />,
+          danger: true,
+          onClick: (info) => {
+            info.domEvent.stopPropagation();
+            props.onCloseDropdown();
+            props.onDelete(record);
+          },
         },
       ];
       return (
@@ -94,6 +115,7 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
           trigger={['click']}
           placement="bottomRight"
           arrow={{ pointAtCenter: true }}
+          getPopupContainer={() => document.body}
           open={props.openDropdownKey === record.resourceId}
           onOpenChange={(open) => props.setOpenDropdownKey(open ? record.resourceId : null)}
         >
@@ -121,8 +143,10 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
   const [loading, setLoading] = useState(false);
   const [renameFileModalOpen, setRenameFileModalOpen] = useState(false);
   const [deleteFileModalOpen, setDeleteFileModalOpen] = useState(false);
+  const [addTagModalOpen, setAddTagModalOpen] = useState(false);
   const [renameFileTarget, setRenameFileTarget] = useState<ResourceItem | null>(null);
   const [deleteFileTarget, setDeleteFileTarget] = useState<ResourceItem | null>(null);
+  const [addTagTarget, setAddTagTarget] = useState<ResourceItem | null>(null);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -165,6 +189,16 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
     setRenameFileTarget(null);
   }, []);
 
+  const handleAddTag = useCallback((file: ResourceItem) => {
+    setAddTagTarget(file);
+    setAddTagModalOpen(true);
+  }, []);
+
+  const handleAddTagModalClose = useCallback(() => {
+    setAddTagModalOpen(false);
+    setAddTagTarget(null);
+  }, []);
+
   const handleDeleteFile = useCallback((file: ResourceItem) => {
     setDeleteFileTarget(file);
     setDeleteFileModalOpen(true);
@@ -188,6 +222,8 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
   const columns = buildColumns({
     onDelete: handleDeleteFile,
     onRename: handleRenameFile,
+    onAddTag: handleAddTag,
+    onCloseDropdown: () => setOpenDropdownKey(null),
     openDropdownKey,
     setOpenDropdownKey,
   });
@@ -237,6 +273,12 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
         open={deleteFileModalOpen}
         file={deleteFileTarget}
         onCancel={handleDeleteFileModalClose}
+        onSuccess={fetchList}
+      />
+      <AddTagModal
+        open={addTagModalOpen}
+        file={addTagTarget}
+        onCancel={handleAddTagModalClose}
         onSuccess={fetchList}
       />
     </>
