@@ -16,12 +16,15 @@ const DEFAULT_FILTER: FileFilterValue = {
   sortDir: RESOURCE_SORT_DIR.DESC,
 };
 
-const FlatViewDrive: React.FC<FlatViewDriveProps> = ({ groupId }) => {
+const FlatViewDrive: React.FC<FlatViewDriveProps> = ({
+  groupId,
+  defaultFilterCollapsed = true,
+}) => {
   const [filter, setFilter] = useState<FileFilterValue>(DEFAULT_FILTER);
-  const [filterCollapsed, setFilterCollapsed] = useState(true);
+  const [filterCollapsed, setFilterCollapsed] = useState(defaultFilterCollapsed);
 
   return (
-    <>
+    <div className={styles.wrapper}>
       {!filterCollapsed && (
         <div className={styles.filterPanel}>
           <FileFilter groupId={groupId} value={filter} onChange={setFilter} />
@@ -44,7 +47,7 @@ const FlatViewDrive: React.FC<FlatViewDriveProps> = ({ groupId }) => {
         </div>
         <FileList groupId={groupId} filter={filter} />
       </main>
-    </>
+    </div>
   );
 };
 
