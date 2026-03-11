@@ -8,7 +8,7 @@ import { formatSize } from '@/utils/format';
 import type { ResourceItem } from '@/types/resource';
 import { ResourceServices } from '@/services/Resource';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { RenameFileModal, DeleteFileModal, AddTagModal } from '@/components/Drive/Modals';
+import { RenameFileModal, DeleteFileModal, EditTagModal } from '@/components/Drive/Modals';
 import { useClickFile } from '@/hooks/drive';
 import type { FileListProps } from './index.type';
 import styles from './style.module.less';
@@ -19,7 +19,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50];
 interface ColumnBuildProps {
   onDelete: (record: ResourceItem) => void;
   onRename: (record: ResourceItem) => void;
-  onAddTag: (record: ResourceItem) => void;
+  onEditTag: (record: ResourceItem) => void;
   onCloseDropdown: () => void;
   openDropdownKey: string | null;
   setOpenDropdownKey: (key: string | null) => void;
@@ -77,14 +77,14 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
     render: (_: unknown, record: ResourceItem) => {
       const menuItems: MenuProps['items'] = [
         {
-          key: 'addTag',
-          label: '添加标签',
+          key: 'editTag',
+          label: '编辑标签',
           icon: <LuTag size={14} />,
           onClick: (info) => {
             // 防止点击事件冒泡到父级元素，导致文件打开
             info.domEvent.stopPropagation();
             props.onCloseDropdown();
-            props.onAddTag(record);
+            props.onEditTag(record);
           },
         },
         {
@@ -143,10 +143,10 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
   const [loading, setLoading] = useState(false);
   const [renameFileModalOpen, setRenameFileModalOpen] = useState(false);
   const [deleteFileModalOpen, setDeleteFileModalOpen] = useState(false);
-  const [addTagModalOpen, setAddTagModalOpen] = useState(false);
+  const [editTagModalOpen, setEditTagModalOpen] = useState(false);
   const [renameFileTarget, setRenameFileTarget] = useState<ResourceItem | null>(null);
   const [deleteFileTarget, setDeleteFileTarget] = useState<ResourceItem | null>(null);
-  const [addTagTarget, setAddTagTarget] = useState<ResourceItem | null>(null);
+  const [editTagTarget, setEditTagTarget] = useState<ResourceItem | null>(null);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -189,14 +189,14 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
     setRenameFileTarget(null);
   }, []);
 
-  const handleAddTag = useCallback((file: ResourceItem) => {
-    setAddTagTarget(file);
-    setAddTagModalOpen(true);
+  const handleEditTag = useCallback((file: ResourceItem) => {
+    setEditTagTarget(file);
+    setEditTagModalOpen(true);
   }, []);
 
-  const handleAddTagModalClose = useCallback(() => {
-    setAddTagModalOpen(false);
-    setAddTagTarget(null);
+  const handleEditTagModalClose = useCallback(() => {
+    setEditTagModalOpen(false);
+    setEditTagTarget(null);
   }, []);
 
   const handleDeleteFile = useCallback((file: ResourceItem) => {
@@ -222,7 +222,7 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
   const columns = buildColumns({
     onDelete: handleDeleteFile,
     onRename: handleRenameFile,
-    onAddTag: handleAddTag,
+    onEditTag: handleEditTag,
     onCloseDropdown: () => setOpenDropdownKey(null),
     openDropdownKey,
     setOpenDropdownKey,
@@ -275,10 +275,10 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
         onCancel={handleDeleteFileModalClose}
         onSuccess={fetchList}
       />
-      <AddTagModal
-        open={addTagModalOpen}
-        file={addTagTarget}
-        onCancel={handleAddTagModalClose}
+      <EditTagModal
+        open={editTagModalOpen}
+        file={editTagTarget}
+        onCancel={handleEditTagModalClose}
         onSuccess={fetchList}
       />
     </>

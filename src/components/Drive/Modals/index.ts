@@ -3,12 +3,12 @@ export { default as RenameFolderModal } from './RenameFolderModal';
 export { default as DeleteFolderModal } from './DeleteFolderModal';
 export { default as RenameFileModal } from './RenameFileModal';
 export { default as DeleteFileModal } from './DeleteFileModal';
-export { default as AddTagModal } from './AddTagModal';
+export { default as EditTagModal } from './EditTagModal';
 export type {
   NewFolderModalProps,
   RenameFolderModalProps,
   DeleteFolderModalProps,
   RenameFileModalProps,
   DeleteFileModalProps,
-  AddTagModalProps,
+  EditTagModalProps,
 } from './index.type';
