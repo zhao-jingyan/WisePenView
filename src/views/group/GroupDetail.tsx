@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import clsx from 'clsx';
 import { useParams } from 'react-router-dom';
-import { Avatar, Button, Divider, Spin, message } from 'antd';
+import { Avatar, Button, Spin, Tabs, message } from 'antd';
 import { AiOutlineEdit, AiOutlineDelete, AiOutlineLogout } from 'react-icons/ai';
 import FlatViewDrive from '@/components/Drive/FlatViewDrive';
 import MemberList from '@/components/Group/MemberList';
@@ -99,34 +98,46 @@ const GroupDetail: React.FC = () => {
         </div>
       </div>
 
-      <Divider />
-
-      <div style={{ marginBottom: 24 }}>
-        <h3 className={styles.sectionTitle}>小组描述</h3>
-        <p className={styles.sectionContent}>{description || '暂无描述'}</p>
-      </div>
-
-      <Divider />
-
-      <div className={styles.fileSectionWrapper}>
-        <h3 className={styles.sectionTitle}>小组文件</h3>
-        <p className={clsx(styles.sectionContent, styles.fileSectionIntro)}>
-          按标签管理小组内的文件
-        </p>
-        <FlatViewDrive groupId={groupId} />
-      </div>
-
-      <Divider />
-
-      <MemberList
-        permissionConfig={permissionConfig!}
-        groupId={groupId}
-        inviteCode={group.inviteCode}
-        pagination={{
-          defaultPageSize: 10,
-          pageSizeOptions: [5, 10, 20, 50],
-          showSizeChanger: true,
-        }}
+      <Tabs
+        className={styles.detailTabs}
+        items={[
+          {
+            key: 'files',
+            label: '文件',
+            children: (
+              <div className={styles.tabPane}>
+                <FlatViewDrive groupId={groupId} defaultFilterCollapsed={false} />
+              </div>
+            ),
+          },
+          {
+            key: 'members',
+            label: '成员列表',
+            children: (
+              <div className={styles.tabPane}>
+                <MemberList
+                  permissionConfig={permissionConfig!}
+                  groupId={groupId}
+                  inviteCode={group.inviteCode}
+                  pagination={{
+                    defaultPageSize: 10,
+                    pageSizeOptions: [5, 10, 20, 50],
+                    showSizeChanger: true,
+                  }}
+                />
+              </div>
+            ),
+          },
+          {
+            key: 'description',
+            label: '描述',
+            children: (
+              <div className={styles.tabPane}>
+                <p className={styles.sectionContent}>{description || '暂无描述'}</p>
+              </div>
+            ),
+          },
+        ]}
       />
 
       <div className={styles.actionsBar}>
