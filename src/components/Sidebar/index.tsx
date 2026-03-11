@@ -1,5 +1,5 @@
-import React from 'react';
-import { Menu, Avatar, Dropdown } from 'antd';
+import React, { useMemo } from 'react';
+import { Menu } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import {
@@ -11,10 +11,13 @@ import {
   RiPenNibFill,
 } from 'react-icons/ri';
 
+import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import styles from './style.module.less';
 import logoImg from '@/assets/images/logo-icon.png';
 
-import UserProfile from '@/components/UserProfile'; // 引入新组件
+import UserProfile from '@/components/UserProfile';
+import { useRecentFilesStore } from '@/store/useRecentFilesStore';
+import { useClickFile } from '@/hooks/drive';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -24,43 +27,61 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const recentItems = useRecentFilesStore((s) => s.items);
+  const clickFile = useClickFile();
 
-  // 菜单配置
-  const menuItems = [
-    {
-      key: 'new-chat',
-      icon: <RiAddCircleFill size={18} />,
-      label: '新聊天',
-      onClick: () => console.log('Create New Chat'),
-    },
-    {
-      key: '/app/editor',
-      icon: <RiPenNibFill size={18} />,
-      label: '新建笔记',
-    },
-    {
-      key: '/app/drive',
-      icon: <RiFileTextLine size={18} />,
-      label: '文档与云盘',
-    },
-    {
-      key: '/app/my-group',
-      icon: <RiGroupFill size={18} />,
-      label: '我的小组',
-    },
-    {
-      type: 'group',
-      label: '聊天记录',
-      key: 'grp1',
-      children: [{ key: 'history1', label: '暂无会话', disabled: true }],
-    },
-    {
-      type: 'group',
-      label: '文档',
-      key: 'grp2',
-      children: [{ key: 'doc1', label: '暂无文档', disabled: true }],
-    },
-  ];
+  const menuItems = useMemo(() => {
+    const baseItems: Parameters<typeof Menu>[0]['items'] = [
+      {
+        key: 'new-chat',
+        icon: <RiAddCircleFill size={18} />,
+        label: '新聊天',
+        onClick: () => console.log('Create New Chat'),
+      },
+      {
+        key: '/app/editor',
+        icon: <RiPenNibFill size={18} />,
+        label: '新建笔记',
+      },
+      {
+        key: '/app/drive',
+        icon: <RiFileTextLine size={18} />,
+        label: '文档与云盘',
+      },
+      {
+        key: '/app/my-group',
+        icon: <RiGroupFill size={18} />,
+        label: '我的小组',
+      },
+    ];
+
+    if (!collapsed) {
+      baseItems.push({
+        type: 'group',
+        label: '聊天记录',
+        key: 'grp1',
+        children: [{ key: 'history1', label: '暂无会话', disabled: true }],
+      });
+
+      const recentChildren =
+        recentItems.length > 0
+          ? recentItems.map((item) => ({
+              key: `recent-${item.resourceId}`,
+              icon: <FileTypeIcon resourceType={item.resourceType} size={16} />,
+              label: item.resourceName || '未命名',
+            }))
+          : [{ key: 'recent-empty', label: '暂无最近文件', disabled: true }];
+
+      baseItems.push({
+        type: 'group',
+        label: '最近使用',
+        key: 'recent',
+        children: recentChildren,
+      });
+    }
+
+    return baseItems;
+  }, [collapsed, recentItems]);
 
   return (
     <div className={clsx(styles.sider, collapsed && styles.collapsed)}>
@@ -89,7 +110,20 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           inlineCollapsed={collapsed}
           items={menuItems as any}
           onClick={({ key }) => {
-            if (key.toString().startsWith('/')) navigate(key.toString());
+            const k = key.toString();
+            if (k.startsWith('/')) {
+              navigate(k);
+            } else if (k.startsWith('recent-') && k !== 'recent-empty') {
+              const resourceId = k.replace('recent-', '');
+              const item = recentItems.find((i) => i.resourceId === resourceId);
+              if (item) {
+                clickFile({
+                  resourceId: item.resourceId,
+                  resourceName: item.resourceName,
+                  resourceType: item.resourceType,
+                });
+              }
+            }
           }}
         />
       </div>
