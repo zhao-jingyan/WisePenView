@@ -4,6 +4,7 @@ import type { MenuProps } from 'antd';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/useUserStore';
+import { getIdentityTypeLabel } from '@/constants/user';
 
 import {
   RiArrowDownSLine,
@@ -24,6 +25,11 @@ interface UserProfileProps {
 
 const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
   const navigate = useNavigate();
+  const user = useUserStore((s) => s.user);
+
+  const displayName = user?.nickname || user?.username || '未登录';
+  const identityLabel =
+    user?.identityType !== undefined ? getIdentityTypeLabel(user.identityType) : '-';
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     switch (key) {
@@ -118,17 +124,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
   return (
     <Dropdown {...dropdownProps}>
       <div className={clsx(styles.profile, !collapsed && styles.expanded)}>
-        {/* 头像 */}
-        <Avatar size="small" className={styles.avatar}>
-          US
+        <Avatar size="small" className={styles.avatar} src={user?.avatar} alt={displayName}>
+          {displayName.charAt(0).toUpperCase()}
         </Avatar>
 
-        {/* 用户信息区 */}
         {!collapsed && (
           <>
             <div className={styles.info}>
-              <span className={styles.username}>user_1008</span>
-              <span className={styles.tag}>FREE</span>
+              <span className={styles.username}>{displayName}</span>
+              <span className={styles.tag}>{identityLabel}</span>
             </div>
             <RiArrowDownSLine className={styles.icon} />
           </>

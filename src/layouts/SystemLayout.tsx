@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import ChatPanel from '@/components/ChatPanel';
+import { useUserStore } from '@/store/useUserStore';
 import styles from './SystemLayout.module.less';
 
 const { Content, Sider } = Layout;
@@ -10,6 +11,13 @@ const { Content, Sider } = Layout;
 const SystemLayout: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showChat, setShowChat] = useState(true);
+  const fetchUserInfo = useUserStore((s) => s.fetchUserInfo);
+
+  useEffect(() => {
+    fetchUserInfo().catch(() => {
+      // 401 会由 Axios 拦截器跳转登录，此处静默即可
+    });
+  }, [fetchUserInfo]);
 
   return (
     <Layout className={styles.root}>
