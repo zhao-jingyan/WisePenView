@@ -1,5 +1,8 @@
 import type { ThemeConfig } from 'antd';
 
+/** 基础字号，影响全局限定版排版，可在此调整 */
+const baseFontSize = 15;
+
 const appTheme: ThemeConfig = {
   cssVar: {
     prefix: 'ant',
@@ -18,7 +21,7 @@ const appTheme: ThemeConfig = {
     fontFamily:
       "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
     fontFamilyCode: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace",
-    fontSize: 14,
+    fontSize: baseFontSize,
     borderRadius: 6,
     controlHeight: 36,
     colorBgLayout: '#FAFAFA',
