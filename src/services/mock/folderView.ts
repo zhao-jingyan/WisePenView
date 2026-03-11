@@ -67,14 +67,19 @@ const pathTreeRoot = cloneNode(MOCK_PATH_TREE_TEMPLATE);
  * 仅用于初始化 filesByPath，后续移动文件/文件夹会直接改写 filesByPath / pathTreeRoot
  */
 const buildMockFilesForPath = (path: string): ResourceItem[] => {
-  const base = path === '/' ? '根目录' : path.split('/').filter(Boolean).pop() ?? '未知';
+  const base = path === '/' ? '根目录' : (path.split('/').filter(Boolean).pop() ?? '未知');
   const count =
-    path === '/' ? 55
-    : path === '/documents' ? 60
-    : path === '/documents/notes' || path === '/documents/reports' ? 45
-    : path === '/images' ? 50
-    : path === '/images/2024' ? 40
-    : 55;
+    path === '/'
+      ? 55
+      : path === '/documents'
+        ? 60
+        : path === '/documents/notes' || path === '/documents/reports'
+          ? 45
+          : path === '/images'
+            ? 50
+            : path === '/images/2024'
+              ? 40
+              : 55;
   return Array.from({ length: count }, (_, i) => ({
     resourceId: `mock-res-${path}-${i}`,
     resourceName: `${base} 文件 ${i + 1}${i % 3 === 0 ? '.note' : i % 3 === 1 ? '.md' : '.pdf'}`,
@@ -101,10 +106,7 @@ const filesByPath: Record<string, ResourceItem[]> = Object.fromEntries(
 );
 
 /** 在树中按 path 查找节点（path 与 tagName 一致） */
-const findNodeByPath = (
-  node: TagTreeResponse,
-  path: string
-): TagTreeResponse | null => {
+const findNodeByPath = (node: TagTreeResponse, path: string): TagTreeResponse | null => {
   const normalized = path === '' ? '/' : path.startsWith('/') ? path : `/${path}`;
   if ((node.tagName ?? '') === normalized) return node;
   for (const child of node.children ?? []) {
@@ -187,10 +189,7 @@ export const getListByPathMock = async (
 /**
  * Mock 移动文件到目标路径（拖拽释放后调用，会更新内存中的归属，下次 getListByPathMock 即生效）
  */
-export const moveFileToPathMock = async (
-  resourceId: string,
-  targetPath: string
-): Promise<void> => {
+export const moveFileToPathMock = async (resourceId: string, targetPath: string): Promise<void> => {
   await delay(MOCK_DELAY_MS);
   const normalizedTarget = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
   let file: ResourceItem | undefined;
@@ -259,10 +258,7 @@ export const createPathTagMock = async (
 /**
  * Mock 重命名路径 tag
  */
-export const renamePathTagMock = async (
-  tagId: string,
-  newName: string
-): Promise<void> => {
+export const renamePathTagMock = async (tagId: string, newName: string): Promise<void> => {
   await delay(MOCK_DELAY_MS);
   const trimmed = newName.trim();
   if (!trimmed || trimmed.includes('/')) {
@@ -297,10 +293,7 @@ export const renamePathTagMock = async (
 /**
  * Mock 重命名文件（更新 filesByPath 中的 resourceName）
  */
-export const renameFileMock = async (
-  resourceId: string,
-  newName: string
-): Promise<void> => {
+export const renameFileMock = async (resourceId: string, newName: string): Promise<void> => {
   await delay(MOCK_DELAY_MS);
   const trimmed = newName.trim();
   if (!trimmed) throw new Error('文件名不能为空');

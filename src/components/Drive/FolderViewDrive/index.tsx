@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { message, Breadcrumb, Table, Spin, Dropdown, Button } from 'antd';
 import type { MenuProps } from 'antd';
-import {
-  AiOutlineFileText,
-  AiOutlineFolder,
-} from 'react-icons/ai';
+import { AiOutlineFileText, AiOutlineFolder } from 'react-icons/ai';
 import {
   LuEllipsisVertical,
   LuPencil,
@@ -81,40 +78,37 @@ const FolderViewDrive: React.FC = () => {
   const isDraggingRef = useRef(false);
 
   // 获取文件夹列表
-  const fetchFolderList = useCallback(
-    async (path: string, filePage = 1, append = false) => {
-      if (filePage === 1) {
-        setFolderLoading(true);
+  const fetchFolderList = useCallback(async (path: string, filePage = 1, append = false) => {
+    if (filePage === 1) {
+      setFolderLoading(true);
+    } else {
+      setFolderLoadingMore(true);
+    }
+    try {
+      const res = await TagServices.getListByPath({
+        path,
+        filePage,
+        filePageSize: FOLDER_FILE_PAGE_SIZE,
+      });
+      setFolders(res.folders);
+      setTotalFolderFiles(res.totalFiles);
+      if (append) {
+        setFolderFiles((prev) => [...prev, ...res.files]);
       } else {
-        setFolderLoadingMore(true);
+        setFolderFiles(res.files);
       }
-      try {
-        const res = await TagServices.getListByPath({
-          path,
-          filePage,
-          filePageSize: FOLDER_FILE_PAGE_SIZE,
-        });
-        setFolders(res.folders);
-        setTotalFolderFiles(res.totalFiles);
-        if (append) {
-          setFolderFiles((prev) => [...prev, ...res.files]);
-        } else {
-          setFolderFiles(res.files);
-        }
-      } catch (err) {
-        message.error(parseErrorMessage(err, '获取列表失败'));
-        if (!append) {
-          setFolders([]);
-          setFolderFiles([]);
-          setTotalFolderFiles(0);
-        }
-      } finally {
-        setFolderLoading(false);
-        setFolderLoadingMore(false);
+    } catch (err) {
+      message.error(parseErrorMessage(err, '获取列表失败'));
+      if (!append) {
+        setFolders([]);
+        setFolderFiles([]);
+        setTotalFolderFiles(0);
       }
-    },
-    []
-  );
+    } finally {
+      setFolderLoading(false);
+      setFolderLoadingMore(false);
+    }
+  }, []);
 
   // 刷新列表
   const refresh = useCallback(() => {
@@ -252,9 +246,7 @@ const FolderViewDrive: React.FC = () => {
           resourceId: file.resourceId,
           tagIds: [targetFolder.tagId],
         });
-        message.success(
-          `已移动到 ~${targetPath === '/' ? '根目录' : targetPath}`
-        );
+        message.success(`已移动到 ~${targetPath === '/' ? '根目录' : targetPath}`);
         refresh();
       } catch (err) {
         message.error(parseErrorMessage(err, '移动失败'));
@@ -271,9 +263,7 @@ const FolderViewDrive: React.FC = () => {
           targetTagId: folder.tagId,
           newParentId: targetFolder.tagId,
         });
-        message.success(
-          `已将「${folder.tagName}」移动到「${targetFolder.tagName}」下`
-        );
+        message.success(`已将「${folder.tagName}」移动到「${targetFolder.tagName}」下`);
         refresh();
       } catch (err) {
         message.error(parseErrorMessage(err, '移动失败'));
@@ -457,41 +447,41 @@ const FolderViewDrive: React.FC = () => {
         const menuItems: MenuProps['items'] =
           record._type === 'folder'
             ? [
-              {
-                key: 'rename',
-                label: '重命名',
-                icon: <LuPencil size={14} />,
-                onClick: () => handleRenameFolder(record.data),
-              },
-              {
-                key: 'delete',
-                label: '删除',
-                icon: <LuTrash2 size={14} />,
-                danger: true,
-                onClick: () => handleDeleteFolder(record.data),
-              },
-            ]
+                {
+                  key: 'rename',
+                  label: '重命名',
+                  icon: <LuPencil size={14} />,
+                  onClick: () => handleRenameFolder(record.data),
+                },
+                {
+                  key: 'delete',
+                  label: '删除',
+                  icon: <LuTrash2 size={14} />,
+                  danger: true,
+                  onClick: () => handleDeleteFolder(record.data),
+                },
+              ]
             : [
-              {
-                key: 'open',
-                label: '打开',
-                icon: <LuFilePen size={14} />,
-                onClick: () => clickFile(record.data),
-              },
-              {
-                key: 'rename',
-                label: '重命名',
-                icon: <LuPencil size={14} />,
-                onClick: () => handleRenameFile(record.data),
-              },
-              {
-                key: 'delete',
-                label: '删除',
-                icon: <LuTrash2 size={14} />,
-                danger: true,
-                onClick: () => handleDeleteFile(record.data),
-              },
-            ].filter(Boolean);
+                {
+                  key: 'open',
+                  label: '打开',
+                  icon: <LuFilePen size={14} />,
+                  onClick: () => clickFile(record.data),
+                },
+                {
+                  key: 'rename',
+                  label: '重命名',
+                  icon: <LuPencil size={14} />,
+                  onClick: () => handleRenameFile(record.data),
+                },
+                {
+                  key: 'delete',
+                  label: '删除',
+                  icon: <LuTrash2 size={14} />,
+                  danger: true,
+                  onClick: () => handleDeleteFile(record.data),
+                },
+              ].filter(Boolean);
         if (menuItems.length === 0) return null;
         return (
           <Dropdown

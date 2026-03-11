@@ -17,7 +17,7 @@ import Register from '@/views/auth/Register';
 import ResetPassword from '@/views/auth/ResetPassword';
 import NewPassword from '@/views/auth/NewPassword';
 import VerifyEmail from '@/views/auth/VerifyEmail';
-import Editor from '@/views/editor/Editor';   // 编辑器页
+import Editor from '@/views/editor/Editor'; // 编辑器页
 
 const router = createBrowserRouter([
   // ==============================

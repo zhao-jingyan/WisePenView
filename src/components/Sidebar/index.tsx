@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const menuItems = [
     {
       key: 'new-chat',
-      icon: <RiAddCircleFill size={18} />, 
+      icon: <RiAddCircleFill size={18} />,
       label: '新聊天',
       onClick: () => console.log('Create New Chat'),
     },
@@ -52,27 +52,22 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       type: 'group',
       label: '聊天记录',
       key: 'grp1',
-      children: [
-        { key: 'history1', label: '暂无会话', disabled: true },
-      ],
+      children: [{ key: 'history1', label: '暂无会话', disabled: true }],
     },
     {
       type: 'group',
       label: '文档',
       key: 'grp2',
-      children: [
-        { key: 'doc1', label: '暂无文档', disabled: true },
-      ],
+      children: [{ key: 'doc1', label: '暂无文档', disabled: true }],
     },
   ];
 
   return (
     <div className={clsx(styles.sider, collapsed && styles.collapsed)}>
-      
       {/* Header */}
       <div className={clsx(styles.header, collapsed && styles.collapsedHeader)}>
         <div onClick={onToggle} className={styles.triggerBtn}>
-           {collapsed ? <RiIndentIncrease /> : <RiIndentDecrease />}
+          {collapsed ? <RiIndentIncrease /> : <RiIndentDecrease />}
         </div>
 
         {!collapsed && (
@@ -89,12 +84,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       <div className={styles.menuContainer}>
         <Menu
           mode="inline"
-          theme="light" 
+          theme="light"
           selectedKeys={[location.pathname]}
           inlineCollapsed={collapsed}
           items={menuItems as any}
           onClick={({ key }) => {
-             if(key.toString().startsWith('/')) navigate(key.toString());
+            if (key.toString().startsWith('/')) navigate(key.toString());
           }}
         />
       </div>

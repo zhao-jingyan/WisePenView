@@ -37,7 +37,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onS
 
   const handleConfirm = async () => {
     try {
-      const values = await form.validateFields() as CreateGroupRequest;
+      const values = (await form.validateFields()) as CreateGroupRequest;
       setSubmitting(true);
       await GroupServices.createGroup(values);
       message.success('创建成功');

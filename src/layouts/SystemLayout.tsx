@@ -14,12 +14,7 @@ const SystemLayout: React.FC = () => {
   return (
     <Layout className={styles.root}>
       {/* 左侧 Sidebar */}
-      <Sider
-        className={styles.leftSider}
-        width={240}
-        theme="light"
-        collapsed={sidebarCollapsed}
-      >
+      <Sider className={styles.leftSider} width={240} theme="light" collapsed={sidebarCollapsed}>
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}

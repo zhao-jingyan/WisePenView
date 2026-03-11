@@ -4,12 +4,7 @@ import { ResourceServices } from '@/services/Resource';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import type { RenameFileModalProps } from './index.type';
 
-const RenameFileModal: React.FC<RenameFileModalProps> = ({
-  open,
-  onCancel,
-  onSuccess,
-  file,
-}) => {
+const RenameFileModal: React.FC<RenameFileModalProps> = ({ open, onCancel, onSuccess, file }) => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 

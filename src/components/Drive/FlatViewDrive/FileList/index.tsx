@@ -44,7 +44,9 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
       tags?.length ? (
         <span className={styles.tagList}>
           {tags.map((t) => (
-            <Tag variant="outlined" key={t}>{t}</Tag>
+            <Tag variant="outlined" key={t}>
+              {t}
+            </Tag>
           ))}
         </span>
       ) : (
@@ -142,14 +144,7 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
     } finally {
       setLoading(false);
     }
-  }, [
-    page,
-    pageSize,
-    filter.sortBy,
-    filter.sortDir,
-    filter.tagQueryLogicMode,
-    filter.tagIds,
-  ]);
+  }, [page, pageSize, filter.sortBy, filter.sortDir, filter.tagQueryLogicMode, filter.tagIds]);
 
   useEffect(() => {
     fetchList();

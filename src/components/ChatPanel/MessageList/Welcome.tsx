@@ -8,16 +8,12 @@ const Welcome: React.FC = () => {
       <div className={styles.logoIcon}>
         <LuBot />
       </div>
-      
+
       {/* 标题 */}
-      <div className={styles.title}>
-        你好，我是AI助理小W
-      </div>
-      
+      <div className={styles.title}>你好，我是AI助理小W</div>
+
       {/* 蓝色引导语 */}
-      <div className={styles.subtitle}>
-        今天想做点什么？
-      </div>
+      <div className={styles.subtitle}>今天想做点什么？</div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from 'react';
 import { Popover, Dropdown, Tooltip, Tag, Spin, Empty } from 'antd';
-import type { MenuProps } from "antd";
+import type { MenuProps } from 'antd';
 // 引入图标库
 import {
   RiArrowDownSLine,
@@ -10,50 +10,35 @@ import {
   RiAppsLine,
   RiCodeSSlashLine,
   RiBarChartLine,
-} from "react-icons/ri";
-import clsx from "clsx";
+} from 'react-icons/ri';
+import clsx from 'clsx';
 
 // 2. 引入 LobeHub AI 图标库
-import {
-  OpenAI,
-  Claude,
-  Grok,
-  DeepSeek,
-  Doubao,
-  Meta,
-  Mistral,
-  Gemini,
-} from "@lobehub/icons";
+import { OpenAI, Claude, Grok, DeepSeek, Doubao, Meta, Mistral, Gemini } from '@lobehub/icons';
 
-import { useModelList } from "@/hooks/ChatPanel";
-import type { Model } from "../index.type";
+import { useModelList } from '@/hooks/ChatPanel';
+import type { Model } from '../index.type';
 
-import styles from "./style.module.less";
+import styles from './style.module.less';
 
-export const LogoFactory = ({
-  provider,
-  size = 20,
-}: {
-  provider: string;
-  size?: number;
-}) => {
+export const LogoFactory = ({ provider, size = 20 }: { provider: string; size?: number }) => {
   const props = { size };
   switch (provider) {
-    case "openai":
+    case 'openai':
       return <OpenAI.Avatar {...props} />;
-    case "anthropic":
+    case 'anthropic':
       return <Claude.Avatar {...props} />;
-    case "google":
+    case 'google':
       return <Gemini.Avatar {...props} />;
-    case "meta":
+    case 'meta':
       return <Meta.Avatar {...props} />;
-    case "grok":
+    case 'grok':
       return <Grok.Avatar {...props} />;
-    case "deepseek":
+    case 'deepseek':
       return <DeepSeek.Avatar {...props} />;
-    case "doubao":
+    case 'doubao':
       return <Doubao.Avatar {...props} />;
-    case "mistral":
+    case 'mistral':
       return <Mistral.Avatar {...props} />;
     default:
       return <OpenAI.Avatar {...props} />;
@@ -61,10 +46,10 @@ export const LogoFactory = ({
 };
 
 const SORT_OPTIONS = [
-  { label: "按使用量", value: "usage", icon: RiBarChartLine },
-  { label: "按字母", value: "alpha", icon: RiSortAsc },
-  { label: "推理模型", value: "reasoning", icon: RiAppsLine },
-  { label: "编程模型", value: "coding", icon: RiCodeSSlashLine },
+  { label: '按使用量', value: 'usage', icon: RiBarChartLine },
+  { label: '按字母', value: 'alpha', icon: RiSortAsc },
+  { label: '推理模型', value: 'reasoning', icon: RiAppsLine },
+  { label: '编程模型', value: 'coding', icon: RiCodeSSlashLine },
 ];
 
 interface ModelSelectorProps {
@@ -74,55 +59,57 @@ interface ModelSelectorProps {
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);
-  const [currentSort, setCurrentSort] = useState<string>("usage");
+  const [currentSort, setCurrentSort] = useState<string>('usage');
 
   const { models, loading } = useModelList();
 
   // 自动选中默认模型
   useEffect(() => {
     if (!loading && models.length > 0) {
-      const targetModel = models.find(m => m.id === value);
+      const targetModel = models.find((m) => m.id === value);
       if (!value || !targetModel) {
         onChange(models[0]);
       }
     }
   }, [loading, models, value, onChange]);
 
-  const currentModel = useMemo(() => models.find((m) => m.id === value) || models[0], [value, models]);
+  const currentModel = useMemo(
+    () => models.find((m) => m.id === value) || models[0],
+    [value, models]
+  );
 
   const listTitle = useMemo(() => {
     const map: Record<string, string> = {
-      usage: "行业排名（按使用量）",
-      alpha: "所有模型（A-Z）",
-      reasoning: "深度推理模型",
-      coding: "代码生成模型",
+      usage: '行业排名（按使用量）',
+      alpha: '所有模型（A-Z）',
+      reasoning: '深度推理模型',
+      coding: '代码生成模型',
     };
-    return map[currentSort] || "模型列表";
+    return map[currentSort] || '模型列表';
   }, [currentSort]);
 
   const processedModels = useMemo(() => {
     const list = [...models];
     switch (currentSort) {
-      case "usage":
+      case 'usage':
         return list.sort((a, b) => a.usageRank - b.usageRank);
-      case "alpha":
+      case 'alpha':
         return list.sort((a, b) => a.name.localeCompare(b.name));
-      case "reasoning":
-        return list.filter((m) => m.category === "reasoning");
-      case "coding":
-        return list.filter((m) => m.category === "coding");
+      case 'reasoning':
+        return list.filter((m) => m.category === 'reasoning');
+      case 'coding':
+        return list.filter((m) => m.category === 'coding');
       default:
         return list;
     }
   }, [currentSort, models]);
 
-  const sortMenuItems: MenuProps["items"] = SORT_OPTIONS.map((opt) => ({
+  const sortMenuItems: MenuProps['items'] = SORT_OPTIONS.map((opt) => ({
     key: opt.value,
     label: opt.label,
     icon: <opt.icon />,
     onClick: () => setCurrentSort(opt.value),
-    className:
-      currentSort === opt.value ? "ant-dropdown-menu-item-selected" : "",
+    className: currentSort === opt.value ? 'ant-dropdown-menu-item-selected' : '',
   }));
 
   const content = (
@@ -135,7 +122,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
             itemIcon: styles.dropdownItemIcon,
           }}
           menu={{ items: sortMenuItems }}
-          trigger={["click"]}
+          trigger={['click']}
           placement="bottomRight"
         >
           <div className={styles.sortTrigger}>
@@ -147,32 +134,24 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
 
       <div className={styles.modelList}>
         {loading ? (
-          <div style={{ padding: "40px 0", textAlign: "center" }}>
+          <div style={{ padding: '40px 0', textAlign: 'center' }}>
             <Spin size="small" />
           </div>
         ) : processedModels.length === 0 ? (
-          <div style={{ padding: "20px 0" }}>
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="暂无模型"
-            />
+          <div style={{ padding: '20px 0' }}>
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无模型" />
           </div>
         ) : (
           processedModels.map((model, index) => (
             <div
               key={model.id}
-              className={clsx(
-                styles.modelItem,
-                model.id === value && styles.active
-              )}
+              className={clsx(styles.modelItem, model.id === value && styles.active)}
               onClick={() => {
                 onChange(model);
                 setOpen(false);
               }}
             >
-              {currentSort === "usage" && (
-                <div className={styles.rankNum}>#{index + 1}</div>
-              )}
+              {currentSort === 'usage' && <div className={styles.rankNum}>#{index + 1}</div>}
 
               <div className={styles.itemLeft}>
                 <div className={styles.logoWrapper}>
@@ -183,10 +162,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
                 <div className={styles.modelName}>{model.name}</div>
 
                 {model.vision && (
-                  <Tooltip
-                    title="支持视觉识别"
-                    classNames={{ container: styles.tooltipBody }}
-                  >
+                  <Tooltip title="支持视觉识别" classNames={{ container: styles.tooltipBody }}>
                     <div className={styles.visionWrapper}>
                       <RiEyeLine />
                     </div>
@@ -195,11 +171,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
 
                 <div className={styles.tagsRow}>
                   {model.tags.map((tag, idx) => (
-                    <Tag
-                      key={idx}
-                      color={tag.type}
-                      className={styles.miniTag}
-                    >
+                    <Tag key={idx} color={tag.type} className={styles.miniTag}>
                       {tag.text}
                     </Tag>
                   ))}
@@ -207,13 +179,9 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
               </div>
 
               <div className={styles.itemRight}>
-                {model.multiplier && (
-                  <Tag className={styles.multiplierTag}>
-                    {model.multiplier}
-                  </Tag>
-                )}
+                {model.multiplier && <Tag className={styles.multiplierTag}>{model.multiplier}</Tag>}
                 {model.id === value && (
-                  <RiCheckLine style={{ color: "var(--ant-color-primary)" }} />
+                  <RiCheckLine style={{ color: 'var(--ant-color-primary)' }} />
                 )}
               </div>
             </div>

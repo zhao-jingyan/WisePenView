@@ -36,9 +36,7 @@ const filterNonPathTags = (nodes: TagTreeNode[]): TagTreeNode[] => {
     .filter((node) => !isPathTag(node.tagName ?? ''))
     .map((node) => ({
       ...node,
-      children: node.children?.length
-        ? filterNonPathTags(node.children)
-        : undefined,
+      children: node.children?.length ? filterNonPathTags(node.children) : undefined,
     }));
 };
 
@@ -48,17 +46,12 @@ const filterPathTagsOnly = (nodes: TagTreeNode[]): TagTreeNode[] => {
     .filter((node) => isPathTag(node.tagName ?? ''))
     .map((node) => ({
       ...node,
-      children: node.children?.length
-        ? filterPathTagsOnly(node.children)
-        : undefined,
+      children: node.children?.length ? filterPathTagsOnly(node.children) : undefined,
     }));
 };
 
 /** 在树中按 path 查找节点（path 与 tagName 对应，如 '/' 或 '/a/b'） */
-const findNodeByPath = (
-  nodes: TagTreeNode[],
-  path: string
-): TagTreeNode | null => {
+const findNodeByPath = (nodes: TagTreeNode[], path: string): TagTreeNode | null => {
   const normalized = path === '' ? '/' : path.startsWith('/') ? path : `/${path}`;
   for (const node of nodes) {
     if ((node.tagName ?? '') === normalized) return node;
@@ -75,9 +68,7 @@ const findNodeByPath = (
  * 获取个人或小组的标签树，不传 groupId 则获取个人标签树
  * 外部应使用 getUserTagTree（用户可见）或 getPathTagTree（文件夹导航）
  */
-const getTagTree = async (
-  params?: GetTagTreeRequest
-): Promise<TagTreeNode[]> => {
+const getTagTree = async (params?: GetTagTreeRequest): Promise<TagTreeNode[]> => {
   if (USE_TAG_MOCK) {
     return getTagTreeMock(params?.groupId);
   }
@@ -92,9 +83,7 @@ const getTagTree = async (
  * 用户可见的 tag 树（TagTree 展示用）
  * 调用 getTagTree，递归过滤掉 tagName 以 / 开头的节点
  */
-const getUserTagTree = async (
-  params?: GetTagTreeRequest
-): Promise<TagTreeNode[]> => {
+const getUserTagTree = async (params?: GetTagTreeRequest): Promise<TagTreeNode[]> => {
   const raw = await getTagTree(params);
   return filterNonPathTags(raw);
 };
@@ -121,15 +110,9 @@ const getPathTagNode = async (path: string): Promise<TagTreeNode | null> => {
  * 1）getPathTagTree 解析 2）ResourceServices 按 tagId 查文件 3）拼接返回
  * 支持 filePage/filePageSize 实现无限滚动
  */
-const getListByPath = async (
-  params: GetListByPathRequest
-): Promise<FolderListByPathResponse> => {
+const getListByPath = async (params: GetListByPathRequest): Promise<FolderListByPathResponse> => {
   if (USE_TAG_MOCK) {
-    return getListByPathMock(
-      params.path,
-      params.filePage ?? 1,
-      params.filePageSize ?? 20
-    );
+    return getListByPathMock(params.path, params.filePage ?? 1, params.filePageSize ?? 20);
   }
   // 获取子tag作为子文件夹
   const pathTree = await getPathTagTree();
@@ -231,10 +214,7 @@ const removeTag = async (params: RemoveTagRequest): Promise<void> => {
  */
 const moveTag = async (params: MoveTagRequest): Promise<void> => {
   if (USE_TAG_MOCK) {
-    await moveFolderToFolderMock(
-      params.targetTagId,
-      params.newParentId || 'path-root'
-    );
+    await moveFolderToFolderMock(params.targetTagId, params.newParentId || 'path-root');
     return;
   }
   const res = (await Axios.post('/tag/move', params)) as ApiResponse;

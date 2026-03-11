@@ -32,9 +32,7 @@ const AiMessage: React.FC<{ message: Message }> = ({ message }) => {
         {/* 只有当正文有内容，或者没有思考过程时（避免空白占位），才渲染正文 */}
         {(message.content || !hasReasoning) && (
           <div className={styles.bubble}>
-            <MessageContent
-              content={message.content}
-            />
+            <MessageContent content={message.content} />
           </div>
         )}
 

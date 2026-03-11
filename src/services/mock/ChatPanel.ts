@@ -108,10 +108,10 @@ export const sendMessageStream = async (
     for (const char of chars) {
       // 检查中断信号
       if (signal?.aborted) throw new Error('Aborted');
-      
+
       callback(char);
       // 模拟网络延迟
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   };
 
@@ -121,7 +121,7 @@ export const sendMessageStream = async (
 
     // 模拟思考结束后的停顿
     if (!signal?.aborted) {
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
     // 2. 阶段二：输出正文 (Content)
@@ -130,11 +130,10 @@ export const sendMessageStream = async (
     // 3. 结束：计算耗时并回调
     const endTime = Date.now();
     const duration = parseFloat(((endTime - startTime) / 1000).toFixed(2));
-    
+
     if (callbacks.onComplete) {
       callbacks.onComplete(duration);
     }
-
   } catch (error) {
     // 如果是中断错误，可以忽略或做特定处理
     if (signal?.aborted) {

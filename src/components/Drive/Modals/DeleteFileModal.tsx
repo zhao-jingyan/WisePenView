@@ -4,12 +4,7 @@ import { ResourceServices } from '@/services/Resource';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import type { DeleteFileModalProps } from './index.type';
 
-const DeleteFileModal: React.FC<DeleteFileModalProps> = ({
-  open,
-  onCancel,
-  onSuccess,
-  file,
-}) => {
+const DeleteFileModal: React.FC<DeleteFileModalProps> = ({ open, onCancel, onSuccess, file }) => {
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
@@ -38,13 +33,7 @@ const DeleteFileModal: React.FC<DeleteFileModalProps> = ({
         <Button key="cancel" onClick={onCancel}>
           取消
         </Button>,
-        <Button
-          key="confirm"
-          danger
-          type="primary"
-          onClick={handleConfirm}
-          loading={loading}
-        >
+        <Button key="confirm" danger type="primary" onClick={handleConfirm} loading={loading}>
           删除
         </Button>,
       ]}

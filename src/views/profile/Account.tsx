@@ -13,12 +13,7 @@ import {
   Space,
   Spin,
 } from 'antd';
-import {
-  RiCheckLine,
-  RiCloseLine,
-  RiErrorWarningLine,
-  RiPencilLine,
-} from 'react-icons/ri';
+import { RiCheckLine, RiCloseLine, RiErrorWarningLine, RiPencilLine } from 'react-icons/ri';
 import { UserServices } from '@/services/User';
 import type {
   GetUserInfoResponse,
@@ -96,7 +91,9 @@ const Account: React.FC = () => {
         nickname: fieldConfig.nickname ? values.nickname : user?.nickname,
         realName: fieldConfig.realName ? values.realName : user?.realName,
         sex: fieldConfig.sex ? values.sex : user?.sex,
-        university: fieldConfig.university ? (values.university ?? null) : (user?.university ?? null),
+        university: fieldConfig.university
+          ? (values.university ?? null)
+          : (user?.university ?? null),
         college: fieldConfig.college ? values.college : user?.college,
         major: fieldConfig.major ? values.major : user?.major,
         className: fieldConfig.className ? values.className : user?.className,
@@ -199,8 +196,6 @@ const Account: React.FC = () => {
       )}
       <Spin spinning={loading}>
         <div className={styles.formSection}>
-
-
           {/* 头部信息 */}
           <div className={styles.accountHeader}>
             <div className={styles.accountHeaderLeft}>
@@ -214,9 +209,7 @@ const Account: React.FC = () => {
                     <span className={styles.username}>{user.username}</span>
                   )}
                 </div>
-                {identityLabel && (
-                  <span className={styles.identityTag}>{identityLabel}</span>
-                )}
+                {identityLabel && <span className={styles.identityTag}>{identityLabel}</span>}
               </div>
             </div>
             {user?.status != null && (
@@ -254,12 +247,7 @@ const Account: React.FC = () => {
 
           {/* 账号 */}
           <h3 className={styles.sectionTitle}>账号</h3>
-          <Descriptions
-            column={2}
-            layout="vertical"
-            size="small"
-            className={styles.descriptions}
-          >
+          <Descriptions column={2} layout="vertical" size="small" className={styles.descriptions}>
             <Descriptions.Item label="用户名">{user?.username ?? '-'}</Descriptions.Item>
             <Descriptions.Item label="学工号">{user?.campusNo ?? '-'}</Descriptions.Item>
             <Descriptions.Item label="邮箱">{user?.email ?? '-'}</Descriptions.Item>
@@ -274,7 +262,11 @@ const Account: React.FC = () => {
               <div className={styles.sectionHeader}>
                 <h3 className={styles.sectionTitle}>基本档案</h3>
                 {!editMode ? (
-                  <Button type="primary" icon={<RiPencilLine size={16} />} onClick={() => setEditMode(true)}>
+                  <Button
+                    type="primary"
+                    icon={<RiPencilLine size={16} />}
+                    onClick={() => setEditMode(true)}
+                  >
                     编辑资料
                   </Button>
                 ) : null}
@@ -284,16 +276,16 @@ const Account: React.FC = () => {
                   <div className={styles.formFieldsGrid}>
                     {visibleFields.map((field) => {
                       const disabledList = fieldConfig.disabledFields ?? [];
-                      const isReadOnly = (
-                        disabledList as readonly string[]
-                      ).includes(field.key);
+                      const isReadOnly = (disabledList as readonly string[]).includes(field.key);
                       const displayValue =
                         field.key === 'sex'
-                          ? (user?.sex != null ? getSexLabel(user.sex) : '-')
+                          ? user?.sex != null
+                            ? getSexLabel(user.sex)
+                            : '-'
                           : field.key === 'degreeLevel'
-                            ? (user?.degreeLevel != null
+                            ? user?.degreeLevel != null
                               ? getDegreeLevelLabel(user.degreeLevel)
-                              : '-')
+                              : '-'
                             : (user?.[field.key] ?? '-');
                       return (
                         <Form.Item key={field.key} label={field.label} name={field.key}>
@@ -338,11 +330,13 @@ const Account: React.FC = () => {
                   {visibleFields.map((field) => (
                     <Descriptions.Item key={field.key} label={field.label}>
                       {field.key === 'sex'
-                        ? (user?.sex != null ? getSexLabel(user.sex) : '-')
+                        ? user?.sex != null
+                          ? getSexLabel(user.sex)
+                          : '-'
                         : field.key === 'degreeLevel'
-                          ? (user?.degreeLevel != null
+                          ? user?.degreeLevel != null
                             ? getDegreeLevelLabel(user.degreeLevel)
-                            : '-')
+                            : '-'
                           : (user?.[field.key] ?? '-')}
                     </Descriptions.Item>
                   ))}
@@ -367,17 +361,15 @@ const Account: React.FC = () => {
         ]}
         width={480}
       >
-        <Alert type="info" 
-        showIcon
-        description={
-              <span>请选择邮箱后缀，系统将发送包含验证链接的邮件。</span>
-        } />
+        <Alert
+          type="info"
+          showIcon
+          description={<span>请选择邮箱后缀，系统将发送包含验证链接的邮件。</span>}
+        />
         <Form form={verifyForm} layout="vertical" className={styles.verifyForm}>
           <Form.Item label="邮箱">
             <Space.Compact className={styles.verifyEmailGroup}>
-              <Space.Addon>
-                {user?.campusNo ?? '-'}
-              </Space.Addon>
+              <Space.Addon>{user?.campusNo ?? '-'}</Space.Addon>
               <Form.Item
                 name="suffixType"
                 noStyle

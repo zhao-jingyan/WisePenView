@@ -13,14 +13,14 @@ interface ChatInputProps {
   onModelChange: (model: Model) => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ 
-  onSend, 
+const ChatInput: React.FC<ChatInputProps> = ({
+  onSend,
   sending,
   currentModelId,
   onModelChange,
 }) => {
   const [value, setValue] = useState('');
-  const [isComposing, setIsComposing] = useState(false); 
+  const [isComposing, setIsComposing] = useState(false);
 
   const handleSend = () => {
     if (!value.trim() || sending || !currentModelId) return;
@@ -48,18 +48,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
           onCompositionStart={() => setIsComposing(true)}
           onCompositionEnd={() => setIsComposing(false)}
         />
-        
-        <ActionToolbar 
+
+        <ActionToolbar
           modelValue={currentModelId}
           onModelChange={onModelChange}
           onSend={handleSend}
           disabledSend={!value.trim() || sending || !currentModelId}
         />
       </div>
-      
-      <div className={styles.footerTip}>
-        AI 内容仅供参考，请仔细甄别
-      </div>
+
+      <div className={styles.footerTip}>AI 内容仅供参考，请仔细甄别</div>
     </div>
   );
 };

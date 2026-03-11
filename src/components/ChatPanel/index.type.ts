@@ -20,9 +20,9 @@ export interface Message {
   id: string;
   role: MessageRole;
   content: string; // 正文内容
-  
-  reasoningContent?: string; 
-  
+
+  reasoningContent?: string;
+
   createAt: number;
   loading?: boolean;
   error?: boolean;
@@ -33,7 +33,7 @@ export interface Message {
     usage?: {
       promptTokens?: number;
       completionTokens?: number;
-      totalTime?: number; 
+      totalTime?: number;
     };
   };
 }

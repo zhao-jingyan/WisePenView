@@ -10,8 +10,8 @@ import styles from './style.module.less';
 
 const Editor: React.FC = () => {
   const editor = useCreateBlockNote({
-  trailingBlock: false,
-});
+    trailingBlock: false,
+  });
 
   return (
     <div className={styles.pageContainer}>

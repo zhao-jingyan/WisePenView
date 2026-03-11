@@ -1,8 +1,4 @@
-import type {
-  TagQueryLogicMode,
-  ResourceSortBy,
-  ResourceSortDir,
-} from '@/services/Resource';
+import type { TagQueryLogicMode, ResourceSortBy, ResourceSortDir } from '@/services/Resource';
 
 /** FileFilter 维护的筛选/排序数据，可直接用于 GetUserResourcesRequest */
 export interface FileFilterValue {

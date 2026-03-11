@@ -42,8 +42,7 @@ const NewFolderModal: React.FC<NewFolderModalProps> = ({
     onCancel();
   };
 
-  const displayPath =
-    parentPath === '/' || !parentPath ? '~' : getFolderDisplayName(parentPath);
+  const displayPath = parentPath === '/' || !parentPath ? '~' : getFolderDisplayName(parentPath);
 
   return (
     <Modal

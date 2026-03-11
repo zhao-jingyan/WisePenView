@@ -7,12 +7,12 @@ export const ModelService = {
   getModels: async (): Promise<Model[]> => {
     // 【未来替换点】：
     // return request.get('/api/models');
-    
+
     // 目前：模拟网络延迟 500ms
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(MOCK_MODELS);
       }, 5000);
     });
-  }
+  },
 };

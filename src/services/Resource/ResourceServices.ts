@@ -5,9 +5,7 @@ import type {
   UpdateResourceTagsRequest,
 } from './index.type';
 
-const getUserResources = async (
-  params: GetUserResourcesRequest
-): Promise<ResourceListPage> => {
+const getUserResources = async (params: GetUserResourcesRequest): Promise<ResourceListPage> => {
   return {
     list: [],
     total: 0,
@@ -17,15 +15,11 @@ const getUserResources = async (
   };
 };
 
-const renameResource = async (
-  _params: RenameResourceRequest
-): Promise<void> => {};
+const renameResource = async (_params: RenameResourceRequest): Promise<void> => {};
 
 const deleteResource = async (_resourceId: string): Promise<void> => {};
 
-const updateResourceTags = async (
-  _params: UpdateResourceTagsRequest
-): Promise<void> => {};
+const updateResourceTags = async (_params: UpdateResourceTagsRequest): Promise<void> => {};
 
 export const ResourceServices = {
   getUserResources,

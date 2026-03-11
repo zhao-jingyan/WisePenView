@@ -3,11 +3,7 @@ import { Tag, Radio, Select } from 'antd';
 import { LuX } from 'react-icons/lu';
 import TagTree from '@/components/Common/TagTree';
 import type { TagTreeNode } from '@/services/Tag';
-import {
-  TAG_QUERY_LOGIC_MODE,
-  RESOURCE_SORT_BY,
-  RESOURCE_SORT_DIR,
-} from '@/services/Resource';
+import { TAG_QUERY_LOGIC_MODE, RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/services/Resource';
 import type { FileFilterProps, FileFilterValue } from './index.type';
 import styles from './style.module.less';
 
@@ -31,11 +27,7 @@ const SORT_DIR_OPTIONS = [
   { label: '降序', value: RESOURCE_SORT_DIR.DESC },
 ];
 
-const FileFilter: React.FC<FileFilterProps> = ({
-  groupId,
-  value,
-  onChange,
-}) => {
+const FileFilter: React.FC<FileFilterProps> = ({ groupId, value, onChange }) => {
   const [innerValue, setInnerValue] = useState<FileFilterValue>(DEFAULT_VALUE);
   const isControlled = value !== undefined;
   const current = isControlled ? value : innerValue;
@@ -151,9 +143,7 @@ const FileFilter: React.FC<FileFilterProps> = ({
 
       {current.tagIds.length > 0 && (
         <div className={styles.selectedSection}>
-          <span className={styles.selectedTitle}>
-            已选标签 ({current.tagIds.length})：
-          </span>
+          <span className={styles.selectedTitle}>已选标签 ({current.tagIds.length})：</span>
           <div className={styles.selectedList}>
             {current.tagIds.map((tagId) => (
               <Tag

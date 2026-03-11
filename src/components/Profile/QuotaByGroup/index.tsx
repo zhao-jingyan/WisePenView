@@ -37,11 +37,8 @@ const QuotaByGroup: React.FC<QuotaByGroupProps> = ({
         title: '组名',
         dataIndex: 'groupName',
         align: 'center',
-        render: (groupName: string) => (
-          <span className={styles.groupNameItem}>{groupName}</span>
-        ),
-        sorter: (a, b) =>
-          (a.groupName || '').localeCompare(b.groupName || '', 'zh-CN'),
+        render: (groupName: string) => <span className={styles.groupNameItem}>{groupName}</span>,
+        sorter: (a, b) => (a.groupName || '').localeCompare(b.groupName || '', 'zh-CN'),
       },
       {
         key: 'quotaUsed',

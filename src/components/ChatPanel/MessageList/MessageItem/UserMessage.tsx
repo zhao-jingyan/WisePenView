@@ -36,7 +36,7 @@ const UserMessage: React.FC<UserMessageProps> = ({ message, onEdit }) => {
   return (
     <div className={styles.userRow}>
       {contextHolder}
-      
+
       <div className={styles.contentCol}>
         {/* 左侧悬浮操作栏 */}
         <div className={styles.actions}>

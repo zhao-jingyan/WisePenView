@@ -8,10 +8,7 @@ import type { TagTreeNode } from '@/services/Tag';
  * @param folder 待重命名的文件夹节点
  * @param newName 新名称（不含路径）
  */
-const renameFolder = async (
-  folder: TagTreeNode,
-  newName: string
-): Promise<void> => {
+const renameFolder = async (folder: TagTreeNode, newName: string): Promise<void> => {
   const tagName = (folder.tagName ?? '').trim();
   if (!tagName || tagName === '/') return;
   const parts = tagName.split('/').filter(Boolean);
@@ -35,10 +32,7 @@ const deleteFolder = async (folder: TagTreeNode): Promise<void> => {
  * @param parentPath 父路径，如 '/' 或 '/a/b'
  * @param folderName 新文件夹名称
  */
-const createFolder = async (
-  parentPath: string,
-  folderName: string
-): Promise<void> => {
+const createFolder = async (parentPath: string, folderName: string): Promise<void> => {
   const parentNode = await TagServices.getPathTagNode(parentPath);
   if (!parentNode?.tagId) {
     throw new Error('父路径不存在');

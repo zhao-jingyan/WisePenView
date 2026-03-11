@@ -39,7 +39,7 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
       return;
     }
     try {
-      const formValues = await form.validateFields() as EditGroupFormValues;
+      const formValues = (await form.validateFields()) as EditGroupFormValues;
       setLoading(true);
       const params: EditGroupRequest = {
         groupId: String(groupId),

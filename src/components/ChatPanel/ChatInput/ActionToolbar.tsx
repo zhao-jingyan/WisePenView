@@ -61,10 +61,7 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
 
       {/* 右侧功能区 */}
       <div className={styles.toolsRight}>
-        <ModelSelector 
-          value={modelValue} 
-          onChange={onModelChange} 
-        />
+        <ModelSelector value={modelValue} onChange={onModelChange} />
 
         <Button
           type="primary"

@@ -13,10 +13,7 @@ const isValidNode = (node: TagTreeNode): boolean =>
   Boolean(node?.tagId && (node.tagName ?? '').trim());
 
 /** 在树中按 tagId 查找节点 */
-const findNodeByTagId = (
-  nodes: TagTreeNode[],
-  tagId: string
-): TagTreeNode | null => {
+const findNodeByTagId = (nodes: TagTreeNode[], tagId: string): TagTreeNode | null => {
   for (const node of nodes) {
     if (node.tagId === tagId) return node;
     if (node.children?.length) {
@@ -30,16 +27,15 @@ const findNodeByTagId = (
 /** 将 TagTreeNode 转为 antd Tree 的 DataNode，节点标题用 Tag 展示，过滤无效节点 */
 const toTreeDataNode = (node: TagTreeNode): DataNode | null => {
   if (!isValidNode(node)) return null;
-  const validChildren = node.children
-    ?.map(toTreeDataNode)
-    .filter((n): n is DataNode => n != null) ?? [];
+  const validChildren =
+    node.children?.map(toTreeDataNode).filter((n): n is DataNode => n != null) ?? [];
   const hasChildren = validChildren.length > 0;
   return {
     key: node.tagId,
     title: (
-        <Tag variant="outlined" className={styles.tagNode}>
-          {node.tagName}
-        </Tag>
+      <Tag variant="outlined" className={styles.tagNode}>
+        {node.tagName}
+      </Tag>
     ),
     ...(hasChildren ? { children: validChildren } : { isLeaf: true }),
   };
@@ -63,9 +59,7 @@ const TagTree: React.FC<TagTreeProps> = ({
       try {
         const list = await TagServices.getUserTagTree(groupId ? { groupId } : undefined);
         setRawList(list);
-        const nodes = list
-          .map(toTreeDataNode)
-          .filter((n): n is DataNode => n != null);
+        const nodes = list.map(toTreeDataNode).filter((n): n is DataNode => n != null);
         setTreeData(nodes);
       } catch (err) {
         message.error(parseErrorMessage(err, '获取标签树失败'));

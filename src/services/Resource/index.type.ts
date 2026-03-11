@@ -25,13 +25,10 @@ export const TAG_QUERY_LOGIC_MODE = {
   AND: 'AND',
 } as const;
 
-export type TagQueryLogicMode =
-  (typeof TAG_QUERY_LOGIC_MODE)[keyof typeof TAG_QUERY_LOGIC_MODE];
+export type TagQueryLogicMode = (typeof TAG_QUERY_LOGIC_MODE)[keyof typeof TAG_QUERY_LOGIC_MODE];
 
-export type ResourceSortBy =
-  (typeof RESOURCE_SORT_BY)[keyof typeof RESOURCE_SORT_BY];
-export type ResourceSortDir =
-  (typeof RESOURCE_SORT_DIR)[keyof typeof RESOURCE_SORT_DIR];
+export type ResourceSortBy = (typeof RESOURCE_SORT_BY)[keyof typeof RESOURCE_SORT_BY];
+export type ResourceSortDir = (typeof RESOURCE_SORT_DIR)[keyof typeof RESOURCE_SORT_DIR];
 
 /** 重命名资源请求参数（OpenAPI renameRes） */
 export interface RenameResourceRequest {

@@ -3,11 +3,7 @@ import clsx from 'clsx';
 import { LuPanelLeftClose, LuPanelLeftOpen } from 'react-icons/lu';
 import FileList from './FileList';
 import FileFilter from './FileFilter';
-import {
-  TAG_QUERY_LOGIC_MODE,
-  RESOURCE_SORT_BY,
-  RESOURCE_SORT_DIR,
-} from '@/services/Resource';
+import { TAG_QUERY_LOGIC_MODE, RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/services/Resource';
 import type { FileFilterValue } from './FileFilter/index.type';
 import styles from './style.module.less';
 
@@ -30,12 +26,7 @@ const FlatViewDrive: React.FC = () => {
           <FileFilter value={filter} onChange={setFilter} />
         </div>
       )}
-      <main
-        className={clsx(
-          styles.listArea,
-          filterCollapsed && styles.listAreaNoDivider
-        )}
-      >
+      <main className={clsx(styles.listArea, filterCollapsed && styles.listAreaNoDivider)}>
         <div className={styles.listAreaTopBar}>
           <button
             type="button"
@@ -44,11 +35,7 @@ const FlatViewDrive: React.FC = () => {
             title={filterCollapsed ? '展开筛选' : '收起筛选'}
             aria-label={filterCollapsed ? '展开筛选' : '收起筛选'}
           >
-            {filterCollapsed ? (
-              <LuPanelLeftOpen size={18} />
-            ) : (
-              <LuPanelLeftClose size={18} />
-            )}
+            {filterCollapsed ? <LuPanelLeftOpen size={18} /> : <LuPanelLeftClose size={18} />}
             <span className={styles.filterToggleText}>
               {filterCollapsed ? '展开筛选' : '收起筛选'}
             </span>

@@ -39,13 +39,7 @@ const DeleteFolderModal: React.FC<DeleteFolderModalProps> = ({
         <Button key="cancel" onClick={onCancel}>
           取消
         </Button>,
-        <Button
-          key="confirm"
-          danger
-          type="primary"
-          onClick={handleConfirm}
-          loading={loading}
-        >
+        <Button key="confirm" danger type="primary" onClick={handleConfirm} loading={loading}>
           删除
         </Button>,
       ]}

@@ -5,15 +5,15 @@ import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/useUserStore';
 
-import { 
-  RiArrowDownSLine, 
+import {
+  RiArrowDownSLine,
   RiBankCardLine,
   RiPieChartLine,
   RiShieldUserLine,
   RiFeedbackLine,
-  RiTranslate2, 
+  RiTranslate2,
   RiSunLine,
-  RiLogoutBoxRLine
+  RiLogoutBoxRLine,
 } from 'react-icons/ri';
 
 import styles from './style.module.less';
@@ -67,7 +67,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
       icon: <RiPieChartLine size={16} />,
     },
     { type: 'divider' },
-    
+
     // --- 第二组：账号与反馈 ---
     {
       key: 'account',
@@ -86,7 +86,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
       key: 'language',
       label: '语言',
       icon: <RiTranslate2 size={16} />,
-      extra: <span style={{ fontSize: 12, color: '#999' }}>简体中文</span>, 
+      extra: <span style={{ fontSize: 12, color: '#999' }}>简体中文</span>,
     },
     {
       key: 'theme',
@@ -112,7 +112,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
       style: { minWidth: 240 },
     },
     trigger: ['click'] as ('click' | 'hover' | 'contextMenu')[],
-    placement: 'topLeft' as const, 
+    placement: 'topLeft' as const,
   };
 
   return (
@@ -122,7 +122,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
         <Avatar size="small" className={styles.avatar}>
           US
         </Avatar>
-        
+
         {/* 用户信息区 */}
         {!collapsed && (
           <>

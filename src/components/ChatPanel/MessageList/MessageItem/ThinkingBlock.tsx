@@ -61,7 +61,7 @@ const ThinkingBlock: React.FC<ThinkingBlockProps> = ({ content, duration, loadin
             label: labelContent,
             // 即使 content 为空(刚开始loading)，也要渲染 div 撑开高度或显示占位
             children: (
-              <Paragraph style={{marginBottom:0}}>
+              <Paragraph style={{ marginBottom: 0 }}>
                 <blockquote className={styles.content}>{content}</blockquote>
               </Paragraph>
             ),

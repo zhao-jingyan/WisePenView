@@ -17,11 +17,7 @@ import type { DataNode } from 'antd/es/tree';
 import type { TreeProps } from 'antd';
 import { LuPlus, LuChevronDown } from 'react-icons/lu';
 import { TagServices } from '@/services/Tag';
-import type {
-  CreateTagRequest,
-  UpdateTagRequest,
-  TagTreeNode,
-} from '@/services/Tag';
+import type { CreateTagRequest, UpdateTagRequest, TagTreeNode } from '@/services/Tag';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import type { TagManagerProps } from './index.type';
 import styles from './style.module.less';
@@ -33,10 +29,7 @@ const isValidNode = (node: TagTreeNode): boolean =>
   Boolean(node?.tagId && (node.tagName ?? '').trim());
 
 /** 在树中按 tagId 查找节点 */
-const findNodeByTagId = (
-  nodes: TagTreeNode[],
-  tagId: string
-): TagTreeNode | null => {
+const findNodeByTagId = (nodes: TagTreeNode[], tagId: string): TagTreeNode | null => {
   for (const node of nodes) {
     if (node.tagId === tagId) return node;
     if (node.children?.length) {
@@ -66,9 +59,8 @@ const findParentTagId = (
 /** 将 TagTreeNode 转为 antd Tree 的 DataNode */
 const toTreeDataNode = (node: TagTreeNode): DataNode | null => {
   if (!isValidNode(node)) return null;
-  const validChildren = node.children
-    ?.map(toTreeDataNode)
-    .filter((n): n is DataNode => n != null) ?? [];
+  const validChildren =
+    node.children?.map(toTreeDataNode).filter((n): n is DataNode => n != null) ?? [];
   const hasChildren = validChildren.length > 0;
   return {
     key: node.tagId,
@@ -108,9 +100,7 @@ const TagManager: React.FC<TagManagerProps> = ({ groupId }) => {
       try {
         const list = await TagServices.getUserTagTree(groupId ? { groupId } : undefined);
         setRawList(list);
-        const nodes = list
-          .map(toTreeDataNode)
-          .filter((n): n is DataNode => n != null);
+        const nodes = list.map(toTreeDataNode).filter((n): n is DataNode => n != null);
         setTreeData(nodes);
       } catch (err) {
         message.error(parseErrorMessage(err, '获取标签树失败'));
@@ -151,9 +141,7 @@ const TagManager: React.FC<TagManagerProps> = ({ groupId }) => {
     const { node, dragNode, dropToGap } = info;
     const targetTagId = String(dragNode.key);
     const dropKey = String(node.key);
-    const newParentId = dropToGap
-      ? findParentTagId(rawList, dropKey)
-      : dropKey;
+    const newParentId = dropToGap ? findParentTagId(rawList, dropKey) : dropKey;
 
     setDropLoading(true);
     try {
@@ -325,7 +313,12 @@ const TagManager: React.FC<TagManagerProps> = ({ groupId }) => {
         <Divider />
         <div className={styles.sectionTitle}>节点操作</div>
         <div className={styles.nodeActions}>
-          <Button onClick={() => { addChildForm.resetFields(); setAddChildModalOpen(true); }}>
+          <Button
+            onClick={() => {
+              addChildForm.resetFields();
+              setAddChildModalOpen(true);
+            }}
+          >
             添加子节点
           </Button>
           <Popconfirm
@@ -364,7 +357,10 @@ const TagManager: React.FC<TagManagerProps> = ({ groupId }) => {
       <Modal
         title="新建标签"
         open={addRootModalOpen}
-        onCancel={() => { addRootForm.resetFields(); setAddRootModalOpen(false); }}
+        onCancel={() => {
+          addRootForm.resetFields();
+          setAddRootModalOpen(false);
+        }}
         onOk={handleAddRoot}
         okText="确定"
         cancelText="取消"
@@ -387,7 +383,10 @@ const TagManager: React.FC<TagManagerProps> = ({ groupId }) => {
       <Modal
         title="添加子标签"
         open={addChildModalOpen}
-        onCancel={() => { addChildForm.resetFields(); setAddChildModalOpen(false); }}
+        onCancel={() => {
+          addChildForm.resetFields();
+          setAddChildModalOpen(false);
+        }}
         onOk={handleAddChild}
         okText="确定"
         cancelText="取消"
