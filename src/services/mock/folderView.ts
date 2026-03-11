@@ -2,7 +2,8 @@
  * 文件夹视图 Mock 数据
  * 用于前端独立开发，不依赖后端 getTagTree / getUserResources
  */
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem, ResourceListPage } from '@/types/resource';
+import type { GetUserResourcesRequest } from '@/services/Resource/index.type';
 import type { TagTreeResponse } from '@/services/Tag/index.type';
 import type { FolderListByPathResponse } from '@/types/folder';
 import { getFolderDisplayName } from '@/utils/path';
@@ -85,7 +86,8 @@ const buildMockFilesForPath = (path: string): ResourceItem[] => {
     resourceName: `${base} 文件 ${i + 1}${i % 3 === 0 ? '.note' : i % 3 === 1 ? '.md' : '.pdf'}`,
     resourceType: i % 3 === 0 ? 'NOTE' : i % 3 === 1 ? 'NOTE' : 'FILE',
     size: (i + 1) * 1024,
-    currentTags: [path],
+    path,
+    tagNames: [],
   }));
 };
 
@@ -100,10 +102,20 @@ const INITIAL_PATHS = [
   '/work',
 ] as const;
 
-/** 可变：拖拽移动后从此处读写，getListByPathMock / moveFileToPathMock / moveFolderToFolderMock 共用 */
+/** 可变：拖拽移动后从此处读写，getListByPathMock / updateResourcePathMock / moveFolderToFolderMock 共用 */
 const filesByPath: Record<string, ResourceItem[]> = Object.fromEntries(
   INITIAL_PATHS.map((p) => [p, buildMockFilesForPath(p)])
 );
+
+/** 在树中按 tagId 查找节点 */
+const findNodeByTagId = (node: TagTreeResponse, tagId: string): TagTreeResponse | null => {
+  if (node.tagId === tagId) return node;
+  for (const child of node.children ?? []) {
+    const found = findNodeByTagId(child, tagId);
+    if (found) return found;
+  }
+  return null;
+};
 
 /** 在树中按 path 查找节点（path 与 tagName 一致） */
 const findNodeByPath = (node: TagTreeResponse, path: string): TagTreeResponse | null => {
@@ -187,31 +199,29 @@ export const getListByPathMock = async (
 };
 
 /**
- * Mock 移动文件到目标路径（拖拽释放后调用，会更新内存中的归属，下次 getListByPathMock 即生效）
+ * Mock 移动文件到目标路径（更新 path 与 filesByPath）
  */
-export const moveFileToPathMock = async (resourceId: string, targetPath: string): Promise<void> => {
+export const updateResourcePathMock = async (
+  resourceId: string,
+  targetPath: string
+): Promise<void> => {
   await delay(MOCK_DELAY_MS);
   const normalizedTarget = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
   let file: ResourceItem | undefined;
-  let fromPath: string | undefined;
   for (const p of Object.keys(filesByPath)) {
-    const list = filesByPath[p];
-    const idx = list.findIndex((f) => f.resourceId === resourceId);
+    const idx = filesByPath[p].findIndex((f) => f.resourceId === resourceId);
     if (idx >= 0) {
-      file = list[idx];
-      fromPath = p;
-      list.splice(idx, 1);
+      file = filesByPath[p][idx];
+      filesByPath[p].splice(idx, 1);
       break;
     }
   }
-  if (!file || !fromPath) return;
+  if (!file) return;
+  file.path = normalizedTarget;
   if (!filesByPath[normalizedTarget]) {
     filesByPath[normalizedTarget] = [];
   }
-  filesByPath[normalizedTarget].push({
-    ...file,
-    currentTags: [normalizedTarget],
-  });
+  filesByPath[normalizedTarget].push(file);
 };
 
 /**
@@ -301,6 +311,92 @@ export const renameFileMock = async (resourceId: string, newName: string): Promi
     const f = list.find((x) => x.resourceId === resourceId);
     if (f) {
       f.resourceName = trimmed;
+      return;
+    }
+  }
+};
+
+/** 递归收集 user tag 树中 tagId -> tagName 映射 */
+const buildTagIdToNameMap = (nodes: TagTreeResponse[], map: Map<string, string>): void => {
+  for (const n of nodes) {
+    const name = (n.tagName ?? '').trim();
+    if (name && !name.startsWith('/')) map.set(n.tagId, name);
+    if (n.children?.length) buildTagIdToNameMap(n.children, map);
+  }
+};
+
+/**
+ * Mock flat 视图：获取用户资源列表（聚合所有路径下的文件，按用户 tagIds 筛选、分页）
+ * tagIds 为用户可见 tag，与 path 区分
+ */
+export const getUserResourcesMock = async (
+  params: GetUserResourcesRequest
+): Promise<ResourceListPage> => {
+  await delay(MOCK_DELAY_MS);
+  const list: ResourceItem[] = [];
+  const seen = new Set<string>();
+  for (const pathList of Object.values(filesByPath)) {
+    for (const f of pathList) {
+      if (!seen.has(f.resourceId)) {
+        seen.add(f.resourceId);
+        list.push(f);
+      }
+    }
+  }
+  let filtered = list;
+  if (params.tagIds?.length) {
+    const rawTree = await getTagTreeMock();
+    const idToName = new Map<string, string>();
+    buildTagIdToNameMap(rawTree, idToName);
+    const targetNames = params.tagIds
+      .map((tid) => idToName.get(tid))
+      .filter((n): n is string => !!n);
+    const logicMode = params.tagQueryLogicMode ?? 'OR';
+    filtered = list.filter((f) => {
+      const ftagNames = new Set(f.tagNames ?? []);
+      if (targetNames.length === 0) return true;
+      if (logicMode === 'AND') return targetNames.every((n) => ftagNames.has(n));
+      return targetNames.some((n) => ftagNames.has(n));
+    });
+  }
+  const total = filtered.length;
+  const sortBy = params.sortBy ?? 'UPDATE_TIME';
+  const sortDir = params.sortDir ?? 'DESC';
+  const sorted = [...filtered].sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === 'NAME') cmp = (a.resourceName ?? '').localeCompare(b.resourceName ?? '');
+    else if (sortBy === 'SIZE') cmp = (a.size ?? 0) - (b.size ?? 0);
+    else cmp = 0;
+    return sortDir === 'ASC' ? cmp : -cmp;
+  });
+  const start = (params.page - 1) * params.size;
+  const pageList = sorted.slice(start, start + params.size);
+  return {
+    list: pageList,
+    total,
+    page: params.page,
+    size: params.size,
+    totalPage: Math.ceil(total / params.size) || 0,
+  };
+};
+
+/**
+ * Mock 更新资源用户标签（仅 tagNames，不涉及 path）
+ * tagIds 为用户可见 tag，需通过 user tag 树映射为 tagName
+ */
+export const updateResourceTagsMock = async (
+  resourceId: string,
+  tagIds: string[]
+): Promise<void> => {
+  await delay(MOCK_DELAY_MS);
+  const rawTree = await getTagTreeMock();
+  const idToName = new Map<string, string>();
+  buildTagIdToNameMap(rawTree, idToName);
+  const tagNames = tagIds.map((tid) => idToName.get(tid)).filter((n): n is string => !!n);
+  for (const list of Object.values(filesByPath)) {
+    const f = list.find((x) => x.resourceId === resourceId);
+    if (f) {
+      f.tagNames = tagNames;
       return;
     }
   }
