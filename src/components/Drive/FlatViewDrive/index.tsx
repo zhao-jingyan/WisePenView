@@ -5,6 +5,7 @@ import FileList from './FileList';
 import FileFilter from './FileFilter';
 import { TAG_QUERY_LOGIC_MODE, RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/services/Resource';
 import type { FileFilterValue } from './FileFilter/index.type';
+import type { FlatViewDriveProps } from './index.type';
 import styles from './style.module.less';
 
 const DEFAULT_FILTER: FileFilterValue = {
@@ -15,7 +16,7 @@ const DEFAULT_FILTER: FileFilterValue = {
   sortDir: RESOURCE_SORT_DIR.DESC,
 };
 
-const FlatViewDrive: React.FC = () => {
+const FlatViewDrive: React.FC<FlatViewDriveProps> = ({ groupId }) => {
   const [filter, setFilter] = useState<FileFilterValue>(DEFAULT_FILTER);
   const [filterCollapsed, setFilterCollapsed] = useState(true);
 
@@ -23,7 +24,7 @@ const FlatViewDrive: React.FC = () => {
     <>
       {!filterCollapsed && (
         <div className={styles.filterPanel}>
-          <FileFilter value={filter} onChange={setFilter} />
+          <FileFilter groupId={groupId} value={filter} onChange={setFilter} />
         </div>
       )}
       <main className={clsx(styles.listArea, filterCollapsed && styles.listAreaNoDivider)}>
@@ -41,7 +42,7 @@ const FlatViewDrive: React.FC = () => {
             </span>
           </button>
         </div>
-        <FileList filter={filter} />
+        <FileList groupId={groupId} filter={filter} />
       </main>
     </>
   );

@@ -1,5 +1,6 @@
 export { ResourceServices } from './ResourceServices';
 export type {
+  GetGroupResourceRequest,
   GetUserResourcesRequest,
   UpdateResourcePathRequest,
   UpdateResourceTagsRequest,

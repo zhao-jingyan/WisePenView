@@ -133,7 +133,7 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
   },
 ];
 
-const FileList: React.FC<FileListProps> = ({ filter }) => {
+const FileList: React.FC<FileListProps> = ({ groupId, filter }) => {
   const clickFile = useClickFile();
   const [openDropdownKey, setOpenDropdownKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -158,6 +158,7 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
         sortDir: filter.sortDir,
         tagQueryLogicMode: filter.tagQueryLogicMode,
         ...(filter.tagIds.length > 0 && { tagIds: filter.tagIds }),
+        ...(groupId && { groupId }),
       });
       setList(res.list);
       setTotal(res.total);
@@ -168,7 +169,15 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, filter.sortBy, filter.sortDir, filter.tagQueryLogicMode, filter.tagIds]);
+  }, [
+    page,
+    pageSize,
+    groupId,
+    filter.sortBy,
+    filter.sortDir,
+    filter.tagQueryLogicMode,
+    filter.tagIds,
+  ]);
 
   useEffect(() => {
     fetchList();
@@ -278,6 +287,7 @@ const FileList: React.FC<FileListProps> = ({ filter }) => {
       <EditTagModal
         open={editTagModalOpen}
         file={editTagTarget}
+        groupId={groupId}
         onCancel={handleEditTagModalClose}
         onSuccess={fetchList}
       />
