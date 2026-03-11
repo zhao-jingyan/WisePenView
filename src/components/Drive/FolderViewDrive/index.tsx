@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { message, Breadcrumb, Table, Spin, Dropdown, Button } from 'antd';
 import type { MenuProps } from 'antd';
-import { AiOutlineFileText, AiOutlineFolder } from 'react-icons/ai';
+import { AiOutlineFolder } from 'react-icons/ai';
+import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import {
   LuEllipsisVertical,
   LuPencil,
@@ -430,7 +431,11 @@ const FolderViewDrive: React.FC = () => {
           {record._type === 'folder' ? (
             <AiOutlineFolder size={20} color="var(--ant-color-warning)" />
           ) : (
-            <AiOutlineFileText size={18} color="var(--ant-color-text-secondary)" />
+            <FileTypeIcon
+              resourceType={record.data.resourceType}
+              size={18}
+              color="var(--ant-color-text-secondary)"
+            />
           )}
           <span>
             {record._type === 'folder'

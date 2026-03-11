@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Tree, Spin, Empty, Button, message } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import { AiOutlineFileText, AiOutlineFolder } from 'react-icons/ai';
+import { AiOutlineFolder } from 'react-icons/ai';
+import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import { LuFolderPlus, LuChevronDown } from 'react-icons/lu';
 import { TagServices } from '@/services/Tag';
 import type { TagTreeNode } from '@/services/Tag/index.type';
@@ -93,7 +94,11 @@ function toDataNodes(
       key,
       title: (
         <span className={styles.nodeTitle}>
-          <AiOutlineFileText size={14} color="var(--ant-color-text-secondary)" />
+          <FileTypeIcon
+            resourceType={f.resourceType}
+            size={14}
+            color="var(--ant-color-text-secondary)"
+          />
           {f.resourceName || '未命名'}
         </span>
       ),

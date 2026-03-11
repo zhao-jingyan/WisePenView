@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Tag, Dropdown, message } from 'antd';
 import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { AiOutlineFileText } from 'react-icons/ai';
+import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import { LuEllipsisVertical, LuPencil, LuTrash2, LuTag } from 'react-icons/lu';
 import { formatSize } from '@/utils/format';
 import type { ResourceItem } from '@/types/resource';
@@ -30,9 +30,9 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
     title: '名称',
     dataIndex: 'resourceName',
     key: 'resourceName',
-    render: (text: string) => (
+    render: (text: string, record: ResourceItem) => (
       <div className={styles.nameCell}>
-        <AiOutlineFileText size={18} color="#666" />
+        <FileTypeIcon resourceType={record.resourceType} size={18} color="#666" />
         <span>{text || '未命名'}</span>
       </div>
     ),
