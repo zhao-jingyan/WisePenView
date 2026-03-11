@@ -242,9 +242,9 @@ const FolderViewDrive: React.FC = () => {
     async (file: ResourceItem, targetFolder: TagTreeNode) => {
       const targetPath = targetFolder.tagName ?? '/';
       try {
-        await ResourceServices.updateResourceTags({
+        await ResourceServices.updateResourcePath({
           resourceId: file.resourceId,
-          tagIds: [targetFolder.tagId],
+          path: targetPath,
         });
         message.success(`已移动到 ~${targetPath === '/' ? '根目录' : targetPath}`);
         refresh();
@@ -451,35 +451,45 @@ const FolderViewDrive: React.FC = () => {
                   key: 'rename',
                   label: '重命名',
                   icon: <LuPencil size={14} />,
-                  onClick: () => handleRenameFolder(record.data),
+                  onClick: (info: Parameters<NonNullable<MenuProps['onClick']>>[0]) => {
+                    info.domEvent.stopPropagation();
+                    setOpenDropdownKey(null);
+                    handleRenameFolder(record.data);
+                  },
                 },
                 {
                   key: 'delete',
                   label: '删除',
                   icon: <LuTrash2 size={14} />,
                   danger: true,
-                  onClick: () => handleDeleteFolder(record.data),
+                  onClick: (info: Parameters<NonNullable<MenuProps['onClick']>>[0]) => {
+                    info.domEvent.stopPropagation();
+                    setOpenDropdownKey(null);
+                    handleDeleteFolder(record.data);
+                  },
                 },
               ]
             : [
                 {
-                  key: 'open',
-                  label: '打开',
-                  icon: <LuFilePen size={14} />,
-                  onClick: () => clickFile(record.data),
-                },
-                {
                   key: 'rename',
                   label: '重命名',
                   icon: <LuPencil size={14} />,
-                  onClick: () => handleRenameFile(record.data),
+                  onClick: (info: Parameters<NonNullable<MenuProps['onClick']>>[0]) => {
+                    info.domEvent.stopPropagation();
+                    setOpenDropdownKey(null);
+                    handleRenameFile(record.data);
+                  },
                 },
                 {
                   key: 'delete',
                   label: '删除',
                   icon: <LuTrash2 size={14} />,
                   danger: true,
-                  onClick: () => handleDeleteFile(record.data),
+                  onClick: (info: Parameters<NonNullable<MenuProps['onClick']>>[0]) => {
+                    info.domEvent.stopPropagation();
+                    setOpenDropdownKey(null);
+                    handleDeleteFile(record.data);
+                  },
                 },
               ].filter(Boolean);
         if (menuItems.length === 0) return null;
@@ -489,7 +499,7 @@ const FolderViewDrive: React.FC = () => {
             trigger={['click']}
             placement="bottomRight"
             arrow={{ pointAtCenter: true }}
-            overlayStyle={{ minWidth: 120 }}
+            getPopupContainer={() => document.body}
             open={openDropdownKey === rowKey}
             onOpenChange={(open) => setOpenDropdownKey(open ? rowKey : null)}
           >
