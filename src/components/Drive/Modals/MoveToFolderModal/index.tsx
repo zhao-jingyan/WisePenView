@@ -1,5 +1,12 @@
-import React from 'react';
-import { Modal, Button } from 'antd';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Modal, Button, message } from 'antd';
+import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { ResourceItem } from '@/types/resource';
+import { ResourceServices } from '@/services/Resource';
+import { TagServices } from '@/services/Tag';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { isValidFolderMove } from '@/utils/path';
+import FolderNav from '@/components/Common/FolderNav';
 import type { MoveToFolderModalProps } from '../index.type';
 import styles from './style.module.less';
 
@@ -9,15 +16,59 @@ const MoveToFolderModal: React.FC<MoveToFolderModalProps> = ({
   onSuccess,
   target,
 }) => {
-  const handleSubmit = () => {
-    // TODO: 实现移动逻辑
-    onSuccess?.();
-    onCancel();
-  };
+  const [selectedFolder, setSelectedFolder] = useState<TagTreeNode | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleCancel = () => {
+  useEffect(() => {
+    if (open) setSelectedFolder(null);
+  }, [open]);
+
+  const handleFolderSelect = useCallback(
+    (item: { type: 'file'; data: ResourceItem } | { type: 'folder'; data: TagTreeNode }) => {
+      if (item.type === 'folder') {
+        setSelectedFolder(item.data);
+      }
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(async () => {
+    if (!target || !selectedFolder) return;
+    if (target.type === 'folder' && !isValidFolderMove(target.data, selectedFolder)) {
+      message.error('不能将文件夹移动到自身或其子目录下');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (target.type === 'file') {
+        const targetPath = selectedFolder.tagName ?? '/';
+        await ResourceServices.updateResourcePath({
+          resourceId: target.data.resourceId,
+          path: targetPath,
+        });
+        message.success(`已移动到 ~${targetPath === '/' ? '根目录' : targetPath}`);
+      } else {
+        const sourceName = target.data.tagName;
+        const destName = selectedFolder.tagName || '~';
+        await TagServices.moveTag({
+          targetTagId: target.data.tagId,
+          newParentId: selectedFolder.tagId === 'path-root' ? undefined : selectedFolder.tagId,
+        });
+        message.success(`已将「${sourceName}」移动到「${destName}」下`);
+      }
+      onSuccess?.();
+      onCancel();
+    } catch (err) {
+      message.error(parseErrorMessage(err, '移动失败'));
+    } finally {
+      setSubmitting(false);
+    }
+  }, [target, selectedFolder, onSuccess, onCancel]);
+
+  const handleCancel = useCallback(() => {
+    setSelectedFolder(null);
     onCancel();
-  };
+  }, [onCancel]);
 
   const displayName =
     target?.type === 'file'
@@ -33,15 +84,28 @@ const MoveToFolderModal: React.FC<MoveToFolderModalProps> = ({
         <Button key="cancel" onClick={handleCancel}>
           取消
         </Button>,
-        <Button key="confirm" type="primary" onClick={handleSubmit}>
+        <Button
+          key="confirm"
+          type="primary"
+          onClick={handleSubmit}
+          loading={submitting}
+          disabled={!selectedFolder}
+        >
           确定
         </Button>,
       ]}
-      width={400}
+      width={480}
     >
       <div className={styles.wrapper}>
         <div className={styles.targetName}>即将移动：{displayName}</div>
-        {/* TODO: 添加目标文件夹选择 UI */}
+        <div className={styles.treeSection}>
+          <span className={styles.treeLabel}>选择目标文件夹：</span>
+          <FolderNav
+            onSelect={handleFolderSelect}
+            showNewFolderButton
+            className={styles.folderNav}
+          />
+        </div>
       </div>
     </Modal>
   );

@@ -31,3 +31,20 @@ export function getFolderDisplayName(tagName: string): string {
   const parts = s.split('/').filter(Boolean);
   return parts[parts.length - 1] ?? s;
 }
+
+/** 用于校验文件夹移动的节点，仅需 tagId 与 tagName */
+export interface FolderMoveCandidate {
+  tagId: string;
+  tagName?: string;
+}
+
+/**
+ * 校验 folder 移动：不能移到自身或子目录下
+ */
+export function isValidFolderMove(folder: FolderMoveCandidate, dest: FolderMoveCandidate): boolean {
+  if (dest.tagId === folder.tagId) return false;
+  const folderPath = folder.tagName ?? '';
+  const destPath = dest.tagName ?? '';
+  if (!folderPath || folderPath === '/') return true;
+  return !destPath.startsWith(`${folderPath}/`);
+}

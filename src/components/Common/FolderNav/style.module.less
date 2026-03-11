@@ -1,0 +1,68 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ant-margin-xs);
+  padding: var(--ant-padding-sm);
+  min-height: 80px;
+
+  &:has(.tree) {
+    justify-content: flex-start;
+  }
+}
+
+.tree {
+  font-size: 12px;
+
+  :global(.ant-tree-treenode) {
+    padding: 1px 0;
+  }
+
+  :global(.ant-tree-switcher) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+  }
+
+  :global(.ant-tree-switcher-icon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+  }
+
+  :global(.ant-tree-node-content-wrapper) {
+    min-height: 22px;
+  }
+
+  :global(.ant-tree-title) {
+    line-height: 22px;
+  }
+}
+
+.nodeTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ant-margin-xxs);
+}
+
+.moreHint {
+  color: var(--ant-color-text-tertiary);
+  font-size: 11px;
+}
+
+.newFolderBtn {
+  align-self: flex-start;
+  padding: 0 var(--ant-padding-xxs);
+  font-size: 12px;
+}
+
+.switcherIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}

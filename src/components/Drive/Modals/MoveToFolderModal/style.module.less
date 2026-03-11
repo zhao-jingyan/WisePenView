@@ -8,3 +8,24 @@
   font-size: var(--ant-font-size-sm);
   color: var(--ant-color-text-secondary);
 }
+
+.treeSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ant-margin-xs);
+  max-height: 480px;
+  overflow: hidden;
+}
+
+.treeLabel {
+  font-size: var(--ant-font-size-sm);
+  color: var(--ant-color-text-secondary);
+}
+
+.folderNav {
+  flex: 1;
+  min-height: 300px;
+  overflow: auto;
+  border: 1px solid var(--ant-color-border);
+  border-radius: var(--ant-border-radius-lg);
+}
