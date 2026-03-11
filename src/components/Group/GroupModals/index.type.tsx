@@ -34,4 +34,5 @@ export interface EditGroupInfoModalProps {
   groupName?: string;
   description?: string;
   cover?: string;
+  groupType?: number;
 }

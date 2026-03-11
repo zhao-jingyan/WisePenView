@@ -10,37 +10,37 @@ const fetchUserGroupQuotas = async (
   page: number,
   pageSize: number
 ): Promise<{ quotas: UserGroupQuota[]; total: number }> => {
-  const res = (await Axios.get('/group/quotas/quota-by-user', {
+  const res = (await Axios.get('/group/member/getAllGroupToken', {
     params: { page, size: pageSize },
   })) as ApiResponse<{
     total: number;
-    list: { groupId?: number; groupName?: string; quotaLimit?: number; quotaUsed?: number }[];
+    list: { groupId?: string; groupName?: string; tokenLimit?: number; tokenUsed?: number }[];
   }>;
   checkResponse(res);
   const list = res.data?.list ?? [];
   const quotas: UserGroupQuota[] = list.map((item) => ({
-    groupId: item.groupId ?? 0,
+    groupId: item.groupId ?? '',
     groupName: item.groupName ?? '',
-    quotaLimit: item.quotaLimit ?? 0,
-    quotaUsed: item.quotaUsed ?? 0,
+    quotaLimit: item.tokenLimit ?? 0,
+    quotaUsed: item.tokenUsed ?? 0,
   }));
   return { quotas, total: res.data?.total ?? 0 };
 };
 
 const fetchGroupQuota = async (groupId: string | number): Promise<GroupQuotaInfo> => {
-  const res = (await Axios.get('/group/quotas/group-info', {
+  const res = (await Axios.get('/group/member/getGroupToken', {
     params: { groupId: toNumberIds(groupId) },
-  })) as ApiResponse<{ quotaUsed?: number; quotaLimit?: number }>;
+  })) as ApiResponse<{ TokenUsed?: number; TokenLimit?: number }>;
   checkResponse(res);
   const data = res.data;
   return {
-    used: data?.quotaUsed ?? 0,
-    limit: data?.quotaLimit ?? 0,
+    used: data?.TokenUsed ?? 0,
+    limit: data?.TokenLimit ?? 0,
   };
 };
 
 const setGroupQuota = async (params: SetGroupQuotaRequest) => {
-  const res = (await Axios.post('/group/quotas/set', params)) as ApiResponse;
+  const res = (await Axios.post('/group/member/changeTokenLimit', params)) as ApiResponse;
   checkResponse(res);
 };
 

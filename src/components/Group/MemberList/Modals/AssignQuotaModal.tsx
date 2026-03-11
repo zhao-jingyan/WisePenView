@@ -54,7 +54,7 @@ const AssignQuotaModal: React.FC<AssignQuotaModalProps> = ({
       await QuotaServices.setGroupQuota({
         groupId: toNumberIds(groupId),
         targetUserIds: memberIds,
-        newLimit: Math.floor(value),
+        newTokenLimit: Math.floor(value),
       });
       message.success(`已为 ${memberIds.length} 位成员分配配额`);
       form.resetFields();

@@ -36,22 +36,26 @@ export interface MemberListPage {
   list: GroupMember[];
 }
 
-/** 后端 /group/info 返回的 creator 结构 */
-export interface GroupCreator {
+/** OpenAPI UserDisplayBase，创建者/成员展示信息 */
+export interface GroupOwnerInfo {
+  nickname: string;
+  realName?: string;
   avatar?: string;
-  name?: string;
-  nickname?: string;
+  identityType?: number;
 }
 
-/** 后端返回的小组结构（与 OpenAPI /group/info 一致） */
+/** 小组结构（与 OpenAPI GroupDetailInfoResponse/GroupItemInfoResponse 对齐） */
 export interface Group {
-  id: number;
-  name: string;
-  creator: GroupCreator;
-  description: string;
-  type: number;
-  coverUrl: string;
-  inviteCode: string;
+  groupId: string;
+  groupName: string;
+  groupDesc: string;
+  groupCoverUrl: string;
+  groupType: number;
+  ownerId?: string;
+  ownerInfo?: GroupOwnerInfo;
   memberCount: number;
   createTime?: string;
+  inviteCode?: string;
+  tokenUsed?: number;
+  tokenBalance?: number;
 }

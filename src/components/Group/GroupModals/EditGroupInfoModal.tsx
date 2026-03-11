@@ -4,13 +4,15 @@ import type { UploadFile } from 'antd';
 import { LuUpload } from 'react-icons/lu';
 import { GroupServices } from '@/services/Group';
 import type { EditGroupRequest } from '@/services/Group';
+import { GROUP_TYPE } from '@/constants/group';
+import { toNumberIds } from '@/utils/number';
 import type { EditGroupInfoModalProps } from './index.type';
 import styles from './style.module.less';
 
 const { TextArea } = Input;
 
 /** 编辑小组表单值（含封面上传） */
-type EditGroupFormValues = Pick<EditGroupRequest, 'groupName' | 'description'> & {
+type EditGroupFormValues = Pick<EditGroupRequest, 'groupName' | 'groupDesc'> & {
   cover?: UploadFile[];
 };
 
@@ -21,6 +23,7 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
   groupName = '',
   description = '',
   cover,
+  groupType = GROUP_TYPE.NORMAL,
   onSuccess,
 }) => {
   const [form] = Form.useForm<EditGroupFormValues>();
@@ -28,8 +31,7 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
 
   useEffect(() => {
     if (open) {
-      form.setFieldsValue({ groupName, description });
-      // cover 来自 coverUrl (string)，表单 cover 字段为 UploadFile[]，仅用于新上传，不在此初始化
+      form.setFieldsValue({ groupName, groupDesc: description });
     }
   }, [open, form, groupName, description]);
 
@@ -42,10 +44,11 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
       const formValues = (await form.validateFields()) as EditGroupFormValues;
       setLoading(true);
       const params: EditGroupRequest = {
-        groupId: String(groupId),
+        groupId: toNumberIds(groupId),
         groupName: formValues.groupName,
-        description: formValues.description,
-        coverUrl: cover ?? '',
+        groupDesc: formValues.groupDesc,
+        groupCoverUrl: cover ?? '',
+        groupType,
       };
       await GroupServices.editGroup(params);
       message.success('小组信息已更新');
@@ -83,7 +86,7 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
         >
           <Input placeholder="请输入小组名称" />
         </Form.Item>
-        <Form.Item label="小组描述" name="description">
+        <Form.Item label="小组描述" name="groupDesc">
           <TextArea rows={4} placeholder="请输入小组描述（可选）" />
         </Form.Item>
         {/* TODO: 图床未实现，上传封面功能待实现 */}

@@ -67,8 +67,8 @@ const MyGroup: React.FC = () => {
   };
 
   const handleGroupClick = (group: Group) => {
-    if (group.id) {
-      navigate(`/app/my-group/${group.id}`);
+    if (group.groupId) {
+      navigate(`/app/my-group/${group.groupId}`);
     }
   };
 
@@ -113,7 +113,7 @@ const MyGroup: React.FC = () => {
         ) : (
           <Row gutter={[24, 24]}>
             {groups.map((group) => (
-              <Col key={group.id} xs={24} sm={12} md={8} lg={6}>
+              <Col key={group.groupId} xs={24} sm={12} md={8} lg={6}>
                 <GroupCard group={group} onClick={handleGroupClick} />
               </Col>
             ))}

@@ -9,11 +9,11 @@ const { Meta } = Card;
 
 const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
   const {
-    name: groupName,
-    creator,
-    coverUrl: cover,
+    groupName,
+    ownerInfo,
+    groupCoverUrl: cover,
     memberCount = 0,
-    type: groupType = GROUP_TYPE.NORMAL,
+    groupType = GROUP_TYPE.NORMAL,
   } = group;
 
   const handleCardClick = () => {
@@ -41,13 +41,13 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
         title={groupName}
         description={
           <div className={styles.metaDescription}>
-            {creator && (
+            {ownerInfo && (
               <>
-                <Avatar size={20} src={creator.avatar} className={styles.creatorAvatar} />
+                <Avatar size={20} src={ownerInfo.avatar} className={styles.creatorAvatar} />
                 <span>
                   {groupType === GROUP_TYPE.NORMAL
-                    ? creator.nickname
-                    : creator.name || creator.nickname}
+                    ? ownerInfo.nickname
+                    : ownerInfo.realName || ownerInfo.nickname}
                 </span>
               </>
             )}

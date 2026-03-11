@@ -20,18 +20,18 @@ const fetchGroupList = async (
 ): Promise<{ groups: Group[]; total: number }> => {
   const { relationType, page, pageSize } = params;
   const res = (await Axios.get('/group/list', {
-    params: { relationType, page, size: pageSize },
+    params: { groupRoleType: relationType, page, size: pageSize },
   })) as ApiResponse<FetchGroupListResponse>;
   checkResponse(res);
   const payload = res.data;
   return {
-    groups: payload?.list ?? [],
-    total: payload?.total ?? 0,
+    groups: (payload?.list ?? []) as Group[],
+    total: Number(payload?.total) ?? 0,
   };
 };
 
 const fetchGroupInfo = async (groupId: string): Promise<Group> => {
-  const res = (await Axios.get('/group/info', {
+  const res = (await Axios.get('/group/getGroupDetailInfo', {
     params: { groupId: toNumberIds(groupId) },
   })) as ApiResponse<Group>;
   checkResponse(res);
@@ -40,17 +40,17 @@ const fetchGroupInfo = async (groupId: string): Promise<Group> => {
 };
 
 const createGroup = async (params: CreateGroupRequest) => {
-  const res = (await Axios.post('/group/new', params)) as ApiResponse;
+  const res = (await Axios.post('/group/addGroup', params)) as ApiResponse;
   checkResponse(res);
 };
 
 const editGroup = async (params: EditGroupRequest) => {
-  const res = (await Axios.post('/group/edit', params)) as ApiResponse;
+  const res = (await Axios.post('/group/changeGroup', params)) as ApiResponse;
   checkResponse(res);
 };
 
 const deleteGroup = async (params: DeleteGroupRequest) => {
-  const res = (await Axios.post('/group/delete', params)) as ApiResponse;
+  const res = (await Axios.post('/group/removeGroup', params)) as ApiResponse;
   checkResponse(res);
 };
 
@@ -71,7 +71,7 @@ const fetchGroupMembers = async (
 };
 
 const fetchMyRoleInGroup = async (groupId: string): Promise<'OWNER' | 'ADMIN' | 'MEMBER'> => {
-  const res = (await Axios.get('/group/member/my-role', {
+  const res = (await Axios.get('/group/member/getMyRole', {
     params: { groupId: toNumberIds(groupId) },
   })) as ApiResponse<number | { role: number }>;
   checkResponse(res);
@@ -82,7 +82,7 @@ const fetchMyRoleInGroup = async (groupId: string): Promise<'OWNER' | 'ADMIN' | 
 };
 
 const joinGroup = async (params: JoinGroupRequest) => {
-  const res = (await Axios.post('/group/member/join', params)) as ApiResponse;
+  const res = (await Axios.post('/group/joinGroup', params)) as ApiResponse;
   checkResponse(res);
 };
 
@@ -92,7 +92,7 @@ const quitGroup = async (params: QuitGroupRequest) => {
 };
 
 const updateMemberRole = async (params: UpdateMemberRoleRequest) => {
-  const res = (await Axios.post('/group/member/update-role', params)) as ApiResponse;
+  const res = (await Axios.post('/group/member/changeRole', params)) as ApiResponse;
   checkResponse(res);
 };
 

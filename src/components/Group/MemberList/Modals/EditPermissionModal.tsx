@@ -34,17 +34,12 @@ const EditPermissionModal: React.FC<EditPermissionModalProps> = ({
     try {
       setLoading(true);
       const role = ROLE_MAP[selectedPermission] ?? 3;
-      const groupIdNum = toNumberIds(groupId);
-      await Promise.all(
-        memberIds.map((targetUserId) => {
-          const params: UpdateMemberRoleRequest = {
-            groupId: groupIdNum,
-            targetUserId,
-            role,
-          };
-          return GroupServices.updateMemberRole(params);
-        })
-      );
+      const params: UpdateMemberRoleRequest = {
+        groupId: toNumberIds(groupId),
+        targetUserIds: memberIds,
+        role,
+      };
+      await GroupServices.updateMemberRole(params);
       message.success(`已修改 ${memberIds.length} 位成员的权限`);
       onSuccess?.();
       onCancel();

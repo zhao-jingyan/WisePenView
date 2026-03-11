@@ -13,19 +13,21 @@ export interface FetchGroupListRequest {
   pageSize: number;
 }
 
-/** 创建小组请求参数 */
+/** 创建小组请求参数（与 OpenAPI addGroup 对齐） */
 export interface CreateGroupRequest {
   groupName: string;
-  description: string;
   groupType: number;
+  groupDesc: string;
+  groupCoverUrl?: string;
 }
 
-/** 编辑小组请求参数 */
+/** 编辑小组请求参数（与 OpenAPI changeGroup 对齐） */
 export interface EditGroupRequest {
-  groupId: string;
+  groupId: number;
   groupName: string;
-  description: string;
-  coverUrl?: string;
+  groupDesc: string;
+  groupCoverUrl: string;
+  groupType: number;
 }
 
 /** 解散小组请求参数 */
@@ -43,10 +45,10 @@ export interface QuitGroupRequest {
   groupId: number;
 }
 
-/** 修改成员角色请求参数 */
+/** 修改成员角色请求参数（与 OpenAPI changeRole 对齐） */
 export interface UpdateMemberRoleRequest {
   groupId: number;
-  targetUserId: number;
+  targetUserIds: number[];
   role: number;
 }
 

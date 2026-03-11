@@ -60,7 +60,7 @@ const GroupDetail: React.FC = () => {
   const [exitGroupModalOpen, setExitGroupModalOpen] = useState(false);
 
   const permissionConfig = useMemo(
-    () => (group ? getPermissionConfig(getGroupTypeLabel(group.type), currentUserRole) : null),
+    () => (group ? getPermissionConfig(getGroupTypeLabel(group.groupType), currentUserRole) : null),
     [group, currentUserRole]
   );
 
@@ -76,22 +76,22 @@ const GroupDetail: React.FC = () => {
     return <div className={styles.pageContainer}>小组不存在</div>;
   }
 
-  const { name: groupName, creator, description, coverUrl: cover, createTime } = group;
-  const groupId = String(group.id ?? id ?? '');
+  const { groupName, ownerInfo, groupDesc: description, groupCoverUrl: cover, createTime } = group;
+  const groupId = group.groupId || id || '';
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>{groupName}</h1>
         <div className={styles.headerMeta}>
-          {creator && (
+          {ownerInfo && (
             <div className={styles.headerMetaItem}>
-              <Avatar size={24} src={creator.avatar} />
+              <Avatar size={24} src={ownerInfo.avatar} />
               <span>
                 创建者：
-                {group.type === GROUP_TYPE.NORMAL
-                  ? creator.nickname
-                  : creator.name || creator.nickname}
+                {group.groupType === GROUP_TYPE.NORMAL
+                  ? ownerInfo.nickname
+                  : ownerInfo.realName || ownerInfo.nickname}
               </span>
             </div>
           )}
@@ -161,6 +161,7 @@ const GroupDetail: React.FC = () => {
         description={description}
         cover={cover}
         groupId={groupId}
+        groupType={group.groupType}
         onSuccess={handleModalSuccess}
       />
       <DissolveGroupModal

@@ -39,7 +39,12 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onS
     try {
       const values = (await form.validateFields()) as CreateGroupRequest;
       setSubmitting(true);
-      await GroupServices.createGroup(values);
+      await GroupServices.createGroup({
+        groupName: values.groupName,
+        groupType: values.groupType,
+        groupDesc: values.groupDesc,
+        groupCoverUrl: '',
+      });
       message.success('创建成功');
       form.resetFields();
       onCancel();
@@ -84,7 +89,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onS
         </Form.Item>
         <Form.Item
           label="小组描述"
-          name="description"
+          name="groupDesc"
           rules={[{ required: true, message: '请输入小组描述' }]}
         >
           <TextArea rows={4} placeholder="请输入小组描述（可选）" />
@@ -104,6 +109,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onS
           </Select>
         </Form.Item>
         {/* TODO: 图床未实现，上传封面功能待实现 */}
+        {/* TODO: 图床未实现，groupCoverUrl 暂传空 */}
         <Form.Item
           label="封面图片"
           name="cover"
