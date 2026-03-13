@@ -17,7 +17,7 @@ import Register from '@/views/auth/Register';
 import ResetPassword from '@/views/auth/ResetPassword';
 import NewPassword from '@/views/auth/NewPassword';
 import VerifyEmail from '@/views/auth/VerifyEmail';
-import Editor from '@/views/editor/Editor'; // 编辑器页
+import NotePage from '@/views/note';
 
 const router = createBrowserRouter([
   // ==============================
@@ -91,8 +91,12 @@ const router = createBrowserRouter([
         element: <Navigate to="/app/drive" replace />,
       },
       {
-        path: 'editor',
-        element: <Editor />,
+        path: 'note',
+        element: <NotePage />,
+      },
+      {
+        path: 'note/:noteId',
+        element: <NotePage />,
       },
       // 文档与云盘页
       {
