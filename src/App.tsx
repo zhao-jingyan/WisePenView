@@ -1,20 +1,26 @@
-import React from 'react';
-import { ConfigProvider } from 'antd';
+import React, { Suspense } from 'react';
+import { ConfigProvider, Spin } from 'antd';
 import { RouterProvider } from 'react-router-dom';
 import router from './router';
 import zhCN from 'antd/locale/zh_CN';
 
 import { ServicesProvider } from '@/contexts/ServicesContext';
 import appTheme from './theme';
+import styles from './App.module.less';
+
+const PageLoadingFallback: React.FC = () => (
+  <div className={styles.pageLoadingFallback}>
+    <Spin size="large" />
+  </div>
+);
 
 const App: React.FC = () => {
   return (
     <ServicesProvider>
-      <ConfigProvider
-        locale={zhCN}
-        theme={appTheme} // 2. 在这里直接传入对象
-      >
-        <RouterProvider router={router} />
+      <ConfigProvider locale={zhCN} theme={appTheme}>
+        <Suspense fallback={<PageLoadingFallback />}>
+          <RouterProvider router={router} />
+        </Suspense>
       </ConfigProvider>
     </ServicesProvider>
   );

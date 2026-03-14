@@ -1,23 +1,23 @@
+import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
-// 引入布局
+// 引入布局（保持同步加载，保证首屏壳子稳定）
 import SystemLayout from '@/layouts/SystemLayout';
 import AuthLayout from '@/layouts/AuthLayout';
 
-// 引入页面 (实际开发中建议使用 lazy load)
-import Home from '@/views/home';
-import Drive from '@/views/drive/Drive';
-import MyGroup from '@/views/group/MyGroup';
-import GroupDetail from '@/views/group/GroupDetail';
-import Account from '@/views/profile/Account';
-// import PermissionConfigPreview from '@/views/group/PermissionConfigPreview';
-import Usage from '@/views/profile/Usage';
-import Login from '@/views/auth/Login';
-import Register from '@/views/auth/Register';
-import ResetPassword from '@/views/auth/ResetPassword';
-import NewPassword from '@/views/auth/NewPassword';
-import VerifyEmail from '@/views/auth/VerifyEmail';
-import Editor from '@/views/editor/Editor'; // 编辑器页
+// 页面使用 lazy load，按路由切分 chunk
+const Home = lazy(() => import('@/views/home'));
+const Drive = lazy(() => import('@/views/drive/Drive'));
+const MyGroup = lazy(() => import('@/views/group/MyGroup'));
+const GroupDetail = lazy(() => import('@/views/group/GroupDetail'));
+const Account = lazy(() => import('@/views/profile/Account'));
+const Usage = lazy(() => import('@/views/profile/Usage'));
+const Login = lazy(() => import('@/views/auth/Login'));
+const Register = lazy(() => import('@/views/auth/Register'));
+const ResetPassword = lazy(() => import('@/views/auth/ResetPassword'));
+const NewPassword = lazy(() => import('@/views/auth/NewPassword'));
+const VerifyEmail = lazy(() => import('@/views/auth/VerifyEmail'));
+const Editor = lazy(() => import('@/views/editor/Editor'));
 
 const router = createBrowserRouter([
   // ==============================
