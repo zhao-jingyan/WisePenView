@@ -15,7 +15,7 @@ export interface FileFilterValue {
 }
 
 export interface FileFilterProps {
-  /** 小组 ID，不传则展示个人标签树 */
+  /** 小组 ID，不传则加载个人标签列表 */
   groupId?: string;
   /** 受控：当前筛选与排序配置 */
   value?: FileFilterValue;

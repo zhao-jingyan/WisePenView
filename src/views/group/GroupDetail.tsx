@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Avatar, Button, Spin, Tabs, message } from 'antd';
 import { AiOutlineEdit, AiOutlineDelete, AiOutlineLogout } from 'react-icons/ai';
-import FlatViewDrive from '@/components/Drive/FlatViewDrive';
+import FlatDrive from '@/components/Drive/FlatDrive';
 import MemberList from '@/components/Group/MemberList';
 import { getPermissionConfig } from '@/components/Group/MemberList/PermissionConfig';
 import {
@@ -113,7 +113,7 @@ const GroupDetail: React.FC = () => {
             label: '文件',
             children: (
               <div className={styles.tabPane}>
-                <FlatViewDrive groupId={groupId} />
+                <FlatDrive groupId={groupId} />
               </div>
             ),
           },

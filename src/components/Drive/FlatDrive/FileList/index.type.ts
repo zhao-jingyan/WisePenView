@@ -1,4 +1,4 @@
-import type { FileFilterValue } from '@/components/Drive/FlatViewDrive/FileFilter/index.type';
+import type { FileFilterValue } from '@/components/Drive/FlatDrive/FileFilter/index.type';
 
 export interface FileListProps {
   /** 小组 ID，不传则查个人资源 */

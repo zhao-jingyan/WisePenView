@@ -3,7 +3,21 @@
  * 不依赖 API 调用，仅对 TagTreeNode 做递归过滤与查找
  */
 
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { FlatTagTreeNode, TagTreeNode } from '@/services/Tag/index.type';
+
+/** 深度优先前序遍历，将树展开为无 children 的列表 */
+export const flattenTagTree = (nodes: TagTreeNode[]): FlatTagTreeNode[] => {
+  const result: FlatTagTreeNode[] = [];
+  const visit = (list: TagTreeNode[]): void => {
+    for (const node of list) {
+      const { children, ...flat } = node;
+      result.push(flat);
+      if (children?.length) visit(children);
+    }
+  };
+  visit(nodes);
+  return result;
+};
 
 /** 判断是否为路径标签（以 / 开头的 tagName） */
 export const isPathTag = (tagName: string): boolean => tagName.startsWith('/');

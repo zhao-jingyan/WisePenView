@@ -1,8 +1,9 @@
 import type { ApiResponse } from '@/types/api';
 import Axios from '@/utils/Axios';
 import { checkResponse } from '@/utils/response';
-import { filterNonPathTags } from '@/utils/tagTree';
+import { filterNonPathTags, flattenTagTree } from '@/utils/tagTree';
 import type {
+  FlatTagTreeNode,
   GetTagTreeRequest,
   TagTreeNode,
   AddTagRequest,
@@ -24,6 +25,12 @@ const fetchRawTagTree = async (params?: GetTagTreeRequest): Promise<TagTreeNode[
 const getTagTree = async (params?: GetTagTreeRequest): Promise<TagTreeNode[]> => {
   const raw = await fetchRawTagTree(params);
   return filterNonPathTags(raw);
+};
+
+const getFlatTagTree = async (params?: GetTagTreeRequest): Promise<FlatTagTreeNode[]> => {
+  const raw = await fetchRawTagTree(params);
+  const tree = filterNonPathTags(raw);
+  return flattenTagTree(tree);
 };
 
 const updateTag = async (params: UpdateTagRequest): Promise<void> => {
@@ -54,6 +61,7 @@ const moveTag = async (params: MoveTagRequest): Promise<void> => {
 
 export const TagServicesImpl: ITagService = {
   getTagTree,
+  getFlatTagTree,
   updateTag,
   addTag,
   changeTag,

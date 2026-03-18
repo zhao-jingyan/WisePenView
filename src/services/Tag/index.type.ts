@@ -6,6 +6,7 @@
 /** TagService 接口：供依赖注入使用 */
 export interface ITagService {
   getTagTree(params?: GetTagTreeRequest): Promise<TagTreeNode[]>;
+  getFlatTagTree(params?: GetTagTreeRequest): Promise<FlatTagTreeNode[]>;
   updateTag(params: UpdateTagRequest): Promise<void>;
   addTag(params: AddTagRequest): Promise<string>;
   changeTag(params: ChangeTagRequest): Promise<void>;
@@ -32,6 +33,9 @@ export interface TagTreeNode {
   /** 子节点列表 */
   children?: TagTreeNode[];
 }
+
+/** 平铺标签节点（无 children，与 getFlatTagTree 返回项一致） */
+export type FlatTagTreeNode = Omit<TagTreeNode, 'children'>;
 
 /** API 返回类型别名，与 OpenAPI TagTreeResponse 对应 */
 export type TagTreeResponse = TagTreeNode;

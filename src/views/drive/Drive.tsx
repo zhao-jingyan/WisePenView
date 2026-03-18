@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Modal, Tabs } from 'antd';
 import { AiOutlineTag, AiOutlineCloudUpload } from 'react-icons/ai';
 import { TagManager } from '@/components/Tag';
-import FlatViewDrive from '@/components/Drive/FlatViewDrive';
+import FlatDrive from '@/components/Drive/FlatDrive';
 import TreeDrive from '@/components/Drive/TreeDrive';
 import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
 
@@ -45,7 +45,7 @@ const Drive: React.FC = () => {
       </div>
 
       <div className={styles.previewContent}>
-        {viewMode === 'flat' && <FlatViewDrive />}
+        {viewMode === 'flat' && <FlatDrive />}
         {viewMode === 'folder' && <TreeDrive />}
       </div>
 
