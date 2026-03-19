@@ -1,5 +1,6 @@
 import Axios from '@/utils/Axios';
 import { checkResponse } from '@/utils/response';
+import { USERNAME_PATTERN } from '@/constants/user';
 import type { ApiResponse } from '@/types/api';
 import type {
   LoginRequest,
@@ -15,6 +16,9 @@ const login = async (params: LoginRequest) => {
 };
 
 const register = async (params: RegisterRequest) => {
+  if (!USERNAME_PATTERN.test(params.username)) {
+    throw new Error('用户名必须是4-20位字母、数字或下划线');
+  }
   const res = (await Axios.post('/auth/register', params)) as ApiResponse;
   checkResponse(res);
 };

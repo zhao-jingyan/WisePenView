@@ -1,3 +1,9 @@
+/** 用户名：4-20 位，仅字母、数字、下划线（用于注册等表单校验） */
+export const USERNAME_MIN_LENGTH = 4;
+export const USERNAME_MAX_LENGTH = 20;
+export const USERNAME_PATTERN = /^[a-zA-Z0-9_]{4,20}$/;
+export const USERNAME_PATTERN_MESSAGE = '用户名必须是4-20位字母、数字或下划线';
+
 /** 邮箱后缀类型（发起邮箱验证用）：0 -> @m.fudan.edu.cn；1 -> @fudan.edu.cn */
 export const EMAIL_SUFFIX_TYPE = { M_FUDAN: 0, FUDAN: 1 } as const;
 export const EMAIL_SUFFIX_LABELS: Record<number, string> = {

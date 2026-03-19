@@ -4,6 +4,7 @@ import { RiUserLine, RiLockLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
 import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/contexts/ServicesContext';
+import { USERNAME_MAX_LENGTH, USERNAME_PATTERN, USERNAME_PATTERN_MESSAGE } from '@/constants/user';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import styles from './Auth.module.less';
 import type { RegisterRequest } from '@/services/Auth';
@@ -44,9 +45,17 @@ const Register: React.FC = () => {
         <Form.Item
           label="用户名"
           name="username"
-          rules={[{ required: true, message: '请输入用户名' }]}
+          rules={[
+            { required: true, message: '请输入用户名' },
+            { pattern: USERNAME_PATTERN, message: USERNAME_PATTERN_MESSAGE },
+          ]}
         >
-          <Input placeholder="输入用户名" size="large" prefix={<RiUserLine />} />
+          <Input
+            placeholder="4-20位字母、数字或下划线"
+            size="large"
+            prefix={<RiUserLine />}
+            maxLength={USERNAME_MAX_LENGTH}
+          />
         </Form.Item>
 
         <Form.Item
