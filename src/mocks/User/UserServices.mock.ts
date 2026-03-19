@@ -32,31 +32,25 @@ const confirmEmailVerify = async (): Promise<void> => {
   await delay(200);
 };
 
-const updateUserProfile = async (
-  params: Parameters<IUserService['updateUserProfile']>[0]
-): Promise<GetUserInfoResponse> => {
+const updateUserInfo = async (
+  params: Parameters<IUserService['updateUserInfo']>[0]
+): Promise<void> => {
   await delay(200);
-  const { nickname, realName, campusNo, mobile, ...profileParams } = params;
-  return {
-    userInfo: {
-      ...fullUserInfo.userInfo,
-      ...(nickname !== undefined && { nickname }),
-      ...(realName !== undefined && { realName }),
-      ...(campusNo !== undefined && { campusNo }),
-      ...(mobile !== undefined && { mobile }),
-    },
-    userProfile: { ...fullUserInfo.userProfile, ...profileParams },
-    readonlyFields: fullUserInfo.readonlyFields,
-  };
+  const { nickname, realName, ...profileParams } = params;
+  Object.assign(fullUserInfo.userInfo, {
+    ...(nickname !== undefined && { nickname }),
+    ...(realName !== undefined && { realName }),
+  });
+  Object.assign(fullUserInfo.userProfile, profileParams);
 };
 
 const clearUserCache = (): void => {};
 
 export const UserServicesMock: IUserService = {
-  getUserInfo,
   getFullUserInfo,
+  getUserInfo,
+  updateUserInfo,
   sendEmailVerify,
   confirmEmailVerify,
-  updateUserProfile,
   clearUserCache,
 };

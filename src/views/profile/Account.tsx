@@ -10,20 +10,23 @@ import {
   message,
   Modal,
   Select,
-  Space,
   Spin,
 } from 'antd';
-import { RiCheckLine, RiCloseLine, RiErrorWarningLine, RiPencilLine } from 'react-icons/ri';
+import {
+  RiCheckLine,
+  RiCloseLine,
+  RiErrorWarningLine,
+  RiMailLine,
+  RiPencilLine,
+} from 'react-icons/ri';
 import { useUserService } from '@/contexts/ServicesContext';
 import type {
   GetUserInfoResponse,
   SendEmailVerifyRequest,
-  UpdateUserProfileRequest,
+  UpdateUserInfoRequest,
 } from '@/services/User';
 import {
   DEGREE_LEVEL_LABELS,
-  EMAIL_SUFFIX_LABELS,
-  EMAIL_SUFFIX_TYPE,
   getDegreeLevelLabel,
   getIdentityTypeLabel,
   getSexLabel,
@@ -38,7 +41,7 @@ import styles from './style.module.less';
 
 const { Option } = Select;
 
-type ProfileFormValues = UpdateUserProfileRequest;
+type ProfileFormValues = UpdateUserInfoRequest;
 
 /** 从 GetUserInfoResponse 中按字段 key 取值（userInfo / userProfile 分流） */
 function getProfileFieldValue(
@@ -51,7 +54,7 @@ function getProfileFieldValue(
 }
 
 interface VerifyEmailFormValues {
-  suffixType: SendEmailVerifyRequest['suffixType'];
+  email: SendEmailVerifyRequest['email'];
 }
 
 const Account: React.FC = () => {
@@ -71,8 +74,6 @@ const Account: React.FC = () => {
         const data = await userService.getFullUserInfo();
         setUser(data);
         form.setFieldsValue({
-          campusNo: data.userInfo.campusNo ?? undefined,
-          mobile: data.userInfo.mobile ?? undefined,
           nickname: data.userInfo.nickname ?? undefined,
           realName: data.userInfo.realName ?? undefined,
           sex: data.userProfile.sex,
@@ -101,9 +102,7 @@ const Account: React.FC = () => {
     try {
       const values = await form.validateFields();
       setSaving(true);
-      const params: UpdateUserProfileRequest = {
-        campusNo: values.campusNo ?? user?.userInfo?.campusNo ?? undefined,
-        mobile: values.mobile ?? user?.userInfo?.mobile ?? undefined,
+      const params: UpdateUserInfoRequest = {
         nickname: fieldConfig.nickname ? values.nickname : (user?.userInfo?.nickname ?? undefined),
         realName: fieldConfig.realName ? values.realName : (user?.userInfo?.realName ?? undefined),
         sex: fieldConfig.sex ? values.sex : user?.userProfile?.sex,
@@ -127,8 +126,9 @@ const Account: React.FC = () => {
           ? values.academicTitle
           : (user?.userProfile?.academicTitle ?? undefined),
       };
-      const updated = await userService.updateUserProfile(params);
-      setUser(updated);
+      await userService.updateUserInfo(params);
+      const data = await userService.getFullUserInfo();
+      setUser(data);
       setEditMode(false);
       message.success('保存成功');
     } catch (err) {
@@ -142,8 +142,6 @@ const Account: React.FC = () => {
   const handleCancelEdit = () => {
     form.resetFields();
     form.setFieldsValue({
-      campusNo: user?.userInfo?.campusNo ?? undefined,
-      mobile: user?.userInfo?.mobile ?? undefined,
       nickname: user?.userInfo?.nickname ?? undefined,
       realName: user?.userInfo?.realName ?? undefined,
       sex: user?.userProfile?.sex,
@@ -159,7 +157,7 @@ const Account: React.FC = () => {
   };
 
   const handleVerify = () => {
-    verifyForm.setFieldsValue({ suffixType: EMAIL_SUFFIX_TYPE.M_FUDAN });
+    verifyForm.resetFields();
     setVerifyModalOpen(true);
   };
 
@@ -171,9 +169,9 @@ const Account: React.FC = () => {
   const handleVerifySubmit = async () => {
     try {
       const values = await verifyForm.validateFields();
-      const params: SendEmailVerifyRequest = { suffixType: values.suffixType };
+      const params: SendEmailVerifyRequest = { email: values.email.trim() };
       await userService.sendEmailVerify(params);
-      message.success('验证邮件已发送，请前往学工号邮箱查收');
+      message.success('验证邮件已发送，请查收');
       verifyForm.resetFields();
       setVerifyModalOpen(false);
     } catch (err) {
@@ -181,11 +179,6 @@ const Account: React.FC = () => {
       message.error(parseErrorMessage(err, '提交失败'));
     }
   };
-
-  const emailSuffixOptions = Object.entries(EMAIL_SUFFIX_LABELS).map(([value, label]) => ({
-    value: Number(value),
-    label,
-  }));
 
   const nickname = user?.userInfo?.nickname ?? user?.userInfo?.username ?? '未设置昵称';
   const avatarLetter = (user?.userInfo?.nickname ?? user?.userInfo?.username ?? '?')
@@ -276,106 +269,87 @@ const Account: React.FC = () => {
 
           <Divider className={styles.sectionDivider} />
 
-          {/* 账号：编辑按钮放在第二栏 */}
-          <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>账号</h3>
-            {!editMode ? (
-              <Button
-                type="primary"
-                icon={<RiPencilLine size={16} />}
-                onClick={() => setEditMode(true)}
-              >
-                编辑资料
-              </Button>
-            ) : null}
-          </div>
-          {!editMode ? (
-            <Descriptions column={2} layout="vertical" size="small" className={styles.descriptions}>
-              <Descriptions.Item label="用户名">
-                {user?.userInfo?.username ?? '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="学工号">
-                {user?.userInfo?.campusNo ?? '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="邮箱">{user?.userInfo?.email ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label="手机号">{user?.userInfo?.mobile ?? '-'}</Descriptions.Item>
-            </Descriptions>
-          ) : (
-            <Form form={form} layout="vertical" className={styles.profileForm}>
-              <Descriptions
-                column={2}
-                layout="vertical"
-                size="small"
-                className={styles.descriptions}
-              >
-                <Descriptions.Item label="用户名">
-                  {user?.userInfo?.username ?? '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="邮箱">{user?.userInfo?.email ?? '-'}</Descriptions.Item>
-              </Descriptions>
-              <div className={styles.formFieldsGrid}>
-                <Form.Item label="学工号" name="campusNo">
-                  <Input placeholder="请输入学工号" className={styles.editableInput} />
-                </Form.Item>
-                <Form.Item label="手机号" name="mobile">
-                  <Input placeholder="请输入手机号" className={styles.editableInput} />
-                </Form.Item>
-              </div>
-              <Divider className={styles.sectionDivider} />
-              <h3 className={styles.sectionTitle}>基本档案</h3>
-              <div className={styles.formFieldsGrid}>
-                {visibleFields.map((field) => {
-                  const disabledList = fieldConfig.disabledFields ?? [];
-                  const isReadOnly = (disabledList as readonly string[]).includes(field.key);
-                  const raw = getProfileFieldValue(user, field.key);
-                  const displayValue =
-                    field.key === 'sex'
-                      ? raw != null
-                        ? getSexLabel(raw as number)
-                        : '-'
-                      : field.key === 'degreeLevel'
-                        ? raw != null
-                          ? getDegreeLevelLabel(raw as number)
-                          : '-'
-                        : (raw ?? '-');
-                  return (
-                    <Form.Item key={field.key} label={field.label} name={field.key}>
-                      {isReadOnly ? (
-                        <div className={styles.readOnlyField}>{displayValue}</div>
-                      ) : field.type === 'input' ? (
-                        <Input placeholder={field.placeholder} className={styles.editableInput} />
-                      ) : (
-                        <Select
-                          placeholder={field.placeholder}
-                          allowClear
-                          className={styles.editableInput}
-                        >
-                          {field.optionsKey ? optionsMap[field.optionsKey] : null}
-                        </Select>
-                      )}
-                    </Form.Item>
-                  );
-                })}
-              </div>
-              <div className={styles.formActions}>
-                <Form.Item className={styles.submitItem}>
-                  <Button type="primary" onClick={handleSaveProfile} loading={saving}>
-                    保存
-                  </Button>
-                  <Button onClick={handleCancelEdit} className={styles.cancelBtn}>
-                    取消
-                  </Button>
-                </Form.Item>
-              </div>
-            </Form>
-          )}
+          {/* 账号：仅展示，不可编辑 */}
+          <h3 className={styles.sectionTitle}>账号</h3>
+          <Descriptions column={2} layout="vertical" size="small" className={styles.descriptions}>
+            <Descriptions.Item label="用户名">{user?.userInfo?.username ?? '-'}</Descriptions.Item>
+            <Descriptions.Item label="学工号">
+              {user?.userInfo?.campusNo === 'PENDING'
+                ? '未认证'
+                : (user?.userInfo?.campusNo ?? '-')}
+            </Descriptions.Item>
+            <Descriptions.Item label="邮箱">{user?.userInfo?.email ?? '-'}</Descriptions.Item>
+            <Descriptions.Item label="手机号">{user?.userInfo?.mobile ?? '-'}</Descriptions.Item>
+          </Descriptions>
 
-          {/* 基本档案（非编辑时展示，管理员不展示） */}
-          {!editMode && fieldConfig.showProfileSection && (
-            <>
-              <Divider className={styles.sectionDivider} />
-              <div className={styles.profileSection}>
+          <Divider className={styles.sectionDivider} />
+
+          {/* 基本档案：编辑资料在第三栏 */}
+          {fieldConfig.showProfileSection && (
+            <div className={styles.profileSection}>
+              <div className={styles.sectionHeader}>
                 <h3 className={styles.sectionTitle}>基本档案</h3>
+                {!editMode ? (
+                  <Button
+                    type="primary"
+                    icon={<RiPencilLine size={16} />}
+                    onClick={() => setEditMode(true)}
+                  >
+                    编辑资料
+                  </Button>
+                ) : null}
+              </div>
+              {editMode ? (
+                <Form form={form} layout="vertical" className={styles.profileForm}>
+                  <div className={styles.formFieldsGrid}>
+                    {visibleFields.map((field) => {
+                      const disabledList = fieldConfig.disabledFields ?? [];
+                      const isReadOnly = (disabledList as readonly string[]).includes(field.key);
+                      const raw = getProfileFieldValue(user, field.key);
+                      const displayValue =
+                        field.key === 'sex'
+                          ? raw != null
+                            ? getSexLabel(raw as number)
+                            : '-'
+                          : field.key === 'degreeLevel'
+                            ? raw != null
+                              ? getDegreeLevelLabel(raw as number)
+                              : '-'
+                            : (raw ?? '-');
+                      return (
+                        <Form.Item key={field.key} label={field.label} name={field.key}>
+                          {isReadOnly ? (
+                            <div className={styles.readOnlyField}>{displayValue}</div>
+                          ) : field.type === 'input' ? (
+                            <Input
+                              placeholder={field.placeholder}
+                              className={styles.editableInput}
+                            />
+                          ) : (
+                            <Select
+                              placeholder={field.placeholder}
+                              allowClear
+                              className={styles.editableInput}
+                            >
+                              {field.optionsKey ? optionsMap[field.optionsKey] : null}
+                            </Select>
+                          )}
+                        </Form.Item>
+                      );
+                    })}
+                  </div>
+                  <div className={styles.formActions}>
+                    <Form.Item className={styles.submitItem}>
+                      <Button type="primary" onClick={handleSaveProfile} loading={saving}>
+                        保存
+                      </Button>
+                      <Button onClick={handleCancelEdit} className={styles.cancelBtn}>
+                        取消
+                      </Button>
+                    </Form.Item>
+                  </div>
+                </Form>
+              ) : (
                 <Descriptions
                   column={2}
                   layout="vertical"
@@ -399,8 +373,8 @@ const Account: React.FC = () => {
                     );
                   })}
                 </Descriptions>
-              </div>
-            </>
+              )}
+            </div>
           )}
         </div>
       </Spin>
@@ -423,24 +397,22 @@ const Account: React.FC = () => {
         <Alert
           type="info"
           showIcon
-          description={<span>请选择邮箱后缀，系统将发送包含验证链接的邮件。</span>}
+          description={<span>请输入完整邮箱地址，系统将发送包含验证链接的邮件。</span>}
         />
         <Form form={verifyForm} layout="vertical" className={styles.verifyForm}>
-          <Form.Item label="邮箱">
-            <Space.Compact className={styles.verifyEmailGroup}>
-              <Space.Addon>{user?.userInfo?.campusNo ?? '-'}</Space.Addon>
-              <Form.Item
-                name="suffixType"
-                noStyle
-                rules={[{ required: true, message: '请选择邮箱后缀' }]}
-              >
-                <Select
-                  className={styles.verifyEmailSelect}
-                  placeholder="请选择邮箱后缀"
-                  options={emailSuffixOptions}
-                />
-              </Form.Item>
-            </Space.Compact>
+          <Form.Item
+            label="邮箱"
+            name="email"
+            rules={[
+              { required: true, message: '请输入邮箱' },
+              { type: 'email', message: '请输入有效邮箱地址' },
+            ]}
+          >
+            <Input
+              prefix={<RiMailLine size={18} className={styles.verifyEmailIcon} />}
+              placeholder="请输入完整邮箱地址"
+              allowClear
+            />
           </Form.Item>
         </Form>
       </Modal>

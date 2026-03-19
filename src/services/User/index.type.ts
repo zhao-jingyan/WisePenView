@@ -2,13 +2,14 @@ import type { User } from '@/types/user';
 
 /** UserService 接口：供依赖注入使用 */
 export interface IUserService {
-  /** 获取用户信息（带缓存，信息为空或 forceRefresh 时重新拉取） */
-  getUserInfo(options?: { forceRefresh?: boolean }): Promise<User>;
-  /** 全量拉取用户信息（含敏感字段），不缓存，需展示 realName/campusNo 等时调用 */
+  /** 全量拉取用户信息（为 Account 等页服务），不缓存 */
   getFullUserInfo(): Promise<GetUserInfoResponse>;
+  /** 展示用精简用户信息，带缓存，供侧栏等展示 */
+  getUserInfo(options?: { forceRefresh?: boolean }): Promise<User>;
+  /** 更新用户信息（内部两次 PUT：userInfo + userProfile）；不拉 GET，需全量时由调用方自行 getFullUserInfo */
+  updateUserInfo(params: UpdateUserInfoRequest): Promise<void>;
   sendEmailVerify(params: SendEmailVerifyRequest): Promise<void>;
   confirmEmailVerify(params: ConfirmEmailVerifyRequest): Promise<void>;
-  updateUserProfile(params: UpdateUserProfileRequest): Promise<GetUserInfoResponse>;
   /** 退出登录时清理缓存 */
   clearUserCache(): void;
 }
@@ -18,16 +19,13 @@ export interface ConfirmEmailVerifyRequest {
   token: string;
 }
 
-/** 发起邮箱验证请求参数 */
+/** 发起邮箱验证请求参数（后端接受完整邮箱字符串） */
 export interface SendEmailVerifyRequest {
-  /** 0 -> @m.fudan.edu.cn；1 -> @fudan.edu.cn */
-  suffixType: number;
+  email: string;
 }
 
-/** 更新用户档案请求参数（账号可编辑：学工号、手机号；基本档案可编辑字段；邮箱只读） */
-export interface UpdateUserProfileRequest {
-  campusNo?: string;
-  mobile?: string;
+/** 更新用户信息请求参数（仅基本档案可编辑；账号栏只读；impl 内按 userInfo / userProfile 拆成两次 PUT） */
+export interface UpdateUserInfoRequest {
   nickname?: string;
   realName?: string;
   sex?: number;

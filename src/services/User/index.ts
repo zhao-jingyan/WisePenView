@@ -3,5 +3,5 @@ export type {
   ConfirmEmailVerifyRequest,
   GetUserInfoResponse,
   SendEmailVerifyRequest,
-  UpdateUserProfileRequest,
+  UpdateUserInfoRequest,
 } from './index.type';
