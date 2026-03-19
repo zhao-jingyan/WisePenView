@@ -35,7 +35,7 @@ const Drive: React.FC = () => {
           activeKey={viewMode}
           onChange={(k) => setViewMode(k as DriveViewMode)}
           items={VIEW_TABS}
-          style={{ marginBottom: -1 }}
+          className={styles.tabsFlush}
         />
       </div>
 

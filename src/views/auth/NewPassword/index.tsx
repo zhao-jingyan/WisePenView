@@ -4,7 +4,8 @@ import { RiLockLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthService } from '@/contexts/ServicesContext';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import styles from './Auth.module.less';
+import auth from '../Auth.module.less';
+import page from './style.module.less';
 import type { NewPasswordRequest } from '@/services/Auth';
 
 const NewPassword: React.FC = () => {
@@ -38,7 +39,7 @@ const NewPassword: React.FC = () => {
   };
 
   return (
-    <div className={styles.authContainer}>
+    <div className={`${auth.authContainer} ${page.pageRoot}`}>
       {contextHolder}
       <Typography.Title>设置新密码</Typography.Title>
       <Form layout="vertical" form={form} onFinish={onFinish} requiredMark={false}>
@@ -60,12 +61,12 @@ const NewPassword: React.FC = () => {
             type="primary"
             size="large"
             htmlType="submit"
-            className={styles.submitButton}
+            className={auth.submitButton}
             loading={loading}
           >
             确认
           </Button>
-          <div className={styles.centerLinks}>
+          <div className={auth.centerLinks}>
             <Typography.Text>
               <Link to="/login">返回登录</Link>
             </Typography.Text>

@@ -8,7 +8,8 @@ import PermissionConfigs, {
   type PermissionConfig,
 } from '@/components/Group/MemberList/PermissionConfig';
 import MemberList from '@/components/Group/MemberList';
-import styles from './style.module.less';
+import layout from '../style.module.less';
+import page from './style.module.less';
 
 /** 九张表共用的 mock 成员数据（与 API 结构一致）；userId 用 string 避免大数精度丢失 */
 const MOCK_MEMBERS: GroupMember[] = [
@@ -46,13 +47,11 @@ const MOCK_MEMBERS: GroupMember[] = [
 
 const PermissionConfigPreview: React.FC = () => {
   return (
-    <div className={styles.pageContainer}>
-      <h1 className={styles.pageTitle}>PermissionConfig 九种配置预览</h1>
-      <p className={styles.pageSubtitle} style={{ marginBottom: 24 }}>
-        组类型 × 当前用户角色 = 9 种表格展示
-      </p>
+    <div className={layout.pageContainer}>
+      <h1 className={layout.pageTitle}>PermissionConfig 九种配置预览</h1>
+      <p className={`${layout.pageSubtitle} ${page.intro}`}>组类型 × 当前用户角色 = 9 种表格展示</p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <div className={page.stack}>
         {PERMISSION_CONFIG_ENTRIES.map(([groupType, userRole]) => {
           const config = PermissionConfigs[groupType]?.[userRole] as PermissionConfig;
           const title = `${getGroupTypeLabel(groupType)} - ${ROLE_LABEL[userRole] ?? userRole}`;
@@ -67,7 +66,7 @@ const PermissionConfigPreview: React.FC = () => {
                 </span>
               }
               extra={
-                <span style={{ fontSize: 12, color: 'var(--ant-color-text-tertiary)' }}>
+                <span className={page.cardExtra}>
                   showRealName: {String(config.showRealName)} | showQuotas:{' '}
                   {String(config.showQuotas)} | 编辑: 修改权限
                   {config.canModifyPermission ? '✓' : '✗'} / 分配配额

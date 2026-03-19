@@ -5,7 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/contexts/ServicesContext';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import styles from './Auth.module.less';
+import auth from '../Auth.module.less';
+import page from './style.module.less';
 import type { LoginRequest } from '@/services/Auth';
 
 const Login: React.FC = () => {
@@ -30,7 +31,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className={styles.authContainer}>
+    <div className={`${auth.authContainer} ${page.pageRoot}`}>
       {contextHolder}
       <Typography.Title>登录</Typography.Title>
 
@@ -52,19 +53,19 @@ const Login: React.FC = () => {
             type="primary"
             size="large"
             htmlType="submit"
-            className={styles.submitButton}
+            className={auth.submitButton}
             loading={loading}
           >
             登录
           </Button>
-          <div className={styles.rightLinks}>
+          <div className={auth.rightLinks}>
             <Link to="/register">注册</Link>
             <Link to="/reset-pwd">忘记密码</Link>
           </div>
         </Form.Item>
       </Form>
 
-      <div className={styles.leftBottomLinks}>
+      <div className={auth.leftBottomLinks}>
         <Typography.Text>登录系统即视为接受</Typography.Text>
         <Link to="#" onClick={() => setContractOpen(true)}>
           用户协议

@@ -13,7 +13,8 @@ import {
 import { useGroupService } from '@/contexts/ServicesContext';
 import type { Group } from '@/types/group';
 import { GROUP_TYPE, getGroupTypeLabel } from '@/constants/group';
-import styles from './style.module.less';
+import layout from '../style.module.less';
+import page from './style.module.less';
 
 const GroupDetail: React.FC = () => {
   const groupService = useGroupService();
@@ -72,26 +73,26 @@ const GroupDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className={styles.pageContainer} style={{ textAlign: 'center', padding: 60 }}>
+      <div className={`${layout.pageContainer} ${page.loadingWrap}`}>
         <Spin size="large" />
       </div>
     );
   }
 
   if (!group) {
-    return <div className={styles.pageContainer}>小组不存在</div>;
+    return <div className={layout.pageContainer}>小组不存在</div>;
   }
 
   const { groupName, ownerInfo, groupDesc: description, groupCoverUrl: cover, createTime } = group;
   const groupId = group.groupId || id || '';
 
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>{groupName}</h1>
-        <div className={styles.headerMeta}>
+    <div className={layout.pageContainer}>
+      <div className={layout.pageHeader}>
+        <h1 className={layout.pageTitle}>{groupName}</h1>
+        <div className={layout.headerMeta}>
           {ownerInfo && (
-            <div className={styles.headerMetaItem}>
+            <div className={layout.headerMetaItem}>
               <Avatar
                 size={24}
                 src={ownerInfo.avatar}
@@ -112,13 +113,13 @@ const GroupDetail: React.FC = () => {
       </div>
 
       <Tabs
-        className={styles.detailTabs}
+        className={layout.detailTabs}
         items={[
           {
             key: 'files',
             label: '文件',
             children: (
-              <div className={styles.tabPane}>
+              <div className={layout.tabPane}>
                 <FlatDrive groupId={groupId} />
               </div>
             ),
@@ -127,7 +128,7 @@ const GroupDetail: React.FC = () => {
             key: 'members',
             label: '成员列表',
             children: (
-              <div className={styles.tabPane}>
+              <div className={layout.tabPane}>
                 <MemberList
                   permissionConfig={permissionConfig!}
                   groupId={groupId}
@@ -145,17 +146,17 @@ const GroupDetail: React.FC = () => {
             key: 'description',
             label: '描述',
             children: (
-              <div className={styles.tabPane}>
-                <p className={styles.sectionContent}>{description || '暂无描述'}</p>
+              <div className={layout.tabPane}>
+                <p className={layout.sectionContent}>{description || '暂无描述'}</p>
               </div>
             ),
           },
         ]}
       />
 
-      <div className={styles.actionsBar}>
+      <div className={layout.actionsBar}>
         {currentUserRole === 'OWNER' ? (
-          <div className={styles.actionsRow}>
+          <div className={layout.actionsRow}>
             <Button icon={<AiOutlineEdit size={16} />} onClick={() => setEditGroupModalOpen(true)}>
               编辑小组信息
             </Button>

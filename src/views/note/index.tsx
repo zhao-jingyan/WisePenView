@@ -7,19 +7,9 @@ import Note from '@/components/Note';
 import SaveStatusLight from '@/components/Note/SaveStatusLight';
 import { UploadPipeline, type SaveStatus, type ConnectionState } from '@/components/Note/Pipeline';
 import { useNoteService, useResourceService } from '@/contexts/ServicesContext';
-import type { Block } from '@/types/note';
+import type { NotePageLoadState, NotePageLocationState, NotePageNoteData } from './index.type';
 
 import styles from './style.module.less';
-
-interface NoteData {
-  resourceId: string;
-  version: number;
-  blocks: Block[];
-  /** 最近编辑时间（来自 loadNote 的 updated_at） */
-  lastEditedAt?: string;
-}
-
-type LoadState = 'loading' | 'success' | 'error';
 
 const NotePage: React.FC = () => {
   const { noteId: resourceIdFromRoute } = useParams<{ noteId: string }>();
@@ -27,15 +17,12 @@ const NotePage: React.FC = () => {
   const location = useLocation();
   const noteService = useNoteService();
   const resourceService = useResourceService();
-  const locationState = location.state as {
-    fromCreate?: boolean;
-    initialNoteData?: NoteData;
-  } | null;
+  const locationState = location.state as NotePageLocationState | null;
   /** 从创建流程跳转进入时由 navigate state 传入 */
   const isNewlyCreated = locationState?.fromCreate === true;
 
-  const [loadState, setLoadState] = useState<LoadState>('loading');
-  const [noteData, setNoteData] = useState<NoteData | null>(null);
+  const [loadState, setLoadState] = useState<NotePageLoadState>('loading');
+  const [noteData, setNoteData] = useState<NotePageNoteData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
   const [connectionState, setConnectionState] = useState<ConnectionState>('online');
@@ -76,7 +63,7 @@ const NotePage: React.FC = () => {
         if (!res.ok) {
           throw new Error('创建笔记失败');
         }
-        const createdNoteData: NoteData = {
+        const createdNoteData: NotePageNoteData = {
           resourceId: res.doc_id,
           version: res.version,
           blocks: res.blocks,

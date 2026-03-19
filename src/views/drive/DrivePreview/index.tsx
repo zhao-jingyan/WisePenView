@@ -1,7 +1,7 @@
 import React from 'react';
 import TreeDrive from '@/components/Drive/TreeDrive';
 
-import styles from './drivePreview.module.less';
+import styles from './style.module.less';
 
 /**
  * 预览页：左右并排展示 TreeDrive 的 tag 模式与 folder 模式，便于对比与调试。

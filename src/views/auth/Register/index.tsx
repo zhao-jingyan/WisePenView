@@ -6,7 +6,8 @@ import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/contexts/ServicesContext';
 import { USERNAME_MAX_LENGTH, USERNAME_PATTERN, USERNAME_PATTERN_MESSAGE } from '@/constants/user';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import styles from './Auth.module.less';
+import auth from '../Auth.module.less';
+import page from './style.module.less';
 import type { RegisterRequest } from '@/services/Auth';
 
 const Register: React.FC = () => {
@@ -38,7 +39,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className={styles.authContainer}>
+    <div className={`${auth.authContainer} ${page.pageRoot}`}>
       {contextHolder}
       <Typography.Title>注册</Typography.Title>
       <Form layout="vertical" form={form} onFinish={onFinish} requiredMark={false}>
@@ -85,12 +86,12 @@ const Register: React.FC = () => {
             type="primary"
             size="large"
             htmlType="submit"
-            className={styles.submitButton}
+            className={auth.submitButton}
             loading={loading}
           >
             注册
           </Button>
-          <div className={styles.centerLinks}>
+          <div className={auth.centerLinks}>
             <Typography.Text>
               已有账号？
               <Link to="/login">登录</Link>

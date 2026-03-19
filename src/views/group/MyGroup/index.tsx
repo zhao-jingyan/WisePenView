@@ -8,13 +8,14 @@ import type { FetchGroupListRequest } from '@/services/Group';
 import type { Group } from '@/types/group';
 import { RELATION_TYPE_MAP } from '@/constants/group';
 import { JoinGroupModal, CreateGroupModal } from '@/components/Group/GroupModals';
-import styles from './style.module.less';
+import layout from '../style.module.less';
+import page from './style.module.less';
 
 const MyGroup: React.FC = () => {
   const groupService = useGroupService();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('joined');
-  const [page, setPage] = useState(1);
+  const [pageNum, setPageNum] = useState(1);
   const [size, setSize] = useState(8);
   const [groups, setGroups] = useState<Group[]>([]);
   const [total, setTotal] = useState(0);
@@ -29,7 +30,7 @@ const MyGroup: React.FC = () => {
     try {
       const params: FetchGroupListRequest = {
         relationType,
-        page,
+        page: pageNum,
         size,
       };
       const { groups: list, total: totalCount } = await groupService.fetchGroupList(params);
@@ -43,7 +44,7 @@ const MyGroup: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [groupService, relationType, page, size]);
+  }, [groupService, relationType, pageNum, size]);
 
   useEffect(() => {
     fetchGroups();
@@ -51,14 +52,14 @@ const MyGroup: React.FC = () => {
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
-    setPage(1);
+    setPageNum(1);
   };
 
   const handlePageChange = (newPage: number, newPageSize?: number) => {
-    setPage(newPage);
+    setPageNum(newPage);
     if (newPageSize && newPageSize !== size) {
       setSize(newPageSize);
-      setPage(1);
+      setPageNum(1);
     }
   };
 
@@ -75,13 +76,13 @@ const MyGroup: React.FC = () => {
   };
 
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.pageHeaderWithActions}>
+    <div className={layout.pageContainer}>
+      <div className={layout.pageHeaderWithActions}>
         <div>
-          <h1 className={styles.pageTitle}>我的小组</h1>
-          <span className={styles.pageSubtitle}>管理您的小组和协作</span>
+          <h1 className={layout.pageTitle}>我的小组</h1>
+          <span className={layout.pageSubtitle}>管理您的小组和协作</span>
         </div>
-        <div className={styles.actionsRow}>
+        <div className={layout.actionsRow}>
           <Button icon={<AiOutlineUserAdd size={16} />} onClick={() => setJoinGroupModalOpen(true)}>
             加入小组
           </Button>
@@ -95,7 +96,7 @@ const MyGroup: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles.tabsWithSearch}>
+      <div className={layout.tabsWithSearch}>
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}
@@ -103,13 +104,13 @@ const MyGroup: React.FC = () => {
             { key: 'joined', label: '我加入的' },
             { key: 'managed', label: '我管理的' },
           ]}
-          style={{ marginBottom: -1 }}
+          className={page.tabsBar}
         />
       </div>
 
       <Spin spinning={loading}>
         {groups.length === 0 ? (
-          <div style={{ padding: '60px 0', textAlign: 'center' }}>
+          <div className={page.emptyState}>
             <Empty description="暂无小组" />
           </div>
         ) : (
@@ -123,9 +124,9 @@ const MyGroup: React.FC = () => {
         )}
 
         {total > 0 && (
-          <div className={styles.paginationWrap}>
+          <div className={layout.paginationWrap}>
             <Pagination
-              current={page}
+              current={pageNum}
               pageSize={size}
               total={total}
               showSizeChanger

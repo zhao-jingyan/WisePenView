@@ -41,9 +41,10 @@ import {
 } from '@/constants/user';
 import { usePendingVerifyEmailStore } from '@/store';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { getProfileFieldConfig, PROFILE_FIELDS } from './profile.config';
-import type { ProfileFieldKey } from './profile.config';
-import styles from './style.module.less';
+import { getProfileFieldConfig, PROFILE_FIELDS } from '../profile.config';
+import type { ProfileFieldKey } from '../profile.config';
+import layout from '../style.module.less';
+import page from './style.module.less';
 
 const { Option } = Select;
 
@@ -74,7 +75,7 @@ const SexReadonlyInput = React.forwardRef<InputRef, { value?: number | null }>((
     disabled
     readOnly
     value={value != null ? getSexLabel(value) : '-'}
-    className={styles.editableInput}
+    className={layout.editableInput}
   />
 ));
 SexReadonlyInput.displayName = 'SexReadonlyInput';
@@ -86,7 +87,7 @@ const DegreeLevelReadonlyInput = React.forwardRef<InputRef, { value?: number | n
       disabled
       readOnly
       value={value != null ? getDegreeLevelLabel(value) : '-'}
-      className={styles.editableInput}
+      className={layout.editableInput}
     />
   )
 );
@@ -352,10 +353,10 @@ const Account: React.FC = () => {
   } as const;
 
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>账号管理</h1>
-        <span className={styles.pageSubtitle}>管理您的账号信息</span>
+    <div className={`${layout.pageContainer} ${page.pageRoot}`}>
+      <div className={layout.pageHeader}>
+        <h1 className={layout.pageTitle}>账号管理</h1>
+        <span className={layout.pageSubtitle}>管理您的账号信息</span>
       </div>
       {user?.userInfo?.status === USER_STATUS.UNVERIFIED && (
         <Alert
@@ -367,30 +368,30 @@ const Account: React.FC = () => {
               去验证
             </Button>
           }
-          className={styles.statusBanner}
+          className={layout.statusBanner}
         />
       )}
       <Spin spinning={loading}>
-        <div className={styles.formSection}>
+        <div className={layout.formSection}>
           {/* 头部信息 */}
-          <div className={styles.accountHeader}>
-            <div className={styles.accountHeaderLeft}>
-              <Avatar size={64} className={styles.avatar}>
+          <div className={layout.accountHeader}>
+            <div className={layout.accountHeaderLeft}>
+              <Avatar size={64} className={layout.avatar}>
                 {avatarLetter}
               </Avatar>
-              <div className={styles.accountInfo}>
-                <div className={styles.nameRow}>
-                  <span className={styles.nickname}>{nickname}</span>
+              <div className={layout.accountInfo}>
+                <div className={layout.nameRow}>
+                  <span className={layout.nickname}>{nickname}</span>
                   {user?.userInfo?.username != null && (
-                    <span className={styles.username}>{user.userInfo.username}</span>
+                    <span className={layout.username}>{user.userInfo.username}</span>
                   )}
                 </div>
-                {identityLabel && <span className={styles.identityTag}>{identityLabel}</span>}
+                {identityLabel && <span className={layout.identityTag}>{identityLabel}</span>}
               </div>
             </div>
             {user?.userInfo?.status != null && (
-              <span className={styles.statusGroup}>
-                <span className={styles.statusText}>
+              <span className={layout.statusGroup}>
+                <span className={layout.statusText}>
                   {user.userInfo.status === USER_STATUS.UNVERIFIED
                     ? '未认证'
                     : user.userInfo.status === USER_STATUS.BANNED
@@ -398,7 +399,7 @@ const Account: React.FC = () => {
                       : '已认证'}
                 </span>
                 <span
-                  className={styles.statusIcon}
+                  className={layout.statusIcon}
                   title={
                     user.userInfo.status === USER_STATUS.UNVERIFIED
                       ? '未认证'
@@ -408,22 +409,22 @@ const Account: React.FC = () => {
                   }
                 >
                   {user.userInfo.status === USER_STATUS.BANNED ? (
-                    <RiCloseLine size={24} className={styles.statusIconBanned} />
+                    <RiCloseLine size={24} className={layout.statusIconBanned} />
                   ) : user.userInfo.status === USER_STATUS.UNVERIFIED ? (
-                    <RiErrorWarningLine size={24} className={styles.statusIconUnverified} />
+                    <RiErrorWarningLine size={24} className={layout.statusIconUnverified} />
                   ) : (
-                    <RiCheckLine size={24} className={styles.statusIconVerified} />
+                    <RiCheckLine size={24} className={layout.statusIconVerified} />
                   )}
                 </span>
               </span>
             )}
           </div>
 
-          <Divider className={styles.sectionDivider} />
+          <Divider className={layout.sectionDivider} />
 
           {/* 账号：普通展示，非表单控件 */}
-          <h3 className={styles.sectionTitle}>账号</h3>
-          <Descriptions column={2} layout="vertical" size="small" className={styles.descriptions}>
+          <h3 className={layout.sectionTitle}>账号</h3>
+          <Descriptions column={2} layout="vertical" size="small" className={layout.descriptions}>
             <Descriptions.Item label="用户名">{user?.userInfo?.username ?? '-'}</Descriptions.Item>
             <Descriptions.Item label="学工号">
               {user?.userInfo?.campusNo === 'PENDING' ? '-' : (user?.userInfo?.campusNo ?? '-')}
@@ -432,13 +433,13 @@ const Account: React.FC = () => {
             <Descriptions.Item label="手机号">{user?.userInfo?.mobile ?? '-'}</Descriptions.Item>
           </Descriptions>
 
-          <Divider className={styles.sectionDivider} />
+          <Divider className={layout.sectionDivider} />
 
           {/* 基本档案：编辑资料在第三栏 */}
           {fieldConfig.showProfileSection && (
-            <div className={styles.profileSection}>
-              <div className={styles.sectionHeader}>
-                <h3 className={styles.sectionTitle}>基本档案</h3>
+            <div className={layout.profileSection}>
+              <div className={layout.sectionHeader}>
+                <h3 className={layout.sectionTitle}>基本档案</h3>
                 {!editMode ? (
                   <Button
                     type="primary"
@@ -450,8 +451,8 @@ const Account: React.FC = () => {
                 ) : null}
               </div>
               {editMode ? (
-                <Form form={form} layout="vertical" className={styles.profileForm}>
-                  <div className={styles.formFieldsGrid}>
+                <Form form={form} layout="vertical" className={layout.profileForm}>
+                  <div className={layout.formFieldsGrid}>
                     {visibleFields.map((field) => {
                       const lockedByServer = readonlyFieldSet.has(field.key);
                       if (lockedByServer) {
@@ -471,7 +472,7 @@ const Account: React.FC = () => {
                         }
                         return (
                           <Form.Item key={field.key} name={field.key} label={field.label}>
-                            <Input disabled readOnly className={styles.editableInput} />
+                            <Input disabled readOnly className={layout.editableInput} />
                           </Form.Item>
                         );
                       }
@@ -480,13 +481,13 @@ const Account: React.FC = () => {
                           {field.type === 'input' ? (
                             <Input
                               placeholder={field.placeholder}
-                              className={styles.editableInput}
+                              className={layout.editableInput}
                             />
                           ) : (
                             <Select
                               placeholder={field.placeholder}
                               allowClear
-                              className={styles.editableInput}
+                              className={layout.editableInput}
                             >
                               {field.optionsKey ? optionsMap[field.optionsKey] : null}
                             </Select>
@@ -495,12 +496,12 @@ const Account: React.FC = () => {
                       );
                     })}
                   </div>
-                  <div className={styles.formActions}>
-                    <Form.Item className={styles.submitItem}>
+                  <div className={layout.formActions}>
+                    <Form.Item className={layout.submitItem}>
                       <Button type="primary" onClick={handleSaveProfile} loading={saving}>
                         保存
                       </Button>
-                      <Button onClick={handleCancelEdit} className={styles.cancelBtn}>
+                      <Button onClick={handleCancelEdit} className={layout.cancelBtn}>
                         取消
                       </Button>
                     </Form.Item>
@@ -511,7 +512,7 @@ const Account: React.FC = () => {
                   column={2}
                   layout="vertical"
                   size="small"
-                  className={styles.descriptions}
+                  className={layout.descriptions}
                 >
                   {visibleFields.map((field) => (
                     <Descriptions.Item key={field.key} label={field.label}>
@@ -546,7 +547,7 @@ const Account: React.FC = () => {
         width={480}
       >
         <Radio.Group
-          className={styles.verifyModeRadio}
+          className={layout.verifyModeRadio}
           value={verifyMode}
           onChange={(e) => {
             setVerifyMode(e.target.value as VerifyModalMode);
@@ -564,10 +565,10 @@ const Account: React.FC = () => {
             <Alert
               type="info"
               showIcon
-              className={styles.verifyModeAlert}
+              className={layout.verifyModeAlert}
               description={<span>请输入完整邮箱地址，系统将发送包含验证链接的邮件。</span>}
             />
-            <Form form={verifyForm} layout="vertical" className={styles.verifyForm}>
+            <Form form={verifyForm} layout="vertical" className={layout.verifyForm}>
               <Form.Item
                 label="邮箱"
                 name="email"
@@ -577,7 +578,7 @@ const Account: React.FC = () => {
                 ]}
               >
                 <Input
-                  prefix={<RiMailLine size={18} className={styles.verifyEmailIcon} />}
+                  prefix={<RiMailLine size={18} className={layout.verifyEmailIcon} />}
                   placeholder="请输入完整邮箱地址"
                   allowClear
                 />
@@ -589,21 +590,21 @@ const Account: React.FC = () => {
             <Alert
               type="info"
               showIcon
-              className={styles.verifyModeAlert}
+              className={layout.verifyModeAlert}
               description={
                 <span>
                   使用复旦大学统一身份认证（UIS）账号与密码发起认证，请按后续提示完成验证。
                 </span>
               }
             />
-            <Form form={verifyForm} layout="vertical" className={styles.verifyForm}>
+            <Form form={verifyForm} layout="vertical" className={layout.verifyForm}>
               <Form.Item
                 label="UIS 账号"
                 name="uisAccount"
                 rules={[{ required: true, message: '请输入 UIS 账号' }]}
               >
                 <Input
-                  prefix={<RiShieldUserLine size={18} className={styles.verifyEmailIcon} />}
+                  prefix={<RiShieldUserLine size={18} className={layout.verifyEmailIcon} />}
                   placeholder="学工号或 UIS 账号"
                   allowClear
                   autoComplete="username"
@@ -635,7 +636,7 @@ const Account: React.FC = () => {
         centered
       >
         {uisOutcome != null && (
-          <div className={styles.uisOutcomeBody}>
+          <div className={layout.uisOutcomeBody}>
             {uisOutcome.requireAction ? (
               <>
                 {uisOutcome.actionPayload.trim() === '' ? (
@@ -645,15 +646,15 @@ const Account: React.FC = () => {
                     message="未返回二维码数据，请稍后重试或联系管理员"
                   />
                 ) : isLikelyQrImageSrc(uisOutcome.actionPayload) ? (
-                  <div className={styles.uisQrWrap}>
+                  <div className={layout.uisQrWrap}>
                     <img
                       src={uisOutcome.actionPayload.trim()}
                       alt="UIS 验证二维码"
-                      className={styles.uisQrImg}
+                      className={layout.uisQrImg}
                     />
                   </div>
                 ) : (
-                  <div className={styles.uisQrWrap}>
+                  <div className={layout.uisQrWrap}>
                     <QRCodeSVG
                       value={uisOutcome.actionPayload.trim()}
                       size={220}
@@ -665,7 +666,7 @@ const Account: React.FC = () => {
                 <Alert
                   type="info"
                   showIcon
-                  className={styles.uisOutcomeHint}
+                  className={layout.uisOutcomeHint}
                   message="请使用复旦大学 UIS 相关应用或微信等扫码完成验证。"
                 />
               </>
@@ -680,7 +681,7 @@ const Account: React.FC = () => {
               <Alert
                 type="info"
                 showIcon
-                className={styles.uisOutcomeHint}
+                className={layout.uisOutcomeHint}
                 message={uisOutcome.message}
               />
             )}

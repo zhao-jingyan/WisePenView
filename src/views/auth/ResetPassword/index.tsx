@@ -4,7 +4,8 @@ import { RiMailLine } from 'react-icons/ri';
 import { Link } from 'react-router-dom';
 import { useAuthService } from '@/contexts/ServicesContext';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import styles from './Auth.module.less';
+import auth from '../Auth.module.less';
+import page from './style.module.less';
 import type { ResetPasswordRequest } from '@/services/Auth';
 
 const ResetPassword: React.FC = () => {
@@ -27,7 +28,7 @@ const ResetPassword: React.FC = () => {
   };
 
   return (
-    <div className={styles.authContainer}>
+    <div className={`${auth.authContainer} ${page.pageRoot}`}>
       {contextHolder}
       <Typography.Title>找回密码</Typography.Title>
       <Alert
@@ -63,12 +64,12 @@ const ResetPassword: React.FC = () => {
             type="primary"
             size="large"
             htmlType="submit"
-            className={styles.submitButton}
+            className={auth.submitButton}
             loading={loading}
           >
             发送验证码
           </Button>
-          <div className={styles.centerLinks}>
+          <div className={auth.centerLinks}>
             <Typography.Text>
               <Link to="/login">返回登录</Link>
             </Typography.Text>

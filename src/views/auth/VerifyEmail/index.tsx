@@ -5,7 +5,8 @@ import { useUserService } from '@/contexts/ServicesContext';
 import { usePendingVerifyEmailStore } from '@/store';
 import type { ConfirmEmailVerifyRequest } from '@/services/User';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import styles from './Auth.module.less';
+import auth from '../Auth.module.less';
+import page from './style.module.less';
 
 const VerifyEmail: React.FC = () => {
   const userService = useUserService();
@@ -52,11 +53,11 @@ const VerifyEmail: React.FC = () => {
   };
 
   return (
-    <div className={styles.authContainer}>
+    <div className={`${auth.authContainer} ${page.pageRoot}`}>
       {contextHolder}
       <Typography.Title>邮箱验证</Typography.Title>
       <Alert
-        className={styles.bindAlert}
+        className={auth.bindAlert}
         description={
           displayEmail ? (
             <>
@@ -74,7 +75,7 @@ const VerifyEmail: React.FC = () => {
         <Button
           type="primary"
           size="large"
-          className={styles.submitButton}
+          className={auth.submitButton}
           loading={loading}
           onClick={onVerify}
           disabled={!token}
