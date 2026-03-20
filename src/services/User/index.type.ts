@@ -1,5 +1,6 @@
 import type { User } from '@/types/user';
 import type { DegreeLevel } from '@/constants/user';
+import type { UserVerificationMode } from '@/constants/user';
 
 /** UserService 接口：供依赖注入使用 */
 export interface IUserService {
@@ -89,7 +90,7 @@ export interface GetUserInfoResponseUserInfo {
   campusNo: string;
   email: string | null;
   mobile: string | null;
-  verificationMode: number | string | null;
+  verificationMode: UserVerificationMode | null;
   status: number;
 }
 

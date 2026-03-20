@@ -34,6 +34,7 @@ import type {
 } from '@/services/User';
 import {
   DEGREE_LEVEL_LABELS,
+  getVerificationModeLabel,
   getDegreeLevelLabel,
   getIdentityTypeLabel,
   getSexLabel,
@@ -435,6 +436,7 @@ const Account: React.FC = () => {
     .toUpperCase();
   const identityLabel =
     user?.userInfo?.identityType != null ? getIdentityTypeLabel(user.userInfo.identityType) : '';
+  const verifiedText = getVerificationModeLabel(user?.userInfo?.verificationMode ?? null);
   const optionsMap = {
     sex: Object.entries(SEX_LABELS).map(([value, label]) => (
       <Option key={value} value={Number(value)}>
@@ -515,7 +517,7 @@ const Account: React.FC = () => {
                     ? '未认证'
                     : user.userInfo.status === USER_STATUS.BANNED
                       ? '封禁'
-                      : '已认证'}
+                      : verifiedText}
                 </span>
                 <span
                   className={layout.statusIcon}
@@ -524,7 +526,7 @@ const Account: React.FC = () => {
                       ? '未认证'
                       : user.userInfo.status === USER_STATUS.BANNED
                         ? '封禁'
-                        : '已认证'
+                        : verifiedText
                   }
                 >
                   {user.userInfo.status === USER_STATUS.BANNED ? (

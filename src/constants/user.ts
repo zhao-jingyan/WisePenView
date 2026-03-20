@@ -42,6 +42,22 @@ export const USER_STATUS_LABELS: Record<number, string> = {
 };
 export const getStatusLabel = (v: number) => USER_STATUS_LABELS[v] ?? String(v);
 
+/** 认证方式（与后端 UserVerificationMode 对齐） */
+export const USER_VERIFICATION_MODE = {
+  EDU_EMAIL: 'EDU_EMAIL',
+  FDU_UIS_SYS: 'FDU_UIS_SYS',
+} as const;
+export type UserVerificationMode =
+  (typeof USER_VERIFICATION_MODE)[keyof typeof USER_VERIFICATION_MODE];
+export const USER_VERIFICATION_MODE_LABELS: Record<UserVerificationMode, string> = {
+  [USER_VERIFICATION_MODE.EDU_EMAIL]: '邮箱认证',
+  [USER_VERIFICATION_MODE.FDU_UIS_SYS]: 'UIS认证',
+};
+export const getVerificationModeLabel = (mode: UserVerificationMode | null | undefined): string => {
+  if (!mode) return '已认证';
+  return USER_VERIFICATION_MODE_LABELS[mode] ?? '已认证';
+};
+
 /** 学历层次（学生用） */
 export const DEGREE_LEVEL = {
   UNKNOWN: 0,
