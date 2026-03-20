@@ -33,8 +33,15 @@ const initiateUISVerify = async (): Promise<void> => {
   mockUisPollCount = 0;
 };
 
-/** 模拟：前两次未完成，第三次 completed 且需扫码 */
+/**
+ * 模拟：前两次未完成 → 第三次返回二维码但 completed 仍为 false（需继续轮询）
+ * → 第四次 completed 为 true 结束
+ */
 let mockUisPollCount = 0;
+
+/** 1×1 透明 PNG 的 base64，与线上一致：仅返回图片字符编码、无 data: 前缀 */
+const MOCK_UIS_QR_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
 const checkFudanUISVerify = async (): Promise<FudanUISVerifyStatusData> => {
   await delay(100);
@@ -47,11 +54,19 @@ const checkFudanUISVerify = async (): Promise<FudanUISVerifyStatusData> => {
       message: '',
     };
   }
+  if (mockUisPollCount === 3) {
+    return {
+      completed: false,
+      requireAction: true,
+      actionPayload: MOCK_UIS_QR_PNG_BASE64,
+      message: 'Mock：请扫码（未完成，将继续每 2 秒查询）',
+    };
+  }
   return {
     completed: true,
-    requireAction: true,
-    actionPayload: 'https://example.com/mock-uis-qr-payload',
-    message: 'Mock：请使用复旦 UIS 完成扫码',
+    requireAction: false,
+    actionPayload: '',
+    message: 'Mock：认证已完成',
   };
 };
 
@@ -59,12 +74,13 @@ const pollFudanUISVerifyUntilComplete: IUserService['pollFudanUISVerifyUntilComp
   options
 ) => {
   const intervalMs = options?.intervalMs ?? 2000;
-  const { signal } = options ?? {};
+  const { signal, onProgress } = options ?? {};
   for (;;) {
     if (signal?.aborted) {
       throw new DOMException('Aborted', 'AbortError');
     }
     const status = await checkFudanUISVerify();
+    onProgress?.(status);
     if (status.completed) {
       return status;
     }

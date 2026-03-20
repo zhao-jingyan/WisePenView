@@ -145,12 +145,12 @@ const pollFudanUISVerifyUntilComplete = async (
   options?: PollFudanUISVerifyOptions
 ): Promise<FudanUISVerifyStatusData> => {
   const intervalMs = options?.intervalMs ?? 2000;
-  const { signal } = options ?? {};
+  const { signal, onProgress } = options ?? {};
 
   for (;;) {
     throwIfAborted(signal);
     const status = await checkFudanUISVerify();
-    console.log(status);
+    onProgress?.(status);
     if (status.completed) {
       return status;
     }
