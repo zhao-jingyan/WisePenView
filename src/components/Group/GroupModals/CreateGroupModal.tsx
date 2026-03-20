@@ -2,14 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Button, Form, Input, Select, Upload, message } from 'antd';
 import type { UploadFile } from 'antd';
 import { LuUpload } from 'react-icons/lu';
-import { useGroupService, useUserService } from '@/contexts/ServicesContext';
+import { useGroupService, useImageService, useUserService } from '@/contexts/ServicesContext';
 import type { CreateGroupRequest } from '@/services/Group';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { beforeUploadImageWithinLimit } from '@/utils/image';
 import { GROUP_TYPE, GROUP_TYPE_LABELS, ALLOWED_GROUP_TYPES_MAP } from '@/constants/group';
 import type { CreateGroupModalProps } from './index.type';
 import styles from './style.module.less';
 
 const { TextArea } = Input;
 const { Option } = Select;
+
+type CreateGroupFormValues = Omit<CreateGroupRequest, 'groupCoverUrl'> & {
+  cover?: UploadFile[];
+};
+
+const fileFromCoverField = (fileList?: UploadFile[]): File | undefined => {
+  const item = fileList?.[0];
+  const raw = item?.originFileObj;
+  return raw instanceof File ? raw : undefined;
+};
 
 const groupTypeOptionsBase = Object.entries(GROUP_TYPE_LABELS).map(([value, label]) => ({
   value: Number(value),
@@ -18,8 +30,9 @@ const groupTypeOptionsBase = Object.entries(GROUP_TYPE_LABELS).map(([value, labe
 
 const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onSuccess }) => {
   const groupService = useGroupService();
+  const imageService = useImageService();
   const userService = useUserService();
-  const [form] = Form.useForm<CreateGroupRequest>();
+  const [form] = Form.useForm<CreateGroupFormValues>();
   const [submitting, setSubmitting] = useState(false);
   const [identityType, setIdentityType] = useState<number | undefined>();
 
@@ -42,13 +55,23 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onS
 
   const handleConfirm = async () => {
     try {
-      const values = (await form.validateFields()) as CreateGroupRequest;
+      const values = await form.validateFields();
       setSubmitting(true);
+      const coverFile = fileFromCoverField(values.cover);
+      let groupCoverUrl = '';
+      if (coverFile) {
+        const { publicUrl } = await imageService.uploadImage({
+          file: coverFile,
+          isPublic: true,
+          bizPath: 'groups',
+        });
+        groupCoverUrl = publicUrl;
+      }
       await groupService.createGroup({
         groupName: values.groupName,
         groupType: values.groupType,
         groupDesc: values.groupDesc,
-        groupCoverUrl: '',
+        groupCoverUrl,
       });
       message.success('创建成功');
       form.resetFields();
@@ -61,8 +84,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onS
         'errorFields' in err &&
         Array.isArray((err as { errorFields?: unknown }).errorFields);
       if (!isValidationError) {
-        const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg;
-        message.error(msg || '创建失败');
+        message.error(parseErrorMessage(err, '创建失败'));
       }
     } finally {
       setSubmitting(false);
@@ -114,15 +136,18 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onS
             ))}
           </Select>
         </Form.Item>
-        {/* TODO: 图床未实现，上传封面功能待实现 */}
-        {/* TODO: 图床未实现，groupCoverUrl 暂传空 */}
         <Form.Item
           label="封面图片"
           name="cover"
           valuePropName="fileList"
           getValueFromEvent={normalizeUpload}
         >
-          <Upload name="file" beforeUpload={() => false} accept="image/*" maxCount={1}>
+          <Upload
+            name="file"
+            beforeUpload={beforeUploadImageWithinLimit}
+            accept="image/*"
+            maxCount={1}
+          >
             <Button icon={<LuUpload />}>点击上传</Button>
           </Upload>
         </Form.Item>

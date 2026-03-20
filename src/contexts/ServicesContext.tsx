@@ -30,6 +30,7 @@ import React, { createContext, useContext } from 'react';
 import type { IAuthService } from '@/services/Auth';
 import type { IFolderService } from '@/services/Folder';
 import type { IGroupService } from '@/services/Group';
+import type { IImageService } from '@/services/Image';
 import type { INoteService } from '@/services/Note';
 import type { IQuotaService } from '@/services/Quota';
 import type { IResourceService } from '@/services/Resource';
@@ -40,6 +41,7 @@ import type { IUserService } from '@/services/User';
 import { AuthServicesImpl } from '@/services/Auth/AuthServices.impl';
 import { FolderServicesImpl } from '@/services/Folder/FolderServices.impl';
 import { GroupServicesImpl } from '@/services/Group/GroupServices.impl';
+import { ImageServicesImpl } from '@/services/Image/ImageServices.impl';
 import { NoteServicesImpl } from '@/services/Note/NoteServices.impl';
 import { QuotaServicesImpl } from '@/services/Quota/QuotaServices.impl';
 import { ResourceServicesImpl } from '@/services/Resource/ResourceServices.impl';
@@ -50,6 +52,7 @@ import { UserServicesImpl } from '@/services/User/UserServices.impl';
 import { AuthServicesMock } from '@/mocks/Auth/AuthServices.mock';
 import { FolderServicesMock } from '@/mocks/Folder/FolderServices.mock';
 import { GroupServicesMock } from '@/mocks/Group/GroupServices.mock';
+import { ImageServicesMock } from '@/mocks/Image/ImageServices.mock';
 import { NoteServicesMock } from '@/mocks/Note/NoteServices.mock';
 import { QuotaServicesMock } from '@/mocks/Quota/QuotaServices.mock';
 import { ResourceServicesMock } from '@/mocks/Resource/ResourceServices.mock';
@@ -62,6 +65,7 @@ export interface ServicesContextValue {
   auth: IAuthService;
   folder: IFolderService;
   group: IGroupService;
+  image: IImageService;
   note: INoteService;
   quota: IQuotaService;
   resource: IResourceService;
@@ -74,6 +78,7 @@ const servicesValue: ServicesContextValue = {
   auth: AuthServicesImpl,
   folder: FolderServicesImpl,
   group: GroupServicesImpl,
+  image: ImageServicesImpl,
   note: NoteServicesImpl,
   quota: QuotaServicesImpl,
   resource: ResourceServicesImpl,
@@ -86,6 +91,7 @@ const mockServicesValue: ServicesContextValue = {
   auth: AuthServicesMock,
   folder: FolderServicesMock,
   group: GroupServicesMock,
+  image: ImageServicesMock,
   note: NoteServicesMock,
   quota: QuotaServicesMock,
   resource: ResourceServicesMock,
@@ -97,6 +103,7 @@ const mockServicesValue: ServicesContextValue = {
 export const useAuthService = (): IAuthService => useServicesContext().auth;
 export const useFolderService = (): IFolderService => useServicesContext().folder;
 export const useGroupService = (): IGroupService => useServicesContext().group;
+export const useImageService = (): IImageService => useServicesContext().image;
 export const useNoteService = (): INoteService => useServicesContext().note;
 export const useQuotaService = (): IQuotaService => useServicesContext().quota;
 export const useResourceService = (): IResourceService => useServicesContext().resource;

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Input, Upload, message } from 'antd';
 import type { UploadFile } from 'antd';
 import { LuUpload } from 'react-icons/lu';
-import { useGroupService } from '@/contexts/ServicesContext';
+import { useGroupService, useImageService } from '@/contexts/ServicesContext';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { beforeUploadImageWithinLimit } from '@/utils/image';
 import type { EditGroupRequest } from '@/services/Group';
 import { GROUP_TYPE } from '@/constants/group';
 import type { EditGroupInfoModalProps } from './index.type';
@@ -13,6 +15,12 @@ const { TextArea } = Input;
 /** 编辑小组表单值（含封面上传） */
 type EditGroupFormValues = Pick<EditGroupRequest, 'groupName' | 'groupDesc'> & {
   cover?: UploadFile[];
+};
+
+const fileFromCoverField = (fileList?: UploadFile[]): File | undefined => {
+  const item = fileList?.[0];
+  const raw = item?.originFileObj;
+  return raw instanceof File ? raw : undefined;
 };
 
 const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
@@ -26,8 +34,12 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
   onSuccess,
 }) => {
   const groupService = useGroupService();
+  const imageService = useImageService();
   const [form] = Form.useForm<EditGroupFormValues>();
   const [loading, setLoading] = useState(false);
+
+  const normalizeUpload = (e: { fileList?: UploadFile[] } | UploadFile[]) =>
+    Array.isArray(e) ? e : (e?.fileList ?? []);
 
   useEffect(() => {
     if (open) {
@@ -43,11 +55,21 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
     try {
       const formValues = (await form.validateFields()) as EditGroupFormValues;
       setLoading(true);
+      const newFile = fileFromCoverField(formValues.cover);
+      let groupCoverUrl = cover ?? '';
+      if (newFile) {
+        const { publicUrl } = await imageService.uploadImage({
+          file: newFile,
+          isPublic: true,
+          bizPath: `groups/${groupId}`,
+        });
+        groupCoverUrl = publicUrl;
+      }
       const params: EditGroupRequest = {
         groupId,
         groupName: formValues.groupName,
         groupDesc: formValues.groupDesc,
-        groupCoverUrl: cover ?? '',
+        groupCoverUrl,
         groupType,
       };
       await groupService.editGroup(params);
@@ -55,9 +77,8 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
       form.resetFields();
       onSuccess?.();
       onCancel();
-    } catch (error) {
-      console.error('编辑小组信息失败:', error);
-      message.error('编辑小组信息失败，请重试');
+    } catch (error: unknown) {
+      message.error(parseErrorMessage(error, '编辑小组信息失败，请重试'));
     } finally {
       setLoading(false);
     }
@@ -90,9 +111,18 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
         <Form.Item label="小组描述" name="groupDesc">
           <TextArea rows={4} placeholder="请输入小组描述（可选）" />
         </Form.Item>
-        {/* TODO: 图床未实现，上传封面功能待实现 */}
-        <Form.Item label="封面图片" name="cover">
-          <Upload name="file" beforeUpload={() => false} accept="image/*" maxCount={1}>
+        <Form.Item
+          label="封面图片"
+          name="cover"
+          valuePropName="fileList"
+          getValueFromEvent={normalizeUpload}
+        >
+          <Upload
+            name="file"
+            beforeUpload={beforeUploadImageWithinLimit}
+            accept="image/*"
+            maxCount={1}
+          >
             <Button icon={<LuUpload />}>点击上传</Button>
           </Upload>
         </Form.Item>
