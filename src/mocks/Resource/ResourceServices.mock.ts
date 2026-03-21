@@ -1,5 +1,5 @@
 import type { IResourceService, RenameResourceRequest } from '@/services/Resource';
-import type { ResourceListPage } from '@/types/resource';
+import type { ResourceListPage } from '@/services/Resource/index.type';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

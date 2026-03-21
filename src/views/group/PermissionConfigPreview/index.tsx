@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Tag } from 'antd';
 import type { GroupMember } from '@/types/group';
-import { ROLE_LABEL } from '@/types/group';
+import { ROLE_LABEL } from '@/constants/group';
 import { getGroupTypeLabel } from '@/constants/group';
 import PermissionConfigs, {
   PERMISSION_CONFIG_ENTRIES,

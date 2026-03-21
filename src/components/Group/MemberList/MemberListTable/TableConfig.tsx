@@ -4,7 +4,7 @@ import type { TableColumnsType } from 'antd';
 import type { GroupMember } from '@/types/group';
 import type { PermissionConfig } from '../PermissionConfig';
 import QuotaBar from '@/components/Common/QuotaBar';
-import { ROLE_REVERSE_MAP, ROLE_LABEL } from '@/types/group';
+import { ROLE_REVERSE_MAP, ROLE_LABEL } from '@/constants/group';
 
 type MemberRecord = GroupMember & { key: React.Key };
 

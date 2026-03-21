@@ -3,6 +3,7 @@ export type {
   GetGroupResourceRequest,
   GetUserResourcesRequest,
   RenameResourceRequest,
+  ResourceListPage,
   UpdateResourcePathRequest,
   UpdateResourceTagsRequest,
   TagQueryLogicMode,

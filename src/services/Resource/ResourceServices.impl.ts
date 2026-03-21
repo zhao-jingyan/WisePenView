@@ -1,4 +1,4 @@
-import type { ResourceListPage } from '@/types/resource';
+import type { ResourceListPage } from './index.type';
 import type {
   GetGroupResourceRequest,
   GetUserResourcesRequest,

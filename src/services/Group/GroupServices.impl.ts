@@ -1,11 +1,13 @@
 import Axios from '@/utils/Axios';
 import { checkResponse } from '@/utils/response';
 import { toIdString } from '@/utils/number';
-import { API_MY_ROLE_MAP, type Group, type GroupMember, type MemberListPage } from '@/types/group';
+import { API_MY_ROLE_MAP } from '@/constants/group';
+import type { Group, GroupMember } from '@/types/group';
 import type { ApiResponse } from '@/types/api';
 import type {
   FetchGroupListRequest,
   FetchGroupListResponse,
+  FetchGroupMembersResponse,
   CreateGroupRequest,
   EditGroupRequest,
   DeleteGroupRequest,
@@ -74,7 +76,7 @@ const fetchGroupMembers = async (
 ): Promise<{ members: GroupMember[]; total: number }> => {
   const res = (await Axios.get('/group/member/list', {
     params: { groupId, page, size },
-  })) as ApiResponse<MemberListPage>;
+  })) as ApiResponse<FetchGroupMembersResponse>;
   checkResponse(res);
   const data = res.data;
   const list = (data?.list ?? []) as unknown as MemberRaw[];

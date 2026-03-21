@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { List, Avatar } from 'antd';
 import type { GroupMember } from '@/types/group';
 import type { SelectedMemberListProps } from './index.type';
-import { ROLE_REVERSE_MAP } from '@/types/group';
+import { ROLE_REVERSE_MAP } from '@/constants/group';
 import styles from './style.module.less';
 
 const SelectedMemberList: React.FC<SelectedMemberListProps> = ({ members }) => {

@@ -3,7 +3,16 @@
  * 与 resource.openapi.json 对齐
  */
 
-import type { ResourceListPage } from '@/types/resource';
+import type { ResourceItem } from '@/types/resource';
+
+/** 资源列表分页（与 OpenAPI PageResultResourceItemResponse 一致） */
+export interface ResourceListPage {
+  list: ResourceItem[];
+  total: number;
+  page: number;
+  size: number;
+  totalPage: number;
+}
 
 /** ResourceService 接口：供依赖注入使用 */
 export interface IResourceService {

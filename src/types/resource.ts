@@ -16,12 +16,3 @@ export interface ResourceItem {
   /** 当前标签 ID 或名称列表，与接口返回一致 */
   currentTags?: string[];
 }
-
-/** 资源列表分页（与 OpenAPI PageResultResourceItemResponse 一致） */
-export interface ResourceListPage {
-  list: ResourceItem[];
-  total: number;
-  page: number;
-  size: number;
-  totalPage: number;
-}

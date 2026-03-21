@@ -4,7 +4,7 @@ import { useGroupService } from '@/contexts/ServicesContext';
 import type { UpdateMemberRoleRequest } from '@/services/Group';
 import { useMemberEditGuard } from './useMemberEditGuard';
 import type { EditPermissionModalProps } from './index.type';
-import { ROLE_MAP } from '@/types/group';
+import { ROLE_MAP } from '@/constants/group';
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
 import styles from './style.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';

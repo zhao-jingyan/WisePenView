@@ -25,6 +25,15 @@ export interface FetchGroupListResponse {
   list: Group[];
 }
 
+/** GET /group/member/list 原始响应（与 OpenAPI 一致）；与 FetchGroupListResponse 同为 wire 形状 */
+export interface FetchGroupMembersResponse {
+  total: number;
+  page: number;
+  size: number;
+  totalPage: number;
+  list: GroupMember[];
+}
+
 /** 获取小组列表请求参数 */
 export interface FetchGroupListRequest {
   relationType: 0 | 1;

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ROLE_REVERSE_MAP } from '@/types/group';
+import { ROLE_REVERSE_MAP } from '@/constants/group';
 import { canEditSelectedMembers, canEditSelectedMembersForQuota } from '../PermissionConfig';
 import type { EditableRole, EditableRoleForQuota } from '../PermissionConfig';
 
