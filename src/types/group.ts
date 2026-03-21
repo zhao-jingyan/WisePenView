@@ -1,13 +1,22 @@
-/** 后端 /group/member/list 返回的成员项结构（与 OpenAPI 一致）；userId 用 string 避免大数精度丢失 */
+import type { GroupMemberRole } from '@/constants/group';
+
+/** 成员列表领域模型（由 OpenAPI GroupMemberDetailResponse 映射）；userId 对应接口 memberId，避免大数精度丢失 */
 export interface GroupMember {
   userId: string;
   realname: string;
   nickname: string;
-  role: number;
+  /** 组内角色（由接口数字角色码经 mapRoleCodeToGroupMemberRole 映射） */
+  role: GroupMemberRole;
   joinTime: string;
   avatar: string;
   limit?: number;
   used?: number;
+}
+
+/** 成员列表分页（领域层，由 GET /group/member/list 的 data 映射） */
+export interface GroupMemberList {
+  members: GroupMember[];
+  total: number;
 }
 
 /** OpenAPI UserDisplayBase，创建者/成员展示信息 */

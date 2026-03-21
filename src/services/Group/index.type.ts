@@ -1,4 +1,4 @@
-import type { Group, GroupMember } from '@/types/group';
+import type { Group, GroupMemberList } from '@/types/group';
 
 /** GroupService 接口：供依赖注入使用 */
 export interface IGroupService {
@@ -7,11 +7,7 @@ export interface IGroupService {
   createGroup(params: CreateGroupRequest): Promise<void>;
   editGroup(params: EditGroupRequest): Promise<void>;
   deleteGroup(params: DeleteGroupRequest): Promise<void>;
-  fetchGroupMembers(
-    groupId: string | number,
-    page: number,
-    size: number
-  ): Promise<{ members: GroupMember[]; total: number }>;
+  fetchGroupMembers(groupId: string | number, page: number, size: number): Promise<GroupMemberList>;
   fetchMyRoleInGroup(groupId: string): Promise<'OWNER' | 'ADMIN' | 'MEMBER'>;
   joinGroup(params: JoinGroupRequest): Promise<void>;
   quitGroup(params: QuitGroupRequest): Promise<void>;
@@ -25,13 +21,30 @@ export interface FetchGroupListResponse {
   list: Group[];
 }
 
-/** GET /group/member/list 原始响应（与 OpenAPI 一致）；与 FetchGroupListResponse 同为 wire 形状 */
+export interface GroupMemberBaseInfo {
+  nickname: string;
+  realName: string | null;
+  avatar: string | null;
+  identityType: number;
+}
+
+export interface GroupMemberRawResponse {
+  role: number;
+  joinTime: string;
+  tokenLimit: number;
+  tokenUsed: number;
+  groupId: string;
+  memberId: string;
+  memberInfo: GroupMemberBaseInfo;
+}
+
+/** GET /group/member/list 的 data */
 export interface FetchGroupMembersResponse {
-  total: number;
+  total: string;
   page: number;
   size: number;
   totalPage: number;
-  list: GroupMember[];
+  list: GroupMemberRawResponse[];
 }
 
 /** 获取小组列表请求参数 */

@@ -13,15 +13,18 @@ export const RELATION_TYPE_MAP: Record<string, 0 | 1> = {
   joined: 1,
 };
 
-/** 小组成员角色（与 OpenAPI 角色码 1/2/3 对齐） */
-export const ROLE_MAP: Record<string, number> = { OWNER: 1, ADMIN: 2, MEMBER: 3 };
-export const ROLE_REVERSE_MAP: Record<number, string> = { 1: 'OWNER', 2: 'ADMIN', 3: 'MEMBER' };
+/** 小组成员角色码：0=OWNER，1=ADMIN，2=MEMBER（与后端约定一致） */
+export const ROLE_MAP: Record<string, number> = { OWNER: 0, ADMIN: 1, MEMBER: 2 };
+export const ROLE_REVERSE_MAP: Record<number, string> = { 0: 'OWNER', 1: 'ADMIN', 2: 'MEMBER' };
 
-/** /group/member/my-role 接口专用：该接口返回的角色码为 0-OWNER, 1-ADMIN, 2-MEMBER，与 ROLE_MAP/ROLE_REVERSE_MAP(1/2/3) 不同 */
-export const API_MY_ROLE_MAP: Record<number, 'OWNER' | 'ADMIN' | 'MEMBER'> = {
-  0: 'OWNER',
-  1: 'ADMIN',
-  2: 'MEMBER',
+/** 组内成员角色字符串（领域模型 GroupMember.role） */
+export type GroupMemberRole = 'OWNER' | 'ADMIN' | 'MEMBER';
+
+/** 接口数字角色码 → 领域角色 */
+export const mapRoleCodeToGroupMemberRole = (code: number): GroupMemberRole => {
+  const key = ROLE_REVERSE_MAP[code];
+  if (key === 'OWNER' || key === 'ADMIN' || key === 'MEMBER') return key;
+  return 'MEMBER';
 };
 
 /** 角色文案（供 TableConfig 等复用） */

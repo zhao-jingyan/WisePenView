@@ -35,7 +35,7 @@ const EditPermissionModal: React.FC<EditPermissionModalProps> = ({
   const handleConfirm = async () => {
     try {
       setLoading(true);
-      const role = ROLE_MAP[selectedPermission] ?? 3;
+      const role = ROLE_MAP[selectedPermission] ?? ROLE_MAP['MEMBER'];
       const params: UpdateMemberRoleRequest = {
         groupId,
         targetUserIds: memberIds,

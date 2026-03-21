@@ -1,8 +1,8 @@
 import Axios from '@/utils/Axios';
 import { checkResponse } from '@/utils/response';
 import { toIdString } from '@/utils/number';
-import { API_MY_ROLE_MAP } from '@/constants/group';
-import type { Group, GroupMember } from '@/types/group';
+import { mapRoleCodeToGroupMemberRole } from '@/constants/group';
+import type { Group, GroupMemberList } from '@/types/group';
 import type { ApiResponse } from '@/types/api';
 import type {
   FetchGroupListRequest,
@@ -17,6 +17,7 @@ import type {
   KickMembersRequest,
 } from './index.type';
 import type { IGroupService } from './index.type';
+import { mapGroupMemberRawResponse } from './groupMember.mapper';
 
 type GroupRaw = { groupId?: string | number } & Record<string, unknown>;
 
@@ -63,26 +64,22 @@ const deleteGroup = async (params: DeleteGroupRequest) => {
   checkResponse(res);
 };
 
-type MemberRaw = { userId?: string | number } & Record<string, unknown>;
-
-/** 将接口返回的成员项 userId 归一化为 string */
-const normalizeMember = (m: MemberRaw): GroupMember =>
-  ({ ...m, userId: toIdString(m.userId) }) as GroupMember;
-
 const fetchGroupMembers = async (
   groupId: string | number,
   page: number,
   size: number
-): Promise<{ members: GroupMember[]; total: number }> => {
+): Promise<GroupMemberList> => {
   const res = (await Axios.get('/group/member/list', {
     params: { groupId, page, size },
   })) as ApiResponse<FetchGroupMembersResponse>;
   checkResponse(res);
+  if (!res.data) {
+    return { members: [], total: 0 };
+  }
   const data = res.data;
-  const list = (data?.list ?? []) as unknown as MemberRaw[];
   return {
-    members: list.map(normalizeMember),
-    total: data?.total ?? 0,
+    members: (data.list ?? []).map(mapGroupMemberRawResponse),
+    total: Number(data.total) || 0,
   };
 };
 
@@ -93,7 +90,7 @@ const fetchMyRoleInGroup = async (groupId: string): Promise<'OWNER' | 'ADMIN' | 
   checkResponse(res);
   const roleNum = typeof res.data === 'number' ? res.data : res.data?.role;
   if (roleNum == null || roleNum < 0) throw new Error('获取角色失败');
-  return API_MY_ROLE_MAP[roleNum] ?? 'MEMBER';
+  return mapRoleCodeToGroupMemberRole(roleNum);
 };
 
 const joinGroup = async (params: JoinGroupRequest) => {

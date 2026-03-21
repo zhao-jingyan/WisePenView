@@ -2,7 +2,7 @@
 // 设计：OWNER 全部权限，ADMIN 可修改 MEMBER 的配额、可踢出 MEMBER，MEMBER 无编辑权限
 // 注意：组长(OWNER)的权限修改和删除不被允许；配额单独用 editableRolesForQuota，组长可修改自己的配额
 
-import { ROLE_REVERSE_MAP } from '@/constants/group';
+import type { GroupMemberRole } from '@/constants/group';
 import { GROUP_TYPE } from '@/constants/group';
 
 export type EditableRole = 'ADMIN' | 'MEMBER';
@@ -169,27 +169,25 @@ export const getPermissionConfig = (groupType: string, userRole: string): Permis
 
 /** 检查选中的成员是否均可被当前用户编辑（基于 editableRoles，OWNER 永远不可编辑，用于权限/删除） */
 export const canEditSelectedMembers = (
-  members: { role?: number }[],
+  members: { role?: GroupMemberRole }[],
   editableRoles: readonly EditableRole[]
 ): boolean => {
   if (editableRoles.length === 0) return false;
   return members.every((m) => {
     if (m.role == null) return false;
-    const roleStr = ROLE_REVERSE_MAP[m.role];
-    return roleStr !== 'OWNER' && editableRoles.includes(roleStr as EditableRole);
+    return m.role !== 'OWNER' && editableRoles.includes(m.role as EditableRole);
   });
 };
 
 /** 检查选中的成员是否均可被当前用户分配配额（基于 editableRolesForQuota，组长可含自己） */
 export const canEditSelectedMembersForQuota = (
-  members: { role?: number }[],
+  members: { role?: GroupMemberRole }[],
   editableRolesForQuota: readonly EditableRoleForQuota[]
 ): boolean => {
   if (editableRolesForQuota.length === 0) return false;
   return members.every((m) => {
     if (m.role == null) return false;
-    const roleStr = ROLE_REVERSE_MAP[m.role] as EditableRoleForQuota;
-    return editableRolesForQuota.includes(roleStr);
+    return editableRolesForQuota.includes(m.role as EditableRoleForQuota);
   });
 };
 

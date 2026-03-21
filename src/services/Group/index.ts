@@ -2,7 +2,8 @@ export type { IGroupService } from './index.type';
 export type {
   FetchGroupListRequest,
   FetchGroupListResponse,
-  FetchGroupMembersResponse,
+  GroupMemberBaseInfo,
+  GroupMemberRawResponse,
   CreateGroupRequest,
   EditGroupRequest,
   DeleteGroupRequest,
@@ -11,3 +12,4 @@ export type {
   UpdateMemberRoleRequest,
   KickMembersRequest,
 } from './index.type';
+export { mapGroupMemberRawResponse } from './groupMember.mapper';

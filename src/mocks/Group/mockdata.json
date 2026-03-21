@@ -44,7 +44,7 @@
       "userId": "1",
       "realname": "张三",
       "nickname": "Mock User",
-      "role": 1,
+      "role": "OWNER",
       "joinTime": "2024-01-01T00:00:00.000Z",
       "avatar": "",
       "limit": 1000,

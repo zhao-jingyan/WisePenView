@@ -2,15 +2,14 @@ import React, { useMemo } from 'react';
 import { List, Avatar } from 'antd';
 import type { GroupMember } from '@/types/group';
 import type { SelectedMemberListProps } from './index.type';
-import { ROLE_REVERSE_MAP } from '@/constants/group';
+import { ROLE_LABEL } from '@/constants/group';
 import styles from './style.module.less';
 
 const SelectedMemberList: React.FC<SelectedMemberListProps> = ({ members }) => {
   const formatDescription = (member: GroupMember) => {
     const parts = [];
     if (member.nickname) parts.push(member.nickname);
-    const roleStr = member.role != null ? ROLE_REVERSE_MAP[member.role] : undefined;
-    if (roleStr) parts.push(roleStr);
+    if (member.role) parts.push(ROLE_LABEL[member.role] ?? member.role);
     return parts.join(' ') || undefined;
   };
 

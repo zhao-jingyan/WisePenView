@@ -4,13 +4,13 @@ import type { TableColumnsType } from 'antd';
 import type { GroupMember } from '@/types/group';
 import type { PermissionConfig } from '../PermissionConfig';
 import QuotaBar from '@/components/Common/QuotaBar';
-import { ROLE_REVERSE_MAP, ROLE_LABEL } from '@/constants/group';
+import type { GroupMemberRole } from '@/constants/group';
+import { ROLE_LABEL, ROLE_MAP } from '@/constants/group';
 
 type MemberRecord = GroupMember & { key: React.Key };
 
-const getBadgeColor = (role: number): string => {
-  const roleStr = ROLE_REVERSE_MAP[role];
-  switch (roleStr) {
+const getBadgeColor = (role: GroupMemberRole): string => {
+  switch (role) {
     case 'OWNER':
       return 'gold';
     case 'ADMIN':
@@ -33,7 +33,9 @@ export const getColumns = (
       dataIndex: 'role',
       width: 64,
       align: 'center',
-      render: (role: number) => <Badge color={getBadgeColor(role)} className={styles.badgeItem} />,
+      render: (role: GroupMemberRole) => (
+        <Badge color={getBadgeColor(role)} className={styles.badgeItem} />
+      ),
     },
     {
       key: 'avatar',
@@ -41,9 +43,7 @@ export const getColumns = (
       dataIndex: 'avatar',
       width: 80,
       render: (avatar: string, record: MemberRecord) => (
-        <Avatar src={avatar} alt={record.nickname || record.realname || '成员'}>
-          {(record.nickname || record.realname || '?').charAt(0).toUpperCase()}
-        </Avatar>
+        <Avatar src={avatar} alt={record.nickname || record.realname || '?'} />
       ),
     },
     {
@@ -67,15 +67,10 @@ export const getColumns = (
       title: '角色',
       dataIndex: 'role',
       width: 120,
-      render: (role: number) => {
-        const roleStr = ROLE_REVERSE_MAP[role];
-        return (
-          <span className={styles.roleItem}>
-            {roleStr ? (ROLE_LABEL[roleStr] ?? roleStr) : String(role)}
-          </span>
-        );
-      },
-      sorter: (a, b) => a.role - b.role,
+      render: (role: GroupMemberRole) => (
+        <span className={styles.roleItem}>{ROLE_LABEL[role] ?? role}</span>
+      ),
+      sorter: (a, b) => (ROLE_MAP[a.role] ?? 0) - (ROLE_MAP[b.role] ?? 0),
     },
     {
       key: 'joinTime',

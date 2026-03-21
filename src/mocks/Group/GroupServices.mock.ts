@@ -1,5 +1,5 @@
 import type { IGroupService } from '@/services/Group';
-import type { Group, GroupMember } from '@/types/group';
+import type { Group, GroupMember, GroupMemberList } from '@/types/group';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -35,7 +35,7 @@ const fetchGroupMembers = async (
   _groupId: string | number,
   _page: number,
   _size: number
-): Promise<{ members: GroupMember[]; total: number }> => {
+): Promise<GroupMemberList> => {
   await delay(200);
   return { members, total: members.length };
 };

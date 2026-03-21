@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ROLE_REVERSE_MAP } from '@/constants/group';
+import type { GroupMemberRole } from '@/constants/group';
 import { canEditSelectedMembers, canEditSelectedMembersForQuota } from '../PermissionConfig';
 import type { EditableRole, EditableRoleForQuota } from '../PermissionConfig';
 
@@ -15,14 +15,14 @@ interface UseMemberEditGuardOptions {
  * @returns memberContainsOwner, canEdit, confirmDisabled
  */
 export function useMemberEditGuard(
-  members: { role?: number }[],
+  members: { role?: GroupMemberRole }[],
   editableRoles: readonly (EditableRole | EditableRoleForQuota)[],
   options: UseMemberEditGuardOptions = {}
 ): { memberContainsOwner: boolean; canEdit: boolean; confirmDisabled: boolean } {
   const { checkOwner = true, forQuota = false } = options;
 
   return useMemo(() => {
-    const memberContainsOwner = members.some((m) => ROLE_REVERSE_MAP[m.role ?? 0] === 'OWNER');
+    const memberContainsOwner = members.some((m) => m.role === 'OWNER');
     const canEdit = forQuota
       ? canEditSelectedMembersForQuota(members, editableRoles as readonly EditableRoleForQuota[])
       : canEditSelectedMembers(members, editableRoles as readonly EditableRole[]);
