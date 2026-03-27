@@ -9,8 +9,10 @@
 export {
   useDrivePreferencesStore,
   usePendingVerifyEmailStore,
+  usePdfPreviewProgressStore,
   useRecentFilesStore,
   type DriveViewMode,
+  type PdfPreviewProgress,
   type RecentFileItem,
 } from './zustand';
 

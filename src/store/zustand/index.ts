@@ -4,4 +4,5 @@
 
 export { useDrivePreferencesStore, type DriveViewMode } from './useDrivePreferencesStore';
 export { usePendingVerifyEmailStore } from './usePendingVerifyEmailStore';
+export { usePdfPreviewProgressStore, type PdfPreviewProgress } from './usePdfPreviewProgressStore';
 export { useRecentFilesStore, type RecentFileItem } from './useRecentFilesStore';

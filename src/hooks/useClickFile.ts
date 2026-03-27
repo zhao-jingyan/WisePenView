@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ResourceItem } from '@/types/resource';
-import { useRecentFilesStore } from '@/store';
+import { usePdfPreviewProgressStore, useRecentFilesStore } from '@/store';
 
 /**
  * 根据资源类型：NOTE 跳转笔记编辑器，其他类型跳转站内 PDF 预览（/app/pdf/:resourceId）
@@ -23,7 +23,15 @@ export const useClickFile = () => {
       if (resourceType === 'NOTE') {
         navigate(`/app/note/${resourceId}`);
       } else {
-        navigate(`/app/pdf/${encodeURIComponent(resourceId)}`);
+        // 尝试恢复上次的阅读状态
+        const progress = usePdfPreviewProgressStore.getState().progressByResourceId[resourceId];
+        const qs = new URLSearchParams();
+        if (progress != null) {
+          qs.set('page', String(progress.page));
+          qs.set('zoom', progress.zoom);
+        }
+        const basePath = `/app/pdf/${encodeURIComponent(resourceId)}`;
+        navigate(qs.size > 0 ? `${basePath}?${qs.toString()}` : basePath);
       }
     },
     [navigate, addFile]

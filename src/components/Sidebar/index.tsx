@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Menu } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
@@ -9,6 +9,7 @@ import {
   RiFileTextLine,
   RiGroupFill,
   RiPenNibFill,
+  RiCloseLine,
 } from 'react-icons/ri';
 
 import FileTypeIcon from '@/components/Common/FileTypeIcon';
@@ -18,70 +19,120 @@ import logoImg from '@/assets/images/logo-icon.png';
 import UserProfile from '@/components/UserProfile';
 import { useRecentFilesStore } from '@/store';
 import { useClickFile } from '@/hooks/drive';
-
-interface SidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
-}
+import { useAppMessage } from '@/hooks/useAppMessage';
+import { type SidebarProps, type SidebarMenuItem } from './index.type';
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const recentItems = useRecentFilesStore((s) => s.items);
+  const removeRecentFile = useRecentFilesStore((s) => s.removeFile);
   const clickFile = useClickFile();
+  const messageApi = useAppMessage();
+
+  const handleOpenFile = useCallback(
+    (resourceId: string) => {
+      const found = recentItems.find((i) => i.resourceId === resourceId);
+      if (found) {
+        clickFile({
+          resourceId: found.resourceId,
+          resourceName: found.resourceName,
+          resourceType: found.resourceType,
+        });
+      } else {
+        messageApi.warning('文件不存在或已失效');
+      }
+    },
+    [clickFile, recentItems, messageApi]
+  );
 
   const menuItems = useMemo(() => {
-    const baseItems: Parameters<typeof Menu>[0]['items'] = [
+    const baseItems: SidebarMenuItem[] = [
       {
         key: 'new-chat',
         icon: <RiAddCircleFill size={18} />,
         label: '新聊天',
-        onClick: () => console.log('Create New Chat'),
       },
       {
         key: '/app/note',
         icon: <RiPenNibFill size={18} />,
         label: '新建笔记',
+        onClick: () => navigate('/app/note'),
       },
       {
         key: '/app/drive',
         icon: <RiFileTextLine size={18} />,
         label: '文档与云盘',
+        onClick: () => navigate('/app/drive'),
       },
       {
         key: '/app/my-group',
         icon: <RiGroupFill size={18} />,
         label: '我的小组',
+        onClick: () => navigate('/app/my-group'),
       },
     ];
 
+    // 构造聊天记录列表
     if (!collapsed) {
+      const sessionHistoryChildren: SidebarMenuItem[] = [
+        // 待接入真实记录
+        {
+          key: 'empty-session',
+          label: '暂无会话',
+          disabled: true,
+        },
+      ];
       baseItems.push({
         type: 'group',
         label: '聊天记录',
-        key: 'grp1',
-        children: [{ key: 'history1', label: '暂无会话', disabled: true }],
+        key: 'recent-session',
+        children: sessionHistoryChildren,
       });
 
-      const recentChildren =
+      // 构造最近文件列表
+      const recentFileChildren: SidebarMenuItem[] =
         recentItems.length > 0
           ? recentItems.map((item) => ({
-              key: `recent-${item.resourceId}`,
+              key: `opened-file-${item.resourceId}`,
               icon: <FileTypeIcon resourceType={item.resourceType} size={16} />,
-              label: item.resourceName || '未命名',
+              label: (
+                <div className={styles.fileMenuLabel}>
+                  <span className={styles.fileMenuLabelText}>{item.resourceName || '未命名'}</span>
+                  <button
+                    type="button"
+                    className={styles.fileCloseBtn}
+                    aria-label={`关闭 ${item.resourceName || '未命名'}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      removeRecentFile(item.resourceId);
+                    }}
+                  >
+                    <RiCloseLine size={14} />
+                  </button>
+                </div>
+              ),
+              onClick: () => handleOpenFile(item.resourceId),
             }))
-          : [{ key: 'recent-empty', label: '暂无最近文件', disabled: true }];
+          : [
+              {
+                key: 'empty-file',
+                label: '暂无打开的文件',
+                disabled: true,
+              },
+            ];
 
       baseItems.push({
         type: 'group',
-        label: '最近使用',
-        key: 'recent',
-        children: recentChildren,
+        label: '打开的文件',
+        key: 'opened-file',
+        children: recentFileChildren,
       });
     }
 
     return baseItems;
-  }, [collapsed, recentItems]);
+  }, [collapsed, recentItems, handleOpenFile, removeRecentFile, navigate]);
 
   return (
     <div className={clsx(styles.sider, collapsed && styles.collapsed)}>
@@ -108,23 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           theme="light"
           selectedKeys={[location.pathname]}
           inlineCollapsed={collapsed}
-          items={menuItems as any}
-          onClick={({ key }) => {
-            const k = key.toString();
-            if (k.startsWith('/')) {
-              navigate(k);
-            } else if (k.startsWith('recent-') && k !== 'recent-empty') {
-              const resourceId = k.replace('recent-', '');
-              const item = recentItems.find((i) => i.resourceId === resourceId);
-              if (item) {
-                clickFile({
-                  resourceId: item.resourceId,
-                  resourceName: item.resourceName,
-                  resourceType: item.resourceType,
-                });
-              }
-            }
-          }}
+          items={menuItems}
         />
       </div>
 
