@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Upload, Progress, message, Button } from 'antd';
+import { Modal, Upload, Progress, Button } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
 import { AiOutlineInbox } from 'react-icons/ai';
 
 import { useDocumentService } from '@/contexts/ServicesContext';
+import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 
 import styles from './UploadDocumentModal.module.less';
@@ -20,6 +21,7 @@ export interface UploadDocumentModalProps {
 export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ open, onClose }) => {
   const documentService = useDocumentService();
   const navigate = useNavigate();
+  const message = useAppMessage();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'hash' | 'upload'>('idle');
@@ -100,7 +102,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ open, 
       okText="开始上传"
       okButtonProps={{ loading: uploading, disabled: fileList.length === 0 }}
       cancelButtonProps={{ disabled: uploading }}
-      destroyOnClose
+      destroyOnHidden
       width={520}
     >
       <p className={styles.hint}>支持 pdf、Office 文档等，单文件最大 100MB。</p>

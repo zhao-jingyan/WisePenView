@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { usePdfPreviewProgressStore } from './usePdfPreviewProgressStore';
 
 export interface RecentFileItem {
   resourceId: string;
@@ -29,9 +30,12 @@ export const useRecentFilesStore = create<RecentFilesState>()(
         }),
 
       removeFile: (resourceId) =>
-        set((state) => ({
-          items: state.items.filter((i) => i.resourceId !== resourceId),
-        })),
+        set((state) => {
+          usePdfPreviewProgressStore.getState().removeProgress(resourceId);
+          return {
+            items: state.items.filter((i) => i.resourceId !== resourceId),
+          };
+        }),
 
       updateFileName: (resourceId, resourceName) =>
         set((state) => ({
