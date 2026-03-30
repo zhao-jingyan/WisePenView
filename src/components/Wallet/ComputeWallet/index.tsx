@@ -294,7 +294,7 @@ const ComputeWallet: React.FC<ComputeWalletProps> = ({
           )}
         </div>
         {canRecharge ? (
-          <Button type="primary" size="large" onClick={() => setRechargeOpen(true)}>
+          <Button type="primary" onClick={() => setRechargeOpen(true)}>
             充值
           </Button>
         ) : null}
