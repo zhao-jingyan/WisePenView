@@ -62,7 +62,7 @@ export function usePrepareConnection({
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // connect: false，先 watchSessionConnection 再 connect，避免漏事件（见 WisepenProvider 注释）
     const wsProvider = new WisepenProvider(
-      `${protocol}//${window.location.host}/note-collab`,
+      `${protocol}//test.api.fudan.wisepen.oriole.cn:9080/note-collab`,
       resourceId,
       newDoc,
       { connect: false }

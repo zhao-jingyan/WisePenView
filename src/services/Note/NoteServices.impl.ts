@@ -33,7 +33,7 @@ const formatLastEditedAt = (value?: string): string => {
 // syncTitle是一个resource的工作，但是语义上属于note服务
 const syncTitle = async (params: SyncTitleRequest): Promise<void> => {
   const { resourceId, newName } = params;
-  const res = (await Axios.post('/resource/item/renameRes', {
+  const res = (await Axios.post('/resource/item/renameResource', {
     resourceId,
     newName,
   })) as ApiResponse;

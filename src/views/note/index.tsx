@@ -100,10 +100,17 @@ const NoteView: React.FC = () => {
                 description="网络连接已断开，当前可继续本地编辑；网络恢复后会自动同步到云端。"
               />
             ) : null}
-            <NoteTitle id={noteId} focusOnMount={editorSessionReady} onEnterKey={focusBody} />
+            <NoteTitle
+              key={resourceId}
+              id={noteId}
+              focusOnMount={editorSessionReady}
+              onEnterKey={focusBody}
+            />
             <NoteInfoBar resourceId={resourceId} />
             <div className={styles.body}>
+              {/* noteId 变化时强制重挂载，避免沿用上一篇笔记的 hook 状态与协同实例 */}
               <NoteEditor
+                key={resourceId}
                 ref={bodyEditorRef}
                 resourceId={resourceId}
                 onSessionReady={handleSessionReady}

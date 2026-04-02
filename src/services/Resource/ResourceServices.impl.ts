@@ -49,7 +49,7 @@ const requestResourceItemList = async (
   if (params.tagIds != null && params.tagIds.length > 0) {
     query.tagIds = params.tagIds;
   }
-  const res = (await Axios.get('/resource/item/list', {
+  const res = (await Axios.get('/resource/item/listResources', {
     params: query,
     paramsSerializer: serializeResourceListQuery,
   })) as ApiResponse<ResourceListPage>;
@@ -73,7 +73,7 @@ const getGroupResources = async (params: GetGroupResourceRequest): Promise<Resou
 };
 
 const renameResource = async (params: RenameResourceRequest): Promise<void> => {
-  const res = (await Axios.post('/resource/item/renameRes', params)) as ApiResponse;
+  const res = (await Axios.post('/resource/item/renameResource', params)) as ApiResponse;
   checkResponse(res);
   // 重命名成功后，更新最近文件列表的文件名
   useRecentFilesStore.getState().updateFileName(params.resourceId, params.newName);
@@ -86,7 +86,7 @@ const updateResourcePath = async (params: UpdateResourcePathRequest): Promise<vo
 };
 
 const updateResourceTags = async (params: UpdateResourceTagsRequest): Promise<void> => {
-  const res = (await Axios.post('/resource/item/updateTags', params)) as ApiResponse;
+  const res = (await Axios.post('/resource/item/changeResourceTags', params)) as ApiResponse;
   checkResponse(res);
 };
 
