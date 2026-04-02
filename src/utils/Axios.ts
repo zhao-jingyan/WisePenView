@@ -1,7 +1,7 @@
 // axios request 封装
 import axios from 'axios';
 
-export const baseServerAddr = 'wisepen-dev-server:9080';
+export const baseServerAddr = 'test.api.fudan.wisepen.oriole.cn:9080';
 
 export const baseURL = 'http://' + baseServerAddr + '/';
 
