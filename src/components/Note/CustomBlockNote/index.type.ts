@@ -1,9 +1,10 @@
-import type { Doc } from 'yjs';
+import type { NoteInstance } from '@/session/plugins/note/NoteInstance';
 
-import type { WisepenProvider } from '@/services/Note/yjs/WisepenProvider';
+export interface NoteBodyEditorHandle {
+  focus: () => void;
+}
 
 export interface CustomBlockNoteProps {
   resourceId: string;
-  doc: Doc;
-  provider: WisepenProvider;
+  instance: NoteInstance;
 }
