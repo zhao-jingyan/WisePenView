@@ -31,8 +31,6 @@ interface RetryStrategyInput {
   lastDelay: number | undefined;
 }
 
-const DEFAULT_ALLOW_SELF_RECOVER_COUNT = 3;
-
 export type RetryDelayStrategy = (input: RetryStrategyInput) => number | null;
 
 export type RetryStrategy = {
@@ -49,7 +47,7 @@ export const RetryStrategies = {
     base = 1000,
     max = 30000,
     maxRetries = 5,
-    allowSelfRecoverCount = DEFAULT_ALLOW_SELF_RECOVER_COUNT
+    allowSelfRecoverCount = 0
   ): RetryStrategy => ({
     allowSelfRecoverCount,
     delay: ({ retryCount }) => {
@@ -59,11 +57,7 @@ export const RetryStrategies = {
   }),
 
   // 2. Fibonacci Backoff
-  fibonacci: (
-    base = 1000,
-    maxRetries = 8,
-    allowSelfRecoverCount = DEFAULT_ALLOW_SELF_RECOVER_COUNT
-  ): RetryStrategy => {
+  fibonacci: (base = 1000, maxRetries = 8, allowSelfRecoverCount = 0): RetryStrategy => {
     const fib = (n: number): number => (n <= 1 ? n : fib(n - 1) + fib(n - 2));
     return {
       allowSelfRecoverCount,
@@ -75,11 +69,7 @@ export const RetryStrategies = {
   },
 
   // 3. Fixed Interval
-  polling: (
-    interval = 3000,
-    maxRetries = 10,
-    allowSelfRecoverCount = DEFAULT_ALLOW_SELF_RECOVER_COUNT
-  ): RetryStrategy => ({
+  polling: (interval = 3000, maxRetries = 10, allowSelfRecoverCount = 0): RetryStrategy => ({
     allowSelfRecoverCount,
     delay: ({ retryCount }) => (retryCount >= maxRetries ? null : interval),
   }),

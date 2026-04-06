@@ -19,7 +19,7 @@ interface NoteViewConnectedProps {
   resourceId: string;
 }
 
-const RECONNECT_BANNER_MIN_VISIBLE_MS = 1_500;
+const RECONNECT_BANNER_MIN_VISIBLE_MS = 2_000;
 
 const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceId }) => {
   const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
@@ -32,7 +32,7 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceI
   const isConnected = sessionStatus === 'connected';
   const isReconnecting = sessionStatus === 'reconnecting';
   const isSessionError = sessionStatus === 'error';
-  const isEditorAvailable = isConnected || isReconnecting;
+  const isEditorReadOnly = !(isConnected || isReconnecting);
   const showFullPageSpin = sessionStatus === 'connecting';
 
   const clearReconnectBannerHideTimer = useCallback(() => {
@@ -124,21 +124,23 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceI
           />
           <NoteInfoBar resourceId={resourceId} />
           <div className={styles.body}>
-            {isEditorAvailable ? (
-              <CustomBlockNote
-                key={resourceId}
-                ref={bodyEditorRef}
-                resourceId={resourceId}
-                instance={instance}
-              />
-            ) : null}
+            <CustomBlockNote
+              key={resourceId}
+              ref={bodyEditorRef}
+              resourceId={resourceId}
+              instance={instance}
+              readOnly={isEditorReadOnly}
+            />
           </div>
         </div>
       </div>
 
       {showFullPageSpin ? (
         <div className={styles.middleOverlay} aria-busy="true" aria-live="polite">
-          <Spin size="large" />
+          <div className={styles.middleOverlayLoading}>
+            <Spin size="large" />
+            <span className={styles.middleOverlayText}>正在连接笔记服务...</span>
+          </div>
         </div>
       ) : null}
     </div>

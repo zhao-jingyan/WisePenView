@@ -7,4 +7,5 @@ export interface NoteBodyEditorHandle {
 export interface CustomBlockNoteProps {
   resourceId: string;
   instance: NoteInstance;
+  readOnly?: boolean;
 }

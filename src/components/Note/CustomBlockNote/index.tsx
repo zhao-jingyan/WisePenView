@@ -44,7 +44,7 @@ function requireConnectedInstance(instance: CustomBlockNoteProps['instance']) {
 
 // CustomBlockNote 组件是 NoteEditor 的子组件，用于创建 BlockNote 实例并接入 YJS 协同连接
 const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
-  ({ resourceId, instance }, ref) => {
+  ({ resourceId, instance, readOnly = false }, ref) => {
     const { provider, doc } = requireConnectedInstance(instance);
     const imageService = useImageService();
     const editorRef = useLatest<CustomBlockNoteEditor | null>(null);
@@ -131,7 +131,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
 
     return (
       <div className={styles.editorShell} onKeyDownCapture={onKeyDownCapture}>
-        <BlockNoteView editor={editor} theme="light" slashMenu={false}>
+        <BlockNoteView editor={editor} theme="light" slashMenu={false} editable={!readOnly}>
           <SuggestionMenuController
             triggerCharacter="/"
             getItems={async (query) => {
