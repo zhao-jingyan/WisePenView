@@ -7,12 +7,11 @@ import { useLatest, useMount, useUnmount } from 'ahooks';
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
 
-import { NOTE_YJS_DOCUMENT_FRAGMENT } from '@/services/Note/yjs';
+import { NOTE_YJS_DOCUMENT_FRAGMENT } from '@/session/plugins/note/constants';
 import { useImageService } from '@/contexts/ServicesContext';
 
-import type { NoteEditorHandle } from '../NoteEditor/index.type';
-import type { CustomBlockNoteProps } from './index.type';
-import { useNoteCaptureKeyEvent } from '../NoteEditor/useNoteCaptureKeyEvent';
+import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
+import { useNoteCaptureKeyEvent } from './useNoteCaptureKeyEvent';
 import { buildNoteSlashMenuItems } from './slashMenuConfig';
 import { blockNoteSchema, type CustomBlockNoteEditor } from './blockNoteSchema';
 import { inlineMathDollarExtension } from './LatexSupport/inlineMathDollarExtension';
@@ -34,9 +33,19 @@ function readInsertedBlockId(insertedBlock: unknown): string | undefined {
   return undefined;
 }
 
+function requireConnectedInstance(instance: CustomBlockNoteProps['instance']) {
+  const provider = instance.provider;
+  const doc = instance.doc;
+  if (!provider || !doc) {
+    throw new Error('Note connection is not ready');
+  }
+  return { provider, doc };
+}
+
 // CustomBlockNote 组件是 NoteEditor 的子组件，用于创建 BlockNote 实例并接入 YJS 协同连接
-const CustomBlockNote = forwardRef<NoteEditorHandle, CustomBlockNoteProps>(
-  ({ resourceId, doc, provider }, ref) => {
+const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
+  ({ resourceId, instance, readOnly = false }, ref) => {
+    const { provider, doc } = requireConnectedInstance(instance);
     const imageService = useImageService();
     const editorRef = useLatest<CustomBlockNoteEditor | null>(null);
 
@@ -114,19 +123,15 @@ const CustomBlockNote = forwardRef<NoteEditorHandle, CustomBlockNoteProps>(
         focus: () => {
           editor.focus();
         },
-        retrySession: () => {
-          provider.disconnect();
-          provider.connect();
-        },
       }),
-      [editor, provider]
+      [editor]
     );
 
-    const onKeyDownCapture = useNoteCaptureKeyEvent(provider);
+    const onKeyDownCapture = useNoteCaptureKeyEvent(instance);
 
     return (
       <div className={styles.editorShell} onKeyDownCapture={onKeyDownCapture}>
-        <BlockNoteView editor={editor} theme="light" slashMenu={false}>
+        <BlockNoteView editor={editor} theme="light" slashMenu={false} editable={!readOnly}>
           <SuggestionMenuController
             triggerCharacter="/"
             getItems={async (query) => {

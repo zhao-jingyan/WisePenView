@@ -1,36 +1,80 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Alert, Button, Result, Spin } from 'antd';
+import { useUnmount, useUpdateEffect } from 'ahooks';
 import { Link, useParams } from 'react-router-dom';
 import { RiArrowLeftLine } from 'react-icons/ri';
-import clsx from 'clsx';
 
-import NoteEditor from '@/components/Note/NoteEditor';
-import type { NoteEditorHandle } from '@/components/Note/NoteEditor/index.type';
+import CustomBlockNote from '@/components/Note/CustomBlockNote';
+import type { NoteBodyEditorHandle } from '@/components/Note/CustomBlockNote/index.type';
 import NoteInfoBar from '@/components/Note/NoteInfoBar';
 import NoteTitle from '@/components/Note/NoteTitle';
-import { useParamsEffect } from '@/hooks/useParamsEffect';
+import { useNoteConnection } from '@/session/plugins/note/NoteSessionUnit';
 import styles from './style.module.less';
 
 /**
  * 笔记路由页：在 SystemLayout 中间栏内全幅 Spin，直至用户信息 + Yjs 会话就绪；失败分两类，可重试。
  */
-const NoteView: React.FC = () => {
-  const { noteId } = useParams<{ noteId?: string }>();
-  const resourceId = noteId ?? '';
-  const [editorSessionReady, setEditorSessionReady] = useState(false);
-  const [sessionErrorMessage, setSessionErrorMessage] = useState<string | null>(null);
-  const [sessionStatus, setSessionStatus] = useState<'connected' | 'disconnected'>('disconnected');
-  const bodyEditorRef = useRef<NoteEditorHandle>(null);
+interface NoteViewConnectedProps {
+  noteId?: string;
+  resourceId: string;
+}
 
-  const resetSessionState = useCallback(() => {
-    setEditorSessionReady(false);
-    setSessionErrorMessage(null);
-    setSessionStatus('connected');
+const RECONNECT_BANNER_MIN_VISIBLE_MS = 2_000;
+
+const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceId }) => {
+  const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
+  const reconnectBannerShownAtRef = useRef<number | null>(null);
+  const reconnectBannerHideTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const { manager, instance } = useNoteConnection(resourceId);
+  const sessionStatus = manager.status;
+  const [showReconnectBanner, setShowReconnectBanner] = useState(false);
+
+  const isConnected = sessionStatus === 'connected';
+  const isReconnecting = sessionStatus === 'reconnecting';
+  const isSessionError = sessionStatus === 'error';
+  const isEditorReadOnly = !(isConnected || isReconnecting);
+  const showFullPageSpin = sessionStatus === 'connecting';
+
+  const clearReconnectBannerHideTimer = useCallback(() => {
+    if (reconnectBannerHideTimerRef.current !== null) {
+      window.clearTimeout(reconnectBannerHideTimerRef.current);
+      reconnectBannerHideTimerRef.current = null;
+    }
   }, []);
 
-  useParamsEffect([resourceId], (nextResourceId) => {
-    resetSessionState();
-    if (!nextResourceId) return;
+  useUpdateEffect(() => {
+    if (isReconnecting) {
+      clearReconnectBannerHideTimer();
+      reconnectBannerShownAtRef.current = Date.now();
+      setShowReconnectBanner(true);
+      return;
+    }
+
+    if (!showReconnectBanner) return;
+    const shownAt = reconnectBannerShownAtRef.current;
+    if (shownAt === null) {
+      setShowReconnectBanner(false);
+      return;
+    }
+
+    const elapsed = Date.now() - shownAt;
+    const remain = Math.max(0, RECONNECT_BANNER_MIN_VISIBLE_MS - elapsed);
+    if (remain === 0) {
+      reconnectBannerShownAtRef.current = null;
+      setShowReconnectBanner(false);
+      return;
+    }
+
+    clearReconnectBannerHideTimer();
+    reconnectBannerHideTimerRef.current = window.setTimeout(() => {
+      reconnectBannerHideTimerRef.current = null;
+      reconnectBannerShownAtRef.current = null;
+      setShowReconnectBanner(false);
+    }, remain);
+  }, [clearReconnectBannerHideTimer, isReconnecting, showReconnectBanner]);
+
+  useUnmount(() => {
+    clearReconnectBannerHideTimer();
   });
 
   const focusBody = useCallback(() => {
@@ -38,25 +82,74 @@ const NoteView: React.FC = () => {
   }, []);
 
   const retrySession = useCallback(() => {
-    setSessionErrorMessage(null);
-    setEditorSessionReady(false);
-    setSessionStatus('connected');
-    bodyEditorRef.current?.retrySession();
-  }, []);
+    void manager.retry();
+  }, [manager]);
 
-  const handleSessionReady = useCallback(() => {
-    setEditorSessionReady(true);
-    setSessionErrorMessage(null);
-  }, []);
+  return (
+    <div className={styles.pageWrap}>
+      <div className={styles.noteContent}>
+        <div className={styles.root}>
+          <header className={styles.pageHeader}>
+            <Link to="/app/drive" className={styles.backLink}>
+              <RiArrowLeftLine size={18} aria-hidden />
+              <span>返回云盘</span>
+            </Link>
+          </header>
+          {showReconnectBanner ? (
+            <Alert
+              className={styles.wsAlert}
+              type="warning"
+              showIcon
+              description="网络连接已断开，当前可继续本地编辑；网络恢复后会自动同步到云端。"
+            />
+          ) : null}
+          {isSessionError ? (
+            <Alert
+              className={styles.wsAlert}
+              type="error"
+              showIcon
+              description="连接笔记服务失败，请检查网络后重试。"
+              action={
+                <Button type="default" size="small" onClick={retrySession}>
+                  重试
+                </Button>
+              }
+            />
+          ) : null}
+          <NoteTitle
+            key={resourceId}
+            id={noteId}
+            focusOnMount={isConnected}
+            onEnterKey={focusBody}
+          />
+          <NoteInfoBar resourceId={resourceId} />
+          <div className={styles.body}>
+            <CustomBlockNote
+              key={resourceId}
+              ref={bodyEditorRef}
+              resourceId={resourceId}
+              instance={instance}
+              readOnly={isEditorReadOnly}
+            />
+          </div>
+        </div>
+      </div>
 
-  const handleSessionError = useCallback((message: string) => {
-    setSessionErrorMessage(message);
-    setEditorSessionReady(false);
-  }, []);
+      {showFullPageSpin ? (
+        <div className={styles.middleOverlay} aria-busy="true" aria-live="polite">
+          <div className={styles.middleOverlayLoading}>
+            <Spin size="large" />
+            <span className={styles.middleOverlayText}>正在连接笔记服务...</span>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
 
-  const mountEditorSubtree = Boolean(resourceId) && sessionErrorMessage === null;
-
-  const showFullPageSpin = Boolean(resourceId) && mountEditorSubtree && !editorSessionReady;
+const NoteView: React.FC = () => {
+  const { noteId } = useParams<{ noteId?: string }>();
+  const resourceId = noteId ?? '';
 
   if (!resourceId) {
     return (
@@ -78,76 +171,7 @@ const NoteView: React.FC = () => {
     );
   }
 
-  return (
-    <div className={styles.pageWrap}>
-      {mountEditorSubtree ? (
-        <div
-          className={clsx(styles.noteContent, editorSessionReady && styles.noteContentVisible)}
-          aria-hidden={!editorSessionReady}
-        >
-          <div className={styles.root}>
-            <header className={styles.pageHeader}>
-              <Link to="/app/drive" className={styles.backLink}>
-                <RiArrowLeftLine size={18} aria-hidden />
-                <span>返回云盘</span>
-              </Link>
-            </header>
-            {sessionStatus === 'disconnected' ? (
-              <Alert
-                className={styles.wsAlert}
-                type="warning"
-                showIcon
-                description="网络连接已断开，当前可继续本地编辑；网络恢复后会自动同步到云端。"
-              />
-            ) : null}
-            <NoteTitle
-              key={resourceId}
-              id={noteId}
-              focusOnMount={editorSessionReady}
-              onEnterKey={focusBody}
-            />
-            <NoteInfoBar resourceId={resourceId} />
-            <div className={styles.body}>
-              {/* noteId 变化时强制重挂载，避免沿用上一篇笔记的 hook 状态与协同实例 */}
-              <NoteEditor
-                key={resourceId}
-                ref={bodyEditorRef}
-                resourceId={resourceId}
-                onSessionReady={handleSessionReady}
-                onSessionError={handleSessionError}
-                onSessionStatusChange={(isConnected) => {
-                  setSessionStatus(isConnected ? 'connected' : 'disconnected');
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {sessionErrorMessage ? (
-        <div className={styles.middleOverlay}>
-          <div className={styles.middleOverlayInner}>
-            <Result
-              status="error"
-              title="笔记连接失败"
-              subTitle={sessionErrorMessage}
-              extra={
-                <Button type="default" onClick={retrySession}>
-                  重试
-                </Button>
-              }
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {showFullPageSpin ? (
-        <div className={styles.middleOverlay} aria-busy="true" aria-live="polite">
-          <Spin size="large" />
-        </div>
-      ) : null}
-    </div>
-  );
+  return <NoteViewConnected noteId={noteId} resourceId={resourceId} />;
 };
 
 export default NoteView;

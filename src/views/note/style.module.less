@@ -16,16 +16,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-  user-select: none;
-}
-
-.noteContentVisible {
   overflow-y: auto;
-  opacity: 1;
-  pointer-events: auto;
-  user-select: auto;
 }
 
 .root {
@@ -90,6 +81,17 @@
   align-items: center;
   justify-content: center;
   background: var(--ant-color-bg-container);
+}
+
+.middleOverlayLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ant-margin-lg);
+}
+
+.middleOverlayText {
+  color: var(--ant-color-text-secondary);
 }
 
 .middleOverlayInner {
