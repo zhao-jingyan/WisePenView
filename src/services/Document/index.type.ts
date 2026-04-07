@@ -3,7 +3,7 @@ export interface DocumentUploadInitRequestBody {
   filename: string;
   extension: string;
   md5: string;
-  size: number;
+  expectedSize: number;
 }
 
 /** `POST /document/initDocUpload` 的 `data`，与后端 DocumentUploadInitResponse 一致 */

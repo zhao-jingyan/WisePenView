@@ -1,6 +1,6 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Alert, Button, Result, Spin } from 'antd';
-import { useUnmount, useUpdateEffect } from 'ahooks';
+import { useRequest } from 'ahooks';
 import { Link, useParams } from 'react-router-dom';
 import { RiArrowLeftLine } from 'react-icons/ri';
 
@@ -8,82 +8,35 @@ import CustomBlockNote from '@/components/Note/CustomBlockNote';
 import type { NoteBodyEditorHandle } from '@/components/Note/CustomBlockNote/index.type';
 import NoteInfoBar from '@/components/Note/NoteInfoBar';
 import NoteTitle from '@/components/Note/NoteTitle';
-import { useNoteConnection } from '@/session/plugins/note/NoteSessionUnit';
+import { useNoteService } from '@/contexts/ServicesContext';
+import { useNoteSession } from '@/session/plugins/note/useNoteSession';
 import styles from './style.module.less';
 
-/**
- * 笔记路由页：在 SystemLayout 中间栏内全幅 Spin，直至用户信息 + Yjs 会话就绪；失败分两类，可重试。
- */
 interface NoteViewConnectedProps {
   noteId?: string;
   resourceId: string;
 }
 
-const RECONNECT_BANNER_MIN_VISIBLE_MS = 2_000;
-
 const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceId }) => {
   const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
-  const reconnectBannerShownAtRef = useRef<number | null>(null);
-  const reconnectBannerHideTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-  const { manager, instance } = useNoteConnection(resourceId);
-  const sessionStatus = manager.status;
-  const [showReconnectBanner, setShowReconnectBanner] = useState(false);
-
-  const isConnected = sessionStatus === 'connected';
-  const isReconnecting = sessionStatus === 'reconnecting';
-  const isSessionError = sessionStatus === 'error';
-  const isEditorReadOnly = !(isConnected || isReconnecting);
-  const showFullPageSpin = sessionStatus === 'connecting';
-
-  const clearReconnectBannerHideTimer = useCallback(() => {
-    if (reconnectBannerHideTimerRef.current !== null) {
-      window.clearTimeout(reconnectBannerHideTimerRef.current);
-      reconnectBannerHideTimerRef.current = null;
+  const noteService = useNoteService();
+  const { status, doc, provider, reconnect } = useNoteSession(resourceId);
+  const { data: noteInfoDisplay } = useRequest(
+    () => noteService.getNoteInfoDisplay({ resourceId }),
+    {
+      ready: Boolean(resourceId),
+      refreshDeps: [resourceId],
     }
-  }, []);
+  );
 
-  useUpdateEffect(() => {
-    if (isReconnecting) {
-      clearReconnectBannerHideTimer();
-      reconnectBannerShownAtRef.current = Date.now();
-      setShowReconnectBanner(true);
-      return;
-    }
-
-    if (!showReconnectBanner) return;
-    const shownAt = reconnectBannerShownAtRef.current;
-    if (shownAt === null) {
-      setShowReconnectBanner(false);
-      return;
-    }
-
-    const elapsed = Date.now() - shownAt;
-    const remain = Math.max(0, RECONNECT_BANNER_MIN_VISIBLE_MS - elapsed);
-    if (remain === 0) {
-      reconnectBannerShownAtRef.current = null;
-      setShowReconnectBanner(false);
-      return;
-    }
-
-    clearReconnectBannerHideTimer();
-    reconnectBannerHideTimerRef.current = window.setTimeout(() => {
-      reconnectBannerHideTimerRef.current = null;
-      reconnectBannerShownAtRef.current = null;
-      setShowReconnectBanner(false);
-    }, remain);
-  }, [clearReconnectBannerHideTimer, isReconnecting, showReconnectBanner]);
-
-  useUnmount(() => {
-    clearReconnectBannerHideTimer();
-  });
+  const isConnected = status === 'connected';
+  const isDisconnected = status === 'disconnected';
+  const isEditorReadOnly = status === 'connecting';
+  const showFullPageSpin = status === 'connecting';
 
   const focusBody = useCallback(() => {
     bodyEditorRef.current?.focus();
   }, []);
-
-  const retrySession = useCallback(() => {
-    void manager.retry();
-  }, [manager]);
 
   return (
     <div className={styles.pageWrap}>
@@ -95,40 +48,33 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceI
               <span>返回云盘</span>
             </Link>
           </header>
-          {showReconnectBanner ? (
+          {isDisconnected ? (
             <Alert
               className={styles.wsAlert}
               type="warning"
-              showIcon
               description="网络连接已断开，当前可继续本地编辑；网络恢复后会自动同步到云端。"
-            />
-          ) : null}
-          {isSessionError ? (
-            <Alert
-              className={styles.wsAlert}
-              type="error"
-              showIcon
-              description="连接笔记服务失败，请检查网络后重试。"
               action={
-                <Button type="default" size="small" onClick={retrySession}>
+                <Button type="default" size="small" onClick={reconnect}>
                   重试
                 </Button>
               }
             />
           ) : null}
           <NoteTitle
-            key={resourceId}
+            key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}`}
             id={noteId}
+            initialContent={noteInfoDisplay?.noteTitle}
             focusOnMount={isConnected}
             onEnterKey={focusBody}
           />
-          <NoteInfoBar resourceId={resourceId} />
+          <NoteInfoBar noteInfoDisplay={noteInfoDisplay} />
           <div className={styles.body}>
             <CustomBlockNote
               key={resourceId}
               ref={bodyEditorRef}
               resourceId={resourceId}
-              instance={instance}
+              doc={doc}
+              provider={provider}
               readOnly={isEditorReadOnly}
             />
           </div>

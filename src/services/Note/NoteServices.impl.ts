@@ -12,6 +12,7 @@ import { checkResponse } from '@/utils/response';
 import type { ApiResponse } from '@/types/api';
 import type { NoteInfoResponse } from '@/types/note';
 import type { UserDisplayBase } from '@/types/user';
+import { useRecentFilesStore } from '@/store';
 
 const getAuthorName = (author: UserDisplayBase): string => {
   return author.nickname || author.realName || '未知用户';
@@ -38,6 +39,7 @@ const syncTitle = async (params: SyncTitleRequest): Promise<void> => {
     newName,
   })) as ApiResponse;
   checkResponse(res);
+  useRecentFilesStore.getState().updateFileName(resourceId, newName);
 };
 
 const createNote = async (params: CreateNoteRequest): Promise<CreateNoteResponse> => {
@@ -59,6 +61,7 @@ const getNoteInfoDisplay = async (params: GetNoteInfoRequest): Promise<NoteInfoD
   const noteInfoData = res.data;
   const allAuthors = noteInfoData.noteInfo.authors ?? [];
   return {
+    noteTitle: noteInfoData.resourceInfo.resourceName,
     authors: allAuthors.map((author) => ({
       name: getAuthorName(author),
       avatar: author.avatar,

@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import clsx from 'clsx';
-import { Tag, Radio, Select, Spin } from 'antd';
+import { Tag, Radio, Select, Spin, Button } from 'antd';
 import { LuX, LuPlus } from 'react-icons/lu';
 import { useRequest } from 'ahooks';
 import { useStickerService } from '@/contexts/ServicesContext';
@@ -11,6 +11,8 @@ import type { Sticker } from '@/services/Sticker';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import AddStickerModal from './AddStickerModal';
 import styles from './style.module.less';
+import { LuTags } from 'react-icons/lu';
+import StickerManageModal from '@/components/Drive/Modals/StickerManageModal';
 
 const DEFAULT_VALUE: FileFilterValue = {
   tagIds: [],
@@ -83,6 +85,7 @@ const FileFilter: React.FC<FileFilterProps> = ({ value, onChange }) => {
   );
 
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [stickerManageModalOpen, setStickerManageModalOpen] = useState(false);
 
   return (
     <div className={styles.wrapper}>
@@ -148,7 +151,7 @@ const FileFilter: React.FC<FileFilterProps> = ({ value, onChange }) => {
       </div>
 
       <div className={styles.toolbar}>
-        <div className={styles.toolbarChunk}>
+        <div className={styles.toolbarLeft}>
           <span className={styles.optionLabel}>排序</span>
           <Select
             size="middle"
@@ -164,11 +167,27 @@ const FileFilter: React.FC<FileFilterProps> = ({ value, onChange }) => {
             options={SORT_DIR_OPTIONS}
           />
         </div>
+        <div className={styles.toolbarRight}>
+          <Button
+            type="default"
+            icon={<LuTags size={16} />}
+            onClick={() => setStickerManageModalOpen(true)}
+          >
+            管理标签
+          </Button>
+        </div>
       </div>
 
       <AddStickerModal
         open={addModalOpen}
         onCancel={() => setAddModalOpen(false)}
+        onSuccess={() => {
+          void reloadStickers();
+        }}
+      />
+      <StickerManageModal
+        open={stickerManageModalOpen}
+        onCancel={() => setStickerManageModalOpen(false)}
         onSuccess={() => {
           void reloadStickers();
         }}

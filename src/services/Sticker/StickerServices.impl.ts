@@ -18,7 +18,7 @@ const getStickerList = async (): Promise<Sticker[]> => {
   checkResponse(res);
   // 过滤掉路径标签, 忽略叶子节点，同时简化数据结构
   const stickers = res.data
-    .filter((node) => node.tagName !== '/')
+    .filter((node) => node.tagName !== '/' && node.tagName !== '.Trash')
     .map((node) => ({ tagId: node.tagId, tagName: node.tagName }));
   return stickers;
 };

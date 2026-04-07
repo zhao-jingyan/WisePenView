@@ -6,6 +6,7 @@ export { useDrivePreferencesStore, type DriveViewMode } from './useDrivePreferen
 export { usePendingVerifyEmailStore } from './usePendingVerifyEmailStore';
 export { usePdfPreviewProgressStore, type PdfPreviewProgress } from './usePdfPreviewProgressStore';
 export { useRecentFilesStore, type RecentFileItem } from './useRecentFilesStore';
+export { useTrashTagStore } from './useTrashTagStore';
 export {
   getTreeDriveCwdStore,
   useTreeDriveCwdStore,

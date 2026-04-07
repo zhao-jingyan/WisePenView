@@ -44,7 +44,7 @@ const assertDocumentUploadAllowed = (file: File): void => {
 const initUpload = async (
   body: DocumentUploadInitRequestBody
 ): Promise<DocumentUploadInitResponse> => {
-  const res = (await Axios.post('/document/initDocUpload', body, {
+  const res = (await Axios.post('/document/uploadDoc', body, {
     timeout: DOCUMENT_UPLOAD_INIT_TIMEOUT_MS,
   })) as ApiResponse<DocumentUploadInitResponse>;
   checkResponse(res);
@@ -65,7 +65,7 @@ const uploadDocument = async (params: UploadDocumentParams): Promise<UploadDocum
     filename: file.name,
     extension,
     md5,
-    size: file.size,
+    expectedSize: file.size,
   });
 
   if (init.flashUploaded) {
@@ -113,9 +113,32 @@ const deleteDocument = async (documentId: string): Promise<void> => {
   checkResponse(res);
 };
 
-/** dev：/api/document/... 经 Vite 剥离 /api → 网关 /document/... */
+const getPendingDocList = async (): Promise<void> => {
+  const res = (await Axios.get('/document/listPendingDoc')) as ApiResponse<unknown>;
+  checkResponse(res);
+};
+
+const syncPendingDocStatus = async (documentId: string): Promise<void> => {
+  const res = (await Axios.post('/document/syncDocStatus')) as ApiResponse<unknown>;
+  checkResponse(res);
+};
+
+const retryPendingDoc = async (documentId: string): Promise<void> => {
+  const res = (await Axios.post('/document/retryDocProcess', null, {
+    params: { documentId },
+  })) as ApiResponse<unknown>;
+  checkResponse(res);
+};
+
+const cancelPendingDoc = async (documentId: string): Promise<void> => {
+  const res = (await Axios.post('/document/cancelDocProcess', null, {
+    params: { documentId },
+  })) as ApiResponse<unknown>;
+  checkResponse(res);
+};
+
 const getDocumentPreviewUrl = (resourceId: string): string => {
-  const path = `/api/document/getDocPreview?documentId=${encodeURIComponent(resourceId)}`;
+  const path = `/document/getDocPreview?resourceId=${encodeURIComponent(resourceId)}`;
   return new URL(path, window.location.origin).href;
 };
 

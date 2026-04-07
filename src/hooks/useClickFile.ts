@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ResourceItem } from '@/types/resource';
 import { usePdfPreviewProgressStore, useRecentFilesStore } from '@/store';
+import { RESOURCE_TYPE } from '@/constants/resource';
 
 /**
  * 根据资源类型：NOTE 跳转笔记编辑器，其他类型跳转站内 PDF 预览（/app/pdf/:resourceId）
@@ -20,7 +21,7 @@ export const useClickFile = () => {
         resourceName: resourceName ?? '',
         resourceType,
       });
-      if (resourceType === 'NOTE') {
+      if (resourceType === RESOURCE_TYPE.NOTE) {
         navigate(`/app/note/${resourceId}`);
       } else {
         // 尝试恢复上次的阅读状态

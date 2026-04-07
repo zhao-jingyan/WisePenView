@@ -44,6 +44,19 @@
   font-size: var(--ant-font-size-sm);
   line-height: 20px;
   padding: 4px 10px;
+
+  :global(.ant-tag-close-icon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline-start: 4px;
+    vertical-align: middle;
+    line-height: 1;
+
+    svg {
+      display: block;
+    }
+  }
 }
 
 .selectedMatch {
@@ -71,11 +84,18 @@
   row-gap: var(--ant-margin-sm);
 }
 
-.toolbarChunk {
+.toolbarLeft {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--ant-margin-sm);
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: var(--ant-margin-sm);
+  margin-left: auto;
 }
 
 .optionLabel {

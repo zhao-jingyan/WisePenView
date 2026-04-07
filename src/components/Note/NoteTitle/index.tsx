@@ -47,18 +47,20 @@ const DEFAULT_HEADING_BLOCK = [
   },
 ] as unknown as BlockNoteBlock[];
 
-/** 确保为 heading 1 块 */
-function toHeadingBlock(block: BlockNoteBlock | undefined): BlockNoteBlock[] {
-  if (!block) return DEFAULT_HEADING_BLOCK;
-  const normalized = {
-    ...block,
-    type: 'heading',
-    props: { ...block.props, level: 1 },
-  } as BlockNoteBlock;
-  return [normalized];
+function toHeadingBlockFromTitle(title?: string): BlockNoteBlock[] {
+  const trimmedTitle = title?.trim();
+  if (trimmedTitle === '未命名笔记' || !trimmedTitle) {
+    return DEFAULT_HEADING_BLOCK;
+  }
+  return [
+    {
+      ...DEFAULT_HEADING_BLOCK[0],
+      content: [{ type: 'text', text: trimmedTitle, styles: {} }],
+    } as BlockNoteBlock,
+  ];
 }
 
-const NoteTitle: React.FC<NoteTitleProps> = ({ id, onEnterKey, focusOnMount }) => {
+const NoteTitle: React.FC<NoteTitleProps> = ({ id, initialContent, onEnterKey, focusOnMount }) => {
   const noteService = useNoteService();
   const message = useAppMessage();
   const latestIdRef = useRef(id);
@@ -71,11 +73,14 @@ const NoteTitle: React.FC<NoteTitleProps> = ({ id, onEnterKey, focusOnMount }) =
     latestIdRef.current = id;
   }, [id]);
 
-  /** 云端拉取标题未接前：空 H1；后续可与笔记详情接口返回的标题对齐后由上层驱动更新策略 */
-  const initialContent = useMemo(() => toHeadingBlock(undefined), []);
+  /** 标题初始值由上层传入（未就绪时回退为空 H1） */
+  const initialTitleBlocks = useMemo(
+    () => toHeadingBlockFromTitle(initialContent),
+    [initialContent]
+  );
 
   const editor = useCreateBlockNote({
-    initialContent,
+    initialContent: initialTitleBlocks,
     dictionary: {
       ...zh,
       placeholders: {
@@ -107,8 +112,8 @@ const NoteTitle: React.FC<NoteTitleProps> = ({ id, onEnterKey, focusOnMount }) =
       const firstBlock = editor.document[0];
       const raw = getBlockPlainText(firstBlock as { content?: unknown[] } | undefined);
       const trimmed = raw.trim();
-      if (!trimmed) return;
-      void noteService.syncTitle({ resourceId: currentId, newName: trimmed }).catch((error) => {
+      const nextTitle = trimmed || '未命名笔记';
+      void noteService.syncTitle({ resourceId: currentId, newName: nextTitle }).catch((error) => {
         message.error(parseErrorMessage(error, '同步标题失败'));
       });
     }, TITLE_DEBOUNCE_MS);

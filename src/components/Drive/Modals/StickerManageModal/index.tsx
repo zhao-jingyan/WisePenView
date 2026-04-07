@@ -10,7 +10,7 @@ import type { StickerManageModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import styles from './style.module.less';
 
-const StickerManageModal: React.FC<StickerManageModalProps> = ({ open, onCancel }) => {
+const StickerManageModal: React.FC<StickerManageModalProps> = ({ open, onCancel, onSuccess }) => {
   const stickerService = useStickerService();
   const message = useAppMessage();
 
@@ -42,6 +42,7 @@ const StickerManageModal: React.FC<StickerManageModalProps> = ({ open, onCancel 
         const updated = { ...selectedSticker!, tagName: trimmed };
         setStickers((prev) => prev.map((s) => (s.tagId === updated.tagId ? updated : s)));
         setSelectedSticker(updated);
+        onSuccess?.();
       },
       onError: (err) => {
         message.error(parseErrorMessage(err, '更新标签失败'));
@@ -58,6 +59,7 @@ const StickerManageModal: React.FC<StickerManageModalProps> = ({ open, onCancel 
         setStickers((prev) => prev.filter((s) => s.tagId !== selectedSticker!.tagId));
         setSelectedSticker(null);
         setEditName('');
+        onSuccess?.();
       },
       onError: (err) => {
         message.error(parseErrorMessage(err, '删除标签失败'));
@@ -73,6 +75,7 @@ const StickerManageModal: React.FC<StickerManageModalProps> = ({ open, onCancel 
         message.success('标签已创建');
         void runFetchStickers();
         setAddName('');
+        onSuccess?.();
       },
       onError: (err) => {
         message.error(parseErrorMessage(err, '创建标签失败'));

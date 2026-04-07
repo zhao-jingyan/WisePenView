@@ -56,7 +56,6 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ open, 
         message.success('上传成功');
         resetState();
         onClose();
-        navigate(`/app/pdf/${encodeURIComponent(result.documentId)}`);
       },
       onError: (err: unknown) => {
         message.error(parseErrorMessage(err, '上传失败'));

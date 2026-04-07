@@ -7,7 +7,6 @@ import { useLatest, useMount, useUnmount } from 'ahooks';
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
 
-import { NOTE_YJS_DOCUMENT_FRAGMENT } from '@/session/plugins/note/constants';
 import { useImageService } from '@/contexts/ServicesContext';
 
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
@@ -17,6 +16,9 @@ import { blockNoteSchema, type CustomBlockNoteEditor } from './blockNoteSchema';
 import { inlineMathDollarExtension } from './LatexSupport/inlineMathDollarExtension';
 import { stripEscapeCharExtension, stripEscapeEditorProps } from './stripEscapeCharExtension';
 import styles from './style.module.less';
+
+/** 笔记正文在 Y.Doc 中的 XmlFragment 名；需与后端 observeDeep 及 BlockNote 绑定名一致 */
+const NOTE_YJS_DOCUMENT_FRAGMENT = 'document-store' as const;
 
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;
 type BlockNoteCollaborationConfig = NonNullable<CreateBlockNoteOptions['collaboration']>;
@@ -33,19 +35,8 @@ function readInsertedBlockId(insertedBlock: unknown): string | undefined {
   return undefined;
 }
 
-function requireConnectedInstance(instance: CustomBlockNoteProps['instance']) {
-  const provider = instance.provider;
-  const doc = instance.doc;
-  if (!provider || !doc) {
-    throw new Error('Note connection is not ready');
-  }
-  return { provider, doc };
-}
-
-// CustomBlockNote 组件是 NoteEditor 的子组件，用于创建 BlockNote 实例并接入 YJS 协同连接
 const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
-  ({ resourceId, instance, readOnly = false }, ref) => {
-    const { provider, doc } = requireConnectedInstance(instance);
+  ({ resourceId, doc, provider, readOnly = false }, ref) => {
     const imageService = useImageService();
     const editorRef = useLatest<CustomBlockNoteEditor | null>(null);
 
@@ -127,7 +118,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       [editor]
     );
 
-    const onKeyDownCapture = useNoteCaptureKeyEvent(instance);
+    const onKeyDownCapture = useNoteCaptureKeyEvent(provider);
 
     return (
       <div className={styles.editorShell} onKeyDownCapture={onKeyDownCapture}>

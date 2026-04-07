@@ -23,6 +23,7 @@ export interface NoteInfoDisplayAuthor {
 }
 
 export interface NoteInfoDisplayData {
+  noteTitle: string;
   authors: NoteInfoDisplayAuthor[];
   lastEditedAtText: string;
 }

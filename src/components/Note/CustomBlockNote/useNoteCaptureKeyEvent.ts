@@ -1,21 +1,21 @@
 import { useCallback } from 'react';
 import type { KeyboardEvent } from 'react';
 
-import type { NoteInstance } from '@/session/plugins/note/NoteInstance';
+import type { WisepenProvider } from '@/session/plugins/note/WisepenProvider';
 
 /**
  * 捕获阶段仅上报 sendIntent，不 preventDefault / 不手动 editor.undo。
  * 协作模式下撤销由 BlockNote 内置键位处理；这里只做异步意图埋点。
  */
-export function useNoteCaptureKeyEvent(instance: NoteInstance) {
+export function useNoteCaptureKeyEvent(provider: WisepenProvider) {
   return useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
       const emitIntentDeferred = (
-        operationType: Parameters<NoteInstance['sendIntent']>[0],
+        operationType: Parameters<WisepenProvider['sendIntent']>[0],
         source: string
       ) => {
         window.setTimeout(() => {
-          instance.sendIntent(operationType, source);
+          provider.sendIntent(operationType, source);
         }, 0);
       };
 
@@ -48,6 +48,6 @@ export function useNoteCaptureKeyEvent(instance: NoteInstance) {
         emitIntentDeferred('REDO', 'Ctrl+Y');
       }
     },
-    [instance]
+    [provider]
   );
 }

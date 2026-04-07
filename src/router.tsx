@@ -8,7 +8,6 @@ import AuthLayout from '@/layouts/AuthLayout';
 // 页面使用 lazy load，按路由切分 chunk
 const Home = lazy(() => import('@/views/home'));
 const Drive = lazy(() => import('@/views/drive/Drive'));
-const DrivePreview = lazy(() => import('@/views/drive/DrivePreview'));
 const MyGroup = lazy(() => import('@/views/group/MyGroup'));
 const GroupDetail = lazy(() => import('@/views/group/GroupDetail'));
 const Account = lazy(() => import('@/views/profile/Account'));
@@ -19,7 +18,6 @@ const ResetPassword = lazy(() => import('@/views/auth/ResetPassword'));
 const NewPassword = lazy(() => import('@/views/auth/NewPassword'));
 const VerifyEmail = lazy(() => import('@/views/auth/VerifyEmail'));
 const NoteView = lazy(() => import('@/views/note'));
-const Pdf = lazy(() => import('@/views/pdf'));
 
 const router = createBrowserRouter([
   // ==============================
@@ -106,14 +104,6 @@ const router = createBrowserRouter([
         element: <Drive />,
       },
       {
-        path: 'preview/drive',
-        element: <DrivePreview />,
-      },
-      {
-        path: 'pdf/:resourceId',
-        element: <Pdf />,
-      },
-      {
         path: 'my-group',
         element: <MyGroup />,
       },
@@ -129,11 +119,6 @@ const router = createBrowserRouter([
         path: 'profile/account',
         element: <Account />,
       },
-      //   // 具体文档编辑页 (例如 /app/editor/123)
-      //   {
-      //     path: 'editor/:id',
-      //     element: <Editor />,
-      //   }
     ],
   },
 

@@ -50,7 +50,7 @@ const NewFolderModal: React.FC<NewFolderModalProps> = ({
       message.warning('当前目录未就绪，请关闭后重试');
       return;
     }
-    await runCreateFolder(trimmed);
+    runCreateFolder(trimmed);
   };
 
   const handleCancel = () => {

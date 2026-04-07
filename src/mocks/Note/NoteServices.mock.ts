@@ -7,9 +7,11 @@ import type {
   GetNoteInfoRequest,
   NoteInfoDisplayData,
 } from '@/services/Note';
+import { useRecentFilesStore } from '@/store';
 
 /** Mock 占位：与实现层一致，无模拟数据逻辑 */
 const syncTitle = async (params: SyncTitleRequest): Promise<void> => {
+  useRecentFilesStore.getState().updateFileName(params.resourceId, params.newName);
   return Promise.resolve();
 };
 

@@ -4,6 +4,7 @@ import { normalizeTagGroupId } from '@/utils/normalizeTagGroupId';
 import { checkResponse } from '@/utils/response';
 import { ResourceServicesImpl } from '@/services/Resource/ResourceServices.impl';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/services/Resource/index.type';
+import { useTrashTagStore } from '@/store';
 import type { TagListByTagResponse } from '@/types/tag';
 import type {
   TagTreeResponse,
@@ -32,6 +33,24 @@ const buildFlatMap = (roots: TagTreeNode[]): Map<string, TagTreeNode> => {
   return map;
 };
 
+const syncTrashTagIdToStore = (groupId: string | undefined, roots: TagTreeNode[]): void => {
+  const queue = [...roots];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    if (!node) {
+      continue;
+    }
+    if (node.tagName === '.Trash') {
+      useTrashTagStore.getState().setTrashTagId(groupId, node.tagId);
+      return;
+    }
+    if (Array.isArray(node.children) && node.children.length > 0) {
+      queue.push(...node.children);
+    }
+  }
+  useTrashTagStore.getState().setTrashTagId(groupId, undefined);
+};
+
 const clearTagTreeCache = (groupId?: string): void => {
   if (groupId !== undefined) {
     const cacheKey = normalizeTagGroupId(groupId) ?? CACHE_KEY_DEFAULT;
@@ -49,6 +68,7 @@ const getTagTree = async (groupId?: string): Promise<TagTreeNode[]> => {
   const cacheKey = normalizedGroupId ?? CACHE_KEY_DEFAULT;
   const cached = tagTreeCache.get(cacheKey);
   if (cached) {
+    syncTrashTagIdToStore(normalizedGroupId, cached);
     return cached;
   }
 
@@ -65,6 +85,7 @@ const getTagTree = async (groupId?: string): Promise<TagTreeNode[]> => {
   const roots: TagTreeNode[] = res.data ?? [];
   tagTreeCache.set(cacheKey, roots);
   tagFlatCache.set(cacheKey, buildFlatMap(roots));
+  syncTrashTagIdToStore(normalizedGroupId, roots);
   return roots;
 };
 

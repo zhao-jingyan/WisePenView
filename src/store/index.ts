@@ -10,6 +10,7 @@ export {
   usePendingVerifyEmailStore,
   usePdfPreviewProgressStore,
   useRecentFilesStore,
+  useTrashTagStore,
   getTreeDriveCwdStore,
   useTreeDriveCwdStore,
   type DriveViewMode,

@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useRequest } from 'ahooks';
 import { Button, Tabs } from 'antd';
 import { AiOutlineCloudUpload } from 'react-icons/ai';
+import { useNavigate } from 'react-router-dom';
+import { RiPenNibFill } from 'react-icons/ri';
 import { LuTags } from 'react-icons/lu';
 import FlatDrive from '@/components/Drive/FlatDrive';
 import TreeDrive from '@/components/Drive/TreeDrive';
 import { StickerManageModal } from '@/components/Drive/Modals';
-import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
+import { useNoteService } from '@/contexts/ServicesContext';
+import { useAppMessage } from '@/hooks/useAppMessage';
+import { RESOURCE_TYPE } from '@/constants/resource';
+import { useDrivePreferencesStore, useRecentFilesStore, type DriveViewMode } from '@/store';
 
 import { UploadDocumentModal } from './UploadDocumentModal';
 import styles from './style.module.less';
@@ -16,10 +22,42 @@ const VIEW_TABS: { key: DriveViewMode; label: string }[] = [
 ];
 
 const Drive: React.FC = () => {
+  const navigate = useNavigate();
   const viewMode = useDrivePreferencesStore((s) => s.viewMode);
   const setViewMode = useDrivePreferencesStore((s) => s.setViewMode);
+  const addRecentFile = useRecentFilesStore((s) => s.addFile);
+  const noteService = useNoteService();
+  const messageApi = useAppMessage();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [stickerManageOpen, setStickerManageOpen] = useState(false);
+  const { loading: creatingNote, run: runCreateNote } = useRequest(
+    async () => {
+      const { resourceId } = await noteService.createNote({ title: '未命名笔记' });
+      if (!resourceId) {
+        throw new Error('创建笔记失败：未获取到资源ID');
+      }
+      return resourceId;
+    },
+    {
+      manual: true,
+      onSuccess: (resourceId) => {
+        addRecentFile({
+          resourceId,
+          resourceName: '未命名笔记',
+          resourceType: RESOURCE_TYPE.NOTE,
+        });
+        navigate(`/app/note/${encodeURIComponent(resourceId)}`);
+      },
+      onError: () => {
+        messageApi.error('创建笔记失败，请稍后重试');
+      },
+    }
+  );
+
+  const handleCreateNote = useCallback(() => {
+    if (creatingNote) return;
+    runCreateNote();
+  }, [creatingNote, runCreateNote]);
 
   return (
     <div className={styles.pageContainer}>
@@ -29,17 +67,20 @@ const Drive: React.FC = () => {
           <span className={styles.pageSubtitle}>管理您的项目和文档</span>
         </div>
         <div className={styles.actionsRow}>
-          {viewMode === 'flat' && (
-            <Button icon={<LuTags size={16} />} onClick={() => setStickerManageOpen(true)}>
-              管理标签
-            </Button>
-          )}
           <Button
-            type="primary"
+            type="default"
             icon={<AiOutlineCloudUpload size={16} />}
             onClick={() => setUploadModalOpen(true)}
           >
             上传文件
+          </Button>
+          <Button
+            type="primary"
+            icon={<RiPenNibFill size={16} />}
+            loading={creatingNote}
+            onClick={handleCreateNote}
+          >
+            新建笔记
           </Button>
         </div>
       </div>

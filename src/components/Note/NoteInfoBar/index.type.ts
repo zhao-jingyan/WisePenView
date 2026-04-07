@@ -1,3 +1,5 @@
+import type { NoteInfoDisplayData } from '@/services/Note';
+
 export interface NoteInfoBarProps {
-  resourceId: string;
+  noteInfoDisplay?: NoteInfoDisplayData;
 }

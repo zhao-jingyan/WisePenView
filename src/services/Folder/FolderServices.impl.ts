@@ -8,6 +8,8 @@ import { normalizeTagGroupId } from '@/utils/normalizeTagGroupId';
 import { checkResponse } from '@/utils/response';
 import { ResourceServicesImpl } from '@/services/Resource/ResourceServices.impl';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/services/Resource/index.type';
+import { TagServicesImpl } from '@/services/Tag/TagServices.impl';
+import { useTrashTagStore } from '@/store';
 import type { IFolderService, GetResByFolderRequest, GetFolderTreeRequest } from './index.type';
 
 /** 模块级缓存，按 groupId 存储已拉取的文件夹树；写操作后通过 clearFolderTreeCache 清除 */
@@ -103,11 +105,21 @@ const renameFolder = async (folder: Folder, newName: string): Promise<void> => {
 };
 
 const deleteFolder = async (folder: Folder): Promise<void> => {
-  const res = (await Axios.post('/resource/tag/removeTag', {
+  let trashTagId = useTrashTagStore.getState().getTrashTagId(folder.groupId);
+  if (!trashTagId) {
+    await TagServicesImpl.getTagTree(folder.groupId);
+    trashTagId = useTrashTagStore.getState().getTrashTagId(folder.groupId);
+  }
+  if (!trashTagId) {
+    throw new Error('未找到回收站标签，无法删除文件夹');
+  }
+
+  const res = (await Axios.post('/resource/tag/moveTag', {
     targetTagId: folder.tagId,
+    newParentId: trashTagId,
   })) as ApiResponse;
   checkResponse(res);
-  clearFolderTreeCache();
+  clearFolderTreeCache(folder.groupId);
 };
 
 const createFolder = async (parentFolder: Folder, folderName: string): Promise<void> => {
@@ -116,6 +128,7 @@ const createFolder = async (parentFolder: Folder, folderName: string): Promise<v
     parentId: parentFolder.tagId,
     tagName: newPathName,
   })) as ApiResponse;
+  console.log(parentFolder, folderName, res);
   checkResponse(res);
   clearFolderTreeCache();
 };
