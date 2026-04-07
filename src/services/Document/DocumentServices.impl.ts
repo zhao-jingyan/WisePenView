@@ -113,8 +113,32 @@ const deleteDocument = async (documentId: string): Promise<void> => {
   checkResponse(res);
 };
 
+const getPendingDocList = async (): Promise<void> => {
+  const res = (await Axios.get('/document/listPendingDoc')) as ApiResponse<unknown>;
+  checkResponse(res);
+};
+
+const syncPendingDocStatus = async (documentId: string): Promise<void> => {
+  const res = (await Axios.post('/document/syncDocStatus')) as ApiResponse<unknown>;
+  checkResponse(res);
+};
+
+const retryPendingDoc = async (documentId: string): Promise<void> => {
+  const res = (await Axios.post('/document/retryDocProcess', null, {
+    params: { documentId },
+  })) as ApiResponse<unknown>;
+  checkResponse(res);
+};
+
+const cancelPendingDoc = async (documentId: string): Promise<void> => {
+  const res = (await Axios.post('/document/cancelDocProcess', null, {
+    params: { documentId },
+  })) as ApiResponse<unknown>;
+  checkResponse(res);
+};
+
 const getDocumentPreviewUrl = (resourceId: string): string => {
-  const path = `/document/getDocPreview?documentId=${encodeURIComponent(resourceId)}`;
+  const path = `/document/getDocPreview?resourceId=${encodeURIComponent(resourceId)}`;
   return new URL(path, window.location.origin).href;
 };
 
