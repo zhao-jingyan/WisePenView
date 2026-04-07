@@ -9,9 +9,16 @@ import type {
   NewPasswordRequest,
 } from './index.type';
 import type { IAuthService } from './index.type';
+import { UserServicesImpl } from '@/services/User';
 
 const login = async (params: LoginRequest) => {
   const res = (await Axios.post('/auth/login', params)) as ApiResponse;
+  checkResponse(res);
+};
+
+const logout = async () => {
+  const res = (await Axios.post('/auth/logout')) as ApiResponse;
+  UserServicesImpl.clearUserCache();
   checkResponse(res);
 };
 
@@ -38,4 +45,5 @@ export const AuthServicesImpl: IAuthService = {
   register,
   resetPassword,
   newPassword,
+  logout,
 };

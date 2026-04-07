@@ -1,3 +1,4 @@
+export { UserServicesImpl } from './UserServices.impl';
 export type { IUserService } from './index.type';
 export type {
   ConfirmEmailVerifyRequest,

@@ -4,6 +4,7 @@ export interface IAuthService {
   register(params: RegisterRequest): Promise<void>;
   resetPassword(params: ResetPasswordRequest): Promise<void>;
   newPassword(params: NewPasswordRequest): Promise<void>;
+  logout(): Promise<void>;
 }
 
 /** 登录请求参数 */

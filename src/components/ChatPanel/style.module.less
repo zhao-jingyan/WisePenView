@@ -20,10 +20,44 @@
   border-bottom: 1px solid var(--ant-color-border-secondary);
   background-color: var(--ant-color-bg-container);
 
+  &.collapsedHeader {
+    justify-content: flex-start;
+    padding: 0 10px;
+  }
+
+  .headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .triggerBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+    border-radius: var(--ant-border-radius);
+    color: var(--ant-color-text-secondary);
+    transition: all 0.3s;
+
+    &:hover {
+      color: var(--ant-color-text);
+      background-color: var(--ant-color-fill-tertiary);
+    }
+  }
+
   .title {
     font-size: 16px;
     font-weight: 600;
     color: var(--ant-color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

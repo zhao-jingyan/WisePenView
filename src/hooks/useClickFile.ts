@@ -14,11 +14,12 @@ export const useClickFile = () => {
 
   const openResource = useCallback(
     (item: ResourceItem) => {
-      const { resourceId, resourceName, resourceType } = item;
+      const { resourceId, resourceName, ownerInfo, resourceType } = item;
       if (resourceId == null || resourceId === '') return;
       addFile({
         resourceId,
         resourceName: resourceName ?? '',
+        ownerInfo,
         resourceType,
       });
       if (resourceType === RESOURCE_TYPE.NOTE) {

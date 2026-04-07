@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Button } from 'antd';
-import { RiAddLine } from 'react-icons/ri';
+import { RiAddLine, RiIndentDecrease, RiIndentIncrease } from 'react-icons/ri';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import type { Message, Model } from '@/components/ChatPanel/index.type';
@@ -8,7 +8,12 @@ import type { Message, Model } from '@/components/ChatPanel/index.type';
 import { sendMessageStream } from '@/services/mock/ChatPanel';
 import styles from './style.module.less';
 
-const ChatPanel: React.FC = () => {
+interface ChatPanelProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed, onToggle }) => {
   const [currentModel, setCurrentModel] = useState<Model | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
@@ -119,23 +124,39 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={styles.panel}>
-      <div className={styles.header}>
-        <div className={styles.title}>新建对话</div>
-        <Button type="text" icon={<RiAddLine />} onClick={startNewChat}>
-          清空
-        </Button>
+      <div className={`${styles.header} ${collapsed ? styles.collapsedHeader : ''}`}>
+        <div className={styles.headerLeft}>
+          <button
+            type="button"
+            className={styles.triggerBtn}
+            onClick={onToggle}
+            aria-label="切换聊天栏"
+          >
+            {collapsed ? <RiIndentIncrease /> : <RiIndentDecrease />}
+          </button>
+          {!collapsed && <div className={styles.title}>新建对话</div>}
+        </div>
+        {!collapsed && (
+          <Button type="text" icon={<RiAddLine />} onClick={startNewChat}>
+            清空
+          </Button>
+        )}
       </div>
-      <div className={styles.content}>
-        <MessageList messages={messages} />
-      </div>
-      <div className={styles.footer}>
-        <ChatInput
-          currentModelId={currentModel?.id || ''}
-          onModelChange={setCurrentModel}
-          onSend={handleSend}
-          sending={sending}
-        />
-      </div>
+      {!collapsed && (
+        <>
+          <div className={styles.content}>
+            <MessageList messages={messages} />
+          </div>
+          <div className={styles.footer}>
+            <ChatInput
+              currentModelId={currentModel?.id || ''}
+              onModelChange={setCurrentModel}
+              onSend={handleSend}
+              sending={sending}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

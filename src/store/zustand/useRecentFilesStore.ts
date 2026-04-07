@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { UserDisplayBase } from '@/types/user';
 import { usePdfPreviewProgressStore } from './usePdfPreviewProgressStore';
 
 export interface RecentFileItem {
   resourceId: string;
   resourceName: string;
+  ownerInfo: UserDisplayBase;
   resourceType?: string;
 }
 
@@ -30,6 +32,7 @@ export const useRecentFilesStore = create<RecentFilesState>()(
             next[existIndex] = {
               ...next[existIndex],
               resourceName: item.resourceName,
+              ownerInfo: item.ownerInfo,
               resourceType: item.resourceType,
             };
             return { items: next };

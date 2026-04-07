@@ -37,6 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       if (found) {
         clickFile({
           resourceId: found.resourceId,
+          ownerInfo: found.ownerInfo,
           resourceName: found.resourceName,
           resourceType: found.resourceType,
         });

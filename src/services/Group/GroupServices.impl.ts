@@ -80,7 +80,7 @@ const createGroup = async (params: CreateGroupRequest): Promise<string> => {
   checkResponse(res);
   const payload = res.data;
   if (payload == null || payload.groupId == null) {
-    throw new Error('创建小组成功但未返回小组 ID');
+    throw new Error('创建小组失败');
   }
   return toIdString(payload.groupId);
 };

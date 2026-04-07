@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useMount } from 'ahooks';
-import { Avatar, Dropdown } from 'antd';
+import { Avatar, Dropdown, Input, Modal } from 'antd';
 import type { MenuProps } from 'antd';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { useUserService } from '@/contexts/ServicesContext';
 import type { User } from '@/types/user';
 import { getIdentityTypeLabel } from '@/constants/user';
+import { useAppMessage } from '@/hooks/useAppMessage';
 
 import {
   RiArrowDownSLine,
@@ -20,7 +21,7 @@ import {
 } from 'react-icons/ri';
 
 import styles from './style.module.less';
-
+import { useAuthService } from '@/contexts/ServicesContext';
 interface UserProfileProps {
   collapsed: boolean;
 }
@@ -28,7 +29,11 @@ interface UserProfileProps {
 const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
   const navigate = useNavigate();
   const userService = useUserService();
+  const messageApi = useAppMessage();
   const [user, setUser] = useState<User | null>(null);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const authService = useAuthService();
 
   useMount(() => {
     void userService.getUserInfo().then(setUser);
@@ -50,16 +55,16 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
         navigate('/app/profile/account');
         break;
       case 'feedback':
-        navigate('/app/profile/feedback');
+        setFeedbackModalOpen(true);
         break;
-      case 'language':
-        console.log('打开语言设置');
-        break;
-      case 'theme':
-        console.log('打开主题设置');
-        break;
+      // case 'language':
+      //   console.log('打开语言设置');
+      //   break;
+      // case 'theme':
+      //   console.log('打开主题设置');
+      //   break;
       case 'logout':
-        userService.clearUserCache();
+        authService.logout();
         navigate('/login', { replace: true });
         break;
       default:
@@ -69,11 +74,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
 
   const items: MenuProps['items'] = [
     // --- 第一组：订阅与财务 ---
-    {
-      key: 'subscription',
-      label: '订阅信息',
-      icon: <RiBankCardLine size={16} />,
-    },
+    // {
+    //   key: 'subscription',
+    //   label: '订阅信息',
+    //   icon: <RiBankCardLine size={16} />,
+    // },
     {
       key: 'usage',
       label: '余额与使用量',
@@ -95,19 +100,19 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
     { type: 'divider' },
 
     // --- 第三组：设置 (带右侧文字) ---
-    {
-      key: 'language',
-      label: '语言',
-      icon: <RiTranslate2 size={16} />,
-      extra: <span style={{ fontSize: 12, color: '#999' }}>简体中文</span>,
-    },
-    {
-      key: 'theme',
-      label: '外观',
-      icon: <RiSunLine size={16} />,
-      extra: <span style={{ fontSize: 12, color: '#999' }}>浅色</span>,
-    },
-    { type: 'divider' },
+    // {
+    //   key: 'language',
+    //   label: '语言',
+    //   icon: <RiTranslate2 size={16} />,
+    //   extra: <span style={{ fontSize: 12, color: '#999' }}>简体中文</span>,
+    // },
+    // {
+    //   key: 'theme',
+    //   label: '外观',
+    //   icon: <RiSunLine size={16} />,
+    //   extra: <span style={{ fontSize: 12, color: '#999' }}>浅色</span>,
+    // },
+    // { type: 'divider' },
 
     // --- 第四组：退出 ---
     {
@@ -128,24 +133,62 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
     placement: 'topLeft' as const,
   };
 
-  return (
-    <Dropdown {...dropdownProps}>
-      <div className={clsx(styles.profile, !collapsed && styles.expanded)}>
-        <Avatar size="small" className={styles.avatar} src={user?.avatar} alt={displayName}>
-          {displayName.charAt(0).toUpperCase()}
-        </Avatar>
+  const handleSubmitFeedback = () => {
+    const content = feedbackText.trim();
+    if (content.length === 0) {
+      messageApi.warning('请先填写反馈内容');
+      return;
+    }
 
-        {!collapsed && (
-          <>
-            <div className={styles.info}>
-              <span className={styles.username}>{displayName}</span>
-              <span className={styles.tag}>{identityLabel}</span>
-            </div>
-            <RiArrowDownSLine className={styles.icon} />
-          </>
-        )}
-      </div>
-    </Dropdown>
+    // TODO: 向服务器发送反馈信息
+    messageApi.success('反馈已提交，感谢你的建议');
+    setFeedbackModalOpen(false);
+    setFeedbackText('');
+  };
+
+  const handleCancelFeedback = () => {
+    setFeedbackModalOpen(false);
+  };
+
+  return (
+    <>
+      <Dropdown {...dropdownProps}>
+        <div className={clsx(styles.profile, !collapsed && styles.expanded)}>
+          <Avatar size="small" className={styles.avatar} src={user?.avatar} alt={displayName}>
+            {displayName.charAt(0).toUpperCase()}
+          </Avatar>
+
+          {!collapsed && (
+            <>
+              <div className={styles.info}>
+                <span className={styles.username}>{displayName}</span>
+                <span className={styles.tag}>{identityLabel}</span>
+              </div>
+              <RiArrowDownSLine className={styles.icon} />
+            </>
+          )}
+        </div>
+      </Dropdown>
+
+      <Modal
+        title="用户反馈"
+        open={feedbackModalOpen}
+        onOk={handleSubmitFeedback}
+        onCancel={handleCancelFeedback}
+        okText="提交"
+        cancelText="取消"
+      >
+        <Input.TextArea
+          value={feedbackText}
+          onChange={(event) => setFeedbackText(event.target.value)}
+          placeholder="请输入你的反馈内容，我们会认真阅读。"
+          autoSize={{ minRows: 8, maxRows: 16 }}
+          maxLength={2000}
+          showCount
+          className={styles.feedbackInput}
+        />
+      </Modal>
+    </>
   );
 };
 
