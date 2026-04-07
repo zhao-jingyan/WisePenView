@@ -39,7 +39,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
     void userService.getUserInfo().then(setUser);
   });
 
-  const displayName = user?.nickname || user?.username || '未登录';
+  const displayName = user?.nickname || user?.username || '-';
   const identityLabel =
     user?.identityType !== undefined ? getIdentityTypeLabel(user.identityType) : '-';
 

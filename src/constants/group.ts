@@ -8,9 +8,9 @@ export const GROUP_TYPE_LABELS: Record<number, string> = {
 export const getGroupTypeLabel = (v: number) => GROUP_TYPE_LABELS[v] ?? String(v);
 
 /** 关系类型（我加入的 / 我管理的） */
-export const RELATION_TYPE_MAP: Record<string, 0 | 1> = {
-  managed: 0,
+export const RELATION_TYPE_MAP: Record<string, 1 | 2> = {
   joined: 1,
+  managed: 2,
 };
 
 /** 小组成员角色码：0=OWNER，1=ADMIN，2=MEMBER（与后端约定一致） */

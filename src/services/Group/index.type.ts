@@ -54,7 +54,7 @@ export interface FetchGroupMembersResponse {
 
 /** 获取小组列表请求参数 */
 export interface FetchGroupListRequest {
-  relationType: 0 | 1;
+  relationType: 1 | 2;
   page: number;
   size: number;
 }

@@ -8,7 +8,7 @@ import { LuTags } from 'react-icons/lu';
 import FlatDrive from '@/components/Drive/FlatDrive';
 import TreeDrive from '@/components/Drive/TreeDrive';
 import { StickerManageModal } from '@/components/Drive/Modals';
-import { useNoteService } from '@/contexts/ServicesContext';
+import { useNoteService, useUserService } from '@/contexts/ServicesContext';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { RESOURCE_TYPE } from '@/constants/resource';
 import { useDrivePreferencesStore, useRecentFilesStore, type DriveViewMode } from '@/store';
@@ -27,6 +27,7 @@ const Drive: React.FC = () => {
   const setViewMode = useDrivePreferencesStore((s) => s.setViewMode);
   const addRecentFile = useRecentFilesStore((s) => s.addFile);
   const noteService = useNoteService();
+  const userService = useUserService();
   const messageApi = useAppMessage();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [stickerManageOpen, setStickerManageOpen] = useState(false);
@@ -36,14 +37,19 @@ const Drive: React.FC = () => {
       if (!resourceId) {
         throw new Error('创建笔记失败：未获取到资源ID');
       }
-      return resourceId;
+      const currentUser = await userService.getUserInfo();
+      return {
+        resourceId,
+        ownerInfo: currentUser,
+      };
     },
     {
       manual: true,
-      onSuccess: (resourceId) => {
+      onSuccess: ({ resourceId, ownerInfo }) => {
         addRecentFile({
           resourceId,
           resourceName: '未命名笔记',
+          ownerInfo,
           resourceType: RESOURCE_TYPE.NOTE,
         });
         navigate(`/app/note/${encodeURIComponent(resourceId)}`);

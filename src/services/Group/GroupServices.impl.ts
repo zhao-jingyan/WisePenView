@@ -74,15 +74,17 @@ const updateGroupResConfig = async (params: UpdateGroupResConfigRequest) => {
 };
 
 const createGroup = async (params: CreateGroupRequest): Promise<string> => {
-  const res = (await Axios.post('/group/addGroup', params)) as ApiResponse<{
-    groupId?: string | number;
-  } | null>;
+  const res = (await Axios.post('/group/addGroup', params)) as ApiResponse<string>;
   checkResponse(res);
   const payload = res.data;
-  if (payload == null || payload.groupId == null) {
+  if (payload == null) {
     throw new Error('创建小组失败');
   }
-  return toIdString(payload.groupId);
+  const groupId = toIdString(payload);
+  if (!groupId) {
+    throw new Error('创建小组失败');
+  }
+  return groupId;
 };
 
 const editGroup = async (params: EditGroupRequest) => {
