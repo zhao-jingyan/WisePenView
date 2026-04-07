@@ -35,19 +35,8 @@ function readInsertedBlockId(insertedBlock: unknown): string | undefined {
   return undefined;
 }
 
-function requireConnectedInstance(instance: CustomBlockNoteProps['instance']) {
-  const provider = instance.provider;
-  const doc = instance.doc;
-  if (!provider || !doc) {
-    throw new Error('Note connection is not ready');
-  }
-  return { provider, doc };
-}
-
-// CustomBlockNote 组件是 NoteEditor 的子组件，用于创建 BlockNote 实例并接入 YJS 协同连接
 const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
-  ({ resourceId, instance, readOnly = false }, ref) => {
-    const { provider, doc } = requireConnectedInstance(instance);
+  ({ resourceId, doc, provider, readOnly = false }, ref) => {
     const imageService = useImageService();
     const editorRef = useLatest<CustomBlockNoteEditor | null>(null);
 
@@ -129,7 +118,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       [editor]
     );
 
-    const onKeyDownCapture = useNoteCaptureKeyEvent(instance);
+    const onKeyDownCapture = useNoteCaptureKeyEvent(provider);
 
     return (
       <div className={styles.editorShell} onKeyDownCapture={onKeyDownCapture}>
