@@ -18,7 +18,6 @@ const ResetPassword = lazy(() => import('@/views/auth/ResetPassword'));
 const NewPassword = lazy(() => import('@/views/auth/NewPassword'));
 const VerifyEmail = lazy(() => import('@/views/auth/VerifyEmail'));
 const NoteView = lazy(() => import('@/views/note'));
-const Pdf = lazy(() => import('@/views/pdf'));
 
 const router = createBrowserRouter([
   // ==============================
@@ -103,10 +102,6 @@ const router = createBrowserRouter([
       {
         path: 'drive',
         element: <Drive />,
-      },
-      {
-        path: 'pdf/:resourceId',
-        element: <Pdf />,
       },
       {
         path: 'my-group',
