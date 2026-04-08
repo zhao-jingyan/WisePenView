@@ -13,6 +13,7 @@ const NewTagModal: React.FC<NewTagModalProps> = ({
   onCancel,
   onSuccess,
   groupId,
+  subjectLabel = '标签',
   parentTagId,
   parentDisplayName,
 }) => {
@@ -48,7 +49,7 @@ const NewTagModal: React.FC<NewTagModalProps> = ({
   const handleSubmit = async () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      message.warning('请输入标签名称');
+      message.warning(`请输入${subjectLabel}名称`);
       return;
     }
     runAddTag(trimmed);
@@ -60,12 +61,12 @@ const NewTagModal: React.FC<NewTagModalProps> = ({
   };
 
   const pathHint = parentTagId
-    ? `将在「${parentDisplayName ?? '当前标签'}」下创建子标签`
-    : '将创建顶级标签';
+    ? `将在「${parentDisplayName ?? '当前目录'}」下创建子${subjectLabel}`
+    : `将创建顶级${subjectLabel}`;
 
   return (
     <Modal
-      title="新建标签"
+      title={`新建${subjectLabel}`}
       open={open}
       onCancel={handleCancel}
       afterOpenChange={handleOpenChange}
@@ -82,7 +83,7 @@ const NewTagModal: React.FC<NewTagModalProps> = ({
     >
       <div className={styles.pathHint}>{pathHint}</div>
       <Input
-        placeholder="请输入标签名称"
+        placeholder={`请输入${subjectLabel}名称`}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onPressEnter={handleSubmit}

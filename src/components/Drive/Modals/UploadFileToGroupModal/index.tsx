@@ -93,8 +93,8 @@ const UploadFileToGroupModal: React.FC<UploadFileToGroupModalProps> = ({
   const canNext = hasFileIds;
   const canSubmit = hasFileIds && selectedTags.length > 0;
 
-  /** 与小组主盘一致：FOLDER → FolderService 树；TAG → TagService 树（TreeNav 内部按 viewMode 选用 Service） */
-  const groupTreeViewMode = fileOrgLogic === 'FOLDER' ? 'folder' : 'tag';
+  /** 与小组主盘一致：FOLDER → FolderService 树；TAG → TagService 树（TreeNav 内部按 dataMode 选用 Service） */
+  const groupTreeDataMode = 'tag';
   const step2Title = fileOrgLogic === 'FOLDER' ? '选择小组文件夹' : '选择小组标签';
   const step2Hint =
     fileOrgLogic === 'FOLDER' ? '选择文件要上传到的小组文件夹' : '选择文件要上传到的小组标签';
@@ -127,8 +127,8 @@ const UploadFileToGroupModal: React.FC<UploadFileToGroupModalProps> = ({
                 <div className={styles.treeNav}>
                   <TreeNav
                     key={`personal-${navRefreshKey}`}
-                    viewMode="folder"
-                    selectMode="leaves"
+                    dataMode="folder"
+                    selectTarget="leaves"
                     refreshTrigger={navRefreshKey}
                     onChange={handleFilesChange}
                   />
@@ -139,13 +139,27 @@ const UploadFileToGroupModal: React.FC<UploadFileToGroupModalProps> = ({
               <div className={styles.treeSection}>
                 <div className={styles.hint}>{step2Hint}</div>
                 <div className={styles.treeNav}>
-                  <TreeNav
-                    key={`group-tree-${groupTreeViewMode}-${groupId}-${navRefreshKey}`}
-                    viewMode={groupTreeViewMode}
-                    selectMode="nodes"
-                    groupId={groupId}
-                    onChange={handleTagsChange}
-                  />
+                  {fileOrgLogic === 'FOLDER' ? (
+                    <TreeNav
+                      key={`group-tree-${groupTreeDataMode}-${groupId}-${navRefreshKey}`}
+                      dataMode={groupTreeDataMode}
+                      selectTarget="nodes"
+                      groupId={groupId}
+                      iconMode="folder"
+                      nodesMultiSelect={false}
+                      onChange={handleTagsChange}
+                    />
+                  ) : (
+                    <TreeNav
+                      key={`group-tree-${groupTreeDataMode}-${groupId}-${navRefreshKey}`}
+                      dataMode={groupTreeDataMode}
+                      selectTarget="nodes"
+                      groupId={groupId}
+                      iconMode="tag"
+                      nodesMultiSelect={true}
+                      onChange={handleTagsChange}
+                    />
+                  )}
                 </div>
               </div>
             </div>

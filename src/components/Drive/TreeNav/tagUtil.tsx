@@ -10,17 +10,21 @@ function isValidTagNode(node: TagTreeNode): boolean {
 }
 
 // 输入tag节点，输出tree可展示的tag数据节点
-export function tagToDataNode(node: TagTreeNode, nodeMap: NodeMap): DataNode | null {
+export function tagToDataNode(
+  node: TagTreeNode,
+  nodeMap: NodeMap,
+  getNodeIcon?: (currentNode: TagTreeNode) => React.ReactNode
+): DataNode | null {
   if (!isValidTagNode(node)) return null;
   nodeMap.set(node.tagId, node);
   const children = (node.children ?? [])
-    .map((c) => tagToDataNode(c, nodeMap))
+    .map((c) => tagToDataNode(c, nodeMap, getNodeIcon))
     .filter((n): n is DataNode => n != null);
   return {
     key: node.tagId,
     title: (
       <span className={styles.nodeTitle}>
-        <AiOutlineTag size={14} color="var(--ant-color-primary)" />
+        {getNodeIcon?.(node) ?? <AiOutlineTag size={14} color="var(--ant-color-primary)" />}
         {node.tagName}
       </span>
     ),

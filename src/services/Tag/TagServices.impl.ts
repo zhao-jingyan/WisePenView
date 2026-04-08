@@ -23,6 +23,7 @@ const tagTreeCache = new Map<string, TagTreeNode[]>();
 /** 扁平索引：cacheKey → (tagId → TagTreeNode)，与 tagTreeCache 同步维护 */
 const tagFlatCache = new Map<string, Map<string, TagTreeNode>>();
 const CACHE_KEY_DEFAULT = '__default__';
+const HIDDEN_TAG_NAME = '.Trash';
 
 const buildFlatMap = (roots: TagTreeNode[]): Map<string, TagTreeNode> => {
   const map = new Map<string, TagTreeNode>();
@@ -50,6 +51,20 @@ const syncTrashTagIdToStore = (groupId: string | undefined, roots: TagTreeNode[]
     }
   }
   useTrashTagStore.getState().setTrashTagId(groupId, undefined);
+};
+
+const filterHiddenTags = (nodes: TagTreeNode[]): TagTreeNode[] => {
+  const filtered: TagTreeNode[] = [];
+  for (const node of nodes) {
+    if ((node.tagName ?? '').trim() === HIDDEN_TAG_NAME) {
+      continue;
+    }
+    filtered.push({
+      ...node,
+      children: Array.isArray(node.children) ? filterHiddenTags(node.children) : undefined,
+    });
+  }
+  return filtered;
 };
 
 const clearTagTreeCache = (groupId?: string): void => {
@@ -81,14 +96,13 @@ const getTagTree = async (groupId?: string): Promise<TagTreeNode[]> => {
   >;
   checkResponse(res);
   // 过滤掉 tagName，分割folder和tag
-  if (Array.isArray(res.data)) {
-    res.data = res.data.filter((item) => !(item.tagName && item.tagName.startsWith('/')));
-  }
-
-  const roots: TagTreeNode[] = res.data ?? [];
+  const rawRoots: TagTreeNode[] = (res.data ?? []).filter(
+    (item) => !(item.tagName && item.tagName.startsWith('/'))
+  );
+  const roots: TagTreeNode[] = filterHiddenTags(rawRoots);
   tagTreeCache.set(cacheKey, roots);
   tagFlatCache.set(cacheKey, buildFlatMap(roots));
-  syncTrashTagIdToStore(normalizedGroupId, roots);
+  syncTrashTagIdToStore(normalizedGroupId, rawRoots);
   return roots;
 };
 

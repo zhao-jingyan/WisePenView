@@ -103,7 +103,7 @@ const MoveToFolderModal: React.FC<MoveToFolderModalProps> = ({
           {selectedNode && <ReadOnlyBreadcrumb node={selectedNode} mode="folder" />}
         </div>
         <div className={`${styles.treeSection} ${styles.treeNav}`}>
-          <TreeNav viewMode="folder" selectMode="nodes" onChange={handleTreeNavChange} />
+          <TreeNav dataMode="folder" selectTarget="nodes" onChange={handleTreeNavChange} />
         </div>
       </div>
     </Modal>

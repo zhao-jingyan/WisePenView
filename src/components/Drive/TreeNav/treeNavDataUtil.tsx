@@ -7,7 +7,12 @@ import type { ResourceItem } from '@/types/resource';
 import type { Folder } from '@/types/folder';
 import { mapFolderToTagTreeNode } from '@/types/folder';
 import type { IFolderService } from '@/services/Folder/index.type';
-import type { NodeMap } from './index.type';
+import type {
+  NodeMap,
+  TreeNavDataMode,
+  TreeNavIconRenderer,
+  TreeNavSelectTarget,
+} from './index.type';
 import { createFolderDataNode } from './folderUtil';
 import styles from './style.module.less';
 
@@ -28,8 +33,9 @@ export interface NavNodeBuildContext {
   resourceById: Map<string, ResourceItem>;
   loadMoreMetaByKey: Map<string, NavLoadMoreMeta>;
   showFiles: boolean;
-  selectMode: 'nodes' | 'leaves';
-  viewMode: 'folder' | 'tag';
+  selectTarget: TreeNavSelectTarget;
+  dataMode: TreeNavDataMode;
+  renderNodeIcon?: TreeNavIconRenderer;
   onLoadMoreClick: (loadMoreKey: string) => void;
 }
 
@@ -41,11 +47,16 @@ function isValidTagNode(node: TagTreeNode): boolean {
 export function tagToLazyNavDataNode(node: TagTreeNode, ctx: NavNodeBuildContext): DataNode | null {
   if (!isValidTagNode(node)) return null;
   ctx.nodeMap.set(node.tagId, node);
+  const customBranchIcon = ctx.renderNodeIcon?.({
+    kind: 'branch',
+    dataMode: ctx.dataMode,
+    rawNode: node,
+  });
   return {
     key: node.tagId,
     title: (
       <span className={styles.nodeTitle}>
-        <AiOutlineTag size={14} color="var(--ant-color-primary)" />
+        {customBranchIcon ?? <AiOutlineTag size={14} color="var(--ant-color-primary)" />}
         {node.tagName}
       </span>
     ),
@@ -58,20 +69,27 @@ export function tagToLazyNavDataNode(node: TagTreeNode, ctx: NavNodeBuildContext
 export function createFileDataNode(item: ResourceItem, ctx: NavNodeBuildContext): DataNode {
   const id = item.resourceId ?? '';
   if (id) ctx.resourceById.set(id, item);
+  const customFileIcon = ctx.renderNodeIcon?.({
+    kind: 'file',
+    dataMode: ctx.dataMode,
+    rawNode: item,
+  });
   return {
     key: `${TREE_NAV_FILE_KEY_PREFIX}${id}`,
     title: (
       <span className={styles.nodeTitle}>
-        <FileTypeIcon
-          resourceType={item.resourceType}
-          size={14}
-          color="var(--ant-color-text-secondary)"
-        />
+        {customFileIcon ?? (
+          <FileTypeIcon
+            resourceType={item.resourceType}
+            size={14}
+            color="var(--ant-color-text-secondary)"
+          />
+        )}
         {item.resourceName || '未命名文件'}
       </span>
     ),
     isLeaf: true,
-    checkable: ctx.selectMode === 'leaves',
+    checkable: ctx.selectTarget === 'leaves',
     selectable: false,
   };
 }
@@ -151,9 +169,18 @@ export async function buildFolderNavChildren(
   folderService: IFolderService
 ): Promise<DataNode[]> {
   const subFolderNodes: DataNode[] = (targetFolder.children ?? []).map((child) => ({
-    ...createFolderDataNode(child, ctx.nodeMap),
-    checkable: ctx.viewMode === 'tag' && ctx.selectMode === 'nodes',
-    selectable: ctx.viewMode === 'folder' && ctx.selectMode === 'nodes',
+    ...createFolderDataNode(
+      child,
+      ctx.nodeMap,
+      undefined,
+      ctx.renderNodeIcon?.({
+        kind: 'branch',
+        dataMode: ctx.dataMode,
+        rawNode: mapFolderToTagTreeNode(child),
+      })
+    ),
+    checkable: ctx.dataMode === 'tag' && ctx.selectTarget === 'nodes',
+    selectable: ctx.dataMode === 'folder' && ctx.selectTarget === 'nodes',
   }));
 
   if (!ctx.showFiles) {

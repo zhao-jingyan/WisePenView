@@ -31,8 +31,8 @@ export interface GroupDisplayConfig {
   canRemoveMember: boolean;
   /** 高级组且当前用户为组长时，小组详情展示 token 明细与 token 划拨 Tab */
   showWalletTabs: boolean;
-  /** 小组详情「文件」Tab 内 TreeDrive 是否只读；管理员与组长可编辑（false），普通成员只读（true） */
-  driveReadOnlyMode: boolean;
+  /** 是否可创建标签（OWNER、ADMIN） */
+  canCreateTag: boolean;
   /** 是否可邀请成员（OWNER、ADMIN） */
   canInviteMember: boolean;
 }
@@ -51,7 +51,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canAssignQuota: false,
       canRemoveMember: false,
       showWalletTabs: false,
-      driveReadOnlyMode: true,
+      canCreateTag: false,
       canInviteMember: false,
     },
     ADMIN: {
@@ -66,7 +66,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canAssignQuota: true,
       canRemoveMember: true,
       showWalletTabs: false,
-      driveReadOnlyMode: false,
+      canCreateTag: true,
       canInviteMember: true,
     },
     OWNER: {
@@ -81,7 +81,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canAssignQuota: true,
       canRemoveMember: true,
       showWalletTabs: false,
-      driveReadOnlyMode: false,
+      canCreateTag: true,
       canInviteMember: true,
     },
   },
@@ -98,7 +98,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canAssignQuota: false,
       canRemoveMember: false,
       showWalletTabs: false,
-      driveReadOnlyMode: true,
+      canCreateTag: false,
       canInviteMember: false,
     },
     ADMIN: {
@@ -113,7 +113,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canAssignQuota: true,
       canRemoveMember: true,
       showWalletTabs: false,
-      driveReadOnlyMode: false,
+      canCreateTag: true,
       canInviteMember: true,
     },
     OWNER: {
@@ -128,7 +128,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canAssignQuota: true,
       canRemoveMember: true,
       showWalletTabs: true,
-      driveReadOnlyMode: false,
+      canCreateTag: true,
       canInviteMember: true,
     },
   },
@@ -145,7 +145,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canAssignQuota: false,
       canRemoveMember: false,
       showWalletTabs: false,
-      driveReadOnlyMode: true,
+      canCreateTag: false,
       canInviteMember: false,
     },
     ADMIN: {
@@ -160,7 +160,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canAssignQuota: true,
       canRemoveMember: true,
       showWalletTabs: false,
-      driveReadOnlyMode: false,
+      canCreateTag: true,
       canInviteMember: true,
     },
     OWNER: {
@@ -175,7 +175,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canAssignQuota: true,
       canRemoveMember: true,
       showWalletTabs: false,
-      driveReadOnlyMode: false,
+      canCreateTag: true,
       canInviteMember: true,
     },
   },
@@ -196,8 +196,8 @@ export const getGroupDisplayConfig = (groupType: number, userRole: string): Grou
       canModifyPermission: false,
       canAssignQuota: false,
       canRemoveMember: false,
+      canCreateTag: false,
       showWalletTabs: false,
-      driveReadOnlyMode: true,
       canInviteMember: false,
     }
   );

@@ -4,9 +4,8 @@ import { Button, Tabs } from 'antd';
 import { AiOutlineCloudUpload } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
 import { RiPenNibFill } from 'react-icons/ri';
-import { LuTags } from 'react-icons/lu';
 import FlatDrive from '@/components/Drive/FlatDrive';
-import TreeDrive from '@/components/Drive/TreeDrive';
+import FolderDrive from '@/components/Drive/TreeDrive/FolderDrive';
 import UploadQueueTab from '@/components/Drive/UploadQueueTab';
 import type { UploadQueueTabRef } from '@/components/Drive/UploadQueueTab';
 import { StickerManageModal } from '@/components/Drive/Modals';
@@ -108,7 +107,7 @@ const Drive: React.FC = () => {
 
       <div className={styles.previewContent}>
         {viewMode === 'flat' && <FlatDrive />}
-        {viewMode === 'folder' && <TreeDrive />}
+        {viewMode === 'folder' && <FolderDrive />}
         {viewMode === 'uploadQueue' && <UploadQueueTab ref={uploadQueueRef} />}
       </div>
 

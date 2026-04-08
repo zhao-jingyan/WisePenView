@@ -104,8 +104,8 @@ const EditTagModal: React.FC<EditTagModalProps> = ({
             <div className={styles.hint}>勾选或取消勾选以调整该文件关联的标签</div>
             <div className={`${styles.treeSection} ${styles.treeNav}`}>
               <TreeNav
-                viewMode="tag"
-                selectMode="nodes"
+                dataMode="tag"
+                selectTarget="nodes"
                 groupId={groupId}
                 tagInitialCheckedIds={tagInitialCheckedIds}
                 onChange={handleTreeChange}

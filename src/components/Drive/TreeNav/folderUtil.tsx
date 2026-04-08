@@ -23,14 +23,15 @@ const getFolderDisplayName = (tagName: string) => {
 export function createFolderDataNode(
   folder: Folder,
   nodeMap: NodeMap,
-  displayName?: string
+  displayName?: string,
+  icon?: React.ReactNode
 ): DataNode {
   nodeMap.set(folder.tagId, folder as TagTreeNode);
   return {
     key: folder.tagId,
     title: (
       <span className={styles.nodeTitle}>
-        <AiOutlineFolder size={14} color="var(--ant-color-warning)" />
+        {icon ?? <AiOutlineFolder size={14} color="var(--ant-color-warning)" />}
         {displayName ?? getFolderDisplayName(folder.tagName)}
       </span>
     ),

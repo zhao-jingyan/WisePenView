@@ -10,6 +10,7 @@ import { getFolderDisplayName } from '@/utils/path';
 import type { ResourceItem } from '@/types/resource';
 import type { TagTreeNode } from '@/services/Tag/index.type';
 import type { MoveToFolderTarget } from '@/components/Drive/Modals';
+import type { GroupFileOrgLogic } from '@/types/group';
 import type { TreeRowItem, TreeDriveMode, LoadMoreRowItem } from '../index.type';
 
 export interface TreeDriveColumnConfigOptions {
@@ -36,6 +37,8 @@ export interface TreeDriveColumnConfigOptions {
   loadingMoreKeys: ReadonlySet<string>;
   /** 只读：操作列保留占位，不展示下拉菜单 */
   readOnlyMode?: boolean;
+  /** 小组文件组织模式：TAG/FOLDER，仅用于展示图标 */
+  fileOrgLogic?: GroupFileOrgLogic;
 }
 
 export function getTreeDriveColumns(
@@ -55,6 +58,7 @@ export function getTreeDriveColumns(
     onLoadMore,
     loadingMoreKeys,
     readOnlyMode = false,
+    fileOrgLogic,
   } = options;
 
   const columns: ColumnsType<TreeRowItem> = [
@@ -94,7 +98,7 @@ export function getTreeDriveColumns(
         return (
           <div className={styles.nameCell}>
             {record._type === 'folder' ? (
-              mode === 'tag' ? (
+              mode === 'tag' && fileOrgLogic !== 'FOLDER' ? (
                 <AiOutlineTag size={20} color="var(--ant-color-primary)" />
               ) : (
                 <AiOutlineFolder size={20} color="var(--ant-color-warning)" />

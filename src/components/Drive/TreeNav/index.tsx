@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Tree, Spin, Empty } from 'antd';
 import type { DataNode } from 'antd/es/tree';
+import { AiOutlineFolder, AiOutlineTag } from 'react-icons/ai';
 import { LuChevronDown } from 'react-icons/lu';
 import { useLatest, useRequest } from 'ahooks';
 import { useFolderService, useTagService } from '@/contexts/ServicesContext';
@@ -9,7 +10,8 @@ import { mapFolderToTagTreeNode } from '@/types/folder';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import type { ITreeDriveAdapter } from '@/hooks/drive/useTreeDrive.type';
-import type { TreeNavProps, NodeMap } from './index.type';
+import FileTypeIcon from '@/components/Common/FileTypeIcon';
+import type { TreeNavProps, NodeMap, TreeNavNodeKind } from './index.type';
 import { ROOT_DISPLAY, createFolderDataNode, replaceNodeChildren } from './folderUtil';
 import { tagToDataNode } from './tagUtil';
 import type { ResourceItem } from '@/types/resource';
@@ -32,8 +34,12 @@ function isLoadMoreTreeKey(key: React.Key): boolean {
 }
 
 const TreeNav: React.FC<TreeNavProps> = ({
-  viewMode,
-  selectMode,
+  dataMode,
+  selectTarget,
+  nodesMultiSelect,
+  leafMultiSelect = true,
+  iconMode,
+  renderNodeIcon,
   groupId,
   onChange,
   refreshTrigger = 0,
@@ -43,10 +49,38 @@ const TreeNav: React.FC<TreeNavProps> = ({
   const tagService = useTagService();
   const message = useAppMessage();
 
-  const showFiles = !(viewMode === 'tag' && selectMode === 'nodes');
+  const showFiles = !(dataMode === 'tag' && selectTarget === 'nodes');
+  const finalIconMode = iconMode ?? dataMode;
+  const finalNodesMultiSelect = nodesMultiSelect ?? dataMode === 'tag';
+
+  const resolveNodeIcon = useCallback(
+    (kind: TreeNavNodeKind, rawNode?: TagTreeNode | ResourceItem) => {
+      const customIcon = renderNodeIcon?.({ kind, dataMode, rawNode });
+      if (customIcon != null) return customIcon;
+      if (kind === 'branch') {
+        return finalIconMode === 'tag' ? (
+          <AiOutlineTag size={14} color="var(--ant-color-primary)" />
+        ) : (
+          <AiOutlineFolder size={14} color="var(--ant-color-warning)" />
+        );
+      }
+      if (kind === 'file') {
+        const resource = rawNode as ResourceItem | undefined;
+        return (
+          <FileTypeIcon
+            resourceType={resource?.resourceType}
+            size={14}
+            color="var(--ant-color-text-secondary)"
+          />
+        );
+      }
+      return null;
+    },
+    [renderNodeIcon, dataMode, finalIconMode]
+  );
 
   const adapter = useMemo<ITreeDriveAdapter>(() => {
-    if (viewMode === 'folder') {
+    if (dataMode === 'folder') {
       return {
         loadTree: async (gid) =>
           mapFolderToTagTreeNode(await folderService.getFolderTree({ groupId: gid })),
@@ -78,7 +112,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
         return { childNodes: res.tags, files: res.files, totalFiles: res.totalFiles };
       },
     };
-  }, [viewMode, folderService, tagService]);
+  }, [dataMode, folderService, tagService]);
 
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
@@ -112,8 +146,9 @@ const TreeNav: React.FC<TreeNavProps> = ({
           resourceById: resourceByIdRef.current,
           loadMoreMetaByKey: loadMoreMetaRef.current,
           showFiles,
-          selectMode,
-          viewMode,
+          selectTarget,
+          dataMode,
+          renderNodeIcon: ({ kind, rawNode }) => resolveNodeIcon(kind, rawNode),
           onLoadMoreClick: (k) => void handleLoadMore(k),
         };
         setTreeData((prev) =>
@@ -135,7 +170,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
         inflightLoadMoreRef.current.delete(loadMoreKey);
       }
     },
-    [adapter, message, showFiles, selectMode, viewMode]
+    [adapter, message, showFiles, selectTarget, dataMode, resolveNodeIcon]
   );
 
   const handleLoadMoreRef = useLatest(handleLoadMore);
@@ -152,24 +187,39 @@ const TreeNav: React.FC<TreeNavProps> = ({
         resourceById: resourceByIdRef.current,
         loadMoreMetaByKey: loadMoreMetaRef.current,
         showFiles,
-        selectMode,
-        viewMode,
+        selectTarget,
+        dataMode,
+        renderNodeIcon: ({ kind, rawNode }) => resolveNodeIcon(kind, rawNode),
         onLoadMoreClick: (k) => void handleLoadMoreRef.current(k),
       };
 
       const root = await folderService.getFolderTree({ groupId });
       const childNodes = await buildFolderNavChildren(root, ctx, folderService);
       const rootNode: DataNode = {
-        ...createFolderDataNode(root, nodeMapRef.current, ROOT_DISPLAY),
+        ...createFolderDataNode(
+          root,
+          nodeMapRef.current,
+          ROOT_DISPLAY,
+          resolveNodeIcon('branch', mapFolderToTagTreeNode(root))
+        ),
         checkable: false,
-        selectable: selectMode === 'nodes',
+        selectable: selectTarget === 'nodes',
         children: childNodes,
       };
       return [rootNode];
     },
     {
-      ready: viewMode === 'folder',
-      refreshDeps: [viewMode, groupId, refreshTrigger, folderService, showFiles, selectMode],
+      ready: dataMode === 'folder',
+      refreshDeps: [
+        dataMode,
+        groupId,
+        refreshTrigger,
+        folderService,
+        showFiles,
+        selectTarget,
+        finalIconMode,
+        renderNodeIcon,
+      ],
       onSuccess: (data) => {
         setTreeData(data);
         setSelectedKeys([]);
@@ -192,25 +242,43 @@ const TreeNav: React.FC<TreeNavProps> = ({
 
       const nodes = await tagService.getTagTree(groupId);
       return nodes
-        .map((n) => tagToDataNode(n, nodeMapRef.current))
+        .map((n) =>
+          tagToDataNode(n, nodeMapRef.current, (currentNode) =>
+            resolveNodeIcon('branch', currentNode)
+          )
+        )
         .filter((n): n is DataNode => n != null);
     },
     {
-      ready: viewMode === 'tag' && selectMode === 'nodes',
+      ready: dataMode === 'tag' && selectTarget === 'nodes',
       refreshDeps: [
-        viewMode,
-        selectMode,
+        dataMode,
+        selectTarget,
+        finalNodesMultiSelect,
         groupId,
         refreshTrigger,
         tagService,
         tagInitialCheckKey,
         tagInitialCheckedIds,
+        finalIconMode,
+        renderNodeIcon,
       ],
       onSuccess: (data) => {
         setTreeData(data);
         const initialIds = (tagInitialCheckedIds ?? []).filter((id) => nodeMapRef.current.has(id));
-        setCheckedTagKeys(initialIds);
-        const selectedNodes = initialIds
+        const normalizedInitialIds = finalNodesMultiSelect
+          ? initialIds
+          : initialIds.length > 0
+            ? [initialIds[initialIds.length - 1]]
+            : [];
+        if (finalNodesMultiSelect) {
+          setCheckedTagKeys(normalizedInitialIds);
+          setSelectedKeys([]);
+        } else {
+          setCheckedTagKeys([]);
+          setSelectedKeys(normalizedInitialIds);
+        }
+        const selectedNodes = normalizedInitialIds
           .map((k) => nodeMapRef.current.get(String(k)))
           .filter((n): n is TagTreeNode => n != null);
         onChangeRef.current?.(selectedNodes, []);
@@ -234,8 +302,9 @@ const TreeNav: React.FC<TreeNavProps> = ({
         resourceById: resourceByIdRef.current,
         loadMoreMetaByKey: loadMoreMetaRef.current,
         showFiles: true,
-        selectMode,
-        viewMode,
+        selectTarget,
+        dataMode,
+        renderNodeIcon: ({ kind, rawNode }) => resolveNodeIcon(kind, rawNode),
         onLoadMoreClick: (k) => void handleLoadMoreRef.current(k),
       };
 
@@ -243,8 +312,16 @@ const TreeNav: React.FC<TreeNavProps> = ({
       return nodes.map((n) => tagToLazyNavDataNode(n, ctx)).filter((n): n is DataNode => n != null);
     },
     {
-      ready: viewMode === 'tag' && selectMode === 'leaves',
-      refreshDeps: [viewMode, selectMode, groupId, refreshTrigger, tagService],
+      ready: dataMode === 'tag' && selectTarget === 'leaves',
+      refreshDeps: [
+        dataMode,
+        selectTarget,
+        groupId,
+        refreshTrigger,
+        tagService,
+        finalIconMode,
+        renderNodeIcon,
+      ],
       onSuccess: (data) => {
         setTreeData(data);
         setCheckedFileKeys([]);
@@ -271,8 +348,9 @@ const TreeNav: React.FC<TreeNavProps> = ({
         resourceById: resourceByIdRef.current,
         loadMoreMetaByKey: loadMoreMetaRef.current,
         showFiles,
-        selectMode,
-        viewMode,
+        selectTarget,
+        dataMode,
+        renderNodeIcon: ({ kind, rawNode }) => resolveNodeIcon(kind, rawNode),
         onLoadMoreClick: (k) => void handleLoadMoreRef.current(k),
       };
       try {
@@ -282,7 +360,16 @@ const TreeNav: React.FC<TreeNavProps> = ({
         message.error(parseErrorMessage(err, '加载文件夹内容失败'));
       }
     },
-    [folderService, groupId, showFiles, selectMode, viewMode, message, handleLoadMoreRef]
+    [
+      folderService,
+      groupId,
+      showFiles,
+      selectTarget,
+      dataMode,
+      message,
+      handleLoadMoreRef,
+      resolveNodeIcon,
+    ]
   );
 
   const handleLoadTagLeavesData = useCallback(
@@ -297,8 +384,9 @@ const TreeNav: React.FC<TreeNavProps> = ({
         resourceById: resourceByIdRef.current,
         loadMoreMetaByKey: loadMoreMetaRef.current,
         showFiles: true,
-        selectMode,
-        viewMode,
+        selectTarget,
+        dataMode,
+        renderNodeIcon: ({ kind, rawNode }) => resolveNodeIcon(kind, rawNode),
         onLoadMoreClick: (k) => void handleLoadMoreRef.current(k),
       };
 
@@ -322,74 +410,101 @@ const TreeNav: React.FC<TreeNavProps> = ({
         message.error(parseErrorMessage(err, '加载标签内容失败'));
       }
     },
-    [adapter, selectMode, viewMode, message, handleLoadMoreRef]
+    [adapter, selectTarget, dataMode, message, handleLoadMoreRef, resolveNodeIcon]
   );
 
   const loadDataProp =
-    viewMode === 'folder'
+    dataMode === 'folder'
       ? handleLoadFolderData
-      : viewMode === 'tag' && selectMode === 'leaves'
+      : dataMode === 'tag' && selectTarget === 'leaves'
         ? handleLoadTagLeavesData
         : undefined;
 
-  const handleSelectFolders = useCallback(
+  const handleSelectNodes = useCallback(
     (keys: React.Key[]) => {
-      if (selectMode !== 'nodes') return;
-      setSelectedKeys(keys);
+      if (selectTarget !== 'nodes') return;
+      const normalizedKeys = finalNodesMultiSelect ? keys : keys.slice(0, 1);
+      setSelectedKeys(normalizedKeys);
       if (keys.length === 0) {
         onChangeRef.current?.([], []);
       } else {
-        const node = nodeMapRef.current.get(String(keys[0]));
-        onChangeRef.current?.(node ? [node] : [], []);
+        const selectedNodes = normalizedKeys
+          .map((k) => nodeMapRef.current.get(String(k)))
+          .filter((n): n is TagTreeNode => n != null);
+        onChangeRef.current?.(selectedNodes, []);
       }
     },
-    [selectMode, onChangeRef]
+    [selectTarget, onChangeRef, finalNodesMultiSelect]
   );
 
   const handleCheckTags = useCallback(
-    (checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }) => {
-      if (viewMode !== 'tag' || selectMode !== 'nodes') return;
-      const keys = Array.isArray(checked) ? checked : checked.checked;
-      setCheckedTagKeys(keys);
-      const nodes = keys
+    (
+      checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] },
+      info?: { node: DataNode; checked: boolean }
+    ) => {
+      if (dataMode !== 'tag' || selectTarget !== 'nodes') return;
+      const keys = (Array.isArray(checked) ? checked : checked.checked).map(String);
+      const normalizedKeys = (() => {
+        if (finalNodesMultiSelect) return keys;
+        const clickedKey = String(info?.node?.key ?? '');
+        if (clickedKey && !clickedKey.startsWith(TREE_NAV_FILE_KEY_PREFIX)) {
+          return info?.checked ? [clickedKey] : [];
+        }
+        return keys.length > 0 ? [keys[keys.length - 1]] : [];
+      })();
+      setCheckedTagKeys(normalizedKeys);
+      const nodes = normalizedKeys
         .map((k) => nodeMapRef.current.get(String(k)))
         .filter((n): n is TagTreeNode => n != null);
       onChangeRef.current?.(nodes, []);
     },
-    [viewMode, selectMode, onChangeRef]
+    [dataMode, selectTarget, onChangeRef, finalNodesMultiSelect]
   );
 
   const handleCheckFiles = useCallback(
-    (checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }) => {
-      if (selectMode !== 'leaves') return;
+    (
+      checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] },
+      info?: { node: DataNode; checked: boolean }
+    ) => {
+      if (selectTarget !== 'leaves') return;
       const keys = Array.isArray(checked) ? checked : checked.checked;
-      const fileKeys = keys.filter((k) => String(k).startsWith(TREE_NAV_FILE_KEY_PREFIX));
-      setCheckedFileKeys(fileKeys);
-      const leaves = fileKeys
+      const fileKeys = keys
+        .filter((k) => String(k).startsWith(TREE_NAV_FILE_KEY_PREFIX))
+        .map(String);
+      const normalizedFileKeys = (() => {
+        if (leafMultiSelect) return fileKeys;
+        const clickedKey = String(info?.node?.key ?? '');
+        if (clickedKey.startsWith(TREE_NAV_FILE_KEY_PREFIX)) {
+          return info?.checked ? [clickedKey] : [];
+        }
+        return fileKeys.length > 0 ? [fileKeys[fileKeys.length - 1]] : [];
+      })();
+      setCheckedFileKeys(normalizedFileKeys);
+      const leaves = normalizedFileKeys
         .map((k) => resourceByIdRef.current.get(String(k).slice(TREE_NAV_FILE_KEY_PREFIX.length)))
         .filter((x): x is ResourceItem => x != null);
       onChangeRef.current?.([], leaves);
     },
-    [selectMode, onChangeRef]
+    [selectTarget, onChangeRef, leafMultiSelect]
   );
 
-  const treeCheckable = (viewMode === 'tag' && selectMode === 'nodes') || selectMode === 'leaves';
+  const nodeCheckable = dataMode === 'tag' && selectTarget === 'nodes' && finalNodesMultiSelect;
+  const leafCheckable = selectTarget === 'leaves';
+  const treeCheckable = nodeCheckable || leafCheckable;
 
-  const treeSelectable = viewMode === 'folder' && selectMode === 'nodes';
+  const treeSelectable = selectTarget === 'nodes' && !nodeCheckable;
 
-  const checkedKeysForTree =
-    viewMode === 'tag' && selectMode === 'nodes'
-      ? checkedTagKeys
-      : selectMode === 'leaves'
-        ? checkedFileKeys
-        : undefined;
+  const checkedKeysForTree = nodeCheckable
+    ? checkedTagKeys
+    : leafCheckable
+      ? checkedFileKeys
+      : undefined;
 
-  const onCheckProp =
-    viewMode === 'tag' && selectMode === 'nodes'
-      ? handleCheckTags
-      : selectMode === 'leaves'
-        ? handleCheckFiles
-        : undefined;
+  const onCheckProp = nodeCheckable
+    ? handleCheckTags
+    : leafCheckable
+      ? handleCheckFiles
+      : undefined;
 
   if (loading && treeData.length === 0) {
     return (
@@ -402,7 +517,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
   if (!loading && treeData.length === 0) {
     return (
       <div className={styles.wrapper}>
-        <Empty description={viewMode === 'tag' ? '暂无标签' : '暂无内容'} />
+        <Empty description={dataMode === 'tag' ? '暂无标签' : '暂无内容'} />
       </div>
     );
   }
@@ -419,12 +534,13 @@ const TreeNav: React.FC<TreeNavProps> = ({
           selectable={treeSelectable}
           selectedKeys={treeSelectable ? selectedKeys : []}
           checkedKeys={checkedKeysForTree}
-          onSelect={treeSelectable ? handleSelectFolders : undefined}
+          multiple={treeSelectable && finalNodesMultiSelect}
+          onSelect={treeSelectable ? handleSelectNodes : undefined}
           onCheck={onCheckProp}
           loadData={loadDataProp}
-          defaultExpandAll={viewMode === 'tag' && selectMode === 'nodes'}
+          defaultExpandAll={dataMode === 'tag' && selectTarget === 'nodes'}
           defaultExpandedKeys={
-            viewMode === 'folder' && treeData.length > 0 ? [treeData[0].key] : []
+            dataMode === 'folder' && treeData.length > 0 ? [treeData[0].key] : []
           }
           switcherIcon={
             <span>

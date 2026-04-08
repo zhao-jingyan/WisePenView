@@ -8,7 +8,6 @@ import { Avatar, Button, Spin, Tabs } from 'antd';
 import type { TabsProps } from 'antd';
 import { AiOutlineEdit, AiOutlineDelete, AiOutlineLogout } from 'react-icons/ai';
 import { getGroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
-import FolderDrive from '@/components/Drive/TreeDrive/FolderDrive';
 import TagDrive from '@/components/Drive/TreeDrive/TagDrive';
 import MemberList from '@/components/Group/MemberList';
 import {
@@ -107,16 +106,11 @@ const GroupDetail: React.FC = () => {
         label: '文件',
         children: (
           <div className={layout.tabPane}>
-            {resConfig.fileOrgLogic === 'FOLDER' ? (
-              <FolderDrive
-                groupId={gid}
-                readOnlyMode={groupDisplayConfig.driveReadOnlyMode}
-                allowUpload={!groupDisplayConfig.driveReadOnlyMode}
-                fileOrgLogic={resConfig.fileOrgLogic}
-              />
-            ) : (
-              <TagDrive groupId={gid} readOnlyMode={groupDisplayConfig.driveReadOnlyMode} />
-            )}
+            <TagDrive
+              groupId={gid}
+              fileOrgLogic={resConfig.fileOrgLogic}
+              canCreateTag={groupDisplayConfig.canCreateTag}
+            />
           </div>
         ),
       },

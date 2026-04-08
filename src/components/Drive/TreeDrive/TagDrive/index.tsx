@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { Table, Button } from 'antd';
-import { LuTag, LuChevronRight, LuChevronDown, LuHouse } from 'react-icons/lu';
+import { LuTag, LuFolderPlus, LuChevronRight, LuChevronDown, LuHouse } from 'react-icons/lu';
+import { AiOutlineCloudUpload } from 'react-icons/ai';
 import type { ResourceItem } from '@/types/resource';
 import type { TagTreeNode } from '@/services/Tag/index.type';
 import { useTagService } from '@/contexts/ServicesContext';
@@ -11,6 +12,7 @@ import {
   RenameFileModal,
   DeleteFileModal,
   EditTagModal,
+  UploadFileToGroupModal,
   type MoveToFolderTarget,
 } from '@/components/Drive/Modals';
 import { useClickFile, useTreeDrive } from '@/hooks/drive';
@@ -23,16 +25,18 @@ import {
   type TreeDriveRowConfigOptions,
 } from '../config/rowConfig';
 import styles from '../style.module.less';
+import type { GroupFileOrgLogic } from '@/types/group';
 
 export interface TagDriveProps {
   groupId?: string;
   /** 只读：隐藏新建标签与行内操作 */
-  readOnlyMode?: boolean;
+  fileOrgLogic?: GroupFileOrgLogic;
+  canCreateTag: boolean;
 }
 
 const TAG_VIRTUAL_ROOT_ID = '__tag_root__';
 
-const TagDrive: React.FC<TagDriveProps> = ({ groupId, readOnlyMode = false }) => {
+const TagDrive: React.FC<TagDriveProps> = ({ groupId, fileOrgLogic, canCreateTag }) => {
   const tagService = useTagService();
   const clickFile = useClickFile();
   const virtualRootRef = useRef<TreeDriveNode | null>(null);
@@ -91,6 +95,7 @@ const TagDrive: React.FC<TagDriveProps> = ({ groupId, readOnlyMode = false }) =>
   const [renameTagTarget, setRenameTagTarget] = useState<TagTreeNode | null>(null);
   const [deleteTagTarget, setDeleteTagTarget] = useState<TagTreeNode | null>(null);
   const [editTagTarget, setEditTagTarget] = useState<MoveToFolderTarget | null>(null);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   const handleRenameFolder = useCallback((node: TagTreeNode) => {
     if (node.tagId === TAG_VIRTUAL_ROOT_ID) return;
@@ -144,50 +149,46 @@ const TagDrive: React.FC<TagDriveProps> = ({ groupId, readOnlyMode = false }) =>
     setNewTagParentLabel(undefined);
   }, []);
 
+  const handleOpenUploadModal = useCallback(() => {
+    setUploadModalOpen(true);
+  }, []);
+
+  const handleCloseUploadModal = useCallback(() => {
+    setUploadModalOpen(false);
+  }, []);
+
+  const createActionLabel = fileOrgLogic === 'FOLDER' ? '新建文件夹' : '新建标签';
+  const createActionIcon =
+    fileOrgLogic === 'FOLDER' ? <LuFolderPlus size={16} /> : <LuTag size={16} />;
+
   const getRowProps = useMemo(
     () =>
       getTreeDriveRowProps({
         mode: 'tag',
-        readOnlyMode,
         setIsDragging,
         styles: styles as TreeDriveRowConfigOptions['styles'],
         onRowClick: handleRowClick,
         onDropFile: noop as unknown as TreeDriveRowConfigOptions['onDropFile'],
         onDropFolder: noop as unknown as TreeDriveRowConfigOptions['onDropFolder'],
       }),
-    [handleRowClick, noop, readOnlyMode]
+    [handleRowClick, noop]
   );
 
-  const columns = useMemo(
-    () =>
-      getTreeDriveColumns({
-        mode: 'tag',
-        readOnlyMode,
-        styles: styles as TreeDriveColumnConfigOptions['styles'],
-        openDropdownKey,
-        setOpenDropdownKey,
-        onMoveToFolder: noop as unknown as TreeDriveColumnConfigOptions['onMoveToFolder'],
-        onEditTag: handleEditTag,
-        onRenameFolder: handleRenameFolder,
-        onDeleteFolder: handleDeleteFolder,
-        onRenameFile: handleRenameFile,
-        onDeleteFile: handleDeleteFile,
-        onLoadMore: handleLoadMore,
-        loadingMoreKeys,
-      }),
-    [
-      readOnlyMode,
-      openDropdownKey,
-      handleEditTag,
-      handleRenameFolder,
-      handleDeleteFolder,
-      handleRenameFile,
-      handleDeleteFile,
-      handleLoadMore,
-      loadingMoreKeys,
-      noop,
-    ]
-  );
+  const columns = getTreeDriveColumns({
+    mode: 'tag',
+    styles: styles as TreeDriveColumnConfigOptions['styles'],
+    openDropdownKey,
+    setOpenDropdownKey,
+    onMoveToFolder: noop as unknown as TreeDriveColumnConfigOptions['onMoveToFolder'],
+    onEditTag: handleEditTag,
+    onRenameFolder: handleRenameFolder,
+    onDeleteFolder: handleDeleteFolder,
+    onRenameFile: handleRenameFile,
+    onDeleteFile: handleDeleteFile,
+    onLoadMore: handleLoadMore,
+    loadingMoreKeys,
+    fileOrgLogic,
+  });
 
   const expandIcon = useCallback(
     ({
@@ -229,7 +230,7 @@ const TagDrive: React.FC<TagDriveProps> = ({ groupId, readOnlyMode = false }) =>
               onClick={() => resetCwd()}
             >
               <LuHouse size={14} />
-              <span>全部标签</span>
+              <span>小组云盘</span>
             </button>
             {breadcrumb.map((item, idx) => (
               <React.Fragment key={item.tagId}>
@@ -245,26 +246,48 @@ const TagDrive: React.FC<TagDriveProps> = ({ groupId, readOnlyMode = false }) =>
             ))}
           </nav>
 
-          {!readOnlyMode && (
+          <div className={styles.toolbarActions}>
             <Button
               type="default"
               size="small"
-              icon={<LuTag size={16} />}
-              onClick={handleOpenNewTag}
+              icon={<AiOutlineCloudUpload size={16} />}
+              onClick={handleOpenUploadModal}
             >
-              新建标签
+              上传文件
             </Button>
-          )}
+
+            {canCreateTag && (
+              <Button
+                type="default"
+                size="small"
+                icon={createActionIcon}
+                onClick={handleOpenNewTag}
+              >
+                {createActionLabel}
+              </Button>
+            )}
+          </div>
         </div>
 
         <NewTagModal
           open={newTagOpen}
           groupId={groupId}
+          subjectLabel={fileOrgLogic === 'FOLDER' ? '文件夹' : '标签'}
           parentTagId={newTagParentId}
           parentDisplayName={newTagParentLabel}
           onCancel={handleCloseNewTag}
           onSuccess={refresh}
         />
+
+        {groupId && fileOrgLogic && (
+          <UploadFileToGroupModal
+            open={uploadModalOpen}
+            onCancel={handleCloseUploadModal}
+            groupId={groupId}
+            fileOrgLogic={fileOrgLogic}
+            onSuccess={refresh}
+          />
+        )}
 
         <RenameTagModal
           open={renameTagTarget !== null}
