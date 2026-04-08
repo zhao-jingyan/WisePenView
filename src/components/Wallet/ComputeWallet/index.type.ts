@@ -13,14 +13,13 @@ export interface ComputeWalletProps {
   targetType: WalletTargetType;
 
   /**
-   * 主体 id：个人为用户 id（string，防大数精度丢失）；小组为 groupId。
-   * 与 getWalletInfo、redeemVoucher、getTransactions 的 targetId 一致。
-   * USER 场景可不传，组件会在内部尝试解析当前用户 id。
+   * 小组为 groupId（string，防大数精度丢失），用于 getUserWalletInfo / listTransactions 的 query。
+   * USER 场景可不传 groupId（接口查当前用户）。
    */
   targetId?: string;
   /**
-   * 是否展示「充值」入口。
-   * 个人场景恒为 true；小组场景仅组长应为 true（普通成员无权给组充值，也不应看到组流水）。
+   * 是否展示「充值」入口（POST /user/wallet/redeemVoucher 仅给本人兑换）。
+   * 个人中心为 true；小组 token 明细应为 false。
    */
   canRecharge: boolean;
   /** 小组充值弹窗标题：为「为「xxx」充值」；个人不传则弹窗为「个人充值」 */

@@ -1,16 +1,19 @@
 /**
- * 钱包资金归属主体，对应 targetType。
- * - USER：个人账户（个人中心「余额与使用量」）
- * - GROUP：小组账户（高级组详情「token明细」，仅组长可操作充值与查看全量流水）
+ * 钱包展示主体（仅前端区分个人 / 小组 Tab，接口统一走 /user/wallet）。
  */
 export const WALLET_TARGET_TYPE = { USER: 1, GROUP: 2 } as const;
 export type WalletTargetType = (typeof WALLET_TARGET_TYPE)[keyof typeof WALLET_TARGET_TYPE];
 
 /**
- * getTransactions 的 type 参数约定（与后端对齐）：
- * - ALL(0)：全部流水
- * - RECHARGE(1)：仅充值
- * - SPEND(2)：仅消费
+ * listTransactions 的 type（与后端枚举一致）。
+ * 「全部」不传 type；Tab「充值」→ 1；「消费」→ 2；3/4 仅在「全部」中出现。
  */
-export const WALLET_TX_LIST_FILTER = { ALL: 0, RECHARGE: 1, SPEND: 2 } as const;
-export type WalletTxListFilter = (typeof WALLET_TX_LIST_FILTER)[keyof typeof WALLET_TX_LIST_FILTER];
+export const WALLET_TOKEN_TX_TYPE = {
+  REFILL: 1,
+  SPEND: 2,
+  TRANSFER_IN: 3,
+  TRANSFER_OUT: 4,
+} as const;
+
+/** Owner↔Group 划拨：1 转入小组，2 转回组长 */
+export const WALLET_TOKEN_TRANSFER_TYPE = { TO_GROUP: 1, TO_OWNER: 2 } as const;

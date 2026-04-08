@@ -1,11 +1,11 @@
 /**
- * 高级组组长：个人计算点与小组池之间的 Token 划拨（giveTokenToGroup / giveTokenToOwner）。
+ * 高级组组长：个人计算点与小组池之间的 Token 划拨（transferTokenBetweenGroupAndUser）。
  */
 import React, { useCallback, useState } from 'react';
 import { Button, InputNumber, Skeleton } from 'antd';
 import { useRequest } from 'ahooks';
-import { useUserService, useWalletService } from '@/contexts/ServicesContext';
-import { WALLET_TARGET_TYPE } from '@/constants/wallet';
+import { useWalletService } from '@/contexts/ServicesContext';
+import { WALLET_TOKEN_TRANSFER_TYPE } from '@/constants/wallet';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import type { OwnerGroupTokenTransferProps } from './index.type';
@@ -15,47 +15,29 @@ const OwnerGroupTokenTransfer: React.FC<OwnerGroupTokenTransferProps> = ({
   groupId,
   onTransferSuccess,
 }) => {
-  const userService = useUserService();
   const walletService = useWalletService();
   const message = useAppMessage();
 
-  const [userId, setUserId] = useState<string | null>(null);
   const [personalBal, setPersonalBal] = useState(0);
   const [groupBal, setGroupBal] = useState(0);
   const [amtToGroup, setAmtToGroup] = useState<number | null>(null);
   const [amtToOwner, setAmtToOwner] = useState<number | null>(null);
 
-  const { loading: userLoading } = useRequest(async () => userService.getUserInfo(), {
-    refreshDeps: [userService],
-    onSuccess: (user) => {
-      setUserId(user.id);
-    },
-    onError: () => {
-      setUserId(null);
-      message.error('获取当前用户失败');
-    },
-  });
-
   const { loading: balanceLoading, runAsync: loadBalances } = useRequest(
     async () => {
-      if (!userId || !groupId) {
+      const gid = groupId?.trim();
+      if (!gid) {
         return null;
       }
-      const [p, g] = await Promise.all([
-        walletService.getWalletInfo({
-          targetType: WALLET_TARGET_TYPE.USER,
-          targetId: userId,
-        }),
-        walletService.getWalletInfo({
-          targetType: WALLET_TARGET_TYPE.GROUP,
-          targetId: groupId,
-        }),
+      const [personalRes, groupRes] = await Promise.all([
+        walletService.getUserWalletInfo(),
+        walletService.getUserWalletInfo({ groupId: gid }),
       ]);
-      return { personalBal: p.balance, groupBal: g.balance };
+      return { personalBal: personalRes.balance, groupBal: groupRes.balance };
     },
     {
-      ready: Boolean(userId && groupId),
-      refreshDeps: [userId, groupId, walletService],
+      ready: Boolean(groupId?.trim()),
+      refreshDeps: [groupId, walletService],
       onSuccess: (res) => {
         if (!res) return;
         setPersonalBal(res.personalBal);
@@ -67,14 +49,18 @@ const OwnerGroupTokenTransfer: React.FC<OwnerGroupTokenTransferProps> = ({
     }
   );
 
-  /** 接口成功后统一：重拉本页两侧余额，并通知父级刷新「token明细」Tab 内钱包 */
   const refreshAfterTransfer = useCallback(async () => {
     await loadBalances();
     onTransferSuccess?.();
   }, [loadBalances, onTransferSuccess]);
 
-  const { loading: submittingToGroup, runAsync: runGiveToGroup } = useRequest(
-    async (amount: number) => walletService.giveTokenToGroup({ groupId, amount }),
+  const { loading: submittingToGroup, runAsync: runTransferToGroup } = useRequest(
+    async (amount: number) =>
+      walletService.transferTokenBetweenGroupAndUser({
+        groupId,
+        tokenCount: amount,
+        tokenTransferType: WALLET_TOKEN_TRANSFER_TYPE.TO_GROUP,
+      }),
     {
       manual: true,
       onSuccess: async () => {
@@ -88,8 +74,13 @@ const OwnerGroupTokenTransfer: React.FC<OwnerGroupTokenTransferProps> = ({
     }
   );
 
-  const { loading: submittingToOwner, runAsync: runGiveToOwner } = useRequest(
-    async (amount: number) => walletService.giveTokenToOwner({ groupId, amount }),
+  const { loading: submittingToOwner, runAsync: runTransferToOwner } = useRequest(
+    async (amount: number) =>
+      walletService.transferTokenBetweenGroupAndUser({
+        groupId,
+        tokenCount: amount,
+        tokenTransferType: WALLET_TOKEN_TRANSFER_TYPE.TO_OWNER,
+      }),
     {
       manual: true,
       onSuccess: async () => {
@@ -113,7 +104,7 @@ const OwnerGroupTokenTransfer: React.FC<OwnerGroupTokenTransferProps> = ({
       message.warning('组长个人计算点不足');
       return;
     }
-    await runGiveToGroup(Math.floor(n));
+    await runTransferToGroup(Math.floor(n));
   };
 
   const handleGiveToOwner = async () => {
@@ -126,25 +117,17 @@ const OwnerGroupTokenTransfer: React.FC<OwnerGroupTokenTransferProps> = ({
       message.warning('小组池计算点不足');
       return;
     }
-    await runGiveToOwner(Math.floor(n));
+    await runTransferToOwner(Math.floor(n));
   };
 
-  if (userLoading) {
-    return (
-      <div className={styles.card}>
-        <Skeleton active paragraph={{ rows: 3 }} />
-      </div>
-    );
-  }
-
-  if (!userId) {
-    return <div className={styles.card}>无法获取登录用户信息，请重新登录后再试。</div>;
+  if (!groupId?.trim()) {
+    return <div className={styles.card}>缺少小组信息</div>;
   }
 
   return (
     <div className={styles.card}>
       <p className={styles.intro}>
-        高级组的小组计算点仅组长可通过点卡充值；您也可以将组长个人账户中的计算点划入小组池，或将小组池余额转回个人账户，便于统一给组员分配使用。
+        点卡兑换仅计入组长个人账户。您可将个人账户中的计算点划入小组池，或将小组池余额转回个人账户，便于统一给组员分配使用。
       </p>
 
       <div className={styles.balanceHeader}>

@@ -1,10 +1,5 @@
 /**
- * 钱包 Mock：供 vite MODE === 'mock' 时本地演示充值与流水筛选。
- *
- * 联调约定（便于手工验错）：
- * - 兑换码全 0：模拟「点卡已使用」
- * - 兑换码全 F：模拟「无效兑换码」
- * - 其它任意 16 位：成功（与真实接口一致不返回 data），本地仍更新余额与流水列表
+ * 钱包 Mock：MODE === 'mock'；接口形态与 /user/wallet 对齐。
  */
 import type { IWalletService } from '@/services/Wallet';
 import type { WalletTransactionRecord } from '@/types/wallet';
@@ -12,22 +7,30 @@ import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-let mockTokenBalance = Number(mockdata.tokenBalance) || 0;
+let mockPersonalBalance = Number(mockdata.tokenBalance) || 0;
+let mockGroupBalance = 800;
 const mockTokenUsed = Number(mockdata.tokenUsed) || 0;
 const allRecords = [...(mockdata.transactions.records as WalletTransactionRecord[])];
 
-const getWalletInfo: IWalletService['getWalletInfo'] = async () => {
+const getUserWalletInfo: IWalletService['getUserWalletInfo'] = async (params) => {
   await delay(280);
+  if (params?.groupId != null && params.groupId !== '') {
+    return {
+      tokenBalance: mockGroupBalance,
+      tokenUsed: mockTokenUsed,
+      balance: mockGroupBalance,
+    };
+  }
   return {
-    tokenBalance: mockTokenBalance,
+    tokenBalance: mockPersonalBalance,
     tokenUsed: mockTokenUsed,
-    balance: mockTokenBalance,
+    balance: mockPersonalBalance,
   };
 };
 
 const redeemVoucher: IWalletService['redeemVoucher'] = async (params) => {
   await delay(400);
-  const code = params.code.replace(/[\s-]/g, '').toUpperCase();
+  const code = params.voucherCode.replace(/[\s-]/g, '').toUpperCase();
   if (code.length !== 16) {
     throw new Error('请输入 16 位兑换码');
   }
@@ -38,14 +41,14 @@ const redeemVoucher: IWalletService['redeemVoucher'] = async (params) => {
     throw new Error('无效兑换码');
   }
   const amount = 500;
-  mockTokenBalance += amount;
+  mockPersonalBalance += amount;
   const traceId = `mock-${Date.now()}`;
   allRecords.unshift({
     traceId,
     time: new Date().toISOString().slice(0, 19).replace('T', ' '),
     type: 'RECHARGE',
     amount,
-    title: '点卡充值',
+    title: '充值',
     subTitle: `****${code.slice(-4)}`,
     operatorName: '我',
   });
@@ -54,12 +57,10 @@ const redeemVoucher: IWalletService['redeemVoucher'] = async (params) => {
 const listTransactions: IWalletService['listTransactions'] = async (params) => {
   await delay(260);
   const { page = 1, size = 20, type: typeParam } = params;
-  const type = typeParam ?? 0;
   let rows = [...allRecords];
-  // type 0：全部；1 / 2 见筛选分支
-  if (type === 1) {
+  if (typeParam === 1) {
     rows = rows.filter((r) => r.type === 'RECHARGE');
-  } else if (type === 2) {
+  } else if (typeParam === 2) {
     rows = rows.filter((r) => r.type === 'SPEND');
   }
   const start = (page - 1) * size;
@@ -67,18 +68,23 @@ const listTransactions: IWalletService['listTransactions'] = async (params) => {
   return { total: rows.length, records: slice };
 };
 
-const giveTokenToGroup: IWalletService['giveTokenToGroup'] = async () => {
+const transferTokenBetweenGroupAndUser: IWalletService['transferTokenBetweenGroupAndUser'] = async (
+  params
+) => {
   await delay(200);
-};
-
-const giveTokenToOwner: IWalletService['giveTokenToOwner'] = async () => {
-  await delay(200);
+  const n = params.tokenCount;
+  if (params.tokenTransferType === 1) {
+    mockPersonalBalance = Math.max(0, mockPersonalBalance - n);
+    mockGroupBalance += n;
+  } else {
+    mockGroupBalance = Math.max(0, mockGroupBalance - n);
+    mockPersonalBalance += n;
+  }
 };
 
 export const WalletServicesMock: IWalletService = {
-  getWalletInfo,
+  getUserWalletInfo,
   redeemVoucher,
   listTransactions,
-  giveTokenToGroup,
-  giveTokenToOwner,
+  transferTokenBetweenGroupAndUser,
 };

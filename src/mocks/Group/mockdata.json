@@ -5,7 +5,7 @@
       "groupName": "示例小组",
       "groupDesc": "这是一个 mock 小组",
       "groupCoverUrl": "",
-      "groupType": 1,
+      "groupType": 2,
       "ownerId": "1",
       "ownerInfo": {
         "nickname": "Mock User",
@@ -25,7 +25,7 @@
     "groupName": "示例小组",
     "groupDesc": "这是一个 mock 小组",
     "groupCoverUrl": "",
-    "groupType": 1,
+    "groupType": 2,
     "ownerId": "1",
     "ownerInfo": {
       "nickname": "Mock User",
