@@ -54,7 +54,7 @@ export interface FetchGroupMembersResponse {
 
 /** 获取小组列表请求参数 */
 export interface FetchGroupListRequest {
-  GroupRoleFilter: 1 | 2;
+  groupRoleFilter: 'JOINED' | 'MANAGED';
   page: number;
   size: number;
 }

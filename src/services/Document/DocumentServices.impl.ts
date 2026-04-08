@@ -10,6 +10,7 @@ import { computeFileMd5 } from '@/utils/computeFileMd5';
 import { putOssPresignedUrl } from '@/utils/ossPresignedPut';
 import { serializeRepeatKeyQuery } from '@/utils/serializeRepeatKeyQuery';
 import type {
+  DocDisplayInfoResponse,
   DocumentUploadInitRequestBody,
   DocumentUploadInitResponse,
   IDocumentService,
@@ -143,11 +144,13 @@ const cancelPendingDoc = async (documentId: string): Promise<void> => {
   checkResponse(res);
 };
 
-const getDocumentPreviewUrl = (resourceId: string): string => {
-  const path = `/document/getDocPreview?resourceId=${encodeURIComponent(resourceId)}`;
-  return new URL(path, window.location.origin).href;
+const getDocInfo = async (resourceId: string): Promise<DocDisplayInfoResponse> => {
+  const res = (await Axios.get('/document/getDocInfo', {
+    params: { resourceId },
+  })) as ApiResponse<DocDisplayInfoResponse>;
+  checkResponse(res);
+  return res.data;
 };
-
 export const DocumentServicesImpl: IDocumentService = {
   uploadDocument,
   retryConvert,
@@ -156,5 +159,5 @@ export const DocumentServicesImpl: IDocumentService = {
   syncPendingDocStatus,
   retryPendingDoc,
   cancelPendingDoc,
-  getDocumentPreviewUrl,
+  getDocInfo,
 };

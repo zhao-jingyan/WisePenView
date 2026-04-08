@@ -30,9 +30,9 @@ const isGroupFileOrgLogic = (v: unknown): v is GroupFileOrgLogic => v === 'FOLDE
 const fetchGroupList = async (
   params: FetchGroupListRequest
 ): Promise<{ groups: Group[]; total: number }> => {
-  const { GroupRoleFilter, page, size } = params;
+  const { groupRoleFilter, page, size } = params;
   const res = (await Axios.get('/group/list', {
-    params: { groupRoleType: GroupRoleFilter, page, size },
+    params: { groupRoleFilter, page, size },
   })) as ApiResponse<FetchGroupListResponse>;
   checkResponse(res);
   const payload = res.data;

@@ -1,6 +1,6 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Alert, Button, Result, Spin } from 'antd';
-import { useRequest } from 'ahooks';
+import { useRequest, useUnmount } from 'ahooks';
 import { Link, useParams } from 'react-router-dom';
 import { RiArrowLeftLine } from 'react-icons/ri';
 
@@ -20,6 +20,8 @@ interface NoteViewConnectedProps {
 
 const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceId }) => {
   const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const [isReconnectLoading, setIsReconnectLoading] = useState(false);
   const noteService = useNoteService();
   const { status, doc, provider, reconnect } = useNoteSession(resourceId);
   const { data: noteInfoDisplay } = useRequest(
@@ -39,6 +41,27 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceI
     bodyEditorRef.current?.focus();
   }, []);
 
+  useUnmount(() => {
+    if (reconnectTimerRef.current !== null) {
+      window.clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+  });
+
+  const handleReconnect = useCallback(() => {
+    reconnect();
+
+    if (reconnectTimerRef.current !== null) {
+      window.clearTimeout(reconnectTimerRef.current);
+    }
+
+    setIsReconnectLoading(true);
+    reconnectTimerRef.current = window.setTimeout(() => {
+      setIsReconnectLoading(false);
+      reconnectTimerRef.current = null;
+    }, 2000);
+  }, [reconnect]);
+
   return (
     <div className={styles.pageWrap}>
       <div className={styles.noteContent}>
@@ -55,7 +78,12 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceI
               type="warning"
               description="网络连接已断开，当前可继续本地编辑；网络恢复后会自动同步到云端。"
               action={
-                <Button type="default" size="small" onClick={reconnect}>
+                <Button
+                  type="default"
+                  size="small"
+                  loading={isReconnectLoading}
+                  onClick={handleReconnect}
+                >
                   重试
                 </Button>
               }

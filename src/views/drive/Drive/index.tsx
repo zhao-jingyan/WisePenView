@@ -99,14 +99,12 @@ const Drive: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles.tabsWithSearch}>
-        <Tabs
-          activeKey={viewMode}
-          onChange={(k) => setViewMode(k as DriveViewMode)}
-          items={VIEW_TABS}
-          className={styles.tabsFlush}
-        />
-      </div>
+      <Tabs
+        activeKey={viewMode}
+        onChange={(k) => setViewMode(k as DriveViewMode)}
+        items={VIEW_TABS}
+        className={styles.detailTabs}
+      />
 
       <div className={styles.previewContent}>
         {viewMode === 'flat' && <FlatDrive />}

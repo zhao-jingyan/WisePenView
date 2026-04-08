@@ -7,7 +7,7 @@ import GroupCard from '@/components/Group/GroupCard';
 import { useGroupService } from '@/contexts/ServicesContext';
 import type { FetchGroupListRequest } from '@/services/Group';
 import type { Group } from '@/types/group';
-import { RELATION_TYPE_MAP } from '@/constants/group';
+import { GROUP_ROLE_FILTER_MAP } from '@/constants/group';
 import { JoinGroupModal, CreateGroupModal } from '@/components/Group/GroupModals';
 import layout from '../style.module.less';
 import page from './style.module.less';
@@ -21,7 +21,7 @@ const MyGroup: React.FC = () => {
   const [joinGroupModalOpen, setJoinGroupModalOpen] = useState(false);
   const [createGroupModalOpen, setCreateGroupModalOpen] = useState(false);
 
-  const relationType = RELATION_TYPE_MAP[activeTab] ?? RELATION_TYPE_MAP.joined;
+  const groupRoleFilter = GROUP_ROLE_FILTER_MAP[activeTab] ?? GROUP_ROLE_FILTER_MAP.joined;
 
   const {
     data: groupsData,
@@ -31,7 +31,7 @@ const MyGroup: React.FC = () => {
   } = usePagination(
     async ({ current, pageSize }) => {
       const params: FetchGroupListRequest = {
-        relationType,
+        groupRoleFilter: groupRoleFilter,
         page: current,
         size: pageSize,
       };
@@ -41,7 +41,7 @@ const MyGroup: React.FC = () => {
     {
       defaultCurrent: 1,
       defaultPageSize: 8,
-      refreshDeps: [relationType],
+      refreshDeps: [groupRoleFilter],
       onError: () => {
         message.error('获取小组列表失败');
       },
@@ -90,17 +90,15 @@ const MyGroup: React.FC = () => {
         </div>
       </div>
 
-      <div className={layout.tabsWithSearch}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={handleTabChange}
-          items={[
-            { key: 'joined', label: '我加入的' },
-            { key: 'managed', label: '我管理的' },
-          ]}
-          className={page.tabsBar}
-        />
-      </div>
+      <Tabs
+        activeKey={activeTab}
+        onChange={handleTabChange}
+        items={[
+          { key: 'joined', label: '我加入的' },
+          { key: 'managed', label: '我管理的' },
+        ]}
+        className={layout.detailTabs}
+      />
 
       <Spin spinning={loading}>
         {groups.length === 0 ? (

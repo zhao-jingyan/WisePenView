@@ -1,4 +1,5 @@
 import type { DocumentResourceType } from '@/constants/document';
+import type { ResourceItem } from '@/types/resource';
 
 /** `POST /document/initDocUpload` 请求体，与后端 DocumentUploadInitRequest 一致 */
 export interface DocumentUploadInitRequestBody {
@@ -28,12 +29,21 @@ export interface PendingDocumentStatus {
   status: string;
 }
 
-export interface PendingDocItem {
-  /** 部分接口实现可能不返回该字段；缺失时前端仅展示，不允许重试/取消/sync */
-  documentId?: string;
+/** 文档元信息（对齐后端 DocumentInfoBase） */
+export interface DocMetaInfo {
   uploadMeta: DocumentUploadMeta;
   documentStatus: PendingDocumentStatus;
   maxPreviewPages: number | null;
+}
+
+export interface PendingDocItem extends DocMetaInfo {
+  /** 部分接口实现可能不返回该字段；缺失时前端仅展示，不允许重试/取消/sync */
+  documentId?: string;
+}
+
+export interface DocDisplayInfoResponse {
+  docMetaInfo: DocMetaInfo;
+  resourceInfo: ResourceItem;
 }
 
 /** DocumentService：文档上传、重试转换、删除（路径与当前后端 DocumentController 一致） */
@@ -52,8 +62,8 @@ export interface IDocumentService {
   retryPendingDoc(documentId: string): Promise<void>;
   /** 取消待处理文档 */
   cancelPendingDoc(documentId: string): Promise<void>;
-  /** 文档预览 PDF 同源 URL（GET `/document/getDocPreview?documentId=...`；dev 下经 `/api` 代理） */
-  getDocumentPreviewUrl(resourceId: string): string;
+  /** 获取文档详情信息（用于预览页展示） */
+  getDocInfo(resourceId: string): Promise<DocDisplayInfoResponse>;
 }
 
 export interface UploadDocumentParams {

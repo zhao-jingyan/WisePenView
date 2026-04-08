@@ -1,4 +1,5 @@
 import type {
+  DocDisplayInfoResponse,
   IDocumentService,
   PendingDocItem,
   UploadDocumentParams,
@@ -42,9 +43,32 @@ const cancelPendingDoc = async (_documentId: string): Promise<void> => {
   await delay(200);
 };
 
-const getDocumentPreviewUrl = (resourceId: string): string => {
-  const path = `/api/document/${encodeURIComponent(resourceId)}/preview`;
-  return new URL(path, window.location.origin).href;
+const getDocInfo = async (documentId: string): Promise<DocDisplayInfoResponse> => {
+  await delay(200);
+  return {
+    docMetaInfo: {
+      uploadMeta: {
+        documentName: `mock-${documentId}.pdf`,
+        uploaderId: 1,
+        fileType: 'pdf',
+        size: 1024 * 1024 * 2,
+      },
+      documentStatus: {
+        status: 'SUCCESS',
+      },
+      maxPreviewPages: 20,
+    },
+    resourceInfo: {
+      resourceId: documentId,
+      resourceName: `mock-${documentId}.pdf`,
+      ownerInfo: {
+        nickname: 'Mock User',
+        avatar: '',
+        identityType: 0,
+      },
+      resourceType: 'file',
+    },
+  };
 };
 
 export const DocumentServicesMock: IDocumentService = {
@@ -55,5 +79,5 @@ export const DocumentServicesMock: IDocumentService = {
   syncPendingDocStatus,
   retryPendingDoc,
   cancelPendingDoc,
-  getDocumentPreviewUrl,
+  getDocInfo,
 };

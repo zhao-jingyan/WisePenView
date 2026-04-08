@@ -29,11 +29,34 @@
   padding: var(--ant-padding-lg) var(--ant-padding-xl);
 }
 
-.viewer {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  border: 1px solid var(--ant-color-border);
-  border-radius: var(--ant-border-radius);
-  overflow: hidden;
+.pageHeader {
+  flex-shrink: 0;
+  margin-bottom: var(--ant-margin-sm);
 }
+
+.headerMain {
+  display: flex;
+  align-items: center;
+  gap: var(--ant-margin-sm);
+  min-height: 24px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ant-margin-xs);
+  color: var(--ant-color-text-secondary);
+  text-decoration: none;
+  font-size: var(--ant-font-size);
+
+  &:hover {
+    color: var(--ant-color-text);
+  }
+}
+
+.metaText {
+  color: var(--ant-color-text-tertiary);
+  font-size: var(--ant-font-size-sm);
+  line-height: 1.4;
+}
+

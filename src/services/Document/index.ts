@@ -1,4 +1,5 @@
 export type {
+  DocDisplayInfoResponse,
   DocumentUploadInitRequestBody,
   DocumentUploadInitResponse,
   IDocumentService,
