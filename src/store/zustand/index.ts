@@ -2,13 +2,30 @@
  * Zustand 状态管理模块入口
  */
 
-export { useDrivePreferencesStore, type DriveViewMode } from './useDrivePreferencesStore';
-export { usePendingVerifyEmailStore } from './usePendingVerifyEmailStore';
-export { usePdfPreviewProgressStore, type PdfPreviewProgress } from './usePdfPreviewProgressStore';
-export { useRecentFilesStore, type RecentFileItem } from './useRecentFilesStore';
-export { useTrashTagStore } from './useTrashTagStore';
+export {
+  useDrivePreferencesStore,
+  clearDrivePreferencesStore,
+  type DriveViewMode,
+} from './useDrivePreferencesStore';
+export {
+  usePendingVerifyEmailStore,
+  clearPendingVerifyEmailStore,
+} from './usePendingVerifyEmailStore';
+export {
+  usePdfPreviewProgressStore,
+  clearPdfPreviewProgressStore,
+  type PdfPreviewProgress,
+} from './usePdfPreviewProgressStore';
+export {
+  useRecentFilesStore,
+  clearRecentFilesStore,
+  type RecentFileItem,
+} from './useRecentFilesStore';
+export { useTrashTagStore, clearTrashTagStore } from './useTrashTagStore';
 export {
   getTreeDriveCwdStore,
   useTreeDriveCwdStore,
+  clearTreeDriveCwdStores,
   type BreadcrumbItem,
 } from './useTreeDriveCwdStore';
+export { clearAllZustandStores } from './clearAllStores';

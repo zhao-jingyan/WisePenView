@@ -9,7 +9,8 @@ import type {
   NewPasswordRequest,
 } from './index.type';
 import type { IAuthService } from './index.type';
-import { UserServicesImpl } from '@/services/User';
+import { clearAllZustandStores } from '@/store';
+import { clearAllServiceCaches } from '@/services/cacheRegistry';
 
 const login = async (params: LoginRequest) => {
   const res = (await Axios.post('/auth/login', params)) as ApiResponse;
@@ -18,8 +19,9 @@ const login = async (params: LoginRequest) => {
 
 const logout = async () => {
   const res = (await Axios.post('/auth/logout')) as ApiResponse;
-  UserServicesImpl.clearUserCache();
   checkResponse(res);
+  clearAllServiceCaches();
+  clearAllZustandStores();
 };
 
 const register = async (params: RegisterRequest) => {

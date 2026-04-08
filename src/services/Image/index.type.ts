@@ -28,10 +28,10 @@ export interface ImageStorageRecord {
 export interface ImageUploadRequest {
   /** 须 ≤ {@link IMAGE_UPLOAD_MAX_BYTES}；`uploadImage` 内会再次校验，便于未走 UI 拦截的调用方 */
   file: File;
-  /** 默认 true：公开图床路径；false 为私密图场景 */
-  isPublic?: boolean;
-  /** 业务路径隔离，如 `groups`、`groups/{userId}` */
-  bizPath?: string;
+  /** 存储业务场景，需与后端 StorageSceneEnum 对齐 */
+  scene: ImageStorageScene;
+  /** 业务隔离标识，可用于细分同场景下的存储路径 */
+  bizTag?: string;
 }
 
 export interface ImageUploadResult {
@@ -47,6 +47,12 @@ export interface IImageService {
   /** 图床代理上传（需登录态，由 Axios 携带 Cookie） */
   uploadImage(params: ImageUploadRequest): Promise<ImageUploadResult>;
 }
+
+/** 后端 StorageSceneEnum */
+export type ImageStorageScene =
+  | 'PUBLIC_IMAGE_FOR_USER'
+  | 'PUBLIC_IMAGE_FOR_GROUP'
+  | 'PRIVATE_IMAGE_FOR_NOTE';
 
 /** 由存储域名与 objectKey 拼公开访问地址（去重斜杠） */
 export function buildImagePublicUrl(

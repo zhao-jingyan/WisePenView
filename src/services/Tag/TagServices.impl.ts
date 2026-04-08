@@ -5,6 +5,7 @@ import { checkResponse } from '@/utils/response';
 import { ResourceServicesImpl } from '@/services/Resource/ResourceServices.impl';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/services/Resource/index.type';
 import { useTrashTagStore } from '@/store';
+import { registerServiceCacheCleaner } from '@/services/cacheRegistry';
 import type { TagListByTagResponse } from '@/types/tag';
 import type {
   TagTreeResponse,
@@ -61,6 +62,8 @@ const clearTagTreeCache = (groupId?: string): void => {
     tagFlatCache.clear();
   }
 };
+
+registerServiceCacheCleaner(() => clearTagTreeCache());
 
 const getTagTree = async (groupId?: string): Promise<TagTreeNode[]> => {
   const normalizedGroupId = normalizeTagGroupId(groupId);

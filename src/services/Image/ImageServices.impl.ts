@@ -17,9 +17,9 @@ const uploadImage = async (params: ImageUploadRequest): Promise<ImageUploadResul
 
   const formData = new FormData();
   formData.append('file', params.file);
-  formData.append('isPublic', String(params.isPublic ?? true));
-  if (params.bizPath !== undefined && params.bizPath !== '') {
-    formData.append('bizPath', params.bizPath);
+  formData.append('scene', params.scene);
+  if (params.bizTag !== undefined && params.bizTag !== '') {
+    formData.append('bizTag', params.bizTag);
   }
 
   const res = (await Axios.post('/storage/imageUpload', formData, {

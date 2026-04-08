@@ -3,6 +3,7 @@ import { checkResponse } from '@/utils/response';
 import { toIdString } from '@/utils/number';
 import type { ApiResponse } from '@/types/api';
 import type { User } from '@/types/user';
+import { registerServiceCacheCleaner } from '@/services/cacheRegistry';
 import type {
   ConfirmEmailVerifyRequest,
   FudanUISVerifyStatusData,
@@ -89,6 +90,8 @@ const updateUserInfo = async (params: UpdateUserInfoRequest): Promise<void> => {
 const clearUserCache = (): void => {
   cachedUserInfo = null;
 };
+
+registerServiceCacheCleaner(clearUserCache);
 
 const sendEmailVerify = async (params: SendEmailVerifyRequest): Promise<void> => {
   const res = (await Axios.post('/user/verify/initiateEmailVerify', null, {

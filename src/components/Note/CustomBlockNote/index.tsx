@@ -68,8 +68,8 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
           try {
             const { publicUrl } = await imageService.uploadImage({
               file,
-              isPublic: true,
-              bizPath: `notes/${resourceId}`,
+              scene: 'PRIVATE_IMAGE_FOR_NOTE',
+              bizTag: `notes/${resourceId}`,
             });
             const currentEd = editorRef.current;
             if (!currentEd || blockId === undefined) {

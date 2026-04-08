@@ -50,4 +50,11 @@ export function getTreeDriveCwdStore(key: string) {
   return store;
 }
 
+export function clearTreeDriveCwdStores(): void {
+  storeMap.forEach((store) => {
+    store.setState({ breadcrumb: [] });
+    store.persist.clearStorage();
+  });
+}
+
 export { getTreeDriveCwdStore as useTreeDriveCwdStore };

@@ -6,6 +6,10 @@ export interface PdfPreviewProgress {
   zoom: string;
 }
 
+const DEFAULT_PDF_PREVIEW_PROGRESS = {
+  progressByResourceId: {} as Record<string, PdfPreviewProgress>,
+};
+
 type PdfPreviewProgressState = {
   progressByResourceId: Record<string, PdfPreviewProgress>;
   setProgress: (resourceId: string, progress: PdfPreviewProgress) => void;
@@ -15,7 +19,7 @@ type PdfPreviewProgressState = {
 export const usePdfPreviewProgressStore = create<PdfPreviewProgressState>()(
   persist(
     (set) => ({
-      progressByResourceId: {},
+      ...DEFAULT_PDF_PREVIEW_PROGRESS,
 
       setProgress: (resourceId, progress) =>
         set((state) => {
@@ -44,3 +48,8 @@ export const usePdfPreviewProgressStore = create<PdfPreviewProgressState>()(
     { name: 'pdf-preview-progress' }
   )
 );
+
+export const clearPdfPreviewProgressStore = (): void => {
+  usePdfPreviewProgressStore.setState(DEFAULT_PDF_PREVIEW_PROGRESS);
+  usePdfPreviewProgressStore.persist.clearStorage();
+};

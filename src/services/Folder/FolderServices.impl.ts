@@ -10,6 +10,7 @@ import { ResourceServicesImpl } from '@/services/Resource/ResourceServices.impl'
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/services/Resource/index.type';
 import { TagServicesImpl } from '@/services/Tag/TagServices.impl';
 import { useTrashTagStore } from '@/store';
+import { registerServiceCacheCleaner } from '@/services/cacheRegistry';
 import type { IFolderService, GetResByFolderRequest, GetFolderTreeRequest } from './index.type';
 
 /** 模块级缓存，按 groupId 存储已拉取的文件夹树；写操作后通过 clearFolderTreeCache 清除 */
@@ -65,6 +66,8 @@ const clearFolderTreeCache = (groupId?: string): void => {
     folderFlatCache.clear();
   }
 };
+
+registerServiceCacheCleaner(() => clearFolderTreeCache());
 
 // 返回一个节点下的所有子节点和文件
 const getResByFolder = async (params: GetResByFolderRequest): Promise<FolderListByPathResponse> => {

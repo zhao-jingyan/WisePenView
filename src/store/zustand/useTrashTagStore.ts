@@ -11,13 +11,17 @@ type TrashTagState = {
   clearTrashTagId: (groupId?: string) => void;
 };
 
+const DEFAULT_TRASH_TAG_STATE = {
+  trashTagIdByGroup: {} as Record<string, string>,
+};
+
 const resolveGroupKey = (groupId?: string): string =>
   normalizeTagGroupId(groupId) ?? DEFAULT_GROUP_KEY;
 
 export const useTrashTagStore = create<TrashTagState>()(
   persist(
     (set, get) => ({
-      trashTagIdByGroup: {},
+      ...DEFAULT_TRASH_TAG_STATE,
       setTrashTagId: (groupId, tagId) => {
         const groupKey = resolveGroupKey(groupId);
         set((state) => {
@@ -54,3 +58,8 @@ export const useTrashTagStore = create<TrashTagState>()(
     { name: 'trash-tag' }
   )
 );
+
+export const clearTrashTagStore = (): void => {
+  useTrashTagStore.setState(DEFAULT_TRASH_TAG_STATE);
+  useTrashTagStore.persist.clearStorage();
+};

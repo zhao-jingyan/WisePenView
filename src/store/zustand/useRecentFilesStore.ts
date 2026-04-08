@@ -17,10 +17,14 @@ type RecentFilesState = {
   updateFileName: (resourceId: string, resourceName: string) => void;
 };
 
+const DEFAULT_RECENT_FILES_STATE = {
+  items: [] as RecentFileItem[],
+};
+
 export const useRecentFilesStore = create<RecentFilesState>()(
   persist(
     (set) => ({
-      items: [],
+      ...DEFAULT_RECENT_FILES_STATE,
 
       addFile: (item) =>
         set((state) => {
@@ -57,3 +61,8 @@ export const useRecentFilesStore = create<RecentFilesState>()(
     { name: 'recent-files' }
   )
 );
+
+export const clearRecentFilesStore = (): void => {
+  useRecentFilesStore.setState(DEFAULT_RECENT_FILES_STATE);
+  useRecentFilesStore.persist.clearStorage();
+};

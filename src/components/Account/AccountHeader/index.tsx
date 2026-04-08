@@ -26,8 +26,8 @@ const AccountHeader: React.FC<AccountHeaderProps> = ({ user, onUserInfoUpdated }
     async (raw: File, currentUser: NonNullable<AccountHeaderProps['user']>) => {
       const { publicUrl } = await imageService.uploadImage({
         file: raw,
-        isPublic: true,
-        bizPath: 'user/avatar',
+        scene: 'PUBLIC_IMAGE_FOR_USER',
+        bizTag: 'user/avatar',
       });
       await userService.updateUserInfo({
         nickname: currentUser.userInfo.nickname ?? undefined,

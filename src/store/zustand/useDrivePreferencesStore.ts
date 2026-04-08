@@ -3,6 +3,11 @@ import { persist } from 'zustand/middleware';
 
 export type DriveViewMode = 'folder' | 'flat' | 'uploadQueue';
 
+const DEFAULT_DRIVE_PREFERENCES = {
+  viewMode: 'folder' as DriveViewMode,
+  filterCollapsed: true,
+};
+
 type DrivePreferencesState = {
   viewMode: DriveViewMode;
   filterCollapsed: boolean;
@@ -13,11 +18,15 @@ type DrivePreferencesState = {
 export const useDrivePreferencesStore = create<DrivePreferencesState>()(
   persist(
     (set) => ({
-      viewMode: 'folder',
-      filterCollapsed: true,
+      ...DEFAULT_DRIVE_PREFERENCES,
       setViewMode: (v) => set({ viewMode: v }),
       setFilterCollapsed: (v) => set({ filterCollapsed: v }),
     }),
     { name: 'drive-preferences' }
   )
 );
+
+export const clearDrivePreferencesStore = (): void => {
+  useDrivePreferencesStore.setState(DEFAULT_DRIVE_PREFERENCES);
+  useDrivePreferencesStore.persist.clearStorage();
+};

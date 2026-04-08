@@ -50,8 +50,8 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
       if (newFile) {
         const { publicUrl } = await imageService.uploadImage({
           file: newFile,
-          isPublic: true,
-          bizPath: `groups/${groupId}`,
+          scene: 'PUBLIC_IMAGE_FOR_GROUP',
+          bizTag: `groups/${groupId}`,
         });
         groupCoverUrl = publicUrl;
       }

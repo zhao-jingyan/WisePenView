@@ -47,3 +47,7 @@ export const usePendingVerifyEmailStore = create<PendingVerifyEmailState>()((set
     set({ email: null });
   },
 }));
+
+export const clearPendingVerifyEmailStore = (): void => {
+  usePendingVerifyEmailStore.getState().clear();
+};
