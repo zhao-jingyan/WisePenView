@@ -142,8 +142,12 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onS
         >
           <Input placeholder="请输入小组名称" />
         </Form.Item>
-        <Form.Item label="小组描述" name="groupDesc" rules={[{ required: false }]}>
-          <TextArea rows={4} placeholder="请输入小组描述（可选）" />
+        <Form.Item
+          label="小组描述"
+          name="groupDesc"
+          rules={[{ required: true, message: '请输入小组描述' }]}
+        >
+          <TextArea rows={4} placeholder="请输入小组描述" />
         </Form.Item>
         <Form.Item
           label="小组类型"

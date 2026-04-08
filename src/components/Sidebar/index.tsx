@@ -97,21 +97,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
 
     // 构造聊天记录列表
     if (!collapsed) {
-      const sessionHistoryChildren: SidebarMenuItem[] = [
-        // 待接入真实记录
-        {
-          key: 'empty-session',
-          label: '暂无会话',
-          disabled: true,
-        },
-      ];
-      baseItems.push({
-        type: 'group',
-        label: '聊天记录',
-        key: 'recent-session',
-        children: sessionHistoryChildren,
-      });
-
       // 构造最近文件列表
       const recentFileChildren: SidebarMenuItem[] =
         recentItems.length > 0
@@ -150,6 +135,21 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         label: '打开的文件',
         key: 'opened-file',
         children: recentFileChildren,
+      });
+
+      const sessionHistoryChildren: SidebarMenuItem[] = [
+        // 待接入真实记录
+        {
+          key: 'empty-session',
+          label: '暂无会话',
+          disabled: true,
+        },
+      ];
+      baseItems.push({
+        type: 'group',
+        label: '聊天记录',
+        key: 'recent-session',
+        children: sessionHistoryChildren,
       });
     }
 

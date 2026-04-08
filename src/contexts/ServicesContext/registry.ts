@@ -6,6 +6,7 @@
 
 // 第一步：导入该服务的接口类型
 import type { IAuthService } from '@/services/Auth';
+import type { IChatService } from '@/services/Chat';
 import type { IDocumentService } from '@/services/Document';
 import type { IFolderService } from '@/services/Folder';
 import type { IGroupService } from '@/services/Group';
@@ -20,6 +21,7 @@ import type { IWalletService } from '@/services/Wallet';
 
 // 第二步：导入真实实现（*Services.impl.ts，调用后端 API）
 import { AuthServicesImpl } from '@/services/Auth/AuthServices.impl';
+import { ChatServicesImpl } from '@/services/Chat/ChatServices.impl';
 import { DocumentServicesImpl } from '@/services/Document/DocumentServices.impl';
 import { FolderServicesImpl } from '@/services/Folder/FolderServices.impl';
 import { GroupServicesImpl } from '@/services/Group/GroupServices.impl';
@@ -34,6 +36,7 @@ import { WalletServicesImpl } from '@/services/Wallet/WalletServices.impl';
 
 // 第三步：导入 Mock 实现（src/mocks/Xxx/XxxServices.mock.ts，用于 MODE === 'mock' 时）
 import { AuthServicesMock } from '@/mocks/Auth/AuthServices.mock';
+import { ChatServicesMock } from '@/mocks/Chat/ChatServices.mock';
 import { DocumentServicesMock } from '@/mocks/Document/DocumentServices.mock';
 import { FolderServicesMock } from '@/mocks/Folder/FolderServices.mock';
 import { GroupServicesMock } from '@/mocks/Group/GroupServices.mock';
@@ -49,6 +52,7 @@ import { WalletServicesMock } from '@/mocks/Wallet/WalletServices.mock';
 // 第四步：在 ServicesContextValue 中新增该服务的类型
 export interface ServicesContextValue {
   auth: IAuthService;
+  chat: IChatService;
   document: IDocumentService;
   folder: IFolderService;
   group: IGroupService;
@@ -66,6 +70,7 @@ export interface ServicesContextValue {
 // 第五步：在 servicesValue 中绑定真实实现
 const servicesValue: ServicesContextValue = {
   auth: AuthServicesImpl,
+  chat: ChatServicesImpl,
   document: DocumentServicesImpl,
   folder: FolderServicesImpl,
   group: GroupServicesImpl,
@@ -82,6 +87,7 @@ const servicesValue: ServicesContextValue = {
 // 第六步：在 mockServicesValue 中绑定 Mock 实现
 const mockServicesValue: ServicesContextValue = {
   auth: AuthServicesMock,
+  chat: ChatServicesMock,
   document: DocumentServicesMock,
   folder: FolderServicesMock,
   group: GroupServicesMock,

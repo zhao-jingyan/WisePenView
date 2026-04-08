@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 
 import type { IAuthService } from '@/services/Auth';
+import type { IChatService } from '@/services/Chat';
 import type { IDocumentService } from '@/services/Document';
 import type { IFolderService } from '@/services/Folder';
 import type { IGroupService } from '@/services/Group';
@@ -27,6 +28,7 @@ function useServicesContext(): ServicesContextValue {
 
 // 第七步：导出 useXxxService hook，组件内通过 useOrderService() 等获取实例
 export const useAuthService = (): IAuthService => useServicesContext().auth;
+export const useChatService = (): IChatService => useServicesContext().chat;
 export const useDocumentService = (): IDocumentService => useServicesContext().document;
 export const useFolderService = (): IFolderService => useServicesContext().folder;
 export const useGroupService = (): IGroupService => useServicesContext().group;

@@ -112,16 +112,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed, onToggle }) => {
     );
   };
 
-  const startNewChat = () => {
-    // 中断当前的流
-    if (abortCtrlRef.current) {
-      abortCtrlRef.current.abort();
-      abortCtrlRef.current = null;
-    }
-    setMessages([]);
-    setSending(false);
-  };
-
   return (
     <div className={styles.panel}>
       <div className={`${styles.header} ${collapsed ? styles.collapsedHeader : ''}`}>
@@ -136,11 +126,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed, onToggle }) => {
           </button>
           {!collapsed && <div className={styles.title}>新建对话</div>}
         </div>
-        {!collapsed && (
-          <Button type="text" icon={<RiAddLine />} onClick={startNewChat}>
-            清空
-          </Button>
-        )}
       </div>
       {!collapsed && (
         <>

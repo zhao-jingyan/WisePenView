@@ -1,5 +1,6 @@
 // eslint-disable-next-line no-restricted-imports -- ChatPanel 待重构：暂时允许 useEffect
 import React, { useState, useMemo, useEffect } from 'react';
+import { useRequest } from 'ahooks';
 import { Popover, Dropdown, Tooltip, Tag, Spin, Empty } from 'antd';
 import type { MenuProps } from 'antd';
 // 引入图标库
@@ -17,7 +18,7 @@ import clsx from 'clsx';
 // 2. 引入 LobeHub AI 图标库
 import { OpenAI, Claude, Grok, DeepSeek, Doubao, Meta, Mistral, Gemini } from '@lobehub/icons';
 
-import { useModelList } from '@/hooks/ChatPanel';
+import { useChatService } from '@/contexts/ServicesContext';
 import type { Model } from '../index.type';
 
 import styles from './style.module.less';
@@ -61,8 +62,9 @@ interface ModelSelectorProps {
 const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);
   const [currentSort, setCurrentSort] = useState<string>('usage');
-
-  const { models, loading } = useModelList();
+  const chatService = useChatService();
+  const { data, loading } = useRequest(() => chatService.getModels());
+  const models = useMemo(() => data ?? [], [data]);
 
   // 自动选中默认模型
   useEffect(() => {

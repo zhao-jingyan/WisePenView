@@ -9,28 +9,27 @@ import type { NoteBodyEditorHandle } from '@/components/Note/CustomBlockNote/ind
 import NoteInfoBar from '@/components/Note/NoteInfoBar';
 import NoteTitle from '@/components/Note/NoteTitle';
 import { useNoteService } from '@/contexts/ServicesContext';
+import type { NoteInfoDisplayData } from '@/services/Note';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useNoteSession } from '@/session/note/useNoteSession';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import styles from './style.module.less';
 
 interface NoteViewConnectedProps {
   noteId?: string;
   resourceId: string;
+  noteInfoDisplay: NoteInfoDisplayData;
 }
 
-const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceId }) => {
+const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({
+  noteId,
+  resourceId,
+  noteInfoDisplay,
+}) => {
   const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
   const reconnectTimerRef = useRef<number | null>(null);
   const [isReconnectLoading, setIsReconnectLoading] = useState(false);
-  const noteService = useNoteService();
   const { status, doc, provider, reconnect } = useNoteSession(resourceId);
-  const { data: noteInfoDisplay } = useRequest(
-    () => noteService.getNoteInfoDisplay({ resourceId }),
-    {
-      ready: Boolean(resourceId),
-      refreshDeps: [resourceId],
-    }
-  );
 
   const isConnected = status === 'connected';
   const isDisconnected = useSmoothFlag(status === 'disconnected', 2000, 2000);
@@ -125,6 +124,15 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({ noteId, resourceI
 const NoteView: React.FC = () => {
   const { noteId } = useParams<{ noteId?: string }>();
   const resourceId = noteId ?? '';
+  const noteService = useNoteService();
+  const {
+    data: noteInfoDisplay,
+    loading: isNoteInfoLoading,
+    error: noteInfoError,
+  } = useRequest(() => noteService.getNoteInfoDisplay({ resourceId }), {
+    ready: Boolean(resourceId),
+    refreshDeps: [resourceId],
+  });
 
   if (!resourceId) {
     return (
@@ -146,7 +154,64 @@ const NoteView: React.FC = () => {
     );
   }
 
-  return <NoteViewConnected noteId={noteId} resourceId={resourceId} />;
+  if (noteInfoError) {
+    return (
+      <div className={styles.pageWrap}>
+        <div className={styles.middleOverlay}>
+          <div className={styles.middleOverlayInner}>
+            <Result
+              status="warning"
+              title="无法打开笔记"
+              subTitle={parseErrorMessage(noteInfoError, '笔记不存在或无访问权限')}
+              extra={
+                <Link to="/app/drive">
+                  <Button type="default">返回云盘</Button>
+                </Link>
+              }
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isNoteInfoLoading) {
+    return (
+      <div className={styles.pageWrap}>
+        <div className={styles.middleOverlay} aria-busy="true" aria-live="polite">
+          <div className={styles.middleOverlayLoading}>
+            <Spin size="large" />
+            <span className={styles.middleOverlayText}>正在加载笔记信息...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!noteInfoDisplay) {
+    return (
+      <div className={styles.pageWrap}>
+        <div className={styles.middleOverlay}>
+          <div className={styles.middleOverlayInner}>
+            <Result
+              status="warning"
+              title="无法打开笔记"
+              subTitle="笔记信息为空，请稍后重试"
+              extra={
+                <Link to="/app/drive">
+                  <Button type="default">返回云盘</Button>
+                </Link>
+              }
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <NoteViewConnected noteId={noteId} resourceId={resourceId} noteInfoDisplay={noteInfoDisplay} />
+  );
 };
 
 export default NoteView;

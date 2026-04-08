@@ -28,7 +28,8 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
     <div className={styles.actionToolbar}>
       {/* 左侧功能区 */}
       <div className={styles.toolsLeft}>
-        <Tooltip title="上传文件">
+        {/* TODO: 以下按钮功能待接入 */}
+        {/* <Tooltip title="上传文件">
           <Button
             type="text"
             size="small"
@@ -56,7 +57,7 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
             className={styles.toolBtn}
             icon={<LuHistory />}
           />
-        </Tooltip>
+        </Tooltip> */}
       </div>
 
       {/* 右侧功能区 */}

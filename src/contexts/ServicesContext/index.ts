@@ -26,6 +26,7 @@ export type { ServicesContextValue } from './registry';
 export { ServicesProvider } from './ServicesProvider';
 export {
   useAuthService,
+  useChatService,
   useDocumentService,
   useFolderService,
   useGroupService,

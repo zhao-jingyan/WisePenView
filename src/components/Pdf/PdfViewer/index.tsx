@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useMount } from 'ahooks';
+import { useMount, useUnmount } from 'ahooks';
 import { PDFViewer as EmbedPdfViewer } from '@embedpdf/react-pdf-viewer';
 import clsx from 'clsx';
 import { baseURL } from '@/utils/Axios';
@@ -15,6 +15,9 @@ interface DocumentManagerApi {
     requestOptions?: RequestInit;
     permissions?: Record<string, boolean>;
   }): Promise<void>;
+  onDocumentError?(
+    handler: (payload: { documentId?: string; error?: unknown }) => void
+  ): (() => void) | void;
 }
 
 interface PdfViewerHandle {
@@ -23,8 +26,9 @@ interface PdfViewerHandle {
   }>;
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = ({ resourceId, config, className }) => {
+const PdfViewer: React.FC<PdfViewerProps> = ({ resourceId, config, className, onLoadError }) => {
   const viewerRef = useRef<PdfViewerHandle | null>(null);
+  const onDocumentErrorCleanupRef = useRef<(() => void) | null>(null);
 
   const loadDocument = async () => {
     if (!resourceId || !viewerRef.current) return;
@@ -32,6 +36,20 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ resourceId, config, className }) 
     try {
       const registry = await viewerRef.current.registry;
       const docManager = registry.getPlugin('document-manager')?.provides();
+      if (!docManager) {
+        const err = new Error('PDF 文档管理器不可用');
+        onLoadError?.(err);
+        return;
+      }
+      if (onDocumentErrorCleanupRef.current === null) {
+        const cleanup = docManager.onDocumentError?.(({ error }) => {
+          console.error('[PdfViewer] 文档事件错误:', error);
+          onLoadError?.(error ?? new Error('文档加载失败'));
+        });
+        if (typeof cleanup === 'function') {
+          onDocumentErrorCleanupRef.current = cleanup;
+        }
+      }
       await docManager?.openDocumentUrl({
         url: `${baseURL}document/getDocPreview?resourceId=${resourceId}`,
         documentId: `doc-${resourceId}`,
@@ -46,11 +64,19 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ resourceId, config, className }) 
       });
     } catch (error) {
       console.error('[PdfViewer] 文档加载失败:', error);
+      onLoadError?.(error);
     }
   };
 
   useMount(() => {
     void loadDocument();
+  });
+
+  useUnmount(() => {
+    if (onDocumentErrorCleanupRef.current) {
+      onDocumentErrorCleanupRef.current();
+      onDocumentErrorCleanupRef.current = null;
+    }
   });
 
   return (
