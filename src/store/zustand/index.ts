@@ -16,6 +16,7 @@ export {
   clearPdfPreviewProgressStore,
   type PdfPreviewProgress,
 } from './usePdfPreviewProgressStore';
+export { useNoteSelectionStore, clearNoteSelectionStore } from './useNoteSelectionStore';
 export {
   useRecentFilesStore,
   clearRecentFilesStore,

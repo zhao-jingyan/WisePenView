@@ -4,6 +4,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 // 引入布局（保持同步加载，保证首屏壳子稳定）
 import SystemLayout from '@/layouts/SystemLayout';
 import AuthLayout from '@/layouts/AuthLayout';
+import HomeLayout from '@/layouts/HomeLayout';
 
 // 页面使用 lazy load，按路由切分 chunk
 const Home = lazy(() => import('@/views/home'));
@@ -19,6 +20,7 @@ const NewPassword = lazy(() => import('@/views/auth/NewPassword'));
 const VerifyEmail = lazy(() => import('@/views/auth/VerifyEmail'));
 const NoteView = lazy(() => import('@/views/note'));
 const PdfPreview = lazy(() => import('@/views/pdf/PdfPreview'));
+const ResourceNotFound = lazy(() => import('@/views/Error/ResourceNotFound'));
 
 const router = createBrowserRouter([
   // ==============================
@@ -26,7 +28,13 @@ const router = createBrowserRouter([
   // ==============================
   {
     path: '/',
-    element: <Home />, // 你的独立门户首页
+    element: <HomeLayout />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+    ],
   },
   {
     path: '/login',
@@ -132,7 +140,7 @@ const router = createBrowserRouter([
   // ==============================
   {
     path: '*',
-    element: <div>404 Not Found</div>,
+    element: <ResourceNotFound />,
   },
 ]);
 

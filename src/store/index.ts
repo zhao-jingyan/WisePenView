@@ -7,12 +7,14 @@
 // Zustand stores
 export {
   useDrivePreferencesStore,
+  useNoteSelectionStore,
   usePendingVerifyEmailStore,
   usePdfPreviewProgressStore,
   useRecentFilesStore,
   useTrashTagStore,
   clearAllZustandStores,
   clearDrivePreferencesStore,
+  clearNoteSelectionStore,
   clearPendingVerifyEmailStore,
   clearPdfPreviewProgressStore,
   clearRecentFilesStore,

@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle } from 'react';
 import { SuggestionMenuController, useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
 import { zh } from '@blocknote/core/locales';
@@ -8,6 +8,7 @@ import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
 
 import { useImageService } from '@/contexts/ServicesContext';
+import { useNoteSelectionStore } from '@/store';
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
 import { useNoteCaptureKeyEvent } from './useNoteCaptureKeyEvent';
 import { buildNoteSlashMenuItems } from './slashMenuConfig';
@@ -21,7 +22,6 @@ const NOTE_YJS_DOCUMENT_FRAGMENT = 'document-store' as const;
 
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;
 type BlockNoteCollaborationConfig = NonNullable<CreateBlockNoteOptions['collaboration']>;
-type EditorSelection = ReturnType<CustomBlockNoteEditor['getSelection']>;
 
 function readInsertedBlockId(insertedBlock: unknown): string | undefined {
   if (
@@ -35,24 +35,12 @@ function readInsertedBlockId(insertedBlock: unknown): string | undefined {
   return undefined;
 }
 
-function getSelectionSignature(selection: EditorSelection): string {
-  if (!selection) {
-    return '';
-  }
-  return selection.blocks
-    .map((block) => block.id)
-    .filter((id): id is string => typeof id === 'string' && id.length > 0)
-    .join(',');
-}
-
 const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
   ({ resourceId, doc, provider, readOnly = false }, ref) => {
     const imageService = useImageService();
+    const setSelectedText = useNoteSelectionStore((state) => state.setSelectedText);
+    const clearSelectedText = useNoteSelectionStore((state) => state.clearSelectedText);
     const editorRef = useLatest<CustomBlockNoteEditor | null>(null);
-    const [selectionState, setSelectionState] = useState<EditorSelection>(undefined);
-    const selectionSignatureRef = useRef<string>('');
-    const onChangeCleanupRef = useRef<(() => void) | null>(null);
-    const selectionSyncRef = useRef<(() => void) | null>(null);
 
     const uploadFile = useCallback(
       async (file: File, insertedBlock: unknown) => {
@@ -115,41 +103,20 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       },
     });
 
-    useMount(() => {
-      console.log('useMount');
-      editorRef.current = editor;
-      const syncSelectionState = () => {
-        const currentEditor = editorRef.current;
-        if (!currentEditor) {
-          return;
-        }
-        const currentSelection = currentEditor.getSelection();
-        if (currentSelection) {
-          console.log('Selected blocks:', currentSelection.blocks.length);
-        }
-        const nextSignature = getSelectionSignature(currentSelection);
-        if (nextSignature === selectionSignatureRef.current) {
-          return;
-        }
-        selectionSignatureRef.current = nextSignature;
-        setSelectionState(currentSelection);
-      };
+    const syncSelectedText = useCallback(() => {
+      setSelectedText(resourceId, editor.getSelectedText());
+    }, [editor, resourceId, setSelectedText]);
 
-      syncSelectionState();
-      selectionSyncRef.current = syncSelectionState;
-      onChangeCleanupRef.current = editor.onChange(syncSelectionState);
-      document.addEventListener('selectionchange', syncSelectionState);
+    // const scheduleSyncSelectionState = useCallback(() => {
+    //   queueMicrotask(syncSelectedText);
+    // }, [syncSelectedText]);
+
+    useMount(() => {
+      editorRef.current = editor;
+      syncSelectedText();
     });
     useUnmount(() => {
-      if (onChangeCleanupRef.current) {
-        onChangeCleanupRef.current();
-        onChangeCleanupRef.current = null;
-      }
-      selectionSignatureRef.current = '';
-      if (selectionSyncRef.current) {
-        document.removeEventListener('selectionchange', selectionSyncRef.current);
-        selectionSyncRef.current = null;
-      }
+      clearSelectedText(resourceId);
       editorRef.current = null;
     });
 
@@ -169,9 +136,16 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       <div
         className={styles.editorShell}
         onKeyDownCapture={onKeyDownCapture}
-        data-selected-block-count={selectionState?.blocks.length ?? 0}
+        // onMouseUpCapture={scheduleSyncSelectionState}
+        // onKeyUpCapture={scheduleSyncSelectionState}
       >
-        <BlockNoteView editor={editor} theme="light" slashMenu={false} editable={!readOnly}>
+        <BlockNoteView
+          editor={editor}
+          theme="light"
+          slashMenu={false}
+          editable={!readOnly}
+          onSelectionChange={syncSelectedText}
+        >
           <SuggestionMenuController
             triggerCharacter="/"
             getItems={async (query) => {
