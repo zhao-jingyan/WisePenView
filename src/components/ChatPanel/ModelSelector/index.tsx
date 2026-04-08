@@ -19,6 +19,7 @@ import clsx from 'clsx';
 import { OpenAI, Claude, Grok, DeepSeek, Doubao, Meta, Mistral, Gemini } from '@lobehub/icons';
 
 import { useChatService } from '@/contexts/ServicesContext';
+import { mapApiModelsToFlatModels } from '@/services/Chat';
 import type { Model } from '../index.type';
 
 import styles from './style.module.less';
@@ -64,7 +65,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
   const [currentSort, setCurrentSort] = useState<string>('usage');
   const chatService = useChatService();
   const { data, loading } = useRequest(() => chatService.getModels());
-  const models = useMemo(() => data ?? [], [data]);
+  const models = useMemo(() => mapApiModelsToFlatModels(data), [data]);
 
   // 自动选中默认模型
   useEffect(() => {

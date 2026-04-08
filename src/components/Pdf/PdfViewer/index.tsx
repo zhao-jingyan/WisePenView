@@ -59,7 +59,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ resourceId, config, className, on
         },
         permissions: {
           canPrint: false,
-          canCopy: true,
+          canCopy: false,
         },
       });
     } catch (error) {

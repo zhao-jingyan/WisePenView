@@ -43,8 +43,8 @@ const PDF_FEATURE_CONFIG: Record<string, boolean> = {
   tools: false,
 
   // selection
-  selection: true,
-  'selection-copy': true,
+  selection: false,
+  'selection-copy': false,
 
   // history
   history: false,
