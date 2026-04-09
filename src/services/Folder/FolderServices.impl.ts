@@ -82,14 +82,18 @@ const getResByFolder = async (params: GetResByFolderRequest): Promise<FolderList
   let files: ResourceItem[] = [];
   let totalFiles = 0;
 
-  const res = await ResourceServicesImpl.getUserResources({
+  const listParams = {
     page: filePage,
     size: filePageSize,
     sortBy: RESOURCE_SORT_BY.UPDATE_TIME,
     sortDir: RESOURCE_SORT_DIR.DESC,
     tagIds: [tagId],
     tagQueryLogicMode: 'AND',
-  });
+  } as const;
+  const normalizedGroupId = normalizeTagGroupId(targetFolder.groupId);
+  const res = normalizedGroupId
+    ? await ResourceServicesImpl.getGroupResources({ ...listParams, groupId: normalizedGroupId })
+    : await ResourceServicesImpl.getUserResources(listParams);
 
   files = res.list;
   totalFiles = res.total;

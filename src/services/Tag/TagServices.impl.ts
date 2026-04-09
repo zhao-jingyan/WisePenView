@@ -137,15 +137,18 @@ const getResByTag = async (params: GetResByTagRequest): Promise<TagListByTagResp
   const tags = tag?.children ?? [];
   const filePage = params.filePage ?? 1;
   const filePageSize = params.filePageSize ?? 20;
-
-  const res = await ResourceServicesImpl.getUserResources({
+  const listParams = {
     page: filePage,
     size: filePageSize,
     sortBy: RESOURCE_SORT_BY.UPDATE_TIME,
     sortDir: RESOURCE_SORT_DIR.DESC,
     tagIds: [targetTag.tagId],
     tagQueryLogicMode: 'AND',
-  });
+  } as const;
+  const normalizedGroupId = normalizeTagGroupId(targetTag.groupId);
+  const res = normalizedGroupId
+    ? await ResourceServicesImpl.getGroupResources({ ...listParams, groupId: normalizedGroupId })
+    : await ResourceServicesImpl.getUserResources(listParams);
 
   return { tags, files: res.list, totalFiles: res.total };
 };

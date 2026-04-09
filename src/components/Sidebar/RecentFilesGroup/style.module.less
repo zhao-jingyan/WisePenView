@@ -1,0 +1,39 @@
+.fileMenuLabel {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline-start: var(--ant-padding-sm);
+}
+
+.fileMenuLabelText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileCloseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: var(--ant-color-text-tertiary);
+  border-radius: var(--ant-border-radius-sm);
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--ant-color-text);
+    background: var(--ant-color-fill-tertiary);
+  }
+}
+
+:global(.ant-menu-item:hover) .fileCloseBtn {
+  opacity: 1;
+}
