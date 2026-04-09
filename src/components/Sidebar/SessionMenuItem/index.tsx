@@ -14,6 +14,7 @@ const SessionMenuItem: React.FC<SessionMenuItemProps> = ({ session, onUpdated, o
   const messageApi = useAppMessage();
   const [editing, setEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(session.title || '');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const { runAsync: runRenameSession } = useRequest(
     async (newTitle: string) =>
@@ -60,6 +61,11 @@ const SessionMenuItem: React.FC<SessionMenuItemProps> = ({ session, onUpdated, o
     }
     await runRenameSession(trimmedTitle);
   }, [editingTitle, messageApi, runRenameSession]);
+
+  const confirmDeleteSession = useCallback(async () => {
+    await runDeleteSession();
+    setDeleteConfirmOpen(false);
+  }, [runDeleteSession]);
 
   return (
     <div className={clsx(styles.sessionMenuLabel, editing && styles.sessionMenuLabelEditing)}>
@@ -144,19 +150,7 @@ const SessionMenuItem: React.FC<SessionMenuItemProps> = ({ session, onUpdated, o
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                Modal.confirm({
-                  title: '删除会话',
-                  content: '删除后不可恢复，是否继续？',
-                  okText: '删除',
-                  okButtonProps: {
-                    danger: true,
-                    loading: deleting,
-                  },
-                  cancelText: '取消',
-                  onOk: async () => {
-                    await runDeleteSession();
-                  },
-                });
+                setDeleteConfirmOpen(true);
               }}
             >
               <RiDeleteBinLine size={16} />
@@ -164,6 +158,19 @@ const SessionMenuItem: React.FC<SessionMenuItemProps> = ({ session, onUpdated, o
           </>
         )}
       </div>
+      <Modal
+        title="删除会话"
+        open={deleteConfirmOpen}
+        onCancel={() => setDeleteConfirmOpen(false)}
+        onOk={confirmDeleteSession}
+        okText="删除"
+        okButtonProps={{ danger: true }}
+        cancelText="取消"
+        confirmLoading={deleting}
+        destroyOnHidden
+      >
+        删除后不可恢复，是否继续？
+      </Modal>
     </div>
   );
 };

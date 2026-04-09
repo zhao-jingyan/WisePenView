@@ -1,5 +1,6 @@
 import React from 'react';
 import { Menu } from 'antd';
+import type { MenuProps } from 'antd';
 import { useRequest } from 'ahooks';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { RiAddCircleFill, RiFileTextLine, RiGroupFill } from 'react-icons/ri';
@@ -32,6 +33,28 @@ const HeaderNav: React.FC<HeaderNavProps> = ({ collapsed, onSessionCreated }) =>
     }
   );
 
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'new-chat',
+      icon: <RiAddCircleFill size={18} />,
+      onClick: () => runCreateSession(),
+      disabled: createSessionLoading,
+      label: '新聊天',
+    },
+    {
+      key: '/app/drive',
+      icon: <RiFileTextLine size={18} />,
+      onClick: () => navigate('/app/drive'),
+      label: '文档与云盘',
+    },
+    {
+      key: '/app/my-group',
+      icon: <RiGroupFill size={18} />,
+      onClick: () => navigate('/app/my-group'),
+      label: '我的小组',
+    },
+  ];
+
   return (
     <Menu
       mode="inline"
@@ -39,30 +62,8 @@ const HeaderNav: React.FC<HeaderNavProps> = ({ collapsed, onSessionCreated }) =>
       className={styles.headerMenu}
       selectedKeys={selectedKeys}
       inlineCollapsed={collapsed}
-    >
-      <Menu.Item
-        key="new-chat"
-        icon={<RiAddCircleFill size={18} />}
-        onClick={() => runCreateSession()}
-        disabled={createSessionLoading}
-      >
-        新聊天
-      </Menu.Item>
-      <Menu.Item
-        key="/app/drive"
-        icon={<RiFileTextLine size={18} />}
-        onClick={() => navigate('/app/drive')}
-      >
-        文档与云盘
-      </Menu.Item>
-      <Menu.Item
-        key="/app/my-group"
-        icon={<RiGroupFill size={18} />}
-        onClick={() => navigate('/app/my-group')}
-      >
-        我的小组
-      </Menu.Item>
-    </Menu>
+      items={menuItems}
+    />
   );
 };
 

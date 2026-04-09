@@ -1,20 +1,14 @@
-import React, {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 import { Menu } from 'antd';
+import type { MenuProps } from 'antd';
+import { useUpdateEffect } from 'ahooks';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useClickFile } from '@/hooks/drive';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useRecentFilesStore } from '@/store';
 import { getOpenedResourceIdFromPath } from '@/utils/openedResourceRoute';
-import RecentFilesGroup from '../RecentFilesGroup';
-import SessionSection from '../SessionSection';
-import type { SessionSectionRef } from '../SessionSection/index.type';
+import { buildRecentFilesGroupItems } from '../RecentFilesGroup';
+import { useSessionListGroup } from '../SessionListGroup';
 import type { SidebarMenuProps, SidebarMenuRef } from './index.type';
 import styles from './style.module.less';
 
@@ -26,7 +20,12 @@ const SidebarMenu = forwardRef<SidebarMenuRef, SidebarMenuProps>(({ collapsed },
   const clickFile = useClickFile();
   const messageApi = useAppMessage();
   const [activeSessionMenuKey, setActiveSessionMenuKey] = useState<string>();
-  const sessionSectionRef = useRef<SessionSectionRef>(null);
+  const [pendingCreatedSessionId, setPendingCreatedSessionId] = useState<string>();
+
+  const { menuItems: sessionMenuItems, refresh } = useSessionListGroup({
+    activeSessionMenuKey,
+    onActiveSessionMenuKeyChange: setActiveSessionMenuKey,
+  });
 
   const selectedKeys = useMemo(() => {
     if (activeSessionMenuKey) {
@@ -73,34 +72,50 @@ const SidebarMenu = forwardRef<SidebarMenuRef, SidebarMenuProps>(({ collapsed },
     [location.pathname, navigate, removeRecentFile]
   );
 
+  const menuItems = useMemo<Required<MenuProps>['items']>(() => {
+    if (collapsed) {
+      return [];
+    }
+    return [
+      ...buildRecentFilesGroupItems({
+        items: recentItems,
+        onOpenFile: handleOpenFile,
+        onCloseFile: handleCloseRecentFile,
+      }),
+      ...sessionMenuItems,
+    ];
+  }, [collapsed, handleCloseRecentFile, handleOpenFile, recentItems, sessionMenuItems]);
+
   useImperativeHandle(
     ref,
     () => ({
       handleCreatedSession: async (sessionId: string) => {
-        await sessionSectionRef.current?.handleCreatedSession(sessionId);
+        setActiveSessionMenuKey(`session-${sessionId}`);
+        if (collapsed) {
+          setPendingCreatedSessionId(sessionId);
+          return;
+        }
+        await refresh();
       },
     }),
-    []
+    [collapsed, refresh]
   );
+
+  useUpdateEffect(() => {
+    if (collapsed || pendingCreatedSessionId == null) return;
+    void refresh();
+    setPendingCreatedSessionId(undefined);
+  }, [collapsed, pendingCreatedSessionId, refresh]);
 
   return (
     <div className={styles.menuContainer}>
-      <Menu mode="inline" theme="light" selectedKeys={selectedKeys} inlineCollapsed={collapsed}>
-        {!collapsed && (
-          <>
-            <RecentFilesGroup
-              items={recentItems}
-              onOpenFile={handleOpenFile}
-              onCloseFile={handleCloseRecentFile}
-            />
-            <SessionSection
-              ref={sessionSectionRef}
-              activeSessionMenuKey={activeSessionMenuKey}
-              onActiveSessionMenuKeyChange={setActiveSessionMenuKey}
-            />
-          </>
-        )}
-      </Menu>
+      <Menu
+        mode="inline"
+        theme="light"
+        selectedKeys={selectedKeys}
+        inlineCollapsed={collapsed}
+        items={menuItems}
+      />
     </div>
   );
 });

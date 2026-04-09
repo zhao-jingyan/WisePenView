@@ -22,6 +22,7 @@ export default defineConfig([
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
+      'no-alert': 'error',
       'no-restricted-imports': [
         'error',
         {
@@ -30,6 +31,12 @@ export default defineConfig([
               name: 'react',
               importNames: ['useEffect'],
               message: '项目约定禁止使用 useEffect，请改为事件驱动、显式回调或更合适的数据流方案。',
+            },
+            {
+              name: 'antd',
+              importNames: ['message'],
+              message:
+                '项目约定禁止使用 antd message 静态方法，请改为 App.useApp() 或 useAppMessage() 返回的实例方法。',
             },
           ],
         },
@@ -40,6 +47,19 @@ export default defineConfig([
           object: 'React',
           property: 'useEffect',
           message: '项目约定禁止使用 useEffect，请改为事件驱动、显式回调或更合适的数据流方案。',
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.object.name='Modal'][callee.property.name=/^(confirm|info|success|error|warning)$/]",
+          message: '项目约定禁止使用 Modal 静态方法，请改为受控 Antd <Modal /> 组件。',
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='modal'][callee.property.name=/^(confirm|info|success|error|warning)$/]",
+          message: '项目约定禁止使用 modal 静态方法，请改为受控 Antd <Modal /> 组件。',
         },
       ],
     },
