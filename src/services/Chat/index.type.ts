@@ -63,6 +63,7 @@ export type MessageRole = 'user' | 'assistant';
 export interface MessageResponse {
   id: string;
   role: MessageRole;
+  model_id: number | null;
   content: string;
   tool_calls: unknown[] | null;
   created_at: string;

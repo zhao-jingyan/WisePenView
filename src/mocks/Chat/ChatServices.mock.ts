@@ -160,6 +160,7 @@ const listHistoryMessages: IChatService['listHistoryMessages'] = async (params) 
       {
         id: 'msg_mock_user_001',
         role: 'user',
+        model_id: null,
         content: '请用 Python 写一个快排',
         tool_calls: null,
         created_at: '2026-04-08T10:00:00Z',
@@ -167,6 +168,7 @@ const listHistoryMessages: IChatService['listHistoryMessages'] = async (params) 
       {
         id: 'msg_mock_assistant_001',
         role: 'assistant',
+        model_id: 1,
         content: '好的，这里是快速排序的代码...',
         tool_calls: null,
         created_at: '2026-04-08T10:00:05Z',

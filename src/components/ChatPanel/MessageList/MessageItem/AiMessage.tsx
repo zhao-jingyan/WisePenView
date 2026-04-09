@@ -12,6 +12,8 @@ const AiMessage: React.FC<{ message: Message }> = ({ message }) => {
   const hasReasoning = message.reasoningContent !== undefined;
   const messageApi = useAppMessage();
   const [copied, setCopied] = React.useState(false);
+  const displayProvider = message.meta?.provider || 'openai';
+  const displayModelName = message.meta?.modelName || message.meta?.modelId || 'AI 助手';
 
   const handleCopy = async () => {
     try {
@@ -28,11 +30,14 @@ const AiMessage: React.FC<{ message: Message }> = ({ message }) => {
     <div className={styles.aiRow}>
       {/* 头像 */}
       <div className={styles.avatarCol}>
-        <LogoFactory provider={message.meta?.provider || 'openai'} size={28} />
+        <LogoFactory provider={displayProvider} size={28} />
       </div>
 
       {/* 内容 */}
       <div className={styles.contentCol}>
+        <div className={styles.modelMeta}>
+          <span className={styles.modelName}>{displayModelName}</span>
+        </div>
         {/* 思考过程块 */}
         {hasReasoning && (
           <ThinkingBlock

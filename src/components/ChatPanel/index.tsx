@@ -7,12 +7,18 @@ import { useChatService } from '@/contexts/ServicesContext';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useCurrentChatSessionStore, useNoteSelectionStore } from '@/store';
 import { useChatSession } from '@/session/chat/useChatSession';
+import { mapApiModelsToFlatModels } from '@/services/Chat';
 import type { MessageResponse } from '@/services/Chat';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import styles from './style.module.less';
 
 interface ChatPanelProps {
   collapsed: boolean;
+}
+
+interface ModelMeta {
+  provider: string;
+  name: string;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
@@ -56,6 +62,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
   const { runAsync: runCreateSession } = useRequest(() => chatService.createSession(), {
     manual: true,
   });
+  const { data: modelListData } = useRequest(() => chatService.getModels());
 
   const mapRole = useCallback((role: string): MessageRole => {
     if (role === 'user') return 'user';
@@ -71,6 +78,52 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
     if (typeof value === 'string') return value;
     return '';
   }, []);
+
+  const modelMetaMap = useMemo<Record<string, ModelMeta>>(() => {
+    const models = mapApiModelsToFlatModels(modelListData);
+    return models.reduce<Record<string, ModelMeta>>((acc, model) => {
+      acc[model.id] = {
+        provider: model.provider,
+        name: model.name,
+      };
+      return acc;
+    }, {});
+  }, [modelListData]);
+
+  const normalizeModelId = useCallback(
+    (modelId: MessageResponse['model_id']): string | undefined => {
+      if (modelId == null) return undefined;
+      return String(modelId);
+    },
+    []
+  );
+
+  useUpdateEffect(() => {
+    if (Object.keys(modelMetaMap).length === 0) return;
+    setHistoryMessages((previousMessages) =>
+      previousMessages.map((message) => {
+        if (message.role !== 'ai') return message;
+        const modelId = message.meta?.modelId;
+        if (!modelId) return message;
+        const modelMeta = modelMetaMap[modelId];
+        if (!modelMeta) return message;
+        if (
+          message.meta?.modelName === modelMeta.name &&
+          message.meta?.provider === modelMeta.provider
+        ) {
+          return message;
+        }
+        return {
+          ...message,
+          meta: {
+            ...message.meta,
+            modelName: modelMeta.name,
+            provider: modelMeta.provider,
+          },
+        };
+      })
+    );
+  }, [modelMetaMap]);
 
   const isSessionInvalidMessage = useCallback((message: string): boolean => {
     const normalizedMessage = message.trim().toLowerCase();
@@ -166,17 +219,30 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
   );
 
   const mapHistoryMessage = useCallback(
-    (message: MessageResponse): Message => ({
-      id: message.id,
-      role: mapRole(message.role),
-      content: message.content || '',
-      createAt: toTimestamp(message.created_at),
-      meta: {
-        provider: currentModel?.provider || 'openai',
-        modelId: currentModel?.id,
-      },
-    }),
-    [currentModel?.id, currentModel?.provider, mapRole, toTimestamp]
+    (message: MessageResponse): Message => {
+      const historyModelId = normalizeModelId(message.model_id);
+      const modelMetaFromMap = historyModelId ? modelMetaMap[historyModelId] : undefined;
+      return {
+        id: message.id,
+        role: mapRole(message.role),
+        content: message.content || '',
+        createAt: toTimestamp(message.created_at),
+        meta: {
+          provider: modelMetaFromMap?.provider || currentModel?.provider || 'openai',
+          modelId: historyModelId || currentModel?.id,
+          modelName: modelMetaFromMap?.name || currentModel?.name,
+        },
+      };
+    },
+    [
+      currentModel?.id,
+      currentModel?.name,
+      currentModel?.provider,
+      mapRole,
+      modelMetaMap,
+      normalizeModelId,
+      toTimestamp,
+    ]
   );
 
   const mappedLiveMessages = useMemo<Message[]>(
@@ -199,10 +265,19 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
           meta: {
             provider: currentModel?.provider || 'openai',
             modelId: currentModel?.id,
+            modelName: currentModel?.name,
           },
         };
       }),
-    [currentModel?.id, currentModel?.provider, liveMessages, mapRole, parseLiveMessage, status]
+    [
+      currentModel?.id,
+      currentModel?.name,
+      currentModel?.provider,
+      liveMessages,
+      mapRole,
+      parseLiveMessage,
+      status,
+    ]
   );
 
   const messages = useMemo<Message[]>(

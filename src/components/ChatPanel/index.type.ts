@@ -34,6 +34,7 @@ export interface Message {
   meta?: {
     provider?: string;
     modelId?: string;
+    modelName?: string;
     usage?: {
       promptTokens?: number;
       completionTokens?: number;

@@ -19,6 +19,20 @@
     flex-direction: column;
     gap: var(--ant-margin-xs);
 
+    .modelMeta {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--ant-margin-xxs);
+      color: var(--ant-color-text-tertiary);
+      font-size: var(--ant-font-size-sm);
+      line-height: 1;
+      width: fit-content;
+
+      .modelName {
+        white-space: nowrap;
+      }
+    }
+
     // 正文区域
     .bubble {
       background: transparent; // AI 无背景

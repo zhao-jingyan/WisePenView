@@ -46,7 +46,20 @@
   overflow: hidden;
 }
 
+.chatResizeGuide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: #d9d9d9;
+  z-index: 40;
+  pointer-events: none;
+  transform: translateX(0);
+}
+
 .chatResizeHandle {
+  @resize-line-gray: #d9d9d9;
   position: absolute;
   left: 0;
   top: 0;
@@ -55,6 +68,10 @@
   transform: translateX(-50%);
   cursor: col-resize;
   z-index: 25;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
 
   &::after {
     content: '';
@@ -69,6 +86,16 @@
   }
 
   &:hover::after {
-    background: var(--ant-color-primary);
+    background: @resize-line-gray;
+  }
+
+  &:focus-visible::after {
+    background: @resize-line-gray;
+  }
+}
+
+.chatResizeHandleActive {
+  &::after {
+    background: #d9d9d9;
   }
 }
