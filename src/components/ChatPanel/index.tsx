@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
+import { RiIndentIncrease } from 'react-icons/ri';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import type { Message, Model, MessageRole } from '@/components/ChatPanel/index.type';
 import { useChatService } from '@/contexts/ServicesContext';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { useCurrentChatSessionStore, useNoteSelectionStore } from '@/store';
+import { useChatPanelStore, useCurrentChatSessionStore, useNoteSelectionStore } from '@/store';
 import { useChatSession } from '@/session/chat/useChatSession';
 import { mapApiModelsToFlatModels } from '@/services/Chat';
 import type { MessageResponse } from '@/services/Chat';
@@ -21,9 +22,12 @@ interface ModelMeta {
   name: string;
 }
 
+const HISTORY_PAGE_SIZE = 100;
+
 const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
   const chatService = useChatService();
   const messageApi = useAppMessage();
+  const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
   const currentSessionId = useCurrentChatSessionStore((state) => state.currentSessionId);
   const currentSessionTitle = useCurrentChatSessionStore((state) => state.currentSessionTitle);
   const setCurrentSession = useCurrentChatSessionStore((state) => state.setCurrentSession);
@@ -37,6 +41,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
   const clearSelectedText = useNoteSelectionStore((state) => state.clearSelectedText);
   const [currentModel, setCurrentModel] = useState<Model | null>(null);
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotalPage, setHistoryTotalPage] = useState(1);
+  const [loadingMoreHistory, setLoadingMoreHistory] = useState(false);
 
   const {
     messages: liveMessages,
@@ -49,11 +56,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
   });
 
   const { runAsync: runLoadSessionHistory } = useRequest(
-    async (sessionId: string) =>
+    async (sessionId: string, page = 1) =>
       chatService.listHistoryMessages({
         sessionId,
-        page: 1,
-        size: 100,
+        page,
+        size: HISTORY_PAGE_SIZE,
       }),
     {
       manual: true,
@@ -69,7 +76,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
     return 'ai';
   }, []);
 
-  const toTimestamp = useCallback((createdAt: string): number => {
+  const toTimestamp = useCallback((createdAt?: string): number => {
+    if (!createdAt) return Date.now();
     const parsed = Date.parse(createdAt);
     return Number.isNaN(parsed) ? Date.now() : parsed;
   }, []);
@@ -79,53 +87,37 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
     return '';
   }, []);
 
-  const stringifyValue = useCallback((value: unknown): string => {
-    if (typeof value === 'string') return value;
-    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-    if (value == null) return '';
-    try {
-      return JSON.stringify(value, null, 2);
-    } catch {
-      return '';
-    }
+  const pushToolName = useCallback((toolNames: string[], toolName: string) => {
+    if (!toolName) return;
+    if (toolNames.includes(toolName)) return;
+    toolNames.push(toolName);
   }, []);
 
-  const formatToolProgressLine = useCallback(
-    (partType: string, payload: Record<string, unknown>): string => {
-      if (partType === 'start-step') return '开始执行步骤';
-      if (partType === 'finish-step') return '步骤执行完成';
+  const getToolNameFromType = useCallback((partType: string): string => {
+    if (!partType.startsWith('tool-')) return '';
+    if (partType === 'tool-input-start') return '';
+    if (partType === 'tool-input-available') return '';
+    if (partType === 'tool-output-available') return '';
+    return partType.slice('tool-'.length);
+  }, []);
 
-      if (partType === 'tool-input-start') {
-        const toolName =
-          getStringValue(payload.toolName) ||
-          getStringValue(payload.tool_name) ||
-          getStringValue(payload.name) ||
-          '未知工具';
-        const toolCallId =
-          getStringValue(payload.toolCallId) || getStringValue(payload.tool_call_id);
-        return toolCallId
-          ? `发起工具调用: ${toolName} (${toolCallId})`
-          : `发起工具调用: ${toolName}`;
-      }
-
-      if (partType === 'tool-input-available') {
-        const inputText = stringifyValue(payload.input ?? payload.args ?? payload.arguments);
-        return inputText ? `工具入参:\n${inputText}` : '工具入参: 无';
-      }
-
-      if (partType === 'tool-output-available') {
-        const outputText = stringifyValue(payload.output ?? payload.result);
-        return outputText ? `工具输出:\n${outputText}` : '工具输出: 无';
-      }
-
-      if (partType.startsWith('tool-')) {
-        const detailText = stringifyValue(payload);
-        return detailText ? `工具事件(${partType}):\n${detailText}` : `工具事件(${partType})`;
-      }
-
-      return '';
+  const getToolNameFromUnknown = useCallback(
+    (value: unknown): string => {
+      if (typeof value !== 'object' || value == null) return '';
+      const typedValue = value as {
+        toolName?: unknown;
+        tool_name?: unknown;
+        name?: unknown;
+        type?: unknown;
+      };
+      const toolName =
+        getStringValue(typedValue.toolName) ||
+        getStringValue(typedValue.tool_name) ||
+        getStringValue(typedValue.name);
+      if (toolName) return toolName;
+      return getToolNameFromType(getStringValue(typedValue.type));
     },
-    [getStringValue, stringifyValue]
+    [getStringValue, getToolNameFromType]
   );
 
   const modelMetaMap = useMemo<Record<string, ModelMeta>>(() => {
@@ -221,7 +213,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
       const textChunks: string[] = [];
       const reasoningChunks: string[] = [];
       const errorChunks: string[] = [];
-      const toolChunks: string[] = [];
+      const toolNames: string[] = [];
 
       if (Array.isArray(typedMessage.parts)) {
         typedMessage.parts.forEach((part) => {
@@ -233,6 +225,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
             error?: unknown;
             errorText?: unknown;
             message?: unknown;
+            toolName?: unknown;
+            tool_name?: unknown;
+            name?: unknown;
           };
 
           const partType = getStringValue(typedPart.type);
@@ -257,15 +252,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
             return;
           }
 
-          if (
-            partType.startsWith('tool-') ||
-            partType === 'start-step' ||
-            partType === 'finish-step'
-          ) {
-            const toolLine = formatToolProgressLine(partType, typedPart as Record<string, unknown>);
-            if (toolLine) {
-              toolChunks.push(toolLine);
-            }
+          if (partType.startsWith('tool-')) {
+            const toolNameFromType = getToolNameFromType(partType);
+            const toolNameFromPayload =
+              getStringValue(typedPart.toolName) ||
+              getStringValue(typedPart.tool_name) ||
+              getStringValue(typedPart.name);
+            pushToolName(toolNames, toolNameFromPayload || toolNameFromType);
           }
         });
       }
@@ -276,39 +269,38 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
         getStringValue(typedMessage.content);
       const reasoningContent = reasoningChunks.join('') || getStringValue(typedMessage.reasoning);
       const errorMessage = errorChunks.join('') || getErrorMessage(typedMessage.error);
-      const toolContent = toolChunks.join('\n');
+      const toolContent = toolNames.join('\n');
 
       return { content, reasoningContent, errorMessage, toolContent };
     },
-    [formatToolProgressLine, getErrorMessage, getStringValue]
+    [getErrorMessage, getStringValue, getToolNameFromType, pushToolName]
   );
 
   const parseHistoryToolCalls = useCallback(
     (toolCalls: MessageResponse['tool_calls']): string | undefined => {
       if (!Array.isArray(toolCalls) || toolCalls.length === 0) return undefined;
-      const entries = toolCalls
-        .map((item, index) => {
-          const itemText = stringifyValue(item);
-          if (!itemText) return `工具调用 ${index + 1}`;
-          return `工具调用 ${index + 1}:\n${itemText}`;
-        })
-        .filter(Boolean);
-
-      return entries.length > 0 ? entries.join('\n\n') : undefined;
+      const toolNames: string[] = [];
+      toolCalls.forEach((item) => {
+        pushToolName(toolNames, getToolNameFromUnknown(item));
+      });
+      return toolNames.length > 0 ? toolNames.join('\n') : undefined;
     },
-    [stringifyValue]
+    [getToolNameFromUnknown, pushToolName]
   );
 
   const mapHistoryMessage = useCallback(
     (message: MessageResponse): Message => {
+      const parsedMessage = parseLiveMessage(message);
+      const errorMessage = parsedMessage.errorMessage.trim();
       const historyModelId = normalizeModelId(message.model_id);
       const modelMetaFromMap = historyModelId ? modelMetaMap[historyModelId] : undefined;
       return {
         id: message.id,
         role: mapRole(message.role),
-        content: message.content || '',
-        toolContent: parseHistoryToolCalls(message.tool_calls),
-        createAt: toTimestamp(message.created_at),
+        content: parsedMessage.content || errorMessage || '',
+        reasoningContent: parsedMessage.reasoningContent || undefined,
+        toolContent: parsedMessage.toolContent || parseHistoryToolCalls(message.tool_calls),
+        createAt: toTimestamp(message.createdAt || message.created_at),
         meta: {
           provider: modelMetaFromMap?.provider || currentModel?.provider || 'openai',
           modelId: historyModelId || currentModel?.id,
@@ -323,6 +315,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
       mapRole,
       modelMetaMap,
       normalizeModelId,
+      parseLiveMessage,
       parseHistoryToolCalls,
       toTimestamp,
     ]
@@ -376,18 +369,24 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
   const loadHistoryMessages = useCallback(
     async (sessionId: string) => {
       try {
-        const payload = await runLoadSessionHistory(sessionId);
+        const payload = await runLoadSessionHistory(sessionId, 1);
         setHistoryMessages(payload.list.map(mapHistoryMessage));
+        setHistoryPage(payload.page ?? 1);
+        setHistoryTotalPage(payload.total_page ?? 1);
       } catch (error) {
         const errorMessage = parseErrorMessage(error, '拉取历史消息失败');
         if (isSessionInvalidMessage(errorMessage)) {
           clearCurrentSession();
           setHistoryMessages([]);
+          setHistoryPage(1);
+          setHistoryTotalPage(1);
           setLiveMessages([]);
           return;
         }
         messageApi.error(errorMessage);
         setHistoryMessages([]);
+        setHistoryPage(1);
+        setHistoryTotalPage(1);
       }
     },
     [
@@ -400,10 +399,40 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
     ]
   );
 
+  const loadMoreHistoryMessages = useCallback(async () => {
+    if (!currentSessionId) return;
+    if (loadingMoreHistory) return;
+    if (historyPage >= historyTotalPage) return;
+
+    const nextPage = historyPage + 1;
+    setLoadingMoreHistory(true);
+
+    try {
+      const payload = await runLoadSessionHistory(currentSessionId, nextPage);
+      const olderMessages = payload.list.map(mapHistoryMessage);
+      setHistoryMessages((previousMessages) => [...olderMessages, ...previousMessages]);
+      setHistoryPage(payload.page ?? nextPage);
+      setHistoryTotalPage(payload.total_page ?? historyTotalPage);
+    } catch (error) {
+      messageApi.error(parseErrorMessage(error, '加载更多历史消息失败'));
+    } finally {
+      setLoadingMoreHistory(false);
+    }
+  }, [
+    currentSessionId,
+    historyPage,
+    historyTotalPage,
+    loadingMoreHistory,
+    mapHistoryMessage,
+    messageApi,
+    runLoadSessionHistory,
+  ]);
+
   const handleSend = useCallback(
     async (text: string) => {
       if (!currentModel) return;
       let targetSessionId = currentSessionId;
+      const shouldSyncTitleAfterSend = historyMessages.length === 0 && liveMessages.length === 0;
 
       if (!targetSessionId) {
         try {
@@ -425,14 +454,30 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
         clearSelectedText(targetSessionId);
       }
       await sendPromise;
+
+      if (!shouldSyncTitleAfterSend) return;
+
+      try {
+        await runLoadSessionHistory(targetSessionId);
+        window.dispatchEvent(
+          new CustomEvent<{ sessionId: string }>('chat-session-first-round-finished', {
+            detail: { sessionId: targetSessionId },
+          })
+        );
+      } catch (error) {
+        messageApi.error(parseErrorMessage(error, '同步会话标题失败'));
+      }
     },
     [
       clearSelectedText,
       currentModel,
       currentSessionId,
+      historyMessages.length,
       hasSelectedContext,
+      liveMessages.length,
       messageApi,
       runCreateSession,
+      runLoadSessionHistory,
       sendSessionMessage,
       setCurrentSession,
     ]
@@ -443,6 +488,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
     clearSelectedText(currentSessionId);
   }, [clearSelectedText, currentSessionId]);
 
+  const handleCollapsePanel = useCallback(() => {
+    setChatPanelCollapsed(true);
+  }, [setChatPanelCollapsed]);
+
   useMount(() => {
     if (!currentSessionId) return;
     setLiveMessages([]);
@@ -452,6 +501,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
   useUpdateEffect(() => {
     if (!currentSessionId) {
       setHistoryMessages([]);
+      setHistoryPage(1);
+      setHistoryTotalPage(1);
       setLiveMessages([]);
       return;
     }
@@ -464,8 +515,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
       <div className={`${styles.header} ${collapsed ? styles.collapsedHeader : ''}`}>
         <div className={styles.headerLeft}>
           {!collapsed && (
+            <button
+              type="button"
+              onClick={handleCollapsePanel}
+              className={styles.triggerBtn}
+              aria-label="收起聊天面板"
+            >
+              <RiIndentIncrease size={18} />
+            </button>
+          )}
+          {!collapsed && (
             <div className={styles.titleWrap}>
-              <div className={styles.title}>{currentSessionTitle || '新建对话'}</div>
+              <div className={styles.title}>{currentSessionTitle || '新对话'}</div>
             </div>
           )}
         </div>
@@ -473,7 +534,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
       {!collapsed && (
         <>
           <div className={styles.content}>
-            <MessageList messages={messages} />
+            <MessageList
+              messages={messages}
+              canLoadMoreHistory={Boolean(currentSessionId) && historyPage < historyTotalPage}
+              loadingMoreHistory={loadingMoreHistory}
+              onLoadMoreHistory={loadMoreHistoryMessages}
+            />
           </div>
           <div className={styles.footer}>
             <ChatInput

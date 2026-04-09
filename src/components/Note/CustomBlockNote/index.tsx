@@ -18,8 +18,8 @@ import { BlockNoteView } from '@blocknote/mantine';
 import { zh } from '@blocknote/core/locales';
 import { filterSuggestionItems } from '@blocknote/core/extensions';
 import { useMount, useUnmount } from 'ahooks';
+import { Button } from 'antd';
 import { RiSparklingLine } from 'react-icons/ri';
-import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
 
 import { useImageService } from '@/contexts/ServicesContext';
@@ -151,8 +151,10 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
           <FormattingToolbarController
             formattingToolbar={() => (
               <FormattingToolbar>
-                <button
-                  type="button"
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<RiSparklingLine size={14} />}
                   className={styles.askAiBtn}
                   onMouseDown={(event) => {
                     event.preventDefault();
@@ -164,9 +166,8 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
                     handleAskAi();
                   }}
                 >
-                  <RiSparklingLine size={14} />
-                  <span>问AI</span>
-                </button>
+                  问AI
+                </Button>
                 <BlockTypeSelect key="blockTypeSelect" />
                 <FileCaptionButton key="fileCaptionButton" />
                 <FileReplaceButton key="replaceFileButton" />

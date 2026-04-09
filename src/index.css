@@ -64,6 +64,12 @@ html {
   min-height: 100dvh;
 }
 
+/* BlockNote 默认会有自己的字体变量，这里统一到应用字体栈 */
+:where(.bn-container, .bn-editor, .bn-mantine, .bn-mantine-root) {
+  --bn-font-family: var(--app-font-family);
+  font-family: var(--app-font-family);
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

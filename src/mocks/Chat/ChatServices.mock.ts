@@ -1,7 +1,13 @@
 import { MOCK_MODELS } from '@/services/mock/ChatPanel';
 import { MODEL_TYPE } from '@/types/model';
 import type { IChatService } from '@/services/Chat';
-import type { ChatSession, ListSessionsRequest, PageResult } from '@/services/Chat';
+import type {
+  ChatSession,
+  ListSessionsRequest,
+  ListHistoryMessagesRequest,
+  MessageResponse,
+  PageResult,
+} from '@/services/Chat';
 
 const providerToVendor = (provider: string): string => {
   switch (provider) {
@@ -64,6 +70,9 @@ const getModels: IChatService['getModels'] = async () => {
 };
 
 const nowIso = (): string => new Date().toISOString();
+const MOCK_HISTORY_SIZE = 260;
+const MOCK_HISTORY_INTERVAL_MS = 45 * 1000;
+const MOCK_HISTORY_BASE_TS = Date.parse('2026-03-01T08:00:00.000Z');
 
 let mockSessionSerial = 3;
 let mockSessions: ChatSession[] = [
@@ -93,6 +102,38 @@ let mockSessions: ChatSession[] = [
   },
 ];
 
+const buildMockHistoryMessages = (sessionId: string, total: number): MessageResponse[] => {
+  return Array.from({ length: total }, (_, index) => {
+    const messageNo = index + 1;
+    const messageSeq = String(messageNo).padStart(4, '0');
+    const isUser = messageNo % 2 === 1;
+    const round = Math.ceil(messageNo / 2);
+    const createdAt = new Date(
+      MOCK_HISTORY_BASE_TS + index * MOCK_HISTORY_INTERVAL_MS
+    ).toISOString();
+
+    const role: MessageResponse['role'] = isUser ? 'user' : 'assistant';
+
+    return {
+      id: `${sessionId}-msg-${messageSeq}`,
+      role,
+      model_id: isUser ? null : 1,
+      content: isUser
+        ? `【${sessionId}】第 ${round} 轮：请解释一下这个需求，并给出步骤。`
+        : `【${sessionId}】第 ${round} 轮回复：已整理需求背景、约束条件与执行步骤。`,
+      tool_calls: null,
+      created_at: createdAt,
+    };
+  });
+};
+
+let mockHistoryMessagesBySessionId: Record<string, MessageResponse[]> = mockSessions.reduce<
+  Record<string, MessageResponse[]>
+>((acc, session) => {
+  acc[session.id] = buildMockHistoryMessages(session.id, MOCK_HISTORY_SIZE);
+  return acc;
+}, {});
+
 const createSession: IChatService['createSession'] = async (params) => {
   mockSessionSerial += 1;
   const now = nowIso();
@@ -105,6 +146,10 @@ const createSession: IChatService['createSession'] = async (params) => {
     updated_at: now,
   };
   mockSessions = [session, ...mockSessions];
+  mockHistoryMessagesBySessionId = {
+    ...mockHistoryMessagesBySessionId,
+    [session.id]: [],
+  };
   return session;
 };
 
@@ -128,6 +173,8 @@ const renameSession: IChatService['renameSession'] = async (params) => {
 
 const deleteSession: IChatService['deleteSession'] = async (params) => {
   mockSessions = mockSessions.filter((session) => session.id !== params.sessionId);
+  const { [params.sessionId]: _removed, ...rest } = mockHistoryMessagesBySessionId;
+  mockHistoryMessagesBySessionId = rest;
 };
 
 const listSessions: IChatService['listSessions'] = async (params?: ListSessionsRequest) => {
@@ -154,30 +201,26 @@ const listSessions: IChatService['listSessions'] = async (params?: ListSessionsR
   return result;
 };
 
-const listHistoryMessages: IChatService['listHistoryMessages'] = async (params) => {
+const listHistoryMessages: IChatService['listHistoryMessages'] = async (
+  params: ListHistoryMessagesRequest
+) => {
+  const page = Math.max(1, params.page ?? 1);
+  const size = Math.max(1, params.size ?? 20);
+  const allMessages = mockHistoryMessagesBySessionId[params.sessionId] ?? [];
+  const total = allMessages.length;
+
+  // 无限滚动语义：page=1 返回最新一段；page 递增返回更老一段；每段内部保持时间升序。
+  const end = Math.max(0, total - (page - 1) * size);
+  const start = Math.max(0, end - size);
+  const list = allMessages.slice(start, end);
+  const totalPage = Math.ceil(total / size);
+
   return {
-    list: [
-      {
-        id: 'msg_mock_user_001',
-        role: 'user',
-        model_id: null,
-        content: '请用 Python 写一个快排',
-        tool_calls: null,
-        created_at: '2026-04-08T10:00:00Z',
-      },
-      {
-        id: 'msg_mock_assistant_001',
-        role: 'assistant',
-        model_id: 1,
-        content: '好的，这里是快速排序的代码...',
-        tool_calls: null,
-        created_at: '2026-04-08T10:00:05Z',
-      },
-    ],
-    total: 2,
-    page: params.page ?? 1,
-    size: params.size ?? 20,
-    total_page: 1,
+    list,
+    total,
+    page,
+    size,
+    total_page: totalPage,
   };
 };
 

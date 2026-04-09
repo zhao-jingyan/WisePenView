@@ -59,14 +59,26 @@ export interface ListHistoryMessagesRequest {
 /** 历史消息角色 */
 export type MessageRole = 'user' | 'assistant';
 
+/** 历史消息分片 */
+export interface MessagePartResponse {
+  type: string;
+  text: string | null;
+  state: string | null;
+  toolCallId: string | null;
+  input: unknown;
+  output: unknown;
+}
+
 /** 历史消息实体（与 MessageResponse 对齐） */
 export interface MessageResponse {
   id: string;
   role: MessageRole;
-  model_id: number | null;
-  content: string;
-  tool_calls: unknown[] | null;
-  created_at: string;
+  model_id?: number | string | null;
+  content?: string;
+  parts?: MessagePartResponse[];
+  tool_calls?: unknown[] | null;
+  createdAt?: string;
+  created_at?: string;
 }
 
 /** 分页返回结构 */

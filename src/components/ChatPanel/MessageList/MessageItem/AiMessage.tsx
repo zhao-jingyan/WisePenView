@@ -49,10 +49,7 @@ const AiMessage: React.FC<{ message: Message }> = ({ message }) => {
             loading={message.loading && !message.content}
           />
         )}
-        <ToolCallBlock
-          content={message.toolContent || ''}
-          loading={Boolean(message.loading && message.toolContent)}
-        />
+        <ToolCallBlock content={message.toolContent || ''} />
         {showLoadingIndicator && (
           <div className={styles.loadingHint}>
             <Spin size="small" />

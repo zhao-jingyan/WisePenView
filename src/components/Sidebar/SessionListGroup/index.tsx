@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Button } from 'antd';
 import type { MenuProps } from 'antd';
-import { useMount, useRequest } from 'ahooks';
+import { useMount, useRequest, useUnmount } from 'ahooks';
 import { useChatService } from '@/contexts/ServicesContext';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
@@ -49,6 +49,12 @@ export const useSessionListGroup = ({
         const payload = await runListSessions(page);
         setSessionPage(payload.page);
         setSessionTotalPage(payload.total_page || 1);
+        if (currentSessionId) {
+          const currentSession = payload.list.find((item) => item.id === currentSessionId);
+          if (currentSession) {
+            setCurrentSession({ id: currentSession.id, title: currentSession.title });
+          }
+        }
         setSessionItems((prev) => {
           if (!append) {
             return payload.list;
@@ -65,15 +71,30 @@ export const useSessionListGroup = ({
         }
       }
     },
-    [messageApi, runListSessions]
+    [currentSessionId, messageApi, runListSessions, setCurrentSession]
   );
 
   const refresh = useCallback(async () => {
     await loadSessionPage(1, false);
   }, [loadSessionPage]);
 
+  const handleSessionFirstRoundFinished = useCallback(() => {
+    void loadSessionPage(1, false);
+  }, [loadSessionPage]);
+
   useMount(() => {
+    window.addEventListener(
+      'chat-session-first-round-finished',
+      handleSessionFirstRoundFinished as EventListener
+    );
     void refresh();
+  });
+
+  useUnmount(() => {
+    window.removeEventListener(
+      'chat-session-first-round-finished',
+      handleSessionFirstRoundFinished as EventListener
+    );
   });
 
   const pinnedSessions = sessionItems.filter((item) => item.is_pinned);

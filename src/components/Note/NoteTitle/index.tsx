@@ -4,7 +4,6 @@ import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
 import type { Block as BlockNoteBlock } from '@blocknote/core';
 import { zh } from '@blocknote/core/locales';
-import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
 
 import { useNoteService } from '@/contexts/ServicesContext';
