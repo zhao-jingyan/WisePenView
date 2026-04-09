@@ -3,4 +3,9 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+
+  /* 给正文末尾预留可滚动空间，避免光标到底后无法继续上拉 */
+  :global(.bn-editor) {
+    padding-bottom: 60vh;
+  }
 }
