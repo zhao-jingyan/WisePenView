@@ -6,6 +6,7 @@ import type {
   CreateSessionRequest,
   DeleteSessionRequest,
   IChatService,
+  ListSessionsRequest,
   ListHistoryMessagesRequest,
   MessageResponse,
   ModelListResponse,
@@ -66,6 +67,25 @@ const deleteSession = async (params: DeleteSessionRequest): Promise<void> => {
   checkResponse(res);
 };
 
+const listSessions = async (params?: ListSessionsRequest): Promise<PageResult<ChatSession>> => {
+  const res = (await Axios.get('/chat/session/listSessions', {
+    params: {
+      page: params?.page,
+      size: params?.size,
+    },
+  })) as ApiResponse<PageResult<ChatSession>>;
+  checkResponse(res);
+
+  const payload = res.data;
+  return {
+    list: payload?.list ?? [],
+    total: payload?.total ?? 0,
+    page: payload?.page ?? params?.page ?? 1,
+    size: payload?.size ?? params?.size ?? 20,
+    total_page: payload?.total_page ?? 0,
+  };
+};
+
 const listHistoryMessages = async (
   params: ListHistoryMessagesRequest
 ): Promise<PageResult<MessageResponse>> => {
@@ -93,5 +113,6 @@ export const ChatServicesImpl: IChatService = {
   createSession,
   renameSession,
   deleteSession,
+  listSessions,
   listHistoryMessages,
 };

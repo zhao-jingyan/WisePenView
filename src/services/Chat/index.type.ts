@@ -6,6 +6,7 @@ export interface IChatService {
   createSession(params?: CreateSessionRequest): Promise<ChatSession>;
   renameSession(params: RenameSessionRequest): Promise<ChatSession>;
   deleteSession(params: DeleteSessionRequest): Promise<void>;
+  listSessions(params?: ListSessionsRequest): Promise<PageResult<ChatSession>>;
   listHistoryMessages(params: ListHistoryMessagesRequest): Promise<PageResult<MessageResponse>>;
 }
 
@@ -40,6 +41,12 @@ export interface ChatSession {
 /** 删除会话请求参数 */
 export interface DeleteSessionRequest {
   sessionId: string;
+}
+
+/** 拉取会话列表请求参数 */
+export interface ListSessionsRequest {
+  page?: number;
+  size?: number;
 }
 
 /** 拉取历史消息请求参数 */

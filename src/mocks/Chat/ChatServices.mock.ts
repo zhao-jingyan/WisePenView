@@ -1,6 +1,7 @@
 import { MOCK_MODELS } from '@/services/mock/ChatPanel';
 import { MODEL_TYPE } from '@/types/model';
 import type { IChatService } from '@/services/Chat';
+import type { ChatSession, ListSessionsRequest, PageResult } from '@/services/Chat';
 
 const providerToVendor = (provider: string): string => {
   switch (provider) {
@@ -62,32 +63,95 @@ const getModels: IChatService['getModels'] = async () => {
   });
 };
 
+const nowIso = (): string => new Date().toISOString();
+
+let mockSessionSerial = 3;
+let mockSessions: ChatSession[] = [
+  {
+    id: 'mock-session-1',
+    user_id: 'mock-user',
+    title: '项目需求讨论',
+    is_pinned: false,
+    created_at: '2026-04-08T09:00:00Z',
+    updated_at: '2026-04-08T09:00:00Z',
+  },
+  {
+    id: 'mock-session-2',
+    user_id: 'mock-user',
+    title: '接口联调记录',
+    is_pinned: false,
+    created_at: '2026-04-07T10:00:00Z',
+    updated_at: '2026-04-07T10:00:00Z',
+  },
+  {
+    id: 'mock-session-3',
+    user_id: 'mock-user',
+    title: '代码评审',
+    is_pinned: false,
+    created_at: '2026-04-06T11:00:00Z',
+    updated_at: '2026-04-06T11:00:00Z',
+  },
+];
+
 const createSession: IChatService['createSession'] = async (params) => {
-  const now = new Date().toISOString();
-  return {
-    id: `mock-session-${Date.now()}`,
+  mockSessionSerial += 1;
+  const now = nowIso();
+  const session: ChatSession = {
+    id: `mock-session-${mockSessionSerial}`,
     user_id: 'mock-user',
     title: params?.title?.trim() ? params.title : 'New Chat',
     is_pinned: false,
     created_at: now,
     updated_at: now,
   };
+  mockSessions = [session, ...mockSessions];
+  return session;
 };
 
 const renameSession: IChatService['renameSession'] = async (params) => {
-  const now = new Date().toISOString();
-  return {
+  const now = nowIso();
+  const target = mockSessions.find((session) => session.id === params.sessionId);
+  const renamed: ChatSession = {
     id: params.sessionId,
-    user_id: 'mock-user',
+    user_id: target?.user_id ?? 'mock-user',
     title: params.newTitle?.trim() ? params.newTitle : 'New Chat',
-    is_pinned: false,
-    created_at: now,
+    is_pinned: target?.is_pinned ?? false,
+    created_at: target?.created_at ?? now,
     updated_at: now,
   };
+
+  mockSessions = mockSessions.map((session) =>
+    session.id === params.sessionId ? renamed : session
+  );
+  return renamed;
 };
 
 const deleteSession: IChatService['deleteSession'] = async (params) => {
-  void params;
+  mockSessions = mockSessions.filter((session) => session.id !== params.sessionId);
+};
+
+const listSessions: IChatService['listSessions'] = async (params?: ListSessionsRequest) => {
+  const page = Math.max(1, params?.page ?? 1);
+  const size = Math.max(1, params?.size ?? 20);
+  const start = (page - 1) * size;
+  const end = start + size;
+  const sortedSessions = [...mockSessions].sort((a, b) => {
+    if (a.is_pinned !== b.is_pinned) {
+      return a.is_pinned ? -1 : 1;
+    }
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
+  const total = sortedSessions.length;
+  const list = sortedSessions.slice(start, end);
+
+  const result: PageResult<ChatSession> = {
+    list,
+    total,
+    page,
+    size,
+    total_page: Math.ceil(total / size),
+  };
+  return result;
 };
 
 const listHistoryMessages: IChatService['listHistoryMessages'] = async (params) => {
@@ -120,5 +184,6 @@ export const ChatServicesMock: IChatService = {
   createSession,
   renameSession,
   deleteSession,
+  listSessions,
   listHistoryMessages,
 };

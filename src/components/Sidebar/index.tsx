@@ -1,5 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
-import { Menu } from 'antd';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Button, Input, Menu, Modal } from 'antd';
+import { useMount, useRequest } from 'ahooks';
 import { useNavigate, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import {
@@ -8,8 +9,10 @@ import {
   RiAddCircleFill,
   RiFileTextLine,
   RiGroupFill,
-  RiPenNibFill,
   RiCloseLine,
+  RiDeleteBinLine,
+  RiEditLine,
+  RiCheckLine,
 } from 'react-icons/ri';
 
 import FileTypeIcon from '@/components/Common/FileTypeIcon';
@@ -22,6 +25,11 @@ import { useClickFile } from '@/hooks/drive';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { type SidebarProps, type SidebarMenuItem } from './index.type';
 import { getOpenedResourceIdFromPath } from '@/utils/openedResourceRoute';
+import { useChatService } from '@/contexts/ServicesContext';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import type { ChatSession } from '@/services/Chat';
+
+const SESSION_PAGE_SIZE = 20;
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const navigate = useNavigate();
@@ -30,11 +38,119 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const removeRecentFile = useRecentFilesStore((s) => s.removeFile);
   const clickFile = useClickFile();
   const messageApi = useAppMessage();
+  const chatService = useChatService();
+  const [activeSessionMenuKey, setActiveSessionMenuKey] = useState<string>();
+  const [sessionItems, setSessionItems] = useState<ChatSession[]>([]);
+  const [sessionPage, setSessionPage] = useState(1);
+  const [sessionTotalPage, setSessionTotalPage] = useState(1);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  const [loadingMoreSessions, setLoadingMoreSessions] = useState(false);
+
+  const { runAsync: runListSessions, loading: sessionListLoading } = useRequest(
+    async (page: number) =>
+      chatService.listSessions({
+        page,
+        size: SESSION_PAGE_SIZE,
+      }),
+    {
+      manual: true,
+    }
+  );
+
+  const loadSessionPage = useCallback(
+    async (page: number, append: boolean) => {
+      if (append) {
+        setLoadingMoreSessions(true);
+      }
+      try {
+        const payload = await runListSessions(page);
+        setSessionPage(payload.page);
+        setSessionTotalPage(payload.total_page || 1);
+        setSessionItems((prev) => {
+          if (!append) {
+            return payload.list;
+          }
+          const existingIds = new Set(prev.map((item) => item.id));
+          const extra = payload.list.filter((item) => !existingIds.has(item.id));
+          return [...prev, ...extra];
+        });
+      } catch (err) {
+        messageApi.error(parseErrorMessage(err, '拉取会话列表失败'));
+      } finally {
+        if (append) {
+          setLoadingMoreSessions(false);
+        }
+      }
+    },
+    [messageApi, runListSessions]
+  );
+
+  useMount(() => {
+    void loadSessionPage(1, false);
+  });
+
+  const { runAsync: runCreateSession, loading: createSessionLoading } = useRequest(
+    async () => chatService.createSession(),
+    {
+      manual: true,
+      onSuccess: async (createdSession) => {
+        messageApi.success('新建聊天成功');
+        setActiveSessionMenuKey(`session-${createdSession.id}`);
+        await loadSessionPage(1, false);
+      },
+      onError: (err) => {
+        messageApi.error(parseErrorMessage(err, '新建聊天失败'));
+      },
+    }
+  );
+
+  const { runAsync: runRenameSession } = useRequest(
+    async (sessionId: string, newTitle: string) =>
+      chatService.renameSession({
+        sessionId,
+        newTitle,
+      }),
+    {
+      manual: true,
+      onSuccess: async () => {
+        messageApi.success('重命名成功');
+        setEditingSessionId(null);
+        setEditingTitle('');
+        await loadSessionPage(1, false);
+      },
+      onError: (err) => {
+        messageApi.error(parseErrorMessage(err, '重命名会话失败'));
+      },
+    }
+  );
+
+  const { runAsync: runDeleteSession, loading: deleteSessionLoading } = useRequest(
+    async (sessionId: string) =>
+      chatService.deleteSession({
+        sessionId,
+      }),
+    {
+      manual: true,
+      onSuccess: async (_, params) => {
+        const targetSessionId = params[0];
+        messageApi.success('删除成功');
+        if (activeSessionMenuKey === `session-${targetSessionId}`) {
+          setActiveSessionMenuKey(undefined);
+        }
+        await loadSessionPage(1, false);
+      },
+      onError: (err) => {
+        messageApi.error(parseErrorMessage(err, '删除会话失败'));
+      },
+    }
+  );
 
   const handleOpenFile = useCallback(
     (resourceId: string) => {
       const found = recentItems.find((i) => i.resourceId === resourceId);
       if (found) {
+        setActiveSessionMenuKey(undefined);
         clickFile({
           resourceId: found.resourceId,
           ownerInfo: found.ownerInfo,
@@ -49,6 +165,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   );
 
   const selectedKeys = useMemo(() => {
+    if (activeSessionMenuKey) {
+      return [activeSessionMenuKey];
+    }
+
     const pathname = location.pathname;
     const baseSelectedKeys = [pathname];
     const resourceId = getOpenedResourceIdFromPath(pathname);
@@ -58,7 +178,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
     if (!existsInSidebar) return baseSelectedKeys;
 
     return [`opened-file-${resourceId}`];
-  }, [location.pathname, recentItems]);
+  }, [activeSessionMenuKey, location.pathname, recentItems]);
 
   const handleCloseRecentFile = useCallback(
     (resourceId: string) => {
@@ -75,29 +195,180 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   );
 
   const menuItems = useMemo(() => {
+    const pinnedSessions = sessionItems.filter((item) => item.is_pinned);
+    const normalSessions = sessionItems.filter((item) => !item.is_pinned);
+
+    const buildSessionMenuChildren = (
+      sessions: ChatSession[],
+      emptyKey: string
+    ): SidebarMenuItem[] => {
+      if (sessions.length === 0) {
+        return [
+          {
+            key: emptyKey,
+            label: '暂无会话',
+            disabled: true,
+          },
+        ];
+      }
+
+      return sessions.map((session) => ({
+        key: `session-${session.id}`,
+        label: (
+          <div
+            className={clsx(
+              styles.sessionMenuLabel,
+              editingSessionId === session.id && styles.sessionMenuLabelEditing
+            )}
+          >
+            {editingSessionId === session.id ? (
+              <Input
+                size="small"
+                value={editingTitle}
+                className={styles.sessionInlineInput}
+                placeholder="请输入会话名称"
+                autoFocus
+                onChange={(event) => setEditingTitle(event.target.value)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
+                onPressEnter={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const trimmedTitle = editingTitle.trim();
+                  if (!trimmedTitle) {
+                    messageApi.warning('请输入会话名称');
+                    return;
+                  }
+                  void runRenameSession(session.id, trimmedTitle);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setEditingSessionId(null);
+                    setEditingTitle('');
+                  }
+                }}
+              />
+            ) : (
+              <span className={styles.sessionMenuLabelText}>{session.title || '未命名会话'}</span>
+            )}
+            <div className={styles.sessionActions}>
+              {editingSessionId === session.id ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.sessionActionBtn}
+                    aria-label="确认重命名"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      const trimmedTitle = editingTitle.trim();
+                      if (!trimmedTitle) {
+                        messageApi.warning('请输入会话名称');
+                        return;
+                      }
+                      void runRenameSession(session.id, trimmedTitle);
+                    }}
+                  >
+                    <RiCheckLine size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.sessionActionBtn}
+                    aria-label="取消重命名"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setEditingSessionId(null);
+                      setEditingTitle('');
+                    }}
+                  >
+                    <RiCloseLine size={16} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={styles.sessionActionBtn}
+                    aria-label={`重命名 ${session.title || '未命名会话'}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setEditingSessionId(session.id);
+                      setEditingTitle(session.title || '');
+                    }}
+                  >
+                    <RiEditLine size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className={clsx(styles.sessionActionBtn, styles.sessionDeleteBtn)}
+                    aria-label={`删除 ${session.title || '未命名会话'}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      Modal.confirm({
+                        title: '删除会话',
+                        content: '删除后不可恢复，是否继续？',
+                        okText: '删除',
+                        okButtonProps: {
+                          danger: true,
+                          loading: deleteSessionLoading,
+                        },
+                        cancelText: '取消',
+                        onOk: async () => {
+                          await runDeleteSession(session.id);
+                        },
+                      });
+                    }}
+                  >
+                    <RiDeleteBinLine size={16} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        ),
+        onClick: () => setActiveSessionMenuKey(`session-${session.id}`),
+      }));
+    };
+
     const baseItems: SidebarMenuItem[] = [
       {
         key: 'new-chat',
         icon: <RiAddCircleFill size={18} />,
         label: '新聊天',
+        onClick: () => {
+          setActiveSessionMenuKey(undefined);
+          void runCreateSession();
+        },
+        disabled: createSessionLoading,
       },
       {
         key: '/app/drive',
         icon: <RiFileTextLine size={18} />,
         label: '文档与云盘',
-        onClick: () => navigate('/app/drive'),
+        onClick: () => {
+          setActiveSessionMenuKey(undefined);
+          navigate('/app/drive');
+        },
       },
       {
         key: '/app/my-group',
         icon: <RiGroupFill size={18} />,
         label: '我的小组',
-        onClick: () => navigate('/app/my-group'),
+        onClick: () => {
+          setActiveSessionMenuKey(undefined);
+          navigate('/app/my-group');
+        },
       },
     ];
 
-    // 构造聊天记录列表
     if (!collapsed) {
-      // 构造最近文件列表
       const recentFileChildren: SidebarMenuItem[] =
         recentItems.length > 0
           ? recentItems.map((item) => ({
@@ -137,14 +408,51 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         children: recentFileChildren,
       });
 
-      const sessionHistoryChildren: SidebarMenuItem[] = [
-        // 待接入真实记录
-        {
-          key: 'empty-session',
-          label: '暂无会话',
+      const sessionHistoryChildren: SidebarMenuItem[] = buildSessionMenuChildren(
+        normalSessions,
+        'empty-normal-session'
+      );
+
+      const hasMoreSessions = sessionPage < sessionTotalPage;
+      if (hasMoreSessions || loadingMoreSessions) {
+        sessionHistoryChildren.push({
+          key: 'session-load-more',
+          label: (
+            <Button
+              type="text"
+              className={styles.sessionLoadMoreBtn}
+              loading={loadingMoreSessions}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (loadingMoreSessions || !hasMoreSessions) return;
+                void loadSessionPage(sessionPage + 1, true);
+              }}
+            >
+              {hasMoreSessions ? '加载更多' : '没有更多了'}
+            </Button>
+          ),
           disabled: true,
-        },
-      ];
+        });
+      }
+
+      if (sessionListLoading && sessionItems.length === 0) {
+        sessionHistoryChildren.splice(0, sessionHistoryChildren.length, {
+          key: 'session-loading',
+          label: '会话加载中...',
+          disabled: true,
+        });
+      }
+
+      if (pinnedSessions.length > 0) {
+        baseItems.push({
+          type: 'group',
+          label: '置顶会话',
+          key: 'pinned-session',
+          children: buildSessionMenuChildren(pinnedSessions, 'empty-pinned-session'),
+        });
+      }
+
       baseItems.push({
         type: 'group',
         label: '聊天记录',
@@ -154,7 +462,27 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
     }
 
     return baseItems;
-  }, [collapsed, recentItems, handleOpenFile, handleCloseRecentFile, navigate]);
+  }, [
+    collapsed,
+    createSessionLoading,
+    deleteSessionLoading,
+    editingSessionId,
+    editingTitle,
+    handleCloseRecentFile,
+    handleOpenFile,
+    loadSessionPage,
+    loadingMoreSessions,
+    messageApi,
+    navigate,
+    recentItems,
+    runCreateSession,
+    runDeleteSession,
+    runRenameSession,
+    sessionItems,
+    sessionListLoading,
+    sessionPage,
+    sessionTotalPage,
+  ]);
 
   return (
     <div className={clsx(styles.sider, collapsed && styles.collapsed)}>
