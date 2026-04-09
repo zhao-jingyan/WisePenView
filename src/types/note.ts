@@ -70,7 +70,7 @@ export type TableContent = unknown;
 
 /** Note 元信息（对齐 WisepenCloud noteService 的 NoteInfoBase） */
 export interface NoteMetaInfo {
-  lastUpdatedAt?: string;
+  lastUpdatedAt?: number | string;
   authors?: string[];
 }
 

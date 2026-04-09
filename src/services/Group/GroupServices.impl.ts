@@ -1,6 +1,7 @@
 import Axios from '@/utils/Axios';
 import { checkResponse } from '@/utils/response';
 import { toIdString } from '@/utils/number';
+import { formatTimestampToDate } from '@/utils/time';
 import { mapRoleCodeToGroupMemberRole } from '@/constants/group';
 import type { Group, GroupFileOrgLogic, GroupMemberList, GroupResConfig } from '@/types/group';
 import type { ApiResponse } from '@/types/api';
@@ -23,7 +24,12 @@ import { mapGroupMemberRawResponse } from './groupMember.mapper';
 type GroupRaw = { groupId?: string | number } & Record<string, unknown>;
 
 /** 将接口返回的 groupId 归一化为 string，避免 JSON 解析大数时精度丢失 */
-const normalizeGroup = (g: GroupRaw): Group => ({ ...g, groupId: toIdString(g.groupId) }) as Group;
+const normalizeGroup = (g: GroupRaw): Group =>
+  ({
+    ...g,
+    groupId: toIdString(g.groupId),
+    createTime: formatTimestampToDate((g as { createTime?: number | string | null }).createTime),
+  }) as Group;
 
 const isGroupFileOrgLogic = (v: unknown): v is GroupFileOrgLogic => v === 'FOLDER' || v === 'TAG';
 

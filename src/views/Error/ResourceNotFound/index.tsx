@@ -19,7 +19,7 @@ const ResourceNotFound: React.FC = () => {
           className={styles.result}
           status="404"
           title="页面不存在"
-          subTitle="抱歉，您访问的链接可能已失效、输入有误，或页面已被移动。请返回首页或上一页继续浏览。"
+          subTitle="抱歉，您访问的链接可能已失效，或页面已被移动。请返回首页或上一页继续浏览。"
           extra={
             <Space size="middle" wrap>
               <Button type="primary" size="large" onClick={() => navigate('/')}>

@@ -21,11 +21,12 @@ const Home: React.FC = () => {
             <div className={styles.heroCopy}>
               <span className={styles.heroEyebrow}>学术英语 · AI 赋能</span>
               <h1 id="landing-hero-title" className={styles.heroTitle}>
-                WisePen Project
+                WisePen
               </h1>
               <p className={styles.heroSubtitle}>学术英语写作 AI + 教学平台</p>
               <Paragraph type="secondary" className={styles.heroLead}>
-                面向高校与科研场景，整合写作辅助、智能对话与文稿评估，帮助师生提升学术英文表达效率与规范性。
+                专为高校教学与科研团队打造。集成智能写作辅助，AI
+                Agent工作流与深度文稿评估，赋能师生智慧教学与应用。
               </Paragraph>
             </div>
             <div className={styles.heroVisual}>

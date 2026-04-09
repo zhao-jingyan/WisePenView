@@ -8,6 +8,7 @@ import type {
   NoteInfoDisplayData,
 } from './index.type';
 import Axios from '@/utils/Axios';
+import { formatTimestampToDateTime } from '@/utils/time';
 import { serializeRepeatKeyQuery } from '@/utils/serializeRepeatKeyQuery';
 import { checkResponse } from '@/utils/response';
 import type { ApiResponse } from '@/types/api';
@@ -55,7 +56,7 @@ const getNoteInfoDisplay = async (params: GetNoteInfoRequest): Promise<NoteInfoD
         avatar: author?.avatar,
       };
     }),
-    lastEditedAtText: noteInfoData.noteInfo.lastUpdatedAt ?? '暂无',
+    lastEditedAtText: formatTimestampToDateTime(noteInfoData.noteInfo.lastUpdatedAt) || '暂无',
   };
 };
 
