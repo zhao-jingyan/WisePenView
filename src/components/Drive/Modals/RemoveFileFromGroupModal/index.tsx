@@ -4,6 +4,7 @@ import { useRequest } from 'ahooks';
 import { useResourceService, useTagService } from '@/contexts/ServicesContext';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { useRecentFilesStore } from '@/store';
 import type { RemoveFileFromGroupModalProps } from './index.type';
 import type { TagTreeNode } from '@/services/Tag/index.type';
 
@@ -17,6 +18,7 @@ const RemoveFileFromGroupModal: React.FC<RemoveFileFromGroupModalProps> = ({
   const tagService = useTagService();
   const resourceService = useResourceService();
   const message = useAppMessage();
+  const removeRecentFile = useRecentFilesStore((s) => s.removeFile);
 
   const collectTagIds = (nodes: TagTreeNode[]): Set<string> => {
     const ids = new Set<string>();
@@ -38,7 +40,7 @@ const RemoveFileFromGroupModal: React.FC<RemoveFileFromGroupModalProps> = ({
       const currentTagIds = Object.keys(file.currentTags ?? {});
       const currentGroupTagIds = currentTagIds.filter((tagId) => groupTagIdSet.has(tagId));
       if (currentGroupTagIds.length === 0) {
-        return;
+        return file.resourceId;
       }
       await resourceService.updateResourceTags({
         resourceId: file.resourceId,
@@ -46,10 +48,14 @@ const RemoveFileFromGroupModal: React.FC<RemoveFileFromGroupModalProps> = ({
         tagIds: [],
         groupId,
       });
+      return file.resourceId;
     },
     {
       manual: true,
-      onSuccess: () => {
+      onSuccess: (removedResourceId) => {
+        if (removedResourceId) {
+          removeRecentFile(removedResourceId);
+        }
         message.success('文件已移出小组空间');
         onSuccess?.();
         onCancel();

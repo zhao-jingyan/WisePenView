@@ -1,6 +1,6 @@
 /**
  * Chat 模型类型定义
- * 与 wisepen-chat-service 的 `chat/api/schemas/model.py` 响应字段对齐
+ * 与 /chat/model/listModels 的响应结构对齐
  */
 
 /** 供应商 ID（对齐后端 ProviderId 枚举值） */
@@ -21,18 +21,14 @@ export const MODEL_TYPE = {
 
 export type ModelType = (typeof MODEL_TYPE)[keyof typeof MODEL_TYPE];
 
-/** 对齐后端 ProviderMap */
-export interface ProviderMap {
-  provider_id: ModelProviderId;
-  model_id: string;
-}
-
 /** 对齐后端 ModelInfo */
 export interface Model {
-  id: string;
+  id: number;
   name: string;
+  vendor: string;
   type: ModelType;
-  providers: ProviderMap[];
   ratio: number;
+  support_thinking: boolean;
+  support_vision: boolean;
   is_default: boolean;
 }

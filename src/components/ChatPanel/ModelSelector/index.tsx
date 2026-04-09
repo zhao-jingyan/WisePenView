@@ -1,25 +1,22 @@
-// eslint-disable-next-line no-restricted-imports -- ChatPanel 待重构：暂时允许 useEffect
-import React, { useState, useMemo, useEffect } from 'react';
-import { useRequest } from 'ahooks';
-import { Popover, Dropdown, Tooltip, Tag, Spin, Empty } from 'antd';
+import React, { useState, useMemo } from 'react';
+import { useRequest, useUpdateEffect } from 'ahooks';
+import { Popover, Dropdown, Tag, Spin, Empty } from 'antd';
 import type { MenuProps } from 'antd';
-// 引入图标库
 import {
   RiArrowDownSLine,
+  RiArrowUpSLine,
   RiCheckLine,
-  RiEyeLine,
   RiSortAsc,
   RiAppsLine,
-  RiCodeSSlashLine,
   RiBarChartLine,
 } from 'react-icons/ri';
 import clsx from 'clsx';
 
-// 2. 引入 LobeHub AI 图标库
 import { OpenAI, Claude, Grok, DeepSeek, Doubao, Meta, Mistral, Gemini } from '@lobehub/icons';
 
 import { useChatService } from '@/contexts/ServicesContext';
 import { mapApiModelsToFlatModels } from '@/services/Chat';
+import { useChatModelPreferenceStore } from '@/store/zustand/useChatModelPreferenceStore';
 import type { Model } from '../index.type';
 
 import styles from './style.module.less';
@@ -49,10 +46,9 @@ export const LogoFactory = ({ provider, size = 20 }: { provider: string; size?: 
 };
 
 const SORT_OPTIONS = [
-  { label: '按使用量', value: 'usage', icon: RiBarChartLine },
-  { label: '按字母', value: 'alpha', icon: RiSortAsc },
-  { label: '推理模型', value: 'reasoning', icon: RiAppsLine },
-  { label: '编程模型', value: 'coding', icon: RiCodeSSlashLine },
+  { label: '按费率', value: 'ratio', icon: RiBarChartLine },
+  { label: '按名字', value: 'name', icon: RiSortAsc },
+  { label: '深度思考模型', value: 'thinking', icon: RiAppsLine },
 ];
 
 interface ModelSelectorProps {
@@ -62,51 +58,69 @@ interface ModelSelectorProps {
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);
-  const [currentSort, setCurrentSort] = useState<string>('usage');
+  const [currentSort, setCurrentSort] = useState<string>('ratio');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const lastSelectedModelId = useChatModelPreferenceStore((state) => state.lastSelectedModelId);
+  const setLastSelectedModelId = useChatModelPreferenceStore(
+    (state) => state.setLastSelectedModelId
+  );
   const chatService = useChatService();
   const { data, loading } = useRequest(() => chatService.getModels());
   const models = useMemo(() => mapApiModelsToFlatModels(data), [data]);
 
-  // 自动选中默认模型
-  useEffect(() => {
+  // 初始化优先使用上次选择，不存在则回退默认模型。
+  useUpdateEffect(() => {
     if (!loading && models.length > 0) {
       const targetModel = models.find((m) => m.id === value);
-      if (!value || !targetModel) {
-        onChange(models[0]);
+      if (targetModel) {
+        if (lastSelectedModelId !== targetModel.id) {
+          setLastSelectedModelId(targetModel.id);
+        }
+        return;
+      }
+
+      const preferredModel = lastSelectedModelId
+        ? models.find((m) => m.id === lastSelectedModelId)
+        : undefined;
+      const defaultModel = models.find((m) => m.isDefault);
+      const nextModel = preferredModel ?? defaultModel ?? models[0];
+      onChange(nextModel);
+      if (lastSelectedModelId !== nextModel.id) {
+        setLastSelectedModelId(nextModel.id);
       }
     }
-  }, [loading, models, value, onChange]);
+  }, [lastSelectedModelId, loading, models, onChange, setLastSelectedModelId, value]);
 
   const currentModel = useMemo(
-    () => models.find((m) => m.id === value) || models[0],
+    () => models.find((m) => m.id === value) || models.find((m) => m.isDefault) || models[0],
     [value, models]
   );
 
   const listTitle = useMemo(() => {
     const map: Record<string, string> = {
-      usage: '行业排名（按使用量）',
-      alpha: '所有模型（A-Z）',
-      reasoning: '深度推理模型',
-      coding: '代码生成模型',
+      ratio: '模型列表（按费率）',
+      name: '模型列表（按名字）',
+      thinking: '深度思考模型',
     };
     return map[currentSort] || '模型列表';
   }, [currentSort]);
 
   const processedModels = useMemo(() => {
     const list = [...models];
+    const direction = sortOrder === 'asc' ? 1 : -1;
     switch (currentSort) {
-      case 'usage':
-        return list.sort((a, b) => a.usageRank - b.usageRank);
-      case 'alpha':
-        return list.sort((a, b) => a.name.localeCompare(b.name));
-      case 'reasoning':
-        return list.filter((m) => m.category === 'reasoning');
-      case 'coding':
-        return list.filter((m) => m.category === 'coding');
+      case 'ratio':
+        return list.sort((a, b) => (a.ratio - b.ratio) * direction || a.name.localeCompare(b.name));
+      case 'name':
+        return list.sort((a, b) => a.name.localeCompare(b.name) * direction);
+      case 'thinking':
+        return list
+          .filter((m) => m.supportThinking)
+          .sort((a, b) => (a.ratio - b.ratio) * direction || a.name.localeCompare(b.name));
       default:
         return list;
     }
-  }, [currentSort, models]);
+  }, [currentSort, models, sortOrder]);
 
   const sortMenuItems: MenuProps['items'] = SORT_OPTIONS.map((opt) => ({
     key: opt.value,
@@ -120,20 +134,32 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
     <div className={styles.selectorPanel}>
       <div className={styles.panelHeader}>
         <span className={styles.headerTitle}>{listTitle}</span>
-        <Dropdown
-          classNames={{
-            itemContent: styles.dropdownItemContent,
-            itemIcon: styles.dropdownItemIcon,
-          }}
-          menu={{ items: sortMenuItems }}
-          trigger={['click']}
-          placement="bottomRight"
-        >
-          <div className={styles.sortTrigger}>
-            {SORT_OPTIONS.find((o) => o.value === currentSort)?.label}
-            <RiArrowDownSLine style={{ marginLeft: 4, fontSize: 10 }} />
-          </div>
-        </Dropdown>
+        <div className={styles.sortActions}>
+          <button
+            type="button"
+            className={styles.sortOrderBtn}
+            onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+            aria-label={sortOrder === 'asc' ? '切换为降序' : '切换为升序'}
+          >
+            {sortOrder === 'asc' ? <RiArrowUpSLine /> : <RiArrowDownSLine />}
+            {sortOrder === 'asc' ? '升序' : '降序'}
+          </button>
+
+          <Dropdown
+            classNames={{
+              itemContent: styles.dropdownItemContent,
+              itemIcon: styles.dropdownItemIcon,
+            }}
+            menu={{ items: sortMenuItems }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <div className={styles.sortTrigger}>
+              {SORT_OPTIONS.find((o) => o.value === currentSort)?.label}
+              <RiArrowDownSLine style={{ marginLeft: 4, fontSize: 10 }} />
+            </div>
+          </Dropdown>
+        </div>
       </div>
 
       <div className={styles.modelList}>
@@ -152,10 +178,11 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
               className={clsx(styles.modelItem, model.id === value && styles.active)}
               onClick={() => {
                 onChange(model);
+                setLastSelectedModelId(model.id);
                 setOpen(false);
               }}
             >
-              {currentSort === 'usage' && <div className={styles.rankNum}>#{index + 1}</div>}
+              {currentSort === 'ratio' && <div className={styles.rankNum}>#{index + 1}</div>}
 
               <div className={styles.itemLeft}>
                 <div className={styles.logoWrapper}>
@@ -165,13 +192,13 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
 
                 <div className={styles.modelName}>{model.name}</div>
 
-                {model.vision && (
+                {/* {model.vision && (
                   <Tooltip title="支持视觉识别" classNames={{ container: styles.tooltipBody }}>
                     <div className={styles.visionWrapper}>
                       <RiEyeLine />
                     </div>
                   </Tooltip>
-                )}
+                )} */}
 
                 <div className={styles.tagsRow}>
                   {model.tags.map((tag, idx) => (
@@ -210,11 +237,10 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
         {loading ? (
           <Spin size="small" style={{ marginRight: 8 }} />
         ) : (
-          <LogoFactory provider={(currentModel as Model).provider} size={16} />
+          <LogoFactory provider={currentModel?.provider ?? 'openai'} size={16} />
         )}
 
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- ChatPanel 待重构 */}
-        <span>{loading ? '模型加载中' : (currentModel as any).name}</span>
+        <span>{loading ? '模型加载中' : (currentModel?.name ?? '请选择模型')}</span>
         <RiArrowDownSLine style={{ fontSize: 10 }} />
       </div>
     </Popover>

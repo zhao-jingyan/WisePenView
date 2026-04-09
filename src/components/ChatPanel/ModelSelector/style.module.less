@@ -56,9 +56,35 @@
       color: var(--ant-color-text-secondary);
     }
 
+    .sortActions {
+      display: flex;
+      align-items: center;
+      gap: var(--ant-margin-xxs);
+    }
+
     .sortTrigger {
       display: flex;
       align-items: center;
+      cursor: pointer;
+      padding: 2px var(--ant-padding-xs);
+      border: 1px solid var(--ant-color-border-secondary);
+      border-radius: var(--ant-border-radius-sm);
+      background-color: var(--ant-color-bg-container);
+      font-size: var(--ant-font-size-sm);
+      color: var(--ant-color-text);
+      line-height: 1.5;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: var(--ant-color-primary);
+        color: var(--ant-color-primary);
+      }
+    }
+
+    .sortOrderBtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
       cursor: pointer;
       padding: 2px var(--ant-padding-xs);
       border: 1px solid var(--ant-color-border-secondary);

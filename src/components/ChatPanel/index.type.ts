@@ -6,9 +6,13 @@ export interface ModelTag {
 export interface Model {
   id: string;
   name: string;
+  vendor: string;
   provider: string; // 'openai' | 'anthropic' | ...
+  ratio: number;
+  supportThinking: boolean;
   tags: ModelTag[];
   multiplier: string | null;
+  isDefault: boolean;
   vision: boolean;
   usageRank: number;
   category: 'reasoning' | 'chat' | 'coding' | 'all-round';
