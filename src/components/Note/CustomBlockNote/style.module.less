@@ -30,12 +30,18 @@
 
   :global(.bn-editor .bn-block-content[data-content-type='heading']) {
     font-size: 26px !important;
+    font-weight: 500 !important;
     line-height: 1.8;
     margin-left: -2px;
     margin-right: -2px;
     padding-left: 2px;
     padding-right: 2px;
     margin-bottom: 10px;
+  }
+
+  :global(.bn-editor .bn-block-content[data-content-type='heading'] .bn-inline-content),
+  :global(.bn-editor .bn-block-content[data-content-type='heading'] .bn-inline-content *) {
+    font-weight: 500 !important;
   }
 
   :global(.bn-editor .bn-block-content[data-content-type='heading'][data-level='2']) {

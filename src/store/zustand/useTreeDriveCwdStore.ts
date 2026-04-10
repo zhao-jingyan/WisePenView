@@ -18,6 +18,7 @@ export interface TreeDriveCwdState {
 }
 
 const storeMap = new Map<string, ReturnType<typeof createCwdStore>>();
+const TREE_DRIVE_CWD_STORAGE_PREFIX = 'tree-drive-cwd-';
 
 // 创建面包屑 store 实例
 function createCwdStore(key: string) {
@@ -55,6 +56,21 @@ export function clearTreeDriveCwdStores(): void {
     store.setState({ breadcrumb: [] });
     store.persist.clearStorage();
   });
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (key.includes(TREE_DRIVE_CWD_STORAGE_PREFIX)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => {
+      localStorage.removeItem(key);
+    });
+  } catch {
+    /* ignore */
+  }
 }
 
 export { getTreeDriveCwdStore as useTreeDriveCwdStore };

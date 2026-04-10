@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Layout } from 'antd';
-import { useMount, useUpdateEffect } from 'ahooks';
+import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
+import { LuBot } from 'react-icons/lu';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import ChatPanel from '@/components/ChatPanel';
@@ -10,6 +11,7 @@ import styles from './SystemLayout.module.less';
 const { Content, Sider } = Layout;
 const MIN_CHAT_PANEL_WIDTH = 320;
 const MAX_CHAT_PANEL_WIDTH = 1020;
+const CHAT_EXPAND_TRIGGER_EDGE_THRESHOLD = 64;
 
 const clampWidth = (width: number, min: number, max: number): number =>
   Math.min(Math.max(width, min), max);
@@ -25,6 +27,7 @@ const SystemLayout: React.FC = () => {
   const chatResizeGuideRef = useRef<HTMLDivElement | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [chatResizing, setChatResizing] = useState(false);
+  const [showChatExpandTrigger, setShowChatExpandTrigger] = useState(false);
   const chatPanelCollapsed = useChatPanelStore((state) => state.chatPanelCollapsed);
   const chatPanelWidth = useChatPanelStore((state) => state.chatPanelWidth);
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
@@ -116,6 +119,28 @@ const SystemLayout: React.FC = () => {
     [setChatPanelWidth]
   );
 
+  const handleViewportMouseMove = useCallback((event: MouseEvent) => {
+    const reachedRightEdge =
+      window.innerWidth - event.clientX <= CHAT_EXPAND_TRIGGER_EDGE_THRESHOLD;
+    setShowChatExpandTrigger(reachedRightEdge);
+  }, []);
+
+  const handleChatExpand = useCallback(() => {
+    if (!hasSessionId) return;
+    setChatPanelCollapsed(false);
+  }, [hasSessionId, setChatPanelCollapsed]);
+
+  useMount(() => {
+    window.addEventListener('mousemove', handleViewportMouseMove);
+  });
+
+  useUnmount(() => {
+    window.removeEventListener('mousemove', handleViewportMouseMove);
+  });
+
+  const shouldShowChatExpandTrigger =
+    hasSessionId && safeChatPanelCollapsed && showChatExpandTrigger;
+
   return (
     <Layout
       ref={rootRef}
@@ -137,6 +162,17 @@ const SystemLayout: React.FC = () => {
           <Outlet />
         </Content>
       </Layout>
+
+      {shouldShowChatExpandTrigger && (
+        <button
+          type="button"
+          className={styles.chatExpandTrigger}
+          onClick={handleChatExpand}
+          aria-label="展开右侧对话栏"
+        >
+          <LuBot className={styles.chatExpandTriggerIcon} />
+        </button>
+      )}
 
       {/* 右侧 AI Panel */}
       <Sider

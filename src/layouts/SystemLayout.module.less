@@ -33,6 +33,42 @@
   padding: 0;
 }
 
+.chatExpandTrigger {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  width: 44px;
+  height: 68px;
+  border: 1px solid var(--ant-color-border);
+  border-right: 0;
+  border-radius: var(--ant-border-radius-sm) 0 0 var(--ant-border-radius-sm);
+  background: var(--ant-color-bg-elevated);
+  color: var(--ant-color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.chatExpandTrigger:hover {
+  background: var(--ant-color-primary-bg-hover);
+  color: var(--ant-color-primary);
+}
+
+.chatExpandTrigger:focus-visible {
+  outline: 2px solid var(--ant-color-primary-border);
+  outline-offset: 2px;
+}
+
+.chatExpandTriggerIcon {
+  font-size: 24px;
+}
+
 .rightSider {
   height: 100%;
   flex-shrink: 0;
