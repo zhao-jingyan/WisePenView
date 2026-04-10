@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Button } from 'antd';
 import type { MenuProps } from 'antd';
-import { useMount, useRequest, useUnmount } from 'ahooks';
+import { useMount, useRequest } from 'ahooks';
 import { useChatService } from '@/contexts/ServicesContext';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
@@ -14,10 +14,7 @@ import styles from './style.module.less';
 const SESSION_PAGE_SIZE = 20;
 type MenuItem = Required<MenuProps>['items'][number];
 
-export const useSessionListGroup = ({
-  activeSessionMenuKey,
-  onActiveSessionMenuKeyChange,
-}: SessionListGroupProps) => {
+export const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionListGroupProps) => {
   const chatService = useChatService();
   const messageApi = useAppMessage();
   const [sessionItems, setSessionItems] = useState<ChatSession[]>([]);
@@ -49,8 +46,10 @@ export const useSessionListGroup = ({
         const payload = await runListSessions(page);
         setSessionPage(payload.page);
         setSessionTotalPage(payload.total_page || 1);
-        if (currentSessionId) {
-          const currentSession = payload.list.find((item) => item.id === currentSessionId);
+        // 始终以 store 最新 sessionId 为准，避免闭包里读到旧值后回写错误会话。
+        const latestSessionId = useCurrentChatSessionStore.getState().currentSessionId;
+        if (latestSessionId) {
+          const currentSession = payload.list.find((item) => item.id === latestSessionId);
           if (currentSession) {
             setCurrentSession({ id: currentSession.id, title: currentSession.title });
           }
@@ -71,30 +70,15 @@ export const useSessionListGroup = ({
         }
       }
     },
-    [currentSessionId, messageApi, runListSessions, setCurrentSession]
+    [messageApi, runListSessions, setCurrentSession]
   );
 
   const refresh = useCallback(async () => {
     await loadSessionPage(1, false);
   }, [loadSessionPage]);
 
-  const handleSessionFirstRoundFinished = useCallback(() => {
-    void loadSessionPage(1, false);
-  }, [loadSessionPage]);
-
   useMount(() => {
-    window.addEventListener(
-      'chat-session-first-round-finished',
-      handleSessionFirstRoundFinished as EventListener
-    );
     void refresh();
-  });
-
-  useUnmount(() => {
-    window.removeEventListener(
-      'chat-session-first-round-finished',
-      handleSessionFirstRoundFinished as EventListener
-    );
   });
 
   const pinnedSessions = sessionItems.filter((item) => item.is_pinned);
@@ -103,21 +87,18 @@ export const useSessionListGroup = ({
 
   const handleDeleted = useCallback(
     (sessionId: string) => {
-      if (activeSessionMenuKey === `session-${sessionId}`) {
-        onActiveSessionMenuKeyChange(undefined);
-      }
       if (currentSessionId === sessionId) {
         clearCurrentSession();
       }
+      onActiveSessionMenuKeyChange?.(undefined);
     },
-    [activeSessionMenuKey, clearCurrentSession, currentSessionId, onActiveSessionMenuKeyChange]
+    [clearCurrentSession, currentSessionId, onActiveSessionMenuKeyChange]
   );
 
   const createSessionItem = useCallback(
     (session: ChatSession): MenuItem => ({
       key: `session-${session.id}`,
       onClick: () => {
-        onActiveSessionMenuKeyChange(`session-${session.id}`);
         setCurrentSession({ id: session.id, title: session.title });
         setChatPanelCollapsed(false);
       },
@@ -131,13 +112,7 @@ export const useSessionListGroup = ({
         />
       ),
     }),
-    [
-      handleDeleted,
-      loadSessionPage,
-      onActiveSessionMenuKeyChange,
-      setChatPanelCollapsed,
-      setCurrentSession,
-    ]
+    [handleDeleted, loadSessionPage, setChatPanelCollapsed, setCurrentSession]
   );
 
   const menuItems = useMemo<MenuItem[]>(() => {

@@ -1,7 +1,7 @@
 import type { ThemeConfig } from 'antd';
 
 /** 基础字号，影响全局限定版排版，可在此调整 */
-const baseFontSize = 15;
+const baseFontSize = 16;
 const appFontFamily = [
   "'Inter'",
   '-apple-system',

@@ -1,6 +1,7 @@
 import React from 'react';
 import { LuCheck, LuCopy } from 'react-icons/lu';
 import { Button, Spin } from 'antd';
+import { useInterval } from 'ahooks';
 import { LogoFactory } from '../../ModelSelector';
 import MessageContent from './MessageContent';
 import ThinkingBlock from './ThinkingBlock';
@@ -9,13 +10,24 @@ import styles from './AiMessage.module.less';
 import type { Message } from '@/components/ChatPanel/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 
+const LOADING_HINTS = ['正在生成回复...', '请稍等片刻...', '正在组织答案...'];
+const LOADING_HINT_SWITCH_MS = 2000;
+
 const AiMessage: React.FC<{ message: Message }> = ({ message }) => {
   const hasReasoning = message.reasoningContent !== undefined;
   const showLoadingIndicator = Boolean(message.loading && !message.content);
   const messageApi = useAppMessage();
   const [copied, setCopied] = React.useState(false);
+  const [loadingHintIndex, setLoadingHintIndex] = React.useState(0);
   const displayProvider = message.meta?.provider || 'openai';
   const displayModelName = message.meta?.modelName || message.meta?.modelId || 'AI 助手';
+
+  useInterval(
+    () => {
+      setLoadingHintIndex((prev) => (prev + 1) % LOADING_HINTS.length);
+    },
+    showLoadingIndicator ? LOADING_HINT_SWITCH_MS : undefined
+  );
 
   const handleCopy = async () => {
     try {
@@ -53,7 +65,9 @@ const AiMessage: React.FC<{ message: Message }> = ({ message }) => {
         {showLoadingIndicator && (
           <div className={styles.loadingHint}>
             <Spin size="small" />
-            <span>正在生成回复...</span>
+            <span key={loadingHintIndex} className={styles.loadingHintText}>
+              {LOADING_HINTS[loadingHintIndex]}
+            </span>
           </div>
         )}
         {/* 正文内容 */}

@@ -432,7 +432,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
     async (text: string) => {
       if (!currentModel) return;
       let targetSessionId = currentSessionId;
-      const shouldSyncTitleAfterSend = historyMessages.length === 0 && liveMessages.length === 0;
 
       if (!targetSessionId) {
         try {
@@ -454,30 +453,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
         clearSelectedText(targetSessionId);
       }
       await sendPromise;
-
-      if (!shouldSyncTitleAfterSend) return;
-
-      try {
-        await runLoadSessionHistory(targetSessionId);
-        window.dispatchEvent(
-          new CustomEvent<{ sessionId: string }>('chat-session-first-round-finished', {
-            detail: { sessionId: targetSessionId },
-          })
-        );
-      } catch (error) {
-        messageApi.error(parseErrorMessage(error, '同步会话标题失败'));
-      }
     },
     [
       clearSelectedText,
       currentModel,
       currentSessionId,
-      historyMessages.length,
       hasSelectedContext,
-      liveMessages.length,
       messageApi,
       runCreateSession,
-      runLoadSessionHistory,
       sendSessionMessage,
       setCurrentSession,
     ]
@@ -494,6 +477,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
 
   useMount(() => {
     if (!currentSessionId) return;
+    setHistoryMessages([]);
+    setHistoryPage(1);
+    setHistoryTotalPage(1);
     setLiveMessages([]);
     void loadHistoryMessages(currentSessionId);
   });
@@ -506,6 +492,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
       setLiveMessages([]);
       return;
     }
+    setHistoryMessages([]);
+    setHistoryPage(1);
+    setHistoryTotalPage(1);
     setLiveMessages([]);
     void loadHistoryMessages(currentSessionId);
   }, [currentSessionId, loadHistoryMessages, setLiveMessages]);

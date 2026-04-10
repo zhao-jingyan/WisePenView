@@ -49,6 +49,11 @@
       gap: var(--ant-margin-xs);
       color: var(--ant-color-text-tertiary);
       font-size: var(--ant-font-size-sm);
+
+      .loadingHintText {
+        display: inline-block;
+        animation: loadingHintFade 3s ease-in-out;
+      }
     }
 
     // 底部操作栏 (常驻)
@@ -74,5 +79,23 @@
         color: var(--ant-color-success);
       }
     }
+  }
+}
+
+@keyframes loadingHintFade {
+  0% {
+    opacity: 0.25;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  82% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.25;
   }
 }

@@ -25,7 +25,7 @@ const HeaderNav: React.FC<HeaderNavProps> = ({ collapsed, onSessionCreated }) =>
       manual: true,
       onSuccess: (session) => {
         messageApi.success('新建聊天成功');
-        onSessionCreated(session.id);
+        onSessionCreated(session.id, session.title);
       },
       onError: (err) => {
         messageApi.error(parseErrorMessage(err, '新建聊天失败'));

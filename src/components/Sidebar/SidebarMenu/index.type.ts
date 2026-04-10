@@ -3,5 +3,5 @@ export interface SidebarMenuProps {
 }
 
 export interface SidebarMenuRef {
-  handleCreatedSession: (sessionId: string) => Promise<void>;
+  handleCreatedSession: (sessionId: string, sessionTitle: string) => Promise<void>;
 }

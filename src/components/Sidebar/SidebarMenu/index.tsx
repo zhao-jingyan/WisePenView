@@ -23,18 +23,11 @@ const SidebarMenu = forwardRef<SidebarMenuRef, SidebarMenuProps>(({ collapsed },
   const clearCurrentSession = useCurrentChatSessionStore((state) => state.clearCurrentSession);
   const clickFile = useClickFile();
   const messageApi = useAppMessage();
-  const [activeSessionMenuKey, setActiveSessionMenuKey] = useState<string>();
   const [pendingCreatedSessionId, setPendingCreatedSessionId] = useState<string>();
 
-  const { menuItems: sessionMenuItems, refresh } = useSessionListGroup({
-    activeSessionMenuKey,
-    onActiveSessionMenuKeyChange: setActiveSessionMenuKey,
-  });
+  const { menuItems: sessionMenuItems, refresh } = useSessionListGroup({});
 
   const selectedKeys = useMemo(() => {
-    if (activeSessionMenuKey) {
-      return [activeSessionMenuKey];
-    }
     if (currentSessionId) {
       return [`session-${currentSessionId}`];
     }
@@ -48,7 +41,7 @@ const SidebarMenu = forwardRef<SidebarMenuRef, SidebarMenuProps>(({ collapsed },
     if (!existsInSidebar) return baseSelectedKeys;
 
     return [`opened-file-${resourceId}`];
-  }, [activeSessionMenuKey, currentSessionId, location.pathname, recentItems]);
+  }, [currentSessionId, location.pathname, recentItems]);
 
   const handleOpenFile = useCallback(
     (resourceId: string) => {
@@ -95,9 +88,8 @@ const SidebarMenu = forwardRef<SidebarMenuRef, SidebarMenuProps>(({ collapsed },
   useImperativeHandle(
     ref,
     () => ({
-      handleCreatedSession: async (sessionId: string) => {
-        setActiveSessionMenuKey(`session-${sessionId}`);
-        setCurrentSession({ id: sessionId });
+      handleCreatedSession: async (sessionId: string, sessionTitle: string) => {
+        setCurrentSession({ id: sessionId, title: sessionTitle });
         setChatPanelCollapsed(false);
         if (collapsed) {
           setPendingCreatedSessionId(sessionId);

@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 interface CurrentChatSessionState {
   currentSessionId?: string;
   currentSessionTitle?: string;
-  setCurrentSession: (session: { id: string; title?: string }) => void;
+  setCurrentSession: (session: { id: string; title: string }) => void;
   clearCurrentSession: () => void;
 }
 

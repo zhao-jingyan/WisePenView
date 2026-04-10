@@ -1,4 +1,4 @@
 export interface SessionListGroupProps {
   activeSessionMenuKey?: string;
-  onActiveSessionMenuKeyChange: (key: string | undefined) => void;
+  onActiveSessionMenuKeyChange?: (key: string | undefined) => void;
 }

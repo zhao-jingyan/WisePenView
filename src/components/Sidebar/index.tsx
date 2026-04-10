@@ -9,8 +9,8 @@ import type { SidebarProps } from './index.type';
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const sidebarMenuRef = useRef<SidebarMenuRef>(null);
 
-  const handleSessionCreated = useCallback((sessionId: string) => {
-    void sidebarMenuRef.current?.handleCreatedSession(sessionId);
+  const handleSessionCreated = useCallback((sessionId: string, sessionTitle: string) => {
+    void sidebarMenuRef.current?.handleCreatedSession(sessionId, sessionTitle);
   }, []);
 
   return (

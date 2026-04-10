@@ -1,4 +1,4 @@
 export interface HeaderNavProps {
   collapsed: boolean;
-  onSessionCreated: (sessionId: string) => void;
+  onSessionCreated: (sessionId: string, sessionTitle: string) => void;
 }
