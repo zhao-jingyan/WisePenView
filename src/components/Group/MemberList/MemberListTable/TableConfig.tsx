@@ -6,6 +6,7 @@ import type { GroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
 import QuotaBar from '@/components/Common/QuotaBar';
 import type { GroupMemberRole } from '@/constants/group';
 import { ROLE_LABEL, ROLE_MAP } from '@/constants/group';
+import { formatTimestampToDate } from '@/utils/time';
 
 type MemberRecord = GroupMember & { key: React.Key };
 
@@ -56,7 +57,7 @@ export const getColumns = (
       key: 'realname',
       title: '姓名',
       dataIndex: 'realname',
-      width: 100,
+      width: 140,
       render: (realname: string) => (
         <span className={styles.nameItem}>{realname.trim() === '' ? '-' : realname}</span>
       ),
@@ -66,7 +67,7 @@ export const getColumns = (
       key: 'nickname',
       title: '昵称',
       dataIndex: 'nickname',
-      width: 100,
+      width: 140,
       render: (nickname: string) => (
         <span className={styles.nicknameItem}>
           {nickname ? (nickname.trim() === '' ? '-' : nickname) : '-'}
@@ -89,7 +90,9 @@ export const getColumns = (
       title: '加入时间',
       dataIndex: 'joinTime',
       width: 150,
-      render: (joinTime: string) => <span className={styles.joinTimeItem}>{joinTime}</span>,
+      render: (joinTime: string) => (
+        <span className={styles.joinTimeItem}>{formatTimestampToDate(joinTime) || '-'}</span>
+      ),
       sorter: (a, b) =>
         (a.joinTime ? new Date(a.joinTime).getTime() : 0) -
         (b.joinTime ? new Date(b.joinTime).getTime() : 0),

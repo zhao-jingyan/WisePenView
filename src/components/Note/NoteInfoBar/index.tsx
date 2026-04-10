@@ -15,7 +15,7 @@ const NoteInfoBar: React.FC<NoteInfoBarProps> = ({ noteInfoDisplay }) => {
           {authors.length > 0 ? (
             authors.map((author, index) => (
               <div className={styles.authorItem} key={`${author.name}-${index}`}>
-                <Avatar size="small" src={author.avatar}>
+                <Avatar size={20} src={author.avatar} className={styles.authorAvatar}>
                   {author.name.slice(0, 1)}
                 </Avatar>
                 <span className={styles.noteInfoValue}>{author.name}</span>
