@@ -1,0 +1,53 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  verify-and-build:
+    name: Code Quality & Build Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      # 【核心新增】1. 在 setup-node 之前，先安装 pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # 建议锁定为你本地使用的 pnpm大版本，如 8 或 9
+
+      # 2. 设置 Node.js，并将缓存机制切换为 pnpm
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm' 
+
+      # 【核心修改】3. 严格依赖安装
+      # --frozen-lockfile 等价于 npm ci，它严格读取 pnpm-lock.yaml，绝不自动更新依赖
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 4. Commit 规范检查 (此 Action 内部兼容 pnpm)
+      - name: Validate PR Commits
+        uses: wagoid/commitlint-github-action@v6
+
+      # 【核心修改】5. 使用 pnpm 执行脚本
+      - name: Lint Code
+        run: pnpm run lint
+
+      # 【核心修改】6. 使用 pnpm exec 替代 npx 调用本地 bin
+      - name: Type Check
+        run: pnpm exec tsc --noEmit
+
+      - name: Mock Type Check
+        run: pnpm run typecheck:mock
+
+      # 7. 编译检查
+      - name: Build Project
+        run: pnpm run build

@@ -24,9 +24,14 @@ const newPassword = async (_params: NewPasswordRequest): Promise<void> => {
   await delay(300);
 };
 
+const logout = async (): Promise<void> => {
+  await delay(100);
+};
+
 export const AuthServicesMock: IAuthService = {
   login,
   register,
   resetPassword,
   newPassword,
+  logout,
 };

@@ -26,8 +26,10 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@services-registry": ["src/contexts/ServicesContext/registry.impl.ts"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/mocks/**/*", "src/contexts/ServicesContext/registry.mock.ts"]
 }

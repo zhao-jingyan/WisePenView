@@ -143,8 +143,8 @@ const getResByTag = async (params: GetResByTagRequest): Promise<TagListByTagResp
     sortBy: RESOURCE_SORT_BY.UPDATE_TIME,
     sortDir: RESOURCE_SORT_DIR.DESC,
     tagIds: [targetTag.tagId],
-    tagQueryLogicMode: 'AND',
-  } as const;
+    tagQueryLogicMode: 'AND' as const,
+  };
   const normalizedGroupId = normalizeTagGroupId(targetTag.groupId);
   const res = normalizedGroupId
     ? await ResourceServicesImpl.getGroupResources({ ...listParams, groupId: normalizedGroupId })

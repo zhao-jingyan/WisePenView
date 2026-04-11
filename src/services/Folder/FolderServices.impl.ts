@@ -88,8 +88,8 @@ const getResByFolder = async (params: GetResByFolderRequest): Promise<FolderList
     sortBy: RESOURCE_SORT_BY.UPDATE_TIME,
     sortDir: RESOURCE_SORT_DIR.DESC,
     tagIds: [tagId],
-    tagQueryLogicMode: 'AND',
-  } as const;
+    tagQueryLogicMode: 'AND' as const,
+  };
   const normalizedGroupId = normalizeTagGroupId(targetFolder.groupId);
   const res = normalizedGroupId
     ? await ResourceServicesImpl.getGroupResources({ ...listParams, groupId: normalizedGroupId })

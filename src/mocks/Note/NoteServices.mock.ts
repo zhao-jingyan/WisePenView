@@ -25,6 +25,7 @@ const deleteNote = async (_params: DeleteNoteRequest): Promise<void> => {
 
 const getNoteInfoDisplay = async (_params: GetNoteInfoRequest): Promise<NoteInfoDisplayData> => {
   return {
+    noteTitle: '未命名笔记',
     authors: [],
     lastEditedAtText: '暂无',
   };

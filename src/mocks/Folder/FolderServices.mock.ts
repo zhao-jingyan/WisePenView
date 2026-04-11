@@ -10,17 +10,24 @@ import mockdata from './mockdata.json';
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface MockFileEntry {
-  files: ResourceItem[];
+  files: Array<Omit<ResourceItem, 'ownerInfo'> & { ownerInfo?: ResourceItem['ownerInfo'] }>;
   totalFiles: number;
 }
 
 const root = mockdata.root as Folder;
 const filesByFolderId = mockdata.filesByFolderId as Record<string, MockFileEntry>;
+const toResourceItem = (
+  item: Omit<ResourceItem, 'ownerInfo'> & { ownerInfo?: ResourceItem['ownerInfo'] }
+): ResourceItem => ({
+  ...item,
+  ownerInfo: item.ownerInfo ?? {},
+});
 
 const BULK_FILE_COUNT = 250;
 const bulkFiles: ResourceItem[] = Array.from({ length: BULK_FILE_COUNT }, (_, i) => ({
   resourceId: `res-bulk-${String(i + 1).padStart(3, '0')}`,
   resourceName: `测试文件-${String(i + 1).padStart(3, '0')}.docx`,
+  ownerInfo: {},
   resourceType: 'FILE',
   size: Math.floor(Math.random() * 100000) + 1024,
   currentTags: { 'folder-bulk': '/大量文件' },
@@ -48,7 +55,7 @@ const getResByFolder = async (params: GetResByFolderRequest): Promise<FolderList
   const folder = flatMap.get(params.folder.tagId);
   const folders = folder?.children ?? [];
   const entry = filesByFolderId[params.folder.tagId];
-  const allFiles = entry?.files ?? [];
+  const allFiles = (entry?.files ?? []).map(toResourceItem);
   const totalFiles = entry?.totalFiles ?? 0;
 
   const page = params.filePage ?? 1;

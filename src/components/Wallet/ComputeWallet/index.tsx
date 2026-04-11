@@ -1,5 +1,5 @@
 /**
- * 通用计算点钱包：/user/wallet；个人无参拉余额，小组传 groupId。
+ * 通用计算点钱包：个人余额走 /user/wallet；小组余额走 groupService.getGroupWalletInfo。
  * 点卡充值仅个人（redeemVoucher）；小组余额由组长通过「token 划拨」转入。
  * 交易明细支持 Tab：全部 / 充值 / 消费（对应 listTransactions 的 type 筛选）。
  * 数据请求使用 ahooks（不使用 useEffect）。
@@ -9,6 +9,7 @@ import { usePagination, useRequest, useUnmount } from 'ahooks';
 import { Button, Pagination, Skeleton, Table, Tabs } from 'antd';
 import { RiAddLine, RiArrowDownLine, RiArrowUpLine, RiSubtractLine } from 'react-icons/ri';
 import { useWalletService } from '@/contexts/ServicesContext';
+import { useGroupService } from '@/contexts/ServicesContext';
 import { WALLET_TARGET_TYPE, WALLET_TOKEN_TX_TYPE } from '@/constants/wallet';
 import type { WalletTransactionKind, WalletTransactionRecord } from '@/types/wallet';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
@@ -59,6 +60,7 @@ const ComputeWallet = React.forwardRef<ComputeWalletRef, ComputeWalletProps>(
     ref
   ) => {
     const walletService = useWalletService();
+    const groupService = useGroupService();
     const message = useAppMessage();
 
     const effectiveGroupId = targetType === WALLET_TARGET_TYPE.GROUP ? (targetId ?? '').trim() : '';
@@ -102,16 +104,16 @@ const ComputeWallet = React.forwardRef<ComputeWalletRef, ComputeWalletProps>(
 
     const { runAsync: loadBalance } = useRequest(
       async (options?: { animateFrom?: number; silent?: boolean }) => {
-        const data = await walletService.getUserWalletInfo(
-          targetType === WALLET_TARGET_TYPE.GROUP && effectiveGroupId
-            ? { groupId: effectiveGroupId }
-            : undefined
-        );
+        if (targetType === WALLET_TARGET_TYPE.GROUP && effectiveGroupId) {
+          const groupBalance = await groupService.getGroupWalletInfo({ groupId: effectiveGroupId });
+          return { balance: groupBalance, options };
+        }
+        const data = await walletService.getUserWalletInfo();
         return { balance: data.balance, options };
       },
       {
         ready: walletReady,
-        refreshDeps: [walletService, targetType, effectiveGroupId],
+        refreshDeps: [walletService, groupService, targetType, effectiveGroupId],
         onBefore: (params) => {
           const options = params?.[0];
           if (!options?.silent) {

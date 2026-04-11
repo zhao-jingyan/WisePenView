@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": ["src/mocks/**/*", "src/contexts/ServicesContext/registry.mock.ts"],
+  "exclude": []
+}

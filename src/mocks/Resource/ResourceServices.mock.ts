@@ -4,12 +4,18 @@ import type {
   IResourceService,
   RenameResourceRequest,
   ResourceListPage,
-} from '@/services/Resource';
-import type { ResourceItem } from '@/types/resource';
-import { useRecentFilesStore } from '@/store';
+} from '../../services/Resource';
+import type { ResourceItem } from '../../types/resource';
+import { useRecentFilesStore } from '../../store';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const toResourceItem = (
+  item: Omit<ResourceItem, 'ownerInfo'> & { ownerInfo?: ResourceItem['ownerInfo'] }
+): ResourceItem => ({
+  ...item,
+  ownerInfo: item.ownerInfo ?? {},
+});
 
 /** 额外生成的「文档」条数，用于压力测试侧边栏 / 列表；按需改大改小 */
 const MOCK_STRESS_FILE_COUNT = 120;
@@ -20,16 +26,17 @@ const buildStressMockItems = (count: number): ResourceItem[] =>
     return {
       resourceId: `mock-stress-${String(n).padStart(4, '0')}`,
       resourceName: `压力测试文档 ${n}.pdf`,
+      ownerInfo: {},
       resourceType: 'file',
       ownerId: '1',
       size: 2048 + n * 100,
       path: '/',
-      currentTags: [],
+      currentTags: {},
     };
   });
 
 const fullMockResourceList: ResourceItem[] = [
-  ...(mockdata.resourceListPage as ResourceListPage).list,
+  ...(mockdata.resourceListPage as unknown as ResourceListPage).list.map(toResourceItem),
   ...buildStressMockItems(MOCK_STRESS_FILE_COUNT),
 ];
 

@@ -1,4 +1,4 @@
-import type { IGroupService } from '@/services/Group';
+import type { GetGroupWalletInfoRequest, IGroupService } from '@/services/Group';
 import type { Group, GroupMember, GroupMemberList, GroupResConfig } from '@/types/group';
 import mockdata from './mockdata.json';
 
@@ -17,6 +17,11 @@ const fetchGroupList = async (): Promise<{ groups: Group[]; total: number }> => 
 const fetchGroupInfo = async (_groupId: string): Promise<Group> => {
   await delay(200);
   return groupDetail;
+};
+
+const getGroupWalletInfo = async (_params: GetGroupWalletInfoRequest): Promise<number> => {
+  await delay(100);
+  return 1000;
 };
 
 const fetchGroupResConfig = async (groupId: string): Promise<GroupResConfig> => {
@@ -74,6 +79,7 @@ const kickMembers = async (): Promise<void> => {
 export const GroupServicesMock: IGroupService = {
   fetchGroupList,
   fetchGroupInfo,
+  getGroupWalletInfo,
   fetchGroupResConfig,
   updateGroupResConfig,
   createGroup,

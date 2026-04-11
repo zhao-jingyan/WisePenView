@@ -27,6 +27,7 @@ const mockFilesByTagId: Record<string, ResourceItem[]> = {
     {
       resourceId: 'res-w-001',
       resourceName: '工作计划.docx',
+      ownerInfo: {},
       resourceType: 'FILE',
       size: 15360,
       currentTags: { 'tag-work': '工作' },
@@ -34,6 +35,7 @@ const mockFilesByTagId: Record<string, ResourceItem[]> = {
     {
       resourceId: 'res-w-002',
       resourceName: '会议总结',
+      ownerInfo: {},
       resourceType: 'NOTE',
       size: 4096,
       currentTags: { 'tag-work': '工作' },
@@ -43,6 +45,7 @@ const mockFilesByTagId: Record<string, ResourceItem[]> = {
     {
       resourceId: 'res-pa-001',
       resourceName: '项目A需求文档.md',
+      ownerInfo: {},
       resourceType: 'NOTE',
       size: 8192,
       currentTags: { 'tag-work-project-a': '项目A' },
@@ -52,6 +55,7 @@ const mockFilesByTagId: Record<string, ResourceItem[]> = {
     {
       resourceId: 'res-st-001',
       resourceName: 'React笔记',
+      ownerInfo: {},
       resourceType: 'NOTE',
       size: 6144,
       currentTags: { 'tag-study-tech': '技术' },
@@ -59,6 +63,7 @@ const mockFilesByTagId: Record<string, ResourceItem[]> = {
     {
       resourceId: 'res-st-002',
       resourceName: 'TypeScript手册.pdf',
+      ownerInfo: {},
       resourceType: 'FILE',
       size: 102400,
       currentTags: { 'tag-study-tech': '技术' },
@@ -68,6 +73,7 @@ const mockFilesByTagId: Record<string, ResourceItem[]> = {
     {
       resourceId: 'res-lr-001',
       resourceName: '2024书单',
+      ownerInfo: {},
       resourceType: 'NOTE',
       size: 3072,
       currentTags: { 'tag-life-reading': '阅读' },

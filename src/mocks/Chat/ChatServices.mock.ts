@@ -1,4 +1,3 @@
-import { MOCK_MODELS } from '@/services/mock/ChatPanel';
 import { MODEL_TYPE } from '@/types/model';
 import type { IChatService } from '@/services/Chat';
 import type {
@@ -8,6 +7,22 @@ import type {
   MessageResponse,
   PageResult,
 } from '@/services/Chat';
+
+type MockModelSeed = {
+  name: string;
+  provider: string;
+  category: 'reasoning' | 'general';
+  vision: boolean;
+};
+
+const MOCK_MODELS: MockModelSeed[] = [
+  { name: 'GPT-4o Mini', provider: 'openai', category: 'general', vision: true },
+  { name: 'DeepSeek V3', provider: 'deepseek', category: 'general', vision: false },
+  { name: 'Gemini 2.5 Flash', provider: 'google', category: 'general', vision: true },
+  { name: 'Claude 3.7 Sonnet', provider: 'anthropic', category: 'reasoning', vision: true },
+  { name: 'o3', provider: 'openai', category: 'reasoning', vision: true },
+  { name: 'Mistral Large', provider: 'mistral', category: 'general', vision: false },
+];
 
 const providerToVendor = (provider: string): string => {
   switch (provider) {
@@ -34,7 +49,7 @@ const getModels: IChatService['getModels'] = async () => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        standard_models: MOCK_MODELS.slice(0, 3).map((item, index) => ({
+        standard_models: MOCK_MODELS.slice(0, 3).map((item: MockModelSeed, index: number) => ({
           id: index + 1,
           name: item.name,
           vendor: providerToVendor(item.provider),
@@ -44,7 +59,7 @@ const getModels: IChatService['getModels'] = async () => {
           support_vision: item.vision,
           is_default: index === 0,
         })),
-        advanced_models: MOCK_MODELS.slice(3, 5).map((item, index) => ({
+        advanced_models: MOCK_MODELS.slice(3, 5).map((item: MockModelSeed, index: number) => ({
           id: 101 + index,
           name: item.name,
           vendor: providerToVendor(item.provider),
@@ -54,7 +69,7 @@ const getModels: IChatService['getModels'] = async () => {
           support_vision: item.vision,
           is_default: false,
         })),
-        other_models: MOCK_MODELS.slice(5).map((item, index) => ({
+        other_models: MOCK_MODELS.slice(5).map((item: MockModelSeed, index: number) => ({
           id: 201 + index,
           name: item.name,
           vendor: providerToVendor(item.provider),

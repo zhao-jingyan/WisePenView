@@ -30,8 +30,11 @@ const fetchUserGroupQuotas = async (
       const baseRaw = item.groupDisplayBase;
       const base =
         baseRaw != null && typeof baseRaw === 'object' ? (baseRaw as Record<string, unknown>) : {};
+      const rawGroupId = base.groupId ?? base.GroupId ?? item.groupId ?? item.GroupId;
       return {
-        groupId: toIdString(base.groupId ?? base.GroupId ?? item.groupId ?? item.GroupId),
+        groupId: toIdString(
+          typeof rawGroupId === 'string' || typeof rawGroupId === 'number' ? rawGroupId : null
+        ),
         groupName: String(
           base.groupName ?? base.GroupName ?? item.groupName ?? item.GroupName ?? ''
         ),

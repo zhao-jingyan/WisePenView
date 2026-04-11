@@ -19,6 +19,7 @@ export default {
         'chore', // 其他不修改 src 或测试文件的变动
         'delete', // 删除不再使用的文件
         'revert', // 回退
+        'rename', // 重命名
       ],
     ],
   },

@@ -7,10 +7,10 @@
     "dev": "vite",
     "mock": "vite --mode mock",
     "build": "tsc -b && vite build",
+    "typecheck:mock": "pnpm exec tsc -p tsconfig.mock.json --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prepare": "husky install",
-    "commit": "cz"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.156",
@@ -28,8 +28,6 @@
     "ant-design": "^1.0.0",
     "antd": "^6.1.0",
     "clsx": "^2.1.1",
-    "commitizen": "^4.3.1",
-    "cz-conventional-changelog": "^3.3.0",
     "katex": "^0.16.42",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

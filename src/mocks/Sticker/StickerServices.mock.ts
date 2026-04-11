@@ -21,9 +21,8 @@ const getStickerList = async (): Promise<Sticker[]> => {
   return mockStickers;
 };
 
-const addSticker = async (_params: AddStickerRequest): Promise<string> => {
+const addSticker = async (_params: AddStickerRequest): Promise<void> => {
   await delay(200);
-  return 'mock-sticker-new';
 };
 
 const updateSticker = async (_params: UpdateStickerRequest): Promise<void> => {
