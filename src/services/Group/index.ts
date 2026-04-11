@@ -2,6 +2,7 @@ export type { IGroupService } from './index.type';
 export type {
   FetchGroupListRequest,
   FetchGroupListResponse,
+  GetGroupWalletInfoRequest,
   GroupMemberBaseInfo,
   GroupMemberRawResponse,
   CreateGroupRequest,

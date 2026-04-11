@@ -4,9 +4,9 @@ import type {
   IResourceService,
   RenameResourceRequest,
   ResourceListPage,
-} from '@/services/Resource';
-import type { ResourceItem } from '@/types/resource';
-import { useRecentFilesStore } from '@/store';
+} from '../../services/Resource';
+import type { ResourceItem } from '../../types/resource';
+import { useRecentFilesStore } from '../../store';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
