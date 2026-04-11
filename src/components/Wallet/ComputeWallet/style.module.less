@@ -88,6 +88,16 @@
   margin-top: 2px;
   font-size: var(--ant-font-size-sm);
   color: var(--ant-color-text-tertiary);
+  // 点卡尾号等掩码行：* 与数字在比例字体下宽窄不一，等宽栈 + tabular 数字对齐
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    'Segoe UI Mono',
+    Menlo,
+    Consolas,
+    'Liberation Mono',
+    monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 .empty {
