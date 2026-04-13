@@ -11,7 +11,8 @@ import { createBeforeUploadImageWithinLimit } from '@/utils/image';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { GROUP_TYPE, GROUP_TYPE_LABELS, ALLOWED_GROUP_TYPES_MAP } from '@/constants/group';
 import type { CreateGroupModalProps } from './index.type';
-import styles from './style.module.less';
+
+import styles from './index.module.less';
 
 const { TextArea } = Input;
 const { Option } = Select;

@@ -5,9 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import { useGroupService } from '@/contexts/ServicesContext';
 import type { DeleteGroupRequest } from '@/services/Group';
 import type { DissolveGroupModalProps } from './index.type';
-import styles from './style.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+
+import styles from './index.module.less';
 
 const DissolveGroupModal: React.FC<DissolveGroupModalProps> = ({
   open,

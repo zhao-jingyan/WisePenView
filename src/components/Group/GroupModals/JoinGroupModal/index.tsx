@@ -4,9 +4,10 @@ import { useRequest } from 'ahooks';
 import { useGroupService } from '@/contexts/ServicesContext';
 import type { JoinGroupRequest } from '@/services/Group';
 import type { JoinGroupModalProps } from './index.type';
-import styles from './style.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+
+import styles from './index.module.less';
 
 const INVITE_CODE_LENGTH = 8;
 
