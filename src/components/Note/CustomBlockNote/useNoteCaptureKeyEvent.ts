@@ -1,15 +1,28 @@
 import { useCallback } from 'react';
 import type { KeyboardEvent } from 'react';
+import type * as Y from 'yjs';
 
 import type { WisepenProvider } from '@/session/note/WisepenProvider';
 
 /**
- * 捕获阶段仅上报 sendIntent，不 preventDefault / 不手动 editor.undo。
- * 协作模式下撤销由 BlockNote 内置键位处理；这里只做异步意图埋点。
+ * 捕获阶段接管撤销/重做快捷键，统一走 Y.UndoManager。
+ * 同时异步上报 sendIntent，保证埋点来源与快捷键一致。
  */
-export function useNoteCaptureKeyEvent(provider: WisepenProvider) {
+interface UseNoteCaptureKeyEventOptions {
+  provider: WisepenProvider;
+  undoManager: Y.UndoManager;
+  readOnly: boolean;
+}
+
+export function useNoteCaptureKeyEvent({
+  provider,
+  undoManager,
+  readOnly,
+}: UseNoteCaptureKeyEventOptions) {
   return useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
+      if (readOnly) return;
+
       const emitIntentDeferred = (
         operationType: Parameters<WisepenProvider['sendIntent']>[0],
         source: string
@@ -37,17 +50,26 @@ export function useNoteCaptureKeyEvent(provider: WisepenProvider) {
 
       if (k === 'z') {
         if (e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          undoManager.redo();
           emitIntentDeferred('REDO', e.metaKey ? 'Cmd+Shift+Z' : 'Ctrl+Shift+Z');
         } else {
+          e.preventDefault();
+          e.stopPropagation();
+          undoManager.undo();
           emitIntentDeferred('UNDO', e.metaKey ? 'Cmd+Z' : 'Ctrl+Z');
         }
         return;
       }
 
       if (k === 'y' && e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        undoManager.redo();
         emitIntentDeferred('REDO', 'Ctrl+Y');
       }
     },
-    [provider]
+    [provider, readOnly, undoManager]
   );
 }

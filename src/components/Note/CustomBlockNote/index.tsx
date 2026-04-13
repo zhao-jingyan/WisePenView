@@ -28,14 +28,12 @@ import { assertImageProxyUploadLimit } from '@/services/Image';
 import { useChatPanelStore, useCurrentChatSessionStore, useNoteSelectionStore } from '@/store';
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
 import { useNoteCaptureKeyEvent } from './useNoteCaptureKeyEvent';
+import { useAttachNoteYjsUndoStack, useNoteYjsUndoManager } from './useNoteYjsUndoStack';
 import { buildNoteSlashMenuItems } from './slashMenuConfig';
 import { blockNoteSchema } from './blockNoteSchema';
 import { inlineMathDollarExtension } from './LatexSupport/inlineMathDollarExtension';
 import { stripEscapeCharExtension, stripEscapeEditorProps } from './stripEscapeCharExtension';
 import styles from './style.module.less';
-
-/** 笔记正文在 Y.Doc 中的 XmlFragment 名；需与后端 observeDeep 及 BlockNote 绑定名一致 */
-const NOTE_YJS_DOCUMENT_FRAGMENT = 'document-store' as const;
 
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;
 type BlockNoteCollaborationConfig = NonNullable<CreateBlockNoteOptions['collaboration']>;
@@ -52,6 +50,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       (state) => state.selectedTextByResourceId[resourceId] ?? ''
     );
     const clearSelectedText = useNoteSelectionStore((state) => state.clearSelectedText);
+    const { noteFragment, undoManager } = useNoteYjsUndoManager(doc);
 
     const uploadFile = useCallback(
       async (file: File) => {
@@ -80,6 +79,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       schema: blockNoteSchema,
       dictionary: zh,
       trailingBlock: true,
+      disableExtensions: ['history', 'yUndo'],
       uploadFile,
       extensions: [stripEscapeCharExtension, inlineMathDollarExtension()],
       _tiptapOptions: {
@@ -87,7 +87,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       },
       collaboration: {
         provider: provider as BlockNoteCollaborationConfig['provider'],
-        fragment: doc.getXmlFragment(NOTE_YJS_DOCUMENT_FRAGMENT),
+        fragment: noteFragment,
         user: {
           // 单人模式下使用固定身份，避免业务层传 userId/color
           name: '',
@@ -100,9 +100,12 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       setSelectedText(resourceId, editor.getSelectedText());
     }, [editor, resourceId, setSelectedText]);
 
+    useAttachNoteYjsUndoStack(doc, editor, undoManager);
+
     useMount(() => {
       syncSelectedText();
     });
+
     useUnmount(() => {
       clearSelectedText(resourceId);
     });
@@ -117,7 +120,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       [editor]
     );
 
-    const onKeyDownCapture = useNoteCaptureKeyEvent(provider);
+    const onKeyDownCapture = useNoteCaptureKeyEvent({ provider, undoManager, readOnly });
     const handleAskAi = useCallback(() => {
       if (!currentSessionId) {
         return;
