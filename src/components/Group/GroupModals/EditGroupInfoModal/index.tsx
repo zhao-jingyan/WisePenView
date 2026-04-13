@@ -10,7 +10,8 @@ import { useAppMessage } from '@/hooks/useAppMessage';
 import type { EditGroupRequest } from '@/services/Group';
 import { GROUP_TYPE } from '@/constants/group';
 import type { EditGroupInfoModalProps } from './index.type';
-import styles from './style.module.less';
+
+import styles from './index.module.less';
 
 const { TextArea } = Input;
 

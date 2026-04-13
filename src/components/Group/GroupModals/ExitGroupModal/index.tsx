@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Modal, Button, Alert } from 'antd';
 import { useRequest } from 'ahooks';
 import { useNavigate } from 'react-router-dom';
 import { useGroupService } from '@/contexts/ServicesContext';
 import type { QuitGroupRequest } from '@/services/Group';
 import type { ExitGroupModalProps } from './index.type';
-import styles from './style.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+
+import styles from './index.module.less';
 
 const ExitGroupModal: React.FC<ExitGroupModalProps> = ({
   open,
