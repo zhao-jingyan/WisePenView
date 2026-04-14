@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useMount } from 'ahooks';
-import { Avatar, Dropdown, Input, Modal } from 'antd';
+import { Avatar, Button, Dropdown, Modal } from 'antd';
 import type { MenuProps } from 'antd';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { useUserService } from '@/contexts/ServicesContext';
 import type { User } from '@/types/user';
 import { getIdentityTypeLabel } from '@/constants/user';
-import { useAppMessage } from '@/hooks/useAppMessage';
 
 import {
   RiArrowDownSLine,
@@ -22,6 +21,10 @@ import {
 
 import styles from './style.module.less';
 import { useAuthService } from '@/contexts/ServicesContext';
+
+/** 问卷星问题反馈页（内嵌 iframe） */
+const FEEDBACK_SURVEY_URL = 'https://v.wjx.cn/vm/PrUZetY.aspx';
+
 interface UserProfileProps {
   collapsed: boolean;
 }
@@ -29,10 +32,8 @@ interface UserProfileProps {
 const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
   const navigate = useNavigate();
   const userService = useUserService();
-  const messageApi = useAppMessage();
   const [user, setUser] = useState<User | null>(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
-  const [feedbackText, setFeedbackText] = useState('');
   const authService = useAuthService();
 
   useMount(() => {
@@ -133,20 +134,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
     placement: 'topLeft' as const,
   };
 
-  const handleSubmitFeedback = () => {
-    const content = feedbackText.trim();
-    if (content.length === 0) {
-      messageApi.warning('请先填写反馈内容');
-      return;
-    }
-
-    // TODO: 向服务器发送反馈信息
-    messageApi.success('反馈已提交，感谢你的建议');
-    setFeedbackModalOpen(false);
-    setFeedbackText('');
-  };
-
-  const handleCancelFeedback = () => {
+  const handleCloseFeedback = () => {
     setFeedbackModalOpen(false);
   };
 
@@ -171,22 +159,37 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
       </Dropdown>
 
       <Modal
-        title="用户反馈"
+        title="问题反馈"
         open={feedbackModalOpen}
-        onOk={handleSubmitFeedback}
-        onCancel={handleCancelFeedback}
-        okText="提交"
-        cancelText="取消"
+        onCancel={handleCloseFeedback}
+        width={880}
+        destroyOnHidden
+        footer={
+          <Button type="primary" onClick={handleCloseFeedback}>
+            关闭
+          </Button>
+        }
       >
-        <Input.TextArea
-          value={feedbackText}
-          onChange={(event) => setFeedbackText(event.target.value)}
-          placeholder="请输入你的反馈内容，我们会认真阅读。"
-          autoSize={{ minRows: 8, maxRows: 16 }}
-          maxLength={2000}
-          showCount
-          className={styles.feedbackInput}
-        />
+        <div className={styles.feedbackIframeWrap}>
+          <iframe
+            className={styles.feedbackIframe}
+            title="问卷星问题反馈"
+            src={FEEDBACK_SURVEY_URL}
+            allowFullScreen
+          />
+        </div>
+        <p className={styles.feedbackFallback}>
+          若页面无法显示，请
+          <a
+            className={styles.feedbackFallbackLink}
+            href={FEEDBACK_SURVEY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            在新窗口打开问卷
+          </a>
+          。
+        </p>
       </Modal>
     </>
   );
