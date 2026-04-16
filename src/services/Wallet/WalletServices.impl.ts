@@ -2,7 +2,7 @@
  * 钱包 Service：/user/wallet/*，成功码与全局一致 `code === 200`。
  */
 import Axios from '@/utils/Axios';
-import { WALLET_LIST_TX_TYPE_QUERY_VALUE } from '@/constants/wallet';
+import { WALLET_LIST_TX_TYPE_QUERY_VALUE, WALLET_TX_TAB_MERGE_FETCH_CAP } from '@/constants/wallet';
 import { checkResponse } from '@/utils/response';
 import type { ApiResponse } from '@/types/api';
 import type { WalletTransactionKind, WalletTransactionRecord } from '@/types/wallet';
@@ -11,6 +11,7 @@ import type {
   RedeemVoucherRequest,
   ListWalletTransactionsRequest,
   ListWalletTransactionsResponse,
+  ListMergedWalletTransactionsRequest,
   TransferTokenBetweenGroupAndUserRequest,
   IWalletService,
 } from './index.type';
@@ -20,7 +21,24 @@ const toNum = (v: unknown, fallback = 0): number => {
   return Number.isFinite(n) ? n : fallback;
 };
 
+/** 部分网关/序列化会把枚举落成对象，统一取出可映射字段 */
+const normalizeTokenTransactionTypeRaw = (raw: unknown): unknown => {
+  if (raw == null) return raw;
+  if (typeof raw === 'object' && !Array.isArray(raw)) {
+    const o = raw as Record<string, unknown>;
+    return o.code ?? o.value ?? o.name ?? o.desc;
+  }
+  return raw;
+};
+
 const mapTokenTransactionTypeToKind = (raw: unknown, tokenCount: number): WalletTransactionKind => {
+  if (typeof raw === 'string') {
+    const upper = raw.trim().toUpperCase();
+    if (upper === 'REFILL') return 'RECHARGE';
+    if (upper === 'SPEND') return 'SPEND';
+    if (upper === 'TRANSFER_IN') return 'TRANSFER_IN';
+    if (upper === 'TRANSFER_OUT') return 'TRANSFER_OUT';
+  }
   const n = Number(raw);
   if (n === 1) return 'RECHARGE';
   if (n === 2) return 'SPEND';
@@ -46,12 +64,34 @@ const titleForKind = (k: WalletTransactionKind): string => {
   }
 };
 
+const operatorNameFromRow = (row: Record<string, unknown>): string | undefined => {
+  const direct =
+    row.operatorName != null && String(row.operatorName).trim().length > 0
+      ? String(row.operatorName)
+      : '';
+  if (direct) return direct;
+  const disp = row.operatorDisplay;
+  if (disp != null && typeof disp === 'object' && !Array.isArray(disp)) {
+    const o = disp as Record<string, unknown>;
+    const nick = o.nickname ?? o.nickName ?? o.userName ?? o.username;
+    if (nick != null && String(nick).trim().length > 0) return String(nick);
+  }
+  return undefined;
+};
+
 /** list 项：tokenTransactionType、tokenCount、meta、createTime 等 */
 const mapTransactionRow = (row: Record<string, unknown>): WalletTransactionRecord => {
   const amountNum = toNum(row.tokenCount ?? row.amount, 0);
-  const hasTxType = row.tokenTransactionType !== undefined && row.tokenTransactionType !== null;
+  const rawTx =
+    row.tokenTransactionType ??
+    row.TokenTransactionType ??
+    row.token_transaction_type ??
+    row.changeType;
+  const normalizedTx = normalizeTokenTransactionTypeRaw(rawTx);
+  const hasTxType =
+    normalizedTx !== undefined && normalizedTx !== null && String(normalizedTx) !== '';
   const kind = hasTxType
-    ? mapTokenTransactionTypeToKind(row.tokenTransactionType, amountNum)
+    ? mapTokenTransactionTypeToKind(normalizedTx, amountNum)
     : mapTokenTransactionTypeToKind(row.changeType, amountNum);
   const time = String(row.createTime ?? row.time ?? row.createdAt ?? '');
   const titleFromApi =
@@ -70,10 +110,7 @@ const mapTransactionRow = (row: Record<string, unknown>): WalletTransactionRecor
     amount: amountNum,
     title,
     subTitle,
-    operatorName:
-      row.operatorName != null && String(row.operatorName).trim().length > 0
-        ? String(row.operatorName)
-        : undefined,
+    operatorName: operatorNameFromRow(row),
   };
 };
 
@@ -129,6 +166,30 @@ const listTransactions = async (
   return { total: toNum(data.total, records.length), records };
 };
 
+const txRecordDedupeKey = (r: WalletTransactionRecord): string =>
+  r.traceId.length > 0 ? r.traceId : `${r.time}\u0000${r.type}\u0000${r.amount}`;
+
+const compareWalletTxTimeDesc = (a: WalletTransactionRecord, b: WalletTransactionRecord): number =>
+  String(b.time).localeCompare(String(a.time));
+
+const listMergedTransactions = async (
+  params: ListMergedWalletTransactionsRequest
+): Promise<ListWalletTransactionsResponse> => {
+  const { groupId, page = 1, size = 20, typeA, typeB } = params;
+  const cap = WALLET_TX_TAB_MERGE_FETCH_CAP;
+  const [ra, rb] = await Promise.all([
+    listTransactions({ groupId, page: 1, size: cap, type: typeA }),
+    listTransactions({ groupId, page: 1, size: cap, type: typeB }),
+  ]);
+  const map = new Map<string, WalletTransactionRecord>();
+  for (const r of ra.records) map.set(txRecordDedupeKey(r), r);
+  for (const r of rb.records) map.set(txRecordDedupeKey(r), r);
+  const merged = [...map.values()].sort(compareWalletTxTimeDesc);
+  const total = ra.total + rb.total;
+  const start = (page - 1) * size;
+  return { total, records: merged.slice(start, start + size) };
+};
+
 const transferTokenBetweenGroupAndUser = async (
   params: TransferTokenBetweenGroupAndUserRequest
 ): Promise<void> => {
@@ -144,5 +205,6 @@ export const WalletServicesImpl: IWalletService = {
   getUserWalletInfo,
   redeemVoucher,
   listTransactions,
+  listMergedTransactions,
   transferTokenBetweenGroupAndUser,
 };

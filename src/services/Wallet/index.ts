@@ -6,4 +6,5 @@ export type {
   TransferTokenBetweenGroupAndUserRequest,
   ListWalletTransactionsRequest,
   ListWalletTransactionsResponse,
+  ListMergedWalletTransactionsRequest,
 } from './index.type';

@@ -1,6 +1,7 @@
 /**
  * 钱包 Mock：MODE === 'mock'；接口形态与 /user/wallet 对齐。
  */
+import { WALLET_TX_TAB_MERGE_FETCH_CAP } from '@/constants/wallet';
 import type { IWalletService } from '@/services/Wallet';
 import type { WalletTransactionRecord } from '@/types/wallet';
 import mockdata from './mockdata.json';
@@ -55,10 +56,37 @@ const listTransactions: IWalletService['listTransactions'] = async (params) => {
     rows = rows.filter((r) => r.type === 'RECHARGE');
   } else if (typeParam === 2) {
     rows = rows.filter((r) => r.type === 'SPEND');
+  } else if (typeParam === 3) {
+    rows = rows.filter((r) => r.type === 'TRANSFER_IN');
+  } else if (typeParam === 4) {
+    rows = rows.filter((r) => r.type === 'TRANSFER_OUT');
   }
   const start = (page - 1) * size;
   const slice = rows.slice(start, start + size);
   return { total: rows.length, records: slice };
+};
+
+const txRecordDedupeKey = (r: WalletTransactionRecord): string =>
+  r.traceId.length > 0 ? r.traceId : `${r.time}\u0000${r.type}\u0000${r.amount}`;
+
+const compareWalletTxTimeDesc = (a: WalletTransactionRecord, b: WalletTransactionRecord): number =>
+  String(b.time).localeCompare(String(a.time));
+
+const listMergedTransactions: IWalletService['listMergedTransactions'] = async (params) => {
+  await delay(260);
+  const { page = 1, size = 20, typeA, typeB } = params;
+  const cap = WALLET_TX_TAB_MERGE_FETCH_CAP;
+  const [ra, rb] = await Promise.all([
+    listTransactions({ ...params, page: 1, size: cap, type: typeA }),
+    listTransactions({ ...params, page: 1, size: cap, type: typeB }),
+  ]);
+  const map = new Map<string, WalletTransactionRecord>();
+  for (const r of ra.records) map.set(txRecordDedupeKey(r), r);
+  for (const r of rb.records) map.set(txRecordDedupeKey(r), r);
+  const merged = [...map.values()].sort(compareWalletTxTimeDesc);
+  const total = ra.total + rb.total;
+  const start = (page - 1) * size;
+  return { total, records: merged.slice(start, start + size) };
 };
 
 const transferTokenBetweenGroupAndUser: IWalletService['transferTokenBetweenGroupAndUser'] = async (
@@ -79,5 +107,6 @@ export const WalletServicesMock: IWalletService = {
   getUserWalletInfo,
   redeemVoucher,
   listTransactions,
+  listMergedTransactions,
   transferTokenBetweenGroupAndUser,
 };

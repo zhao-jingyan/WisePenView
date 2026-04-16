@@ -6,7 +6,7 @@ export type WalletTargetType = (typeof WALLET_TARGET_TYPE)[keyof typeof WALLET_T
 
 /**
  * listTransactions 可选 type（与后端 TokenTransactionType 数值一致，Service 层会转为枚举名）。
- * 「全部」不传；Tab「充值」→ REFILL；「消费」→ SPEND。
+ * 「全部」不传；个人 Tab「充值」→ REFILL；小组「充值」前端合并 REFILL + TRANSFER_IN（划入）；「消费」合并 SPEND + TRANSFER_OUT。
  */
 export const WALLET_TOKEN_TX_TYPE = {
   REFILL: 1,
@@ -28,3 +28,6 @@ export const WALLET_LIST_TX_TYPE_QUERY_VALUE = {
 
 /** Owner↔Group 划拨：1 转入小组，2 转回组长 */
 export const WALLET_TOKEN_TRANSFER_TYPE = { TO_GROUP: 1, TO_OWNER: 2 } as const;
+
+/** Tab 内合并两类流水时，每类 listTransactions 的 size 上限（超出则分页可能不完整） */
+export const WALLET_TX_TAB_MERGE_FETCH_CAP = 500;
