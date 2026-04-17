@@ -19,7 +19,7 @@ import styles from './style.module.less';
 
 const VIEW_TABS: { key: DriveViewMode; label: string }[] = [
   { key: 'folder', label: '文件夹管理' },
-  { key: 'flat', label: '按标签管理' },
+  { key: 'flat', label: '标签管理' },
   { key: 'uploadQueue', label: '上传队列' },
 ];
 

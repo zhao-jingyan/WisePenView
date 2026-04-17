@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { UserDisplayBase } from '@/types/user';
+
+import { zustandSessionStorage } from './sessionStorage';
 import { usePdfPreviewProgressStore } from './usePdfPreviewProgressStore';
 
 export interface RecentFileItem {
@@ -58,7 +60,7 @@ export const useRecentFilesStore = create<RecentFilesState>()(
           items: state.items.map((i) => (i.resourceId === resourceId ? { ...i, resourceName } : i)),
         })),
     }),
-    { name: 'recent-files' }
+    { name: 'recent-files', storage: zustandSessionStorage }
   )
 );
 
