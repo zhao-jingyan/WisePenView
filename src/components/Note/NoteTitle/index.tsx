@@ -7,6 +7,7 @@ import { zh } from '@blocknote/core/locales';
 import '@blocknote/mantine/style.css';
 
 import { useNoteService } from '@/contexts/ServicesContext';
+import { useNewNoteStore } from '@/store';
 
 import type { NoteTitleProps } from './index.type';
 import styles from './style.module.less';
@@ -123,6 +124,13 @@ const NoteTitle: React.FC<NoteTitleProps> = ({ id, initialContent, onEnterKey, f
       const firstBlock = editor.document[0];
       if (!firstBlock) return;
       triggerTitleDebounceTimer();
+
+      const currentId = latestIdRef.current;
+      if (currentId != null && currentId !== '') {
+        const raw = getBlockPlainText(firstBlock as { content?: unknown[] } | undefined);
+        const isTitleEmpty = raw.trim().length === 0;
+        useNewNoteStore.getState().syncNewNoteTitleFromEditor(currentId, isTitleEmpty);
+      }
     });
   });
 

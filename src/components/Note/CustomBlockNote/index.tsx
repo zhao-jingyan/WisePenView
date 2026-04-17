@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import {
   BasicTextStyleButton,
   BlockTypeSelect,
@@ -25,7 +25,12 @@ import '@blocknote/mantine/style.css';
 import { useImageService } from '@/contexts/ServicesContext';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { assertImageProxyUploadLimit } from '@/services/Image';
-import { useChatPanelStore, useCurrentChatSessionStore, useNoteSelectionStore } from '@/store';
+import {
+  useChatPanelStore,
+  useCurrentChatSessionStore,
+  useNewNoteStore,
+  useNoteSelectionStore,
+} from '@/store';
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
 import { useNoteCaptureKeyEvent } from './useNoteCaptureKeyEvent';
 import { useAttachNoteYjsUndoStack, useNoteYjsUndoManager } from './useNoteYjsUndoStack';
@@ -50,6 +55,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       (state) => state.selectedTextByResourceId[resourceId] ?? ''
     );
     const clearSelectedText = useNoteSelectionStore((state) => state.clearSelectedText);
+    const newNoteBodyOnChangeCleanupRef = useRef<(() => void) | null>(null);
     const { noteFragment, undoManager } = useNoteYjsUndoManager(doc);
 
     const uploadFile = useCallback(
@@ -106,7 +112,18 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       syncSelectedText();
     });
 
+    useMount(() => {
+      newNoteBodyOnChangeCleanupRef.current = editor.onChange(() => {
+        const isNoteEmpty = editor.blocksToMarkdownLossy().trim().length === 0;
+        useNewNoteStore.getState().syncNewNoteBodyFromEditor(resourceId, isNoteEmpty);
+      });
+    });
+
     useUnmount(() => {
+      if (newNoteBodyOnChangeCleanupRef.current) {
+        newNoteBodyOnChangeCleanupRef.current();
+        newNoteBodyOnChangeCleanupRef.current = null;
+      }
       clearSelectedText(resourceId);
     });
 

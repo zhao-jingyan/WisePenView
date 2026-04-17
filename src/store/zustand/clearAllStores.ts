@@ -8,6 +8,8 @@ import { clearRecentFilesStore } from './useRecentFilesStore';
 import { clearTrashTagStore } from './useTrashTagStore';
 import { clearPendingVerifyEmailStore } from './usePendingVerifyEmailStore';
 import { clearTreeDriveCwdStores } from './useTreeDriveCwdStore';
+import { clearNewNoteStore } from './useNewNoteStore';
+import { clearNewChatSessionStore } from './useNewChatSessionStore';
 
 export function clearAllZustandStores(): void {
   clearChatModelPreferenceStore();
@@ -20,4 +22,6 @@ export function clearAllZustandStores(): void {
   clearTrashTagStore();
   clearPendingVerifyEmailStore();
   clearTreeDriveCwdStores();
+  clearNewNoteStore();
+  clearNewChatSessionStore();
 }
