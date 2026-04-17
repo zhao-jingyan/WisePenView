@@ -117,7 +117,6 @@ const TreeNav: React.FC<TreeNavProps> = ({
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [checkedTagKeys, setCheckedTagKeys] = useState<React.Key[]>([]);
-  const [checkedFileKeys, setCheckedFileKeys] = useState<React.Key[]>([]);
 
   const nodeMapRef = useRef<NodeMap>(new Map());
   const loadMoreMetaRef = useRef<Map<string, NavLoadMoreMeta>>(new Map());
@@ -223,7 +222,6 @@ const TreeNav: React.FC<TreeNavProps> = ({
       onSuccess: (data) => {
         setTreeData(data);
         setSelectedKeys([]);
-        setCheckedFileKeys([]);
         onChangeRef.current?.([], []);
       },
       onError: (err) => {
@@ -324,7 +322,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
       ],
       onSuccess: (data) => {
         setTreeData(data);
-        setCheckedFileKeys([]);
+        setSelectedKeys([]);
         onChangeRef.current?.([], []);
       },
       onError: (err) => {
@@ -461,25 +459,21 @@ const TreeNav: React.FC<TreeNavProps> = ({
     [dataMode, selectTarget, onChangeRef, finalNodesMultiSelect]
   );
 
-  const handleCheckFiles = useCallback(
-    (
-      checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] },
-      info?: { node: DataNode; checked: boolean }
-    ) => {
+  const handleSelectLeaves = useCallback(
+    (keys: React.Key[], info: { node: DataNode; selected: boolean }) => {
       if (selectTarget !== 'leaves') return;
-      const keys = Array.isArray(checked) ? checked : checked.checked;
       const fileKeys = keys
         .filter((k) => String(k).startsWith(TREE_NAV_FILE_KEY_PREFIX))
         .map(String);
       const normalizedFileKeys = (() => {
         if (leafMultiSelect) return fileKeys;
-        const clickedKey = String(info?.node?.key ?? '');
+        const clickedKey = String(info.node?.key ?? '');
         if (clickedKey.startsWith(TREE_NAV_FILE_KEY_PREFIX)) {
-          return info?.checked ? [clickedKey] : [];
+          return info.selected ? [clickedKey] : [];
         }
         return fileKeys.length > 0 ? [fileKeys[fileKeys.length - 1]] : [];
       })();
-      setCheckedFileKeys(normalizedFileKeys);
+      setSelectedKeys(normalizedFileKeys);
       const leaves = normalizedFileKeys
         .map((k) => resourceByIdRef.current.get(String(k).slice(TREE_NAV_FILE_KEY_PREFIX.length)))
         .filter((x): x is ResourceItem => x != null);
@@ -488,23 +482,29 @@ const TreeNav: React.FC<TreeNavProps> = ({
     [selectTarget, onChangeRef, leafMultiSelect]
   );
 
+  const handleTreeSelect = useCallback(
+    (keys: React.Key[], info: { node: DataNode; selected: boolean }) => {
+      if (selectTarget === 'nodes') {
+        handleSelectNodes(keys);
+      } else if (selectTarget === 'leaves') {
+        handleSelectLeaves(keys, info);
+      }
+    },
+    [selectTarget, handleSelectNodes, handleSelectLeaves]
+  );
+
   const nodeCheckable = dataMode === 'tag' && selectTarget === 'nodes' && finalNodesMultiSelect;
-  const leafCheckable = selectTarget === 'leaves';
-  const treeCheckable = nodeCheckable || leafCheckable;
+  const treeCheckable = nodeCheckable;
 
-  const treeSelectable = selectTarget === 'nodes' && !nodeCheckable;
+  const treeSelectable = (selectTarget === 'nodes' && !nodeCheckable) || selectTarget === 'leaves';
 
-  const checkedKeysForTree = nodeCheckable
-    ? checkedTagKeys
-    : leafCheckable
-      ? checkedFileKeys
-      : undefined;
+  const checkedKeysForTree = nodeCheckable ? checkedTagKeys : undefined;
 
-  const onCheckProp = nodeCheckable
-    ? handleCheckTags
-    : leafCheckable
-      ? handleCheckFiles
-      : undefined;
+  const onCheckProp = nodeCheckable ? handleCheckTags : undefined;
+
+  const treeMultiple =
+    (selectTarget === 'nodes' && finalNodesMultiSelect) ||
+    (selectTarget === 'leaves' && leafMultiSelect);
 
   if (loading && treeData.length === 0) {
     return (
@@ -534,8 +534,8 @@ const TreeNav: React.FC<TreeNavProps> = ({
           selectable={treeSelectable}
           selectedKeys={treeSelectable ? selectedKeys : []}
           checkedKeys={checkedKeysForTree}
-          multiple={treeSelectable && finalNodesMultiSelect}
-          onSelect={treeSelectable ? handleSelectNodes : undefined}
+          multiple={treeSelectable && treeMultiple}
+          onSelect={treeSelectable ? handleTreeSelect : undefined}
           onCheck={onCheckProp}
           loadData={loadDataProp}
           defaultExpandAll={dataMode === 'tag' && selectTarget === 'nodes'}

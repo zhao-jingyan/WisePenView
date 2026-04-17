@@ -61,7 +61,7 @@ const MemberListToolbar: React.FC<MemberListToolbarProps> = ({
       <span className={styles.toolbarDefaultText}>共 {total} 人</span>
       <div className={styles.toolbarDefaultButtons}>
         {groupDisplayConfig.canEnterEditMode && (
-          <Button onClick={onToggleEditMode}>编辑用户</Button>
+          <Button onClick={onToggleEditMode}>管理用户</Button>
         )}
         {groupDisplayConfig.canInviteMember && (
           <Button type="primary" onClick={onInviteUser}>

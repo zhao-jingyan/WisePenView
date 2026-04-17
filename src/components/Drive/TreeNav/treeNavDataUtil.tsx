@@ -89,8 +89,8 @@ export function createFileDataNode(item: ResourceItem, ctx: NavNodeBuildContext)
       </span>
     ),
     isLeaf: true,
-    checkable: ctx.selectTarget === 'leaves',
-    selectable: false,
+    checkable: false,
+    selectable: ctx.selectTarget === 'leaves',
   };
 }
 
