@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { normalizeTagGroupId } from '@/utils/normalizeTagGroupId';
 
+import { zustandSessionStorage } from './sessionStorage';
+
 const DEFAULT_GROUP_KEY = '__default__';
 
 type TrashTagState = {
@@ -55,7 +57,7 @@ export const useTrashTagStore = create<TrashTagState>()(
         });
       },
     }),
-    { name: 'trash-tag' }
+    { name: 'trash-tag', storage: zustandSessionStorage }
   )
 );
 

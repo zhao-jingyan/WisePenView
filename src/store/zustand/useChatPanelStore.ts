@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { zustandSessionStorage } from './sessionStorage';
+
 interface ChatPanelState {
   chatPanelCollapsed: boolean;
   chatPanelWidth: number;
@@ -35,7 +37,7 @@ export const useChatPanelStore = create<ChatPanelState>()(
       toggleChatPanelCollapsed: () =>
         set((state) => ({ chatPanelCollapsed: !state.chatPanelCollapsed })),
     }),
-    { name: 'chat-panel' }
+    { name: 'chat-panel', storage: zustandSessionStorage }
   )
 );
 

@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { zustandSessionStorage } from './sessionStorage';
+
 export interface BreadcrumbItem {
   tagId: string;
   tagName: string;
@@ -36,7 +38,7 @@ function createCwdStore(key: string) {
         /** 重置到根目录 */
         reset: () => set({ breadcrumb: [] }),
       }),
-      { name: `tree-drive-cwd-${key}` }
+      { name: `tree-drive-cwd-${key}`, storage: zustandSessionStorage }
     )
   );
 }
@@ -58,15 +60,15 @@ export function clearTreeDriveCwdStores(): void {
   });
   try {
     const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i);
+    for (let i = 0; i < sessionStorage.length; i += 1) {
+      const key = sessionStorage.key(i);
       if (!key) continue;
       if (key.includes(TREE_DRIVE_CWD_STORAGE_PREFIX)) {
         keysToRemove.push(key);
       }
     }
     keysToRemove.forEach((key) => {
-      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
     });
   } catch {
     /* ignore */

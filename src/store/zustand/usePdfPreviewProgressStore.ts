@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { zustandSessionStorage } from './sessionStorage';
+
 export interface PdfPreviewProgress {
   page: number;
   zoom: string;
@@ -45,7 +47,7 @@ export const usePdfPreviewProgressStore = create<PdfPreviewProgressState>()(
           return { progressByResourceId: next };
         }),
     }),
-    { name: 'pdf-preview-progress' }
+    { name: 'pdf-preview-progress', storage: zustandSessionStorage }
   )
 );
 

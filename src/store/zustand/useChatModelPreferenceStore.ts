@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { zustandSessionStorage } from './sessionStorage';
+
 type ChatModelPreferenceState = {
   lastSelectedModelId: string | null;
   setLastSelectedModelId: (modelId: string) => void;
@@ -16,7 +18,7 @@ export const useChatModelPreferenceStore = create<ChatModelPreferenceState>()(
       ...DEFAULT_CHAT_MODEL_PREFERENCE_STATE,
       setLastSelectedModelId: (modelId) => set({ lastSelectedModelId: modelId }),
     }),
-    { name: 'chat-model-preference' }
+    { name: 'chat-model-preference', storage: zustandSessionStorage }
   )
 );
 

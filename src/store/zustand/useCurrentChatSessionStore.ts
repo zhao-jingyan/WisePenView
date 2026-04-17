@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { zustandSessionStorage } from './sessionStorage';
+
 interface CurrentChatSessionState {
   currentSessionId?: string;
   currentSessionTitle?: string;
@@ -39,7 +41,7 @@ export const useCurrentChatSessionStore = create<CurrentChatSessionState>()(
           return DEFAULT_CURRENT_CHAT_SESSION_STATE;
         }),
     }),
-    { name: 'current-chat-session' }
+    { name: 'current-chat-session', storage: zustandSessionStorage }
   )
 );
 

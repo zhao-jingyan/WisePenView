@@ -2,11 +2,7 @@
  * 通用计算点钱包：个人余额走 /user/wallet；小组余额走 groupService.getGroupWalletInfo。
  * 点卡充值仅个人（redeemVoucher）；小组余额由组长通过「token 划拨」转入。
  * 交易明细 Tab：全部 / 充值 / 消费。
-<<<<<<< HEAD
  * 个人「充值」仅 REFILL；小组「充值」与「消费」通过 walletService.listMergedTransactions 合并两类流水；其余走 listTransactions。
-=======
- * 个人「充值」仅 REFILL；小组「充值」合并 REFILL+TRANSFER_IN；「消费」合并 SPEND+TRANSFER_OUT；其余走单 type。
->>>>>>> f1ce8aa47fb3d0098f16c3ab8b11df6934cf137e
  * 数据请求使用 ahooks（不使用 useEffect）。
  */
 import React, { useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
