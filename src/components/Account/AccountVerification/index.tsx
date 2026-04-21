@@ -5,7 +5,6 @@ import { useRequest, useUnmount } from 'ahooks';
 import { useUserService } from '@/contexts/ServicesContext';
 import type { InitiateUISVerifyRequest, SendEmailVerifyRequest } from '@/services/User';
 import { USER_STATUS } from '@/constants/user';
-import { usePendingVerifyEmailStore } from '@/store';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import VerifyBanner from '../VerifyBanner';
 import { resolveUisQrImageDataUrl } from './resolveUisQrImageDataUrl';
@@ -28,7 +27,6 @@ const AccountVerification: React.FC<AccountVerificationProps> = ({ user, onUserI
   const uisPollingActiveRef = useRef(false);
   const uisPollLoadingRef = useRef<(() => void) | null>(null);
   const [verifyForm] = Form.useForm<VerifyModalFormValues>();
-  const setPendingVerifyEmail = usePendingVerifyEmailStore((s) => s.setEmail);
 
   const endUisPolling = () => {
     uisPollingActiveRef.current = false;
@@ -84,8 +82,7 @@ const AccountVerification: React.FC<AccountVerificationProps> = ({ user, onUserI
     },
     {
       manual: true,
-      onSuccess: ({ email }) => {
-        setPendingVerifyEmail(email);
+      onSuccess: () => {
         message.success('验证邮件已发送，请查收');
         verifyForm.resetFields();
         setVerifyMode('uis');

@@ -6,7 +6,6 @@ import { clearNoteSelectionStore } from './useNoteSelectionStore';
 import { clearPdfPreviewProgressStore } from './usePdfPreviewProgressStore';
 import { clearRecentFilesStore } from './useRecentFilesStore';
 import { clearTrashTagStore } from './useTrashTagStore';
-import { clearPendingVerifyEmailStore } from './usePendingVerifyEmailStore';
 import { clearTreeDriveCwdStores } from './useTreeDriveCwdStore';
 import { clearNewNoteStore } from './useNewNoteStore';
 import { clearNewChatSessionStore } from './useNewChatSessionStore';
@@ -20,7 +19,6 @@ export function clearAllZustandStores(): void {
   clearDrivePreferencesStore();
   clearNoteSelectionStore();
   clearTrashTagStore();
-  clearPendingVerifyEmailStore();
   clearTreeDriveCwdStores();
   clearNewNoteStore();
   clearNewChatSessionStore();
