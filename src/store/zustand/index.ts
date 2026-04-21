@@ -34,4 +34,6 @@ export {
   clearTreeDriveCwdStores,
   type BreadcrumbItem,
 } from './useTreeDriveCwdStore';
+export { useNewNoteStore, clearNewNoteStore } from './useNewNoteStore';
+export { useNewChatSessionStore, clearNewChatSessionStore } from './useNewChatSessionStore';
 export { clearAllZustandStores } from './clearAllStores';

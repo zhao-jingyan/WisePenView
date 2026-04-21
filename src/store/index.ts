@@ -30,4 +30,8 @@ export {
   type PdfPreviewProgress,
   type RecentFileItem,
   type BreadcrumbItem,
+  useNewNoteStore,
+  clearNewNoteStore,
+  useNewChatSessionStore,
+  clearNewChatSessionStore,
 } from './zustand';
