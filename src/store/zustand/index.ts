@@ -8,10 +8,6 @@ export {
   type DriveViewMode,
 } from './useDrivePreferencesStore';
 export {
-  usePendingVerifyEmailStore,
-  clearPendingVerifyEmailStore,
-} from './usePendingVerifyEmailStore';
-export {
   usePdfPreviewProgressStore,
   clearPdfPreviewProgressStore,
   type PdfPreviewProgress,

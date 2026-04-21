@@ -3,7 +3,6 @@ import { useRequest } from 'ahooks';
 import { Alert, Button, Modal, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useUserService } from '@/contexts/ServicesContext';
-import { usePendingVerifyEmailStore } from '@/store';
 import type { ConfirmEmailVerifyRequest } from '@/services/User';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import auth from '../Auth.module.less';
@@ -12,15 +11,6 @@ import { useAppMessage } from '@/hooks/useAppMessage';
 const VerifyEmail: React.FC = () => {
   const userService = useUserService();
   const message = useAppMessage();
-  const clearPendingEmail = usePendingVerifyEmailStore((s) => s.clear);
-
-  /** 首帧同步读：先 localStorage（与发起验证同源），再 URL ?email=（后端若在链接中带邮箱） */
-  const [displayEmail] = useState<string | null>(() => {
-    const fromStorage = usePendingVerifyEmailStore.getState().peekPendingEmail();
-    if (fromStorage) return fromStorage;
-    const fromUrl = new URLSearchParams(window.location.search).get('email');
-    return fromUrl ? decodeURIComponent(fromUrl) : null;
-  });
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -36,7 +26,6 @@ const VerifyEmail: React.FC = () => {
       manual: true,
       onSuccess: () => {
         message.success('邮箱验证成功');
-        clearPendingEmail();
         setSuccessModalOpen(true);
       },
       onError: (err: unknown) => {
@@ -63,16 +52,7 @@ const VerifyEmail: React.FC = () => {
       <Typography.Title>邮箱验证</Typography.Title>
       <Alert
         className={auth.bindAlert}
-        description={
-          displayEmail ? (
-            <>
-              正在为 <Typography.Text strong>{displayEmail}</Typography.Text>{' '}
-              完成验证，请点击下方按钮。
-            </>
-          ) : (
-            '请点击下方按钮完成邮箱验证。'
-          )
-        }
+        description="请点击下方按钮完成邮箱验证。"
         type="info"
         showIcon
       />
