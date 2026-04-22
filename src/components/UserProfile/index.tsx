@@ -59,10 +59,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
         setFeedbackModalOpen(true);
         break;
       // case 'language':
-      //   console.log('打开语言设置');
       //   break;
       // case 'theme':
-      //   console.log('打开主题设置');
       //   break;
       case 'logout':
         authService.logout();

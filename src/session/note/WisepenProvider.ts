@@ -1,6 +1,6 @@
 import { WebsocketProvider } from 'y-websocket';
 import { baseServerAddr } from '@/utils/Axios';
-import * as Y from 'yjs';
+import type * as Y from 'yjs';
 
 export function getNoteUrl(): string {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';

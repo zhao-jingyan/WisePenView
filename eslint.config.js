@@ -23,6 +23,10 @@ export default defineConfig([
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'no-alert': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/consistent-type-imports': 'error',
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-restricted-imports': [
         'error',
         {
@@ -38,6 +42,20 @@ export default defineConfig([
               importNames: ['message'],
               message:
                 '项目约定禁止使用 antd message 静态方法，请改为 App.useApp() 或 useAppMessage() 返回的实例方法。',
+            },
+          ],
+          patterns: [
+            {
+              group: [
+                '@/services/*/*Services.impl',
+                '@/services/*/*Services.impl.*',
+                // 相对路径同样拦截，防止绕过 `@/` 别名
+                '**/services/*/*Services.impl',
+                '**/services/*/*Services.impl.*',
+              ],
+              importNamePattern: '^create[A-Z]\\w*Services$',
+              message:
+                '项目保留命名约定：createXxxServices 是 Service 工厂的专属符号，仅允许在装配入口 src/contexts/ServicesContext/registry.impl.ts 中 import；其它位置禁止直接导入或调用，业务代码请通过 useXxxService() 获取实例。',
             },
           ],
         },
@@ -63,6 +81,16 @@ export default defineConfig([
             "CallExpression[callee.object.name='modal'][callee.property.name=/^(confirm|info|success|error|warning)$/]",
           message: '项目约定禁止使用 modal 静态方法，请改为受控 Antd <Modal /> 组件。',
         },
+        {
+          selector: 'ExportAllDeclaration[source.value=/Services\\.impl(\\.[jt]sx?)?$/]',
+          message:
+            '禁止 re-export *Services.impl —— createXxxServices 工厂只能在 src/contexts/ServicesContext/registry.impl.ts 装配，index.ts 不得二次导出。',
+        },
+        {
+          selector: 'ExportNamedDeclaration[source.value=/Services\\.impl(\\.[jt]sx?)?$/]',
+          message:
+            '禁止 re-export *Services.impl —— createXxxServices 工厂只能在 src/contexts/ServicesContext/registry.impl.ts 装配，index.ts 不得二次导出。',
+        },
       ],
     },
   },
@@ -73,6 +101,21 @@ export default defineConfig([
     rules: {
       'no-restricted-imports': 'off',
       'no-restricted-properties': 'off',
+    },
+  },
+  {
+    // Service 工厂的唯一合法装配入口：只有 registry.impl.ts 可以 import createXxxServices。
+    // 请勿扩大此白名单，否则"分层 + 显式注入"约束将被破坏。
+    files: ['src/contexts/ServicesContext/registry.impl.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+  {
+    // Mock 实现允许 console.log 作为调试路径
+    files: ['src/mocks/**/*.{ts,tsx}'],
+    rules: {
+      'no-console': 'off',
     },
   },
 ]);
