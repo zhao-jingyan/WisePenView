@@ -70,7 +70,6 @@ const getGroupResources = async (params: GetGroupResourceRequest): Promise<Resou
 };
 
 const renameResource = async (params: RenameResourceRequest): Promise<void> => {
-  console.log('[ResourceServices.mock] renameResource', params);
   await delay(150);
   useRecentFilesStore.getState().updateFileName(params.resourceId, params.newName);
 };

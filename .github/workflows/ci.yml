@@ -45,9 +45,6 @@ jobs:
       - name: Type Check
         run: pnpm exec tsc --noEmit
 
-      - name: Mock Type Check
-        run: pnpm run typecheck:mock
-
       # 7. 编译检查
       - name: Build Project
         run: pnpm run build

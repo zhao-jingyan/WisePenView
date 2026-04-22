@@ -4,6 +4,6 @@
 echo "Running pre-push checks with pnpm..."
 
 pnpm run lint || { echo "❌ 全量 ESLint 检查失败"; exit 1; }
-pnpm run typecheck:mock || { echo "❌ Mock TypeCheck 失败"; exit 1; }
+pnpm exec tsc --noEmit || { echo "❌ TypeCheck 失败"; exit 1; }
 
 echo "✅ All pre-push checks passed!"

@@ -7,7 +7,6 @@
     "dev": "vite",
     "mock": "vite --mode mock",
     "build": "tsc -b && vite build",
-    "typecheck:mock": "pnpm exec tsc -p tsconfig.mock.json --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
     "prepare": "husky install"

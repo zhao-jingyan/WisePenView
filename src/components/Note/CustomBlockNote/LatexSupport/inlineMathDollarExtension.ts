@@ -3,7 +3,7 @@ import type { InlineContent } from '@blocknote/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 
-import { blockNoteSchema } from '../blockNoteSchema';
+import type { blockNoteSchema } from '../blockNoteSchema';
 import type { CustomBlockNoteEditor } from '../blockNoteSchema';
 
 type NoteInlineContent = InlineContent<
