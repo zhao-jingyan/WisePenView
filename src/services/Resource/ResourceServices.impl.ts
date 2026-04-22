@@ -73,10 +73,10 @@ const updateResourceTags = async (params: UpdateResourceTagsRequest): Promise<vo
   checkResponse(res);
 };
 
-export const ResourceServicesImpl: IResourceService = {
+export const createResourceServices = (): IResourceService => ({
   getUserResources,
   getGroupResources,
   renameResource,
   updateResourcePath,
   updateResourceTags,
-};
+});

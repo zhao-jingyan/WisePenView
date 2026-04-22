@@ -62,8 +62,8 @@ const setGroupQuota = async (params: SetGroupQuotaRequest) => {
   checkResponse(res);
 };
 
-export const QuotaServicesImpl: IQuotaService = {
+export const createQuotaServices = (): IQuotaService => ({
   fetchUserGroupQuotas,
   fetchGroupQuota,
   setGroupQuota,
-};
+});

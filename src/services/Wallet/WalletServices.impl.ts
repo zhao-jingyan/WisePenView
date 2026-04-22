@@ -201,10 +201,10 @@ const transferTokenBetweenGroupAndUser = async (
   checkResponse(res);
 };
 
-export const WalletServicesImpl: IWalletService = {
+export const createWalletServices = (): IWalletService => ({
   getUserWalletInfo,
   redeemVoucher,
   listTransactions,
   listMergedTransactions,
   transferTokenBetweenGroupAndUser,
-};
+});

@@ -4,6 +4,7 @@ import { useRequest } from 'ahooks';
 import { useStickerService } from '@/contexts/ServicesContext';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { validateReservedName } from '@/utils/validateReservedName';
 import type { AddStickerModalProps } from './index.type';
 
 const AddStickerModal: React.FC<AddStickerModalProps> = ({ open, onCancel, onSuccess }) => {
@@ -38,8 +39,13 @@ const AddStickerModal: React.FC<AddStickerModalProps> = ({ open, onCancel, onSuc
   const handleOk = useCallback(async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
+    const validation = validateReservedName(trimmed);
+    if (!validation.valid) {
+      message.warning(validation.reason);
+      return;
+    }
     runAddSticker(trimmed);
-  }, [name, runAddSticker]);
+  }, [name, runAddSticker, message]);
 
   return (
     <Modal
