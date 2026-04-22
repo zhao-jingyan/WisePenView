@@ -34,6 +34,6 @@ const uploadImage = async (params: ImageUploadRequest): Promise<ImageUploadResul
   };
 };
 
-export const ImageServicesImpl: IImageService = {
+export const createImageServices = (): IImageService => ({
   uploadImage,
-};
+});

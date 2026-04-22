@@ -165,7 +165,7 @@ const kickMembers = async (params: KickMembersRequest) => {
   checkResponse(res);
 };
 
-export const GroupServicesImpl: IGroupService = {
+export const createGroupServices = (): IGroupService => ({
   fetchGroupList,
   fetchGroupInfo,
   getGroupWalletInfo,
@@ -180,4 +180,4 @@ export const GroupServicesImpl: IGroupService = {
   quitGroup,
   updateMemberRole,
   kickMembers,
-};
+});

@@ -14,18 +14,17 @@ import type { IUserService } from '@/services/User';
 import type { IWalletService } from '@/services/Wallet';
 
 export interface ServicesContextValue {
-  auth: IAuthService;
-  chat: IChatService;
-  document: IDocumentService;
-  folder: IFolderService;
-  group: IGroupService;
-  image: IImageService;
-  note: INoteService;
-  quota: IQuotaService;
-  resource: IResourceService;
-  sticker: IStickerService;
-  tag: ITagService;
-  user: IUserService;
-  /** 见 src/services/Wallet */
-  wallet: IWalletService;
+  authService: IAuthService;
+  chatService: IChatService;
+  documentService: IDocumentService;
+  folderService: IFolderService;
+  groupService: IGroupService;
+  imageService: IImageService;
+  noteService: INoteService;
+  quotaService: IQuotaService;
+  resourceService: IResourceService;
+  stickerService: IStickerService;
+  tagService: ITagService;
+  userService: IUserService;
+  walletService: IWalletService;
 }

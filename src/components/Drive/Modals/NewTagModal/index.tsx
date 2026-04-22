@@ -3,6 +3,7 @@ import { Modal, Button, Input } from 'antd';
 import { useRequest } from 'ahooks';
 import { useTagService } from '@/contexts/ServicesContext';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { validateReservedName } from '@/utils/validateReservedName';
 import type { NewTagModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 
@@ -50,6 +51,11 @@ const NewTagModal: React.FC<NewTagModalProps> = ({
     const trimmed = name.trim();
     if (!trimmed) {
       message.warning(`请输入${subjectLabel}名称`);
+      return;
+    }
+    const validation = validateReservedName(trimmed);
+    if (!validation.valid) {
+      message.warning(validation.reason);
       return;
     }
     runAddTag(trimmed);

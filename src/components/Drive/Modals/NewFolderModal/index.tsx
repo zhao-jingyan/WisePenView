@@ -4,6 +4,7 @@ import { Modal, Button, Input } from 'antd';
 import { useFolderService } from '@/contexts/ServicesContext';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { getFolderDisplayName } from '@/utils/path';
+import { validateReservedName } from '@/utils/validateReservedName';
 import type { NewFolderModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 
@@ -44,6 +45,11 @@ const NewFolderModal: React.FC<NewFolderModalProps> = ({
     const trimmed = name.trim();
     if (!trimmed) {
       message.warning('请输入文件夹名称');
+      return;
+    }
+    const validation = validateReservedName(trimmed);
+    if (!validation.valid) {
+      message.warning(validation.reason);
       return;
     }
     if (!parentFolder) {

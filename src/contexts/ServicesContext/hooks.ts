@@ -27,17 +27,17 @@ function useServicesContext(): ServicesContextValue {
 }
 
 // 第七步：导出 useXxxService hook，组件内通过 useOrderService() 等获取实例
-export const useAuthService = (): IAuthService => useServicesContext().auth;
-export const useChatService = (): IChatService => useServicesContext().chat;
-export const useDocumentService = (): IDocumentService => useServicesContext().document;
-export const useFolderService = (): IFolderService => useServicesContext().folder;
-export const useGroupService = (): IGroupService => useServicesContext().group;
-export const useImageService = (): IImageService => useServicesContext().image;
-export const useNoteService = (): INoteService => useServicesContext().note;
-export const useQuotaService = (): IQuotaService => useServicesContext().quota;
-export const useResourceService = (): IResourceService => useServicesContext().resource;
-export const useStickerService = (): IStickerService => useServicesContext().sticker;
-export const useTagService = (): ITagService => useServicesContext().tag;
-export const useUserService = (): IUserService => useServicesContext().user;
+export const useAuthService = (): IAuthService => useServicesContext().authService;
+export const useChatService = (): IChatService => useServicesContext().chatService;
+export const useDocumentService = (): IDocumentService => useServicesContext().documentService;
+export const useFolderService = (): IFolderService => useServicesContext().folderService;
+export const useGroupService = (): IGroupService => useServicesContext().groupService;
+export const useImageService = (): IImageService => useServicesContext().imageService;
+export const useNoteService = (): INoteService => useServicesContext().noteService;
+export const useQuotaService = (): IQuotaService => useServicesContext().quotaService;
+export const useResourceService = (): IResourceService => useServicesContext().resourceService;
+export const useStickerService = (): IStickerService => useServicesContext().stickerService;
+export const useTagService = (): ITagService => useServicesContext().tagService;
+export const useUserService = (): IUserService => useServicesContext().userService;
 /** 个人中心钱包、高级组 token 相关页注入 */
-export const useWalletService = (): IWalletService => useServicesContext().wallet;
+export const useWalletService = (): IWalletService => useServicesContext().walletService;

@@ -18,19 +18,19 @@ import { WalletServicesMock } from '@/mocks/Wallet/WalletServices.mock';
 import type { ServicesContextValue } from './registry.types';
 
 const mockServicesValue: ServicesContextValue = {
-  auth: AuthServicesMock,
-  chat: ChatServicesMock,
-  document: DocumentServicesMock,
-  folder: FolderServicesMock,
-  group: GroupServicesMock,
-  image: ImageServicesMock,
-  note: NoteServicesMock,
-  quota: QuotaServicesMock,
-  resource: ResourceServicesMock,
-  sticker: StickerServicesMock,
-  tag: TagServicesMock,
-  user: UserServicesMock,
-  wallet: WalletServicesMock,
+  authService: AuthServicesMock,
+  chatService: ChatServicesMock,
+  documentService: DocumentServicesMock,
+  folderService: FolderServicesMock,
+  groupService: GroupServicesMock,
+  imageService: ImageServicesMock,
+  noteService: NoteServicesMock,
+  quotaService: QuotaServicesMock,
+  resourceService: ResourceServicesMock,
+  stickerService: StickerServicesMock,
+  tagService: TagServicesMock,
+  userService: UserServicesMock,
+  walletService: WalletServicesMock,
 };
 
 export function getContextValue(): ServicesContextValue {

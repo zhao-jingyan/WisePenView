@@ -151,7 +151,7 @@ const getDocInfo = async (resourceId: string): Promise<DocDisplayInfoResponse> =
   checkResponse(res);
   return res.data;
 };
-export const DocumentServicesImpl: IDocumentService = {
+export const createDocumentServices = (): IDocumentService => ({
   uploadDocument,
   retryConvert,
   deleteDocument,
@@ -160,4 +160,4 @@ export const DocumentServicesImpl: IDocumentService = {
   retryPendingDoc,
   cancelPendingDoc,
   getDocInfo,
-};
+});

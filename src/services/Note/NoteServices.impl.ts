@@ -60,9 +60,9 @@ const getNoteInfoDisplay = async (params: GetNoteInfoRequest): Promise<NoteInfoD
   };
 };
 
-export const NoteServicesImpl: INoteService = {
+export const createNoteServices = (): INoteService => ({
   syncTitle,
   createNote,
   deleteNote,
   getNoteInfoDisplay,
-};
+});

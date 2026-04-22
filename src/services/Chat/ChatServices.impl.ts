@@ -108,11 +108,11 @@ const listHistoryMessages = async (
   };
 };
 
-export const ChatServicesImpl: IChatService = {
+export const createChatServices = (): IChatService => ({
   getModels,
   createSession,
   renameSession,
   deleteSession,
   listSessions,
   listHistoryMessages,
-};
+});

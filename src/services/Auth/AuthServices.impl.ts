@@ -42,10 +42,10 @@ const newPassword = async (params: NewPasswordRequest) => {
   checkResponse(res);
 };
 
-export const AuthServicesImpl: IAuthService = {
+export const createAuthServices = (): IAuthService => ({
   login,
   register,
   resetPassword,
   newPassword,
   logout,
-};
+});
