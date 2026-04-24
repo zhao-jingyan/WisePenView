@@ -11,10 +11,14 @@ import type {
 import type { IAuthService } from './index.type';
 import { clearAllZustandStores } from '@/store';
 import { clearAllServiceCaches } from '@/services/cacheRegistry';
+import { emitAuthSyncEvent } from '@/utils/authSync';
 
 const login = async (params: LoginRequest) => {
   const res = (await Axios.post('/auth/login', params)) as ApiResponse;
   checkResponse(res);
+  clearAllServiceCaches();
+  clearAllZustandStores();
+  emitAuthSyncEvent('LOGIN');
 };
 
 const logout = async () => {
@@ -22,6 +26,7 @@ const logout = async () => {
   checkResponse(res);
   clearAllServiceCaches();
   clearAllZustandStores();
+  emitAuthSyncEvent('LOGOUT');
 };
 
 const register = async (params: RegisterRequest) => {
