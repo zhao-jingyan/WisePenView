@@ -2,8 +2,9 @@
 import axios from 'axios';
 import { clearAllZustandStores } from '@/store';
 import { clearAllServiceCaches } from '@/services/cacheRegistry';
+import { emitAuthSyncEvent } from '@/utils/authSync';
 
-export const baseServerAddr = 'test.api.fudan.wisepen.oriole.cn:9080';
+export const baseServerAddr = 'test.api.fudan.wisepen.oriole.cn:80';
 
 export const baseURL = 'http://' + baseServerAddr + '/';
 
@@ -24,6 +25,7 @@ Axios.interceptors.response.use(
     if (status === 401) {
       clearAllServiceCaches();
       clearAllZustandStores();
+      emitAuthSyncEvent('UNAUTHORIZED');
       window.location.href = '/login';
     }
     // 400 视为业务/字段校验错误，500 视为服务端错误，把服务端文案挂到 message 上供上层展示

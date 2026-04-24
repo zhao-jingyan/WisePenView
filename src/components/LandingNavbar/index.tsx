@@ -29,13 +29,13 @@ const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeKey }) => {
             },
             {
               key: '2',
-              label: '登录',
-              onClick: () => navigate('/login'),
+              label: '注册',
+              onClick: () => navigate('/register'),
             },
             {
               key: '3',
-              label: '注册',
-              onClick: () => navigate('/register'),
+              label: '登录',
+              onClick: () => navigate('/login'),
             },
           ]}
         />

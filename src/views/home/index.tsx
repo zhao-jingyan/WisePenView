@@ -28,6 +28,18 @@ const Home: React.FC = () => {
                 专为高校教学与科研团队打造。集成智能写作辅助，AI
                 Agent工作流与深度文稿评估，赋能师生智慧教学与应用。
               </Paragraph>
+              <Space className={styles.heroActions} size="middle" wrap>
+                <Button
+                  type="primary"
+                  className={styles.heroCta}
+                  onClick={() => navigate('/register')}
+                >
+                  注册
+                </Button>
+                <Button className={styles.heroCta} onClick={() => navigate('/login')}>
+                  登录
+                </Button>
+              </Space>
             </div>
             <div className={styles.heroVisual}>
               <div className={styles.heroArtFloat}>
