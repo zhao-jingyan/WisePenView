@@ -11,8 +11,6 @@ import styles from './style.module.less';
 const { Paragraph, Text } = Typography;
 
 const Home: React.FC = () => {
-  const navigate = useNavigate();
-
   return (
     <div className={styles.landingPage}>
       <section className={styles.hero} aria-labelledby="landing-hero-title">

@@ -21,6 +21,7 @@ const VerifyEmail = lazy(() => import('@/views/auth/VerifyEmail'));
 const NoteView = lazy(() => import('@/views/note'));
 const PdfPreview = lazy(() => import('@/views/pdf/PdfPreview'));
 const ResourceNotFound = lazy(() => import('@/views/error/ResourceNotFound'));
+const AppError = lazy(() => import('@/views/error/AppError'));
 
 const router = createBrowserRouter([
   // ==============================
@@ -29,6 +30,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <HomeLayout />,
+    errorElement: <AppError />,
     children: [
       {
         index: true,
@@ -39,6 +41,7 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <AuthLayout />,
+    errorElement: <AppError />,
     children: [
       {
         index: true,
@@ -49,6 +52,7 @@ const router = createBrowserRouter([
   {
     path: '/register',
     element: <AuthLayout />,
+    errorElement: <AppError />,
     children: [
       {
         index: true,
@@ -59,6 +63,7 @@ const router = createBrowserRouter([
   {
     path: '/reset-pwd',
     element: <AuthLayout />,
+    errorElement: <AppError />,
     children: [
       {
         index: true,
@@ -69,6 +74,7 @@ const router = createBrowserRouter([
   {
     path: '/new-pwd',
     element: <AuthLayout />,
+    errorElement: <AppError />,
     children: [
       {
         index: true,
@@ -79,6 +85,7 @@ const router = createBrowserRouter([
   {
     path: '/verify-email',
     element: <AuthLayout />,
+    errorElement: <AppError />,
     children: [
       {
         index: true,
@@ -93,6 +100,7 @@ const router = createBrowserRouter([
   {
     path: '/app',
     element: <SystemLayout />, // 承载：左侧导航 + 右侧助手 + 中间内容
+    errorElement: <AppError />,
     children: [
       // 默认重定向到文档列表
       {
