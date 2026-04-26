@@ -1,10 +1,10 @@
 import { WebsocketProvider } from 'y-websocket';
-import { baseServerAddr } from '@/utils/Axios';
+import { getApiServerAddr } from '@/utils/apiServerAddr';
 import type * as Y from 'yjs';
 
 export function getNoteUrl(): string {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${baseServerAddr}/note-collab`;
+  return `${protocol}//${getApiServerAddr()}/note-collab`;
 }
 
 /**

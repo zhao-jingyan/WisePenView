@@ -13,6 +13,10 @@ dist
 dist-ssr
 *.local
 
+# Local env overrides (shared env files like .env.development / .env.production 仍入库)
+.env.local
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 *.code-workspace

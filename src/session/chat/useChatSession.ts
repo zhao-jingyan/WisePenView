@@ -2,10 +2,11 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useCallback } from 'react';
 import { useNoteSelectionStore } from '@/store';
-import { baseURL } from '@/utils/Axios';
+import { getApiBaseURL } from '@/utils/apiServerAddr';
 import type { ChatState, ChatRequestBody, UseChatSessionOptions } from './index.type';
 
-const DEFAULT_COMPLETIONS_API = `${baseURL}chat/completions`;
+// 调用时求值：apiServerAddr 会在生产环境随网络变化运行时切换，固化会失效
+const getCompletionsApi = (): string => `${getApiBaseURL()}chat/completions`;
 
 const buildRequestBody = ({
   sessionId,
@@ -62,7 +63,7 @@ export const useChatSession = ({
 }: UseChatSessionOptions) => {
   const chat = useChat({
     transport: new DefaultChatTransport({
-      api: DEFAULT_COMPLETIONS_API,
+      api: getCompletionsApi(),
       fetch: (input, init) =>
         fetch(input, {
           ...init,

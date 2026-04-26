@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { useMount, useUnmount } from 'ahooks';
 import { PDFViewer as EmbedPdfViewer } from '@embedpdf/react-pdf-viewer';
 import clsx from 'clsx';
-import { baseURL } from '@/utils/Axios';
+import { getApiBaseURL } from '@/utils/apiServerAddr';
 import type { PdfViewerProps } from './index.type';
 import { DEFAULT_PDF_VIEWER_CONFIG } from './pdf.config';
 import styles from './style.module.less';
@@ -51,7 +51,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ resourceId, config, className, on
         }
       }
       await docManager?.openDocumentUrl({
-        url: `${baseURL}document/getDocPreview?resourceId=${resourceId}`,
+        url: `${getApiBaseURL()}document/getDocPreview?resourceId=${resourceId}`,
         documentId: `doc-${resourceId}`,
         mode: 'range-request',
         requestOptions: {
