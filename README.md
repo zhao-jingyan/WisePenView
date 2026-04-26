@@ -4,35 +4,31 @@
 
 ## 快速开始
 
-### 1 安装前置环境（Node.js / Python3）
+### 1 安装前置环境（Node.js）
 
-> 如果你已安装好 Node.js 与 Python3，可跳过这一步。
+[Node.js 官方下载（中文）](https://nodejs.org/zh-cn/download)
 
-### 2 项目初始化（依赖安装 + hosts 配置）
+### 2 项目初始化
 
-- macOS / Linux:
-  - `bash scripts/setup.sh`
-- Windows:
-  - `scripts\setup.bat`
+1. 全局安装 pnpm：
+   - `npm install -g pnpm`
+2. 安装依赖：
+   - `pnpm install`
 
 说明：
 
-- 脚本会优先使用 `corepack` 管理 `pnpm`。
-- 若本机没有 `corepack`，会交互询问是否允许全局安装 `pnpm`（默认否）。
-- `hosts` 写入可能需要管理员权限：
-  - macOS / Linux 可使用 `sudo bash scripts/setup.sh`
-  - Windows 请以管理员身份运行 `setup.bat`
+- 若安装失败，请检查 Node.js 与 npm 是否正确安装。
 
 ### 3 启动本地测试
 
 - Mock 模式：
-  - `npm run mock`
+  - `pnpm mock`
 - 开发模式：
-  - `npm run dev`
+  - `pnpm dev`
 
 ## 常用命令
 
-- `npm run dev`：启动开发服务器
-- `npm run mock`：以 mock 模式启动
-- `npm run build`：构建产物
-- `npm run lint`：执行 ESLint
+- `pnpm dev`：启动开发服务器
+- `pnpm mock`：以 mock 模式启动
+- `pnpm build`：构建产物
+- `pnpm lint`：执行 ESLint

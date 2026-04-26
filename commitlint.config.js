@@ -7,19 +7,14 @@ export default {
       2,
       'always',
       [
-        'feat', // 新功能
-        'fix', // 修补 bug
-        'docs', // 文档
-        'style', // 格式（不影响代码运行的变动）
-        'refactor', // 重构
+        'feat', // 新功能 (Feature)
+        'fix', // 修复 Bug
+        'docs', // 仅修改文档 (Documentation)
+        'style', // 代码格式修改，不影响逻辑 (空格, 缩进, 分号等)
+        'refactor', // 代码重构 (既不修复 Bug 也不添加新功能)
         'perf', // 性能优化
-        'test', // 测试相关
-        'build', // 构建系统或外部依赖变动
-        'ci', // 修改 CI 配置、脚本
-        'chore', // 其他不修改 src 或测试文件的变动
-        'delete', // 删除不再使用的文件
-        'revert', // 回退
-        'rename', // 重命名
+        'test', // 添加或修改测试用例
+        'chore', // 构建过程或辅助工具的变动 (如修改 .gitignore, package.json)
       ],
     ],
   },

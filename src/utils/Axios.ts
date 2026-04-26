@@ -3,19 +3,19 @@ import axios from 'axios';
 import { clearAllZustandStores } from '@/store';
 import { clearAllServiceCaches } from '@/services/cacheRegistry';
 import { emitAuthSyncEvent } from '@/utils/authSync';
-
-export const baseServerAddr = 'test.api.fudan.wisepen.oriole.cn:80';
-
-export const baseURL = 'http://' + baseServerAddr + '/';
+import { getApiBaseURL } from '@/utils/apiServerAddr';
 
 const Axios = axios.create({
-  baseURL: baseURL,
   timeout: 5000,
   withCredentials: true,
 });
 
-// 暂时在请求时没有操作，传透 config 即可
-Axios.interceptors.request.use((config) => config);
+// baseURL 由 apiServerAddr 模块自管理（生产模式后台轮询切换内/外网），
+// 此处在请求拦截器逐次读取，确保始终命中最新地址。
+Axios.interceptors.request.use((config) => {
+  config.baseURL = getApiBaseURL();
+  return config;
+});
 
 Axios.interceptors.response.use(
   (response) => response.data,
