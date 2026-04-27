@@ -4,6 +4,7 @@ import type { UserDisplayBase } from '@/types/user';
 
 import { zustandSessionStorage } from './sessionStorage';
 import { usePdfPreviewProgressStore } from './usePdfPreviewProgressStore';
+import { useNewNoteStore } from './useNewNoteStore';
 
 export interface RecentFileItem {
   resourceId: string;
@@ -50,6 +51,7 @@ export const useRecentFilesStore = create<RecentFilesState>()(
       removeFile: (resourceId) =>
         set((state) => {
           usePdfPreviewProgressStore.getState().removeProgress(resourceId);
+          useNewNoteStore.getState().clearNewNoteResourceId(resourceId);
           return {
             items: state.items.filter((i) => i.resourceId !== resourceId),
           };
