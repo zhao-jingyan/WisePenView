@@ -7,6 +7,7 @@ interface NewNoteState {
   /** 与当前 new 笔记正文编辑器内容绑定：trim 后无字为 true */
   isNoteEmpty: boolean;
   setNewNoteResourceId: (resourceId: string) => void;
+  clearNewNoteResourceId: (resourceId: string) => void;
   syncNewNoteTitleFromEditor: (resourceId: string, isTitleEmpty: boolean) => void;
   syncNewNoteBodyFromEditor: (resourceId: string, isNoteEmpty: boolean) => void;
 }
@@ -25,6 +26,14 @@ export const useNewNoteStore = create<NewNoteState>()((set) => ({
       newNoteResourceId: resourceId,
       isTitleEmpty: true,
       isNoteEmpty: true,
+    }),
+
+  clearNewNoteResourceId: (resourceId) =>
+    set((state) => {
+      if (state.newNoteResourceId !== resourceId) {
+        return state;
+      }
+      return DEFAULT_NEW_NOTE_STATE;
     }),
 
   syncNewNoteTitleFromEditor: (resourceId, isTitleEmpty) =>

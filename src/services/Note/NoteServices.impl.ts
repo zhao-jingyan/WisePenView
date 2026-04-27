@@ -13,7 +13,7 @@ import { serializeRepeatKeyQuery } from '@/utils/serializeRepeatKeyQuery';
 import { checkResponse } from '@/utils/response';
 import type { ApiResponse } from '@/types/api';
 import type { NoteInfoResponse } from '@/types/note';
-import { useRecentFilesStore } from '@/store';
+import { useNoteSelectionStore, useRecentFilesStore } from '@/store';
 
 // syncTitle是一个resource的工作，但是语义上属于note服务
 const syncTitle = async (params: SyncTitleRequest): Promise<void> => {
@@ -40,12 +40,19 @@ const deleteNote = async (params: DeleteNoteRequest): Promise<void> => {
     paramsSerializer: serializeRepeatKeyQuery,
   })) as ApiResponse<void>;
   checkResponse(res);
+  for (const resourceId of params.resourceIds) {
+    useRecentFilesStore.getState().removeFile(resourceId);
+    useNoteSelectionStore.getState().clearSelectedText(resourceId);
+  }
 };
 
 const getNoteInfoDisplay = async (params: GetNoteInfoRequest): Promise<NoteInfoDisplayData> => {
   const res = (await Axios.get('/note/getNoteInfo', { params })) as ApiResponse<NoteInfoResponse>;
   checkResponse(res);
   const noteInfoData = res.data;
+  if (!noteInfoData?.resourceInfo || !noteInfoData?.noteInfo) {
+    throw new Error('笔记不存在或已被删除');
+  }
   const authorIds = noteInfoData.noteInfo.authors ?? [];
   return {
     noteTitle: noteInfoData.resourceInfo.resourceName,

@@ -1,6 +1,7 @@
 import type { ApiResponse } from '@/types/api';
 import Axios from '@/utils/Axios';
 import { checkResponse } from '@/utils/response';
+import { useCurrentChatSessionStore, useNewChatSessionStore, useNoteSelectionStore } from '@/store';
 import type {
   ChatSession,
   CreateSessionRequest,
@@ -65,6 +66,9 @@ const deleteSession = async (params: DeleteSessionRequest): Promise<void> => {
     params: { session_id: params.sessionId },
   })) as ApiResponse<null>;
   checkResponse(res);
+  useCurrentChatSessionStore.getState().clearCurrentSessionById(params.sessionId);
+  useNewChatSessionStore.getState().clearNewChatSessionById(params.sessionId);
+  useNoteSelectionStore.getState().clearSelectedText(params.sessionId);
 };
 
 const listSessions = async (params?: ListSessionsRequest): Promise<PageResult<ChatSession>> => {

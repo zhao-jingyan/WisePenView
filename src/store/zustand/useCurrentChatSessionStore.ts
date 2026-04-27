@@ -8,6 +8,7 @@ interface CurrentChatSessionState {
   currentSessionTitle?: string;
   setCurrentSession: (session: { id: string; title: string }) => void;
   clearCurrentSession: () => void;
+  clearCurrentSessionById: (sessionId: string) => void;
 }
 
 const DEFAULT_CURRENT_CHAT_SESSION_STATE: Pick<
@@ -36,6 +37,13 @@ export const useCurrentChatSessionStore = create<CurrentChatSessionState>()(
       clearCurrentSession: () =>
         set((state) => {
           if (state.currentSessionId == null && state.currentSessionTitle == null) {
+            return state;
+          }
+          return DEFAULT_CURRENT_CHAT_SESSION_STATE;
+        }),
+      clearCurrentSessionById: (sessionId) =>
+        set((state) => {
+          if (state.currentSessionId !== sessionId) {
             return state;
           }
           return DEFAULT_CURRENT_CHAT_SESSION_STATE;
