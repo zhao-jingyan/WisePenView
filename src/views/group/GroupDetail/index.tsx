@@ -4,9 +4,10 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useRequest } from 'ahooks';
 import { useParams } from 'react-router-dom';
-import { Avatar, Button, Spin, Tabs } from 'antd';
+import { Button, Spin, Tabs } from 'antd';
 import type { TabsProps } from 'antd';
 import { AiOutlineEdit, AiOutlineDelete, AiOutlineLogout } from 'react-icons/ai';
+import UserCapsule from '@/components/Common/UserCapsule';
 import { getGroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
 import TagDrive from '@/components/Drive/TreeDrive/TagDrive';
 import MemberList from '@/components/Group/MemberList';
@@ -202,6 +203,7 @@ const GroupDetail: React.FC = () => {
 
   const { groupName, ownerInfo, groupDesc: description, groupCoverUrl: cover, createTime } = group;
   const groupId = group.groupId || id || '';
+  const ownerName = ownerInfo?.nickname?.trim() || '-';
 
   return (
     <div className={layout.pageContainer}>
@@ -210,17 +212,8 @@ const GroupDetail: React.FC = () => {
         <div className={layout.headerMeta}>
           {ownerInfo && (
             <div className={layout.headerMetaItem}>
-              <Avatar
-                size={24}
-                src={ownerInfo.avatar}
-                alt={ownerInfo.nickname || ownerInfo.realName || '创建者'}
-              >
-                {(ownerInfo.nickname || ownerInfo.realName || '?').charAt(0).toUpperCase()}
-              </Avatar>
-              <span>
-                创建者：
-                {ownerInfo.nickname?.trim() || '-'}
-              </span>
+              <span>创建者：</span>
+              <UserCapsule name={ownerName} avatar={ownerInfo.avatar} />
             </div>
           )}
           <span>创建日期：{createTime ?? '暂无'}</span>

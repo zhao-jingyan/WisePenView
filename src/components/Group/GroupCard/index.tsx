@@ -1,9 +1,10 @@
 import React from 'react';
-import { Avatar, Card, Image, Badge } from 'antd';
+import { Card, Image, Badge } from 'antd';
 import styles from './style.module.less';
 import type { GroupCardProps } from './index.type';
 import { PLACEHOLDER_IMAGE } from '@/utils/image';
 import { GROUP_TYPE, getGroupTypeLabel } from '@/constants/group';
+import UserCapsule from '@/components/Common/UserCapsule';
 
 const { Meta } = Card;
 
@@ -19,6 +20,8 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
   const handleCardClick = () => {
     onClick?.(group);
   };
+
+  const ownerName = ownerInfo?.nickname ?? '';
 
   const cardContent = (
     <Card
@@ -41,23 +44,7 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
         title={groupName}
         description={
           <div className={styles.metaDescription}>
-            {ownerInfo && (
-              <>
-                <Avatar
-                  size={20}
-                  src={ownerInfo.avatar}
-                  className={styles.creatorAvatar}
-                  alt={ownerInfo.nickname || ownerInfo.realName || '创建者'}
-                >
-                  {(ownerInfo.nickname || ownerInfo.realName || '?').charAt(0).toUpperCase()}
-                </Avatar>
-                <span>
-                  {groupType === GROUP_TYPE.NORMAL
-                    ? ownerInfo.nickname
-                    : ownerInfo.realName || ownerInfo.nickname}
-                </span>
-              </>
-            )}
+            {ownerInfo && <UserCapsule name={ownerName} avatar={ownerInfo.avatar} />}
             <span className={styles.memberCount}>{memberCount} 成员</span>
           </div>
         }
