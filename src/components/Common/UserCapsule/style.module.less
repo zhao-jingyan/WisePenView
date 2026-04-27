@@ -1,0 +1,38 @@
+.userCapsule {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  color: var(--ant-color-text-secondary);
+  font-size: var(--ant-font-size-sm);
+  line-height: 20px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.bare {
+  gap: var(--ant-margin-sm);
+}
+
+.capsule {
+  height: 24px;
+  gap: var(--ant-margin-xxs);
+  padding: 2px 8px 2px 2px;
+  border-radius: 12px;
+  background: var(--ant-color-fill-secondary);
+
+  .name {
+    color: var(--ant-color-text);
+  }
+}
+
+.avatar {
+  flex: 0 0 auto;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

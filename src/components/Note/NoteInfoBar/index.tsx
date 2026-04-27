@@ -1,6 +1,7 @@
 import React from 'react';
-import { Avatar, Divider } from 'antd';
+import { Divider } from 'antd';
 
+import UserCapsule from '@/components/Common/UserCapsule';
 import type { NoteInfoBarProps } from './index.type';
 import styles from './style.module.less';
 
@@ -14,12 +15,12 @@ const NoteInfoBar: React.FC<NoteInfoBarProps> = ({ noteInfoDisplay }) => {
         <div className={styles.authorsWrap}>
           {authors.length > 0 ? (
             authors.map((author, index) => (
-              <div className={styles.authorItem} key={`${author.name}-${index}`}>
-                <Avatar size={20} src={author.avatar} className={styles.authorAvatar}>
-                  {author.name.slice(0, 1)}
-                </Avatar>
-                <span className={styles.noteInfoValue}>{author.name}</span>
-              </div>
+              <UserCapsule
+                key={`${author.name}-${index}`}
+                name={author.name}
+                avatar={author.avatar}
+                variant="bare"
+              />
             ))
           ) : (
             <span className={styles.noteInfoValue}>暂无</span>
