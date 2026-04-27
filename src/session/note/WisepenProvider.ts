@@ -1,5 +1,5 @@
 import { WebsocketProvider } from 'y-websocket';
-import { getApiServerAddr } from '@/utils/apiServerAddr';
+import { getApiServerAddr, notifyAddrFailure } from '@/utils/apiServerAddr';
 import type * as Y from 'yjs';
 
 export function getNoteUrl(): string {
@@ -7,20 +7,23 @@ export function getNoteUrl(): string {
   return `${protocol}//${getApiServerAddr()}/note-collab`;
 }
 
-/**
- * 笔记协同 WebSocket：在 y-websocket 上固定 path、query（resourceId），并支持发送意图元数据帧。
- * 与 HTTP 类 NoteService 分离，供 EditorRoom 等协同层使用。
- */
+/** 笔记协同 WebSocket：固定 path、resourceId query，支持发送意图元数据帧。 */
 export class WisepenProvider extends WebsocketProvider {
   constructor(resourceId: string, doc: Y.Doc, options?: { connect?: boolean }) {
-    // y-websocket 默认把第二参数拼在 URL 后；传 'ws' 最终形如 ws://host/note-collab/ws?resourceId=...
-    // connect: false 时由调用方在注册好 status/sync 监听后再 connect()，避免本地极快连上时错过 connected 事件
+    // 第二参数 'ws' 被 y-websocket 拼到 URL 末段，最终形如 ws://host/note-collab/ws?resourceId=...
+    // connect: false 让调用方先注册 status/sync 监听再 connect()，防止极快连上时错过 connected 事件
     super(getNoteUrl(), 'ws', doc, {
       connect: options?.connect ?? true,
       disableBc: true,
       params: {
         resourceId,
       },
+    });
+
+    // 传输层失败时反馈给 ping 模块加速 HTTP 收敛；WS 自身的 URL 在构造期已固化，
+    // 不会跟着新地址重连，需上层销毁并重建 Provider 才能切换 WS 链路。
+    this.on('connection-error', () => {
+      notifyAddrFailure();
     });
   }
 

@@ -3,16 +3,16 @@ import axios from 'axios';
 import { clearAllZustandStores } from '@/store';
 import { clearAllServiceCaches } from '@/services/cacheRegistry';
 import { emitAuthSyncEvent } from '@/utils/authSync';
-import { getApiBaseURL } from '@/utils/apiServerAddr';
+import { awaitAddrReady, getApiBaseURL, notifyAddrFailure } from '@/utils/apiServerAddr';
 
 const Axios = axios.create({
   timeout: 5000,
   withCredentials: true,
 });
 
-// baseURL 由 apiServerAddr 模块自管理（生产模式后台轮询切换内/外网），
-// 此处在请求拦截器逐次读取，确保始终命中最新地址。
-Axios.interceptors.request.use((config) => {
+// baseURL 逐次读最新值；addr 可疑不可达时短暂等探测收敛，避免排队请求继续撞旧地址。
+Axios.interceptors.request.use(async (config) => {
+  await awaitAddrReady();
   config.baseURL = getApiBaseURL();
   return config;
 });
@@ -20,7 +20,11 @@ Axios.interceptors.request.use((config) => {
 Axios.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (!error.response) return Promise.reject(error);
+    // 无 response：传输层失败，反馈给 ping 模块立即重探测，绕过默认轮询节奏
+    if (!error.response) {
+      notifyAddrFailure();
+      return Promise.reject(error);
+    }
     const { status, data } = error.response;
     if (status === 401) {
       clearAllServiceCaches();
