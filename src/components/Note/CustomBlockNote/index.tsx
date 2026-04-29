@@ -1,19 +1,5 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
-import {
-  BasicTextStyleButton,
-  BlockTypeSelect,
-  ColorStyleButton,
-  CreateLinkButton,
-  FileCaptionButton,
-  FileReplaceButton,
-  FormattingToolbar,
-  FormattingToolbarController,
-  NestBlockButton,
-  SuggestionMenuController,
-  TextAlignButton,
-  UnnestBlockButton,
-  useCreateBlockNote,
-} from '@blocknote/react';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
+import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
 import type {
   BlockNoteEditor,
@@ -22,10 +8,7 @@ import type {
   StyleSchema,
 } from '@blocknote/core';
 import { zh } from '@blocknote/core/locales';
-import { filterSuggestionItems } from '@blocknote/core/extensions';
 import { useMount, useUnmount } from 'ahooks';
-import { Button } from 'antd';
-import { RiSparklingLine } from 'react-icons/ri';
 import '@blocknote/mantine/style.css';
 
 import { useImageService } from '@/contexts/ServicesContext';
@@ -39,12 +22,15 @@ import {
 } from '@/store';
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
 import type { NoteOutlineItem } from '@/components/Note/NoteOutline/index.type';
-import { useNoteCaptureKeyEvent } from './useNoteCaptureKeyEvent';
-import { useAttachNoteYjsUndoStack, useNoteYjsUndoManager } from './useNoteYjsUndoStack';
-import { buildNoteSlashMenuItems } from './slashMenuConfig';
 import { blockNoteSchema } from './blockNoteSchema';
-import { inlineMathDollarExtension } from './LatexSupport/inlineMathDollarExtension';
-import { stripEscapeCharExtension, stripEscapeEditorProps } from './stripEscapeCharExtension';
+import NoteToolbar from '../NoteToolbar';
+import NoteSlashMenu from '../NoteSlashMenu';
+import {
+  collectNoteEditorExtensions,
+  collectNoteEditorProps,
+  getNoteEditorPlugins,
+} from './plugins';
+import { useAttachNoteYjsUndoStack, useNoteCaptureKeyEvent, useNoteYjsUndoManager } from './hooks';
 import styles from './style.module.less';
 
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;
@@ -162,6 +148,10 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
     const flatBlocksRef = useRef<{ id: string; type: string }[]>([]);
     const { noteFragment, undoManager } = useNoteYjsUndoManager(doc);
 
+    const plugins = useMemo(() => getNoteEditorPlugins(), []);
+    const editorExtensions = useMemo(() => collectNoteEditorExtensions(plugins), [plugins]);
+    const editorProps = useMemo(() => collectNoteEditorProps(plugins), [plugins]);
+
     const uploadFile = useCallback(
       async (file: File) => {
         // 只拦截图片：非图片文件让 BlockNote 走默认行为（或抛错以阻止插入）
@@ -191,9 +181,9 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       trailingBlock: true,
       disableExtensions: ['history', 'yUndo'],
       uploadFile,
-      extensions: [stripEscapeCharExtension, inlineMathDollarExtension()],
+      extensions: editorExtensions,
       _tiptapOptions: {
-        editorProps: stripEscapeEditorProps,
+        editorProps,
       },
       collaboration: {
         provider: provider as BlockNoteCollaborationConfig['provider'],
@@ -342,50 +332,8 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
           editable={!readOnly}
           onSelectionChange={handleSelectionChange}
         >
-          <FormattingToolbarController
-            formattingToolbar={() => (
-              <FormattingToolbar>
-                <Button
-                  type="primary"
-                  size="small"
-                  icon={<RiSparklingLine size={14} />}
-                  className={styles.askAiBtn}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleAskAi();
-                  }}
-                >
-                  问AI
-                </Button>
-                <BlockTypeSelect key="blockTypeSelect" />
-                <FileCaptionButton key="fileCaptionButton" />
-                <FileReplaceButton key="replaceFileButton" />
-                <BasicTextStyleButton basicTextStyle="bold" key="boldStyleButton" />
-                <BasicTextStyleButton basicTextStyle="italic" key="italicStyleButton" />
-                <BasicTextStyleButton basicTextStyle="underline" key="underlineStyleButton" />
-                <BasicTextStyleButton basicTextStyle="strike" key="strikeStyleButton" />
-                <BasicTextStyleButton basicTextStyle="code" key="codeStyleButton" />
-                <TextAlignButton textAlignment="left" key="textAlignLeftButton" />
-                <TextAlignButton textAlignment="center" key="textAlignCenterButton" />
-                <TextAlignButton textAlignment="right" key="textAlignRightButton" />
-                <ColorStyleButton key="colorStyleButton" />
-                <NestBlockButton key="nestBlockButton" />
-                <UnnestBlockButton key="unnestBlockButton" />
-                <CreateLinkButton key="createLinkButton" />
-              </FormattingToolbar>
-            )}
-          />
-          <SuggestionMenuController
-            triggerCharacter="/"
-            getItems={async (query) => {
-              return filterSuggestionItems(buildNoteSlashMenuItems(editor), query);
-            }}
-          />
+          <NoteToolbar onAskAi={handleAskAi} />
+          <NoteSlashMenu editor={editor} plugins={plugins} />
         </BlockNoteView>
       </div>
     );
