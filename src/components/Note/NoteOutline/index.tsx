@@ -4,18 +4,8 @@ import clsx from 'clsx';
 import type { NoteOutlineItem, NoteOutlineProps } from './index.type';
 import styles from './style.module.less';
 
-function clampLevel(level: number): 0 | 1 | 2 | 3 | 4 | 5 | 6 {
-  if (level <= 0) return 0;
-  if (level === 1) return 1;
-  if (level === 2) return 2;
-  if (level === 3) return 3;
-  if (level === 4) return 4;
-  if (level === 5) return 5;
-  return 6;
-}
-
 function resolveLevelClass(level: number): string {
-  const l = clampLevel(level);
+  const l = Math.min(6, Math.max(0, Math.floor(level)));
   return styles[`level${l}`];
 }
 

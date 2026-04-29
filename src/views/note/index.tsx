@@ -94,108 +94,116 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({
             <span className={rvhStyles.inlineTitleText}>{toolbarNoteTitle}</span>
           </>
         }
-        titleBlock={
-          <NoteTitle
-            key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}`}
-            id={noteId}
-            initialContent={noteInfoDisplay?.noteTitle}
-            focusOnMount={isConnected}
-            onEnterKey={focusBody}
-          />
-        }
       />
-      <div className={styles.noteContent}>
-        {isOutlineOpen ? (
-          <aside className={styles.outlineAside} aria-label="文档目录侧栏">
-            <div className={styles.outlineTopRow}>
-              <span className={styles.outlineTopTitle}>目录</span>
-              <button
-                type="button"
-                className={styles.outlineToggleBtn}
-                aria-label="收起目录"
-                onClick={() => setIsOutlineOpen(false)}
-              >
-                <RiArrowLeftDoubleLine size={20} />
-              </button>
-            </div>
-            <div className={styles.outlineScrollArea}>
-              <NoteOutline
-                items={outlineItemsWithTitle}
-                activeId={activeHeadingId}
-                onNavigate={(id) => {
-                  if (id === '__note_title__') {
-                    const anchor = titleAnchorRef.current;
-                    if (anchor) {
-                      anchor.scrollIntoView({ block: 'start', behavior: 'smooth' });
-                      window.requestAnimationFrame(() => {
-                        const editable = anchor.querySelector(
-                          '[contenteditable="true"]'
-                        ) as HTMLElement | null;
-                        editable?.focus();
-                      });
-                    } else {
-                      mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                    return;
-                  }
-                  bodyEditorRef.current?.navigateToBlock(id);
-                }}
-              />
-            </div>
-          </aside>
-        ) : (
-          <div className={styles.outlineCollapsedCol} aria-label="展开目录">
-            <button
-              type="button"
-              className={styles.outlineToggleBtn}
-              aria-label="展开目录"
-              onClick={() => setIsOutlineOpen(true)}
-            >
-              <RiMenuLine size={20} />
-            </button>
-          </div>
-        )}
-
-        <div className={styles.root}>
-          {isDisconnected ? (
-            <Alert
-              className={styles.wsAlert}
-              type="warning"
-              description="网络连接已断开，当前可继续本地编辑；网络恢复后会自动同步到云端。"
-              action={
-                <Button
-                  type="default"
-                  size="small"
-                  loading={isReconnectLoading}
-                  onClick={handleReconnect}
+      <div className={styles.statesBelowHeader}>
+        <div className={styles.mainScroll} ref={mainScrollRef}>
+          <div className={styles.contentRow}>
+            {isOutlineOpen ? (
+              <aside className={styles.outlineAside} aria-label="文档目录侧栏">
+                <div className={styles.outlineTopRow}>
+                  <span className={styles.outlineTopTitle}>目录</span>
+                  <button
+                    type="button"
+                    className={styles.outlineToggleBtn}
+                    aria-label="收起目录"
+                    onClick={() => setIsOutlineOpen(false)}
+                  >
+                    <RiArrowLeftDoubleLine size={20} />
+                  </button>
+                </div>
+                <div className={styles.outlineScrollArea}>
+                  <NoteOutline
+                    items={outlineItemsWithTitle}
+                    activeId={activeHeadingId}
+                    onNavigate={(id) => {
+                      if (id === '__note_title__') {
+                        const anchor = titleAnchorRef.current;
+                        if (anchor) {
+                          anchor.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                          window.requestAnimationFrame(() => {
+                            const editable = anchor.querySelector(
+                              '[contenteditable="true"]'
+                            ) as HTMLElement | null;
+                            editable?.focus();
+                          });
+                        } else {
+                          mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                        return;
+                      }
+                      bodyEditorRef.current?.navigateToBlock(id);
+                    }}
+                  />
+                </div>
+              </aside>
+            ) : (
+              <div className={styles.outlineCollapsedCol} aria-label="展开目录">
+                <button
+                  type="button"
+                  className={styles.outlineToggleBtn}
+                  aria-label="展开目录"
+                  onClick={() => setIsOutlineOpen(true)}
                 >
-                  重试
-                </Button>
-              }
-            />
-          ) : null}
-          <NoteInfoBar noteInfoDisplay={noteInfoDisplay} />
-          <div className={styles.body}>
-            <CustomBlockNote
-              key={resourceId}
-              ref={bodyEditorRef}
-              resourceId={resourceId}
-              doc={doc}
-              provider={provider}
-              readOnly={isEditorReadOnly}
-            />
-          </div>
-        </div>
-      </div>
+                  <RiMenuLine size={20} />
+                </button>
+              </div>
+            )}
 
-      {showFullPageSpin ? (
-        <div className={styles.middleOverlay} aria-busy="true" aria-live="polite">
-          <div className={styles.middleOverlayLoading}>
-            <Spin size="large" />
-            <span className={styles.middleOverlayText}>正在连接笔记服务...</span>
+            <div className={styles.mainCol}>
+              <div className={styles.root}>
+                {isDisconnected ? (
+                  <Alert
+                    className={styles.wsAlert}
+                    type="warning"
+                    description="网络连接已断开，当前可继续本地编辑；网络恢复后会自动同步到云端。"
+                    action={
+                      <Button
+                        type="default"
+                        size="small"
+                        loading={isReconnectLoading}
+                        onClick={handleReconnect}
+                      >
+                        重试
+                      </Button>
+                    }
+                  />
+                ) : null}
+                <div ref={titleAnchorRef}>
+                  <NoteTitle
+                    key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}`}
+                    id={noteId}
+                    initialContent={noteInfoDisplay?.noteTitle}
+                    focusOnMount={isConnected}
+                    onEnterKey={focusBody}
+                  />
+                </div>
+                <NoteInfoBar noteInfoDisplay={noteInfoDisplay} />
+                <div className={styles.body}>
+                  <CustomBlockNote
+                    key={resourceId}
+                    ref={bodyEditorRef}
+                    resourceId={resourceId}
+                    doc={doc}
+                    provider={provider}
+                    readOnly={isEditorReadOnly}
+                    onOutlineChange={setOutlineItems}
+                    onActiveHeadingChange={setActiveHeadingId}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      ) : null}
+
+        {showFullPageSpin ? (
+          <div className={styles.middleOverlay} aria-busy="true" aria-live="polite">
+            <div className={styles.middleOverlayLoading}>
+              <Spin size="large" />
+              <span className={styles.middleOverlayText}>正在连接笔记服务...</span>
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 };

@@ -89,7 +89,12 @@
 
 .outlineAside {
   flex: 0 0 auto;
-  width: calc(5 * var(--ant-control-height-lg));
+  /* 目录侧栏：跟随主题尺寸 token 缩放，目标落在 240~280 观感区间 */
+  width: clamp(
+    calc(6 * var(--ant-control-height-lg)),
+    calc(7 * var(--ant-control-height-lg)),
+    calc(8 * var(--ant-control-height-lg))
+  );
   min-height: 0;
   padding: 0;
   background: transparent;
