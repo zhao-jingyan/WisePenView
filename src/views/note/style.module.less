@@ -9,14 +9,12 @@
   overflow: hidden;
 }
 
-/* 会话未就绪时仍挂载子树（跑 Yjs / BlockNote），但不交互、不可见 */
-.noteContent {
+.mainScroll {
   flex: 1;
+  min-width: 0;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  overflow-y: auto;
+  overflow: auto;
+  padding: var(--ant-padding-lg);
 }
 
 .root {
@@ -26,9 +24,9 @@
   flex: 1;
   min-height: 0;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--ant-padding-lg) var(--ant-padding-xl);
+  max-width: 980px;
+  margin: 0;
+  padding: 0;
 }
 
 .pageHeader {
@@ -64,12 +62,113 @@
   margin-bottom: var(--ant-margin-lg);
 }
 
+.contentRow {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--ant-margin-sm);
+}
+
+.mainCol {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .body {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   margin-top: var(--ant-margin-lg);
+}
+
+.outlineAside {
+  flex: 0 0 auto;
+  width: calc(5 * var(--ant-control-height-lg));
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: calc(100vh - var(--ant-padding-lg) * 2);
+}
+
+.outlineTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ant-margin-xs);
+  padding: var(--ant-padding-sm) var(--ant-padding-sm);
+  color: var(--ant-color-text-secondary);
+}
+
+.outlineTopTitle {
+  font-size: var(--ant-font-size);
+  font-weight: 500;
+}
+
+.outlineScrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+/* 滚动条：默认透明，hover 时显示 */
+.outlineScrollArea::-webkit-scrollbar {
+  width: var(--ant-scrollbar-width);
+}
+.outlineScrollArea::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: var(--ant-border-radius-sm);
+  transition: background-color 0.15s ease;
+}
+.outlineScrollArea::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.outlineScrollArea:hover::-webkit-scrollbar-thumb {
+  background-color: var(--ant-color-fill-secondary);
+}
+
+.outlineCollapsedCol {
+  flex: 0 0 auto;
+  width: calc(var(--ant-control-height-sm) + var(--ant-margin-xxs));
+  min-height: 0;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  padding: var(--ant-padding-sm) 0;
+}
+
+.outlineToggleBtn {
+  --outline-toggle-size: calc(var(--ant-control-height-sm) + var(--ant-margin-xxs));
+  width: var(--outline-toggle-size);
+  height: var(--outline-toggle-size);
+  border: 0;
+  background: transparent;
+  border-radius: var(--ant-border-radius);
+  cursor: pointer;
+  color: var(--ant-color-text-secondary);
+  line-height: var(--outline-toggle-size);
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: var(--ant-color-fill-tertiary);
+    color: var(--ant-color-text);
+  }
 }
 
 /* 仅盖住中间栏可视区域（pageWrap 即 middleContent 一屏范围） */

@@ -2,10 +2,12 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Alert, Button, Result, Spin } from 'antd';
 import { useRequest, useUnmount } from 'ahooks';
 import { Link, useParams } from 'react-router-dom';
-import { RiArrowLeftLine } from 'react-icons/ri';
+import { RiArrowLeftDoubleLine, RiArrowLeftLine, RiMenuLine } from 'react-icons/ri';
 
 import CustomBlockNote from '@/components/Note/CustomBlockNote';
 import type { NoteBodyEditorHandle } from '@/components/Note/CustomBlockNote/index.type';
+import NoteOutline from '@/components/Note/NoteOutline';
+import type { NoteOutlineItem } from '@/components/Note/NoteOutline/index.type';
 import NoteInfoBar from '@/components/Note/NoteInfoBar';
 import NoteTitle from '@/components/Note/NoteTitle';
 import { useNoteService } from '@/contexts/ServicesContext';
@@ -27,8 +29,13 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({
   noteInfoDisplay,
 }) => {
   const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+  const titleAnchorRef = useRef<HTMLDivElement>(null);
   const reconnectTimerRef = useRef<number | null>(null);
   const [isReconnectLoading, setIsReconnectLoading] = useState(false);
+  const [isOutlineOpen, setIsOutlineOpen] = useState(true);
+  const [outlineItems, setOutlineItems] = useState<NoteOutlineItem[]>([]);
+  const [activeHeadingId, setActiveHeadingId] = useState<string | undefined>(undefined);
   const { status, doc, provider, reconnect } = useNoteSession(resourceId);
 
   const isConnected = status === 'connected';
@@ -61,9 +68,15 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({
     }, 2000);
   }, [reconnect]);
 
+  const noteTitleText = noteInfoDisplay?.noteTitle?.trim() || '未命名笔记';
+  const outlineItemsWithTitle: NoteOutlineItem[] = [
+    { id: '__note_title__', level: 0, text: noteTitleText },
+    ...outlineItems,
+  ];
+
   return (
     <div className={styles.pageWrap}>
-      <div className={styles.noteContent}>
+      <div className={styles.mainScroll} ref={mainScrollRef}>
         <div className={styles.root}>
           <header className={styles.pageHeader}>
             <Link to="/app/drive" className={styles.backLink}>
@@ -71,40 +84,101 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({
               <span>返回云盘</span>
             </Link>
           </header>
-          {isDisconnected ? (
-            <Alert
-              className={styles.wsAlert}
-              type="warning"
-              description="网络连接已断开，当前可继续本地编辑；网络恢复后会自动同步到云端。"
-              action={
-                <Button
-                  type="default"
-                  size="small"
-                  loading={isReconnectLoading}
-                  onClick={handleReconnect}
+
+          <div className={styles.contentRow}>
+            {isOutlineOpen ? (
+              <aside className={styles.outlineAside} aria-label="文档目录侧栏">
+                <div className={styles.outlineTopRow}>
+                  <span className={styles.outlineTopTitle}>目录</span>
+                  <button
+                    type="button"
+                    className={styles.outlineToggleBtn}
+                    aria-label="收起目录"
+                    onClick={() => setIsOutlineOpen(false)}
+                  >
+                    <RiArrowLeftDoubleLine size={20} />
+                  </button>
+                </div>
+                <div className={styles.outlineScrollArea}>
+                  <NoteOutline
+                    items={outlineItemsWithTitle}
+                    activeId={activeHeadingId}
+                    onNavigate={(id) => {
+                      if (id === '__note_title__') {
+                        const anchor = titleAnchorRef.current;
+                        if (anchor) {
+                          anchor.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                          window.requestAnimationFrame(() => {
+                            const editable = anchor.querySelector(
+                              '[contenteditable="true"]'
+                            ) as HTMLElement | null;
+                            editable?.focus();
+                          });
+                        } else {
+                          mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                        return;
+                      }
+                      bodyEditorRef.current?.navigateToBlock(id);
+                    }}
+                  />
+                </div>
+              </aside>
+            ) : (
+              <div className={styles.outlineCollapsedCol} aria-label="展开目录">
+                <button
+                  type="button"
+                  className={styles.outlineToggleBtn}
+                  aria-label="展开目录"
+                  onClick={() => setIsOutlineOpen(true)}
                 >
-                  重试
-                </Button>
-              }
-            />
-          ) : null}
-          <NoteTitle
-            key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}`}
-            id={noteId}
-            initialContent={noteInfoDisplay?.noteTitle}
-            focusOnMount={isConnected}
-            onEnterKey={focusBody}
-          />
-          <NoteInfoBar noteInfoDisplay={noteInfoDisplay} />
-          <div className={styles.body}>
-            <CustomBlockNote
-              key={resourceId}
-              ref={bodyEditorRef}
-              resourceId={resourceId}
-              doc={doc}
-              provider={provider}
-              readOnly={isEditorReadOnly}
-            />
+                  <RiMenuLine size={20} />
+                </button>
+              </div>
+            )}
+
+            <div className={styles.mainCol}>
+              {isDisconnected ? (
+                <Alert
+                  className={styles.wsAlert}
+                  type="warning"
+                  description="网络连接已断开，当前可继续本地编辑；网络恢复后会自动同步到云端。"
+                  action={
+                    <Button
+                      type="default"
+                      size="small"
+                      loading={isReconnectLoading}
+                      onClick={handleReconnect}
+                    >
+                      重试
+                    </Button>
+                  }
+                />
+              ) : null}
+
+              <div ref={titleAnchorRef}>
+                <NoteTitle
+                  key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}`}
+                  id={noteId}
+                  initialContent={noteInfoDisplay?.noteTitle}
+                  focusOnMount={isConnected}
+                  onEnterKey={focusBody}
+                />
+              </div>
+              <NoteInfoBar noteInfoDisplay={noteInfoDisplay} />
+              <div className={styles.body}>
+                <CustomBlockNote
+                  key={resourceId}
+                  ref={bodyEditorRef}
+                  resourceId={resourceId}
+                  doc={doc}
+                  provider={provider}
+                  readOnly={isEditorReadOnly}
+                  onOutlineChange={setOutlineItems}
+                  onActiveHeadingChange={setActiveHeadingId}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
