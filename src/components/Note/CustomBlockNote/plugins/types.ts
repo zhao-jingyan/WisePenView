@@ -16,13 +16,6 @@ export type NoteInlineContentSpecs = Record<string, InlineContentSpec<InlineCont
 
 /**
  * 插件 slash 菜单回调使用的 editor 类型。
- *
- * 使用 BlockNote 顶层类型边界（`BlockSchema` / `InlineContentSchema` / `StyleSchema`），
- * 避免 `types.ts` 依赖 `blockNoteSchema.ts` 而产生模块循环：
- * `blockNoteSchema → plugins → NoteEditorPlugin（types）→ CustomBlockNoteEditor → blockNoteSchema`。
- *
- * 代价：插件拿到的是「宽」editor；与部分 API（如 `insertOrUpdateBlockForSlashMenu`）交互时若类型过窄会需在调用处断言。
- * `NoteSlashMenu/buildSlashMenuItems` 聚合插件 slash 项时将具体 editor 断言为 `PluginEditor`，是为规避 BlockNote 在 `options.dropCursor` 等处的类型不变性。
  */
 export type PluginEditor = BlockNoteEditor<BlockSchema, InlineContentSchema, StyleSchema>;
 
