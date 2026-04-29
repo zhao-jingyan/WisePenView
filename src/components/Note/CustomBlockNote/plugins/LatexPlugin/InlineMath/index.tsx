@@ -12,10 +12,10 @@ import { LatexEditPopover } from '../LatexEditPopover';
 import {
   computeLatexPopoverPlacement,
   isLatexPopoverAnchorMeasurable,
-} from '../latexPopoverGeometry';
+} from '../LatexEditPopover/latexPopoverGeometry';
 import popoverStyles from './style.module.less';
-import { useFocusPopoverTextarea } from '../useFocusPopoverTextarea';
-import { useLatexPopoverAnchorSync } from '../useLatexPopoverAnchorSync';
+import { useFocusPopoverTextarea } from '../LatexEditPopover/useFocusPopoverTextarea';
+import { useLatexPopoverAnchorSync } from '../LatexEditPopover/useLatexPopoverAnchorSync';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import 'katex/dist/katex.min.css';
 

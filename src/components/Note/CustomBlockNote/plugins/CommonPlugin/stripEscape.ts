@@ -1,7 +1,7 @@
 import { createExtension } from '@blocknote/core';
 import type { Mark } from '@tiptap/pm/model';
-import type { EditorProps } from '@tiptap/pm/view';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
+import type { EditorProps } from '@tiptap/pm/view';
 
 const ESC = '\u001b';
 

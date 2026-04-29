@@ -1,17 +1,22 @@
 /* eslint-disable react-refresh/only-export-components -- BlockNote block spec 与展示组件同文件 */
 import { useCallback, useRef, useState } from 'react';
+import type {
+  BlockNoteEditor,
+  BlockSchema,
+  InlineContentSchema,
+  StyleSchema,
+} from '@blocknote/core';
 import { createReactBlockSpec, type ReactCustomBlockRenderProps } from '@blocknote/react';
 
-import type { CustomBlockNoteEditor } from '../../blockNoteSchema';
 import { LatexEditPopover } from '../LatexEditPopover';
 import {
   computeLatexPopoverPlacement,
   isLatexPopoverAnchorMeasurable,
-} from '../latexPopoverGeometry';
+} from '../LatexEditPopover/latexPopoverGeometry';
 import popoverStyles from '../InlineMath/style.module.less';
 import { renderKatexInto } from '../katexRender';
-import { useFocusPopoverTextarea } from '../useFocusPopoverTextarea';
-import { useLatexPopoverAnchorSync } from '../useLatexPopoverAnchorSync';
+import { useFocusPopoverTextarea } from '../LatexEditPopover/useFocusPopoverTextarea';
+import { useLatexPopoverAnchorSync } from '../LatexEditPopover/useLatexPopoverAnchorSync';
 import styles from './style.module.less';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import 'katex/dist/katex.min.css';
@@ -94,7 +99,9 @@ function MathBlockView(props: MathBlockRenderProps) {
 
   const focusStartOfBlockAfterMath = () => {
     const { editor, block } = props;
-    const ed = editor as CustomBlockNoteEditor;
+    // 渲染上下文里 editor 的 schema 仅包含 math，自身无法直接 `insertBlocks([{type:'paragraph'}])`。
+    // 这里向 BlockNote 顶层 editor 类型放宽，便于复用默认块（paragraph）。
+    const ed = editor as unknown as BlockNoteEditor<BlockSchema, InlineContentSchema, StyleSchema>;
     const next = ed.getNextBlock(block);
     try {
       if (next) {
