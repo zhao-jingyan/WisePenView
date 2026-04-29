@@ -1,0 +1,88 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ant-margin-xxs);
+  min-height: 0;
+}
+
+.empty {
+  padding: var(--ant-padding-xxs) var(--ant-padding-xs);
+  color: var(--ant-color-text-tertiary);
+  font-size: var(--ant-font-size-sm);
+}
+
+.item {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: var(--ant-padding-xxs) var(--ant-padding-xs);
+  border-radius: var(--ant-border-radius);
+  cursor: pointer;
+  color: var(--ant-color-text);
+  font-size: var(--ant-font-size-sm);
+  line-height: var(--ant-line-height);
+  position: relative;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+
+  &:hover {
+    background: var(--ant-color-fill-tertiary);
+  }
+}
+
+.titleItem {
+  color: var(--ant-color-text);
+  font-weight: 600;
+}
+
+.active {
+  background: var(--ant-color-fill-secondary);
+  color: var(--ant-color-text);
+  font-weight: 500;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: var(--ant-padding-xxs);
+    bottom: var(--ant-padding-xxs);
+    width: calc(2 * var(--ant-line-width));
+    border-radius: var(--ant-border-radius-sm);
+    background: var(--ant-color-primary);
+  }
+}
+
+/* Indentation by heading level */
+.level0 {
+  padding-left: var(--ant-padding-xxs);
+}
+.level1 {
+  padding-left: var(--ant-padding-xs);
+}
+.level2 {
+  padding-left: calc(var(--ant-padding-xs) + var(--ant-padding-sm));
+}
+.level3 {
+  padding-left: calc(var(--ant-padding-xs) + var(--ant-padding-sm) * 2);
+}
+.level4 {
+  padding-left: calc(var(--ant-padding-xs) + var(--ant-padding-sm) * 3);
+}
+.level5 {
+  padding-left: calc(var(--ant-padding-xs) + var(--ant-padding-sm) * 4);
+}
+.level6 {
+  padding-left: calc(var(--ant-padding-xs) + var(--ant-padding-sm) * 5);
+}
+

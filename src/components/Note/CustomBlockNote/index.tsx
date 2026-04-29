@@ -14,8 +14,13 @@ import {
   useNewNoteStore,
   useNoteSelectionStore,
 } from '@/store';
-import { blockNoteSchema } from './blockNoteSchema';
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
+import {
+  buildFlatBlocksFromEditor,
+  buildOutlineItemsFromEditor,
+  resolveActiveHeadingId,
+} from './Outline';
+import { blockNoteSchema } from './blockNoteSchema';
 import NoteToolbar from '../NoteToolbar';
 import NoteSlashMenu from '../NoteSlashMenu';
 import {
@@ -29,8 +34,15 @@ import styles from './style.module.less';
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;
 type BlockNoteCollaborationConfig = NonNullable<CreateBlockNoteOptions['collaboration']>;
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null;
+}
+
 const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
-  ({ resourceId, doc, provider, readOnly = false }, ref) => {
+  (
+    { resourceId, doc, provider, readOnly = false, onOutlineChange, onActiveHeadingChange },
+    ref
+  ) => {
     const imageService = useImageService();
     const message = useAppMessage();
     const currentSessionId = useCurrentChatSessionStore((state) => state.currentSessionId);
@@ -42,6 +54,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
     );
     const clearSelectedText = useNoteSelectionStore((state) => state.clearSelectedText);
     const newNoteBodyOnChangeCleanupRef = useRef<(() => void) | null>(null);
+    const flatBlocksRef = useRef<{ id: string; type: string }[]>([]);
     const { noteFragment, undoManager } = useNoteYjsUndoManager(doc);
 
     const plugins = useMemo(() => getNoteEditorPlugins(), []);
@@ -106,6 +119,19 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
       newNoteBodyOnChangeCleanupRef.current = editor.onChange(() => {
         const isNoteEmpty = editor.blocksToMarkdownLossy().trim().length === 0;
         useNewNoteStore.getState().syncNewNoteBodyFromEditor(resourceId, isNoteEmpty);
+
+        const needOutline = Boolean(onOutlineChange);
+        const needFlatBlocks = Boolean(onActiveHeadingChange);
+        if (needOutline || needFlatBlocks) {
+          const items = needOutline ? buildOutlineItemsFromEditor(editor) : [];
+          const flat = needFlatBlocks ? buildFlatBlocksFromEditor(editor) : [];
+          if (needFlatBlocks) {
+            flatBlocksRef.current = flat;
+          }
+          if (needOutline) {
+            onOutlineChange?.(items);
+          }
+        }
       });
     });
 
@@ -123,11 +149,68 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
         focus: () => {
           editor.focus();
         },
+        navigateToBlock: (id: string) => {
+          try {
+            editor.setTextCursorPosition(id, 'start');
+            editor.focus();
+            // 再次触发 scrollIntoView，避免未滚动到可视区域
+            const view = (
+              editor as unknown as {
+                prosemirrorView?: { state?: { tr?: unknown }; dispatch?: unknown };
+              }
+            ).prosemirrorView;
+            const canScroll =
+              typeof view?.dispatch === 'function' &&
+              view?.state &&
+              isRecord(view.state) &&
+              'tr' in view.state &&
+              isRecord(view.state.tr) &&
+              typeof (view.state.tr as { scrollIntoView?: unknown }).scrollIntoView === 'function';
+            if (canScroll) {
+              window.requestAnimationFrame(() => {
+                try {
+                  (view.dispatch as (tr: unknown) => void)(
+                    (view.state as { tr: { scrollIntoView: () => unknown } }).tr.scrollIntoView()
+                  );
+                } catch {
+                  void 0;
+                }
+              });
+            }
+          } catch {
+            editor.focus();
+          }
+        },
       }),
       [editor]
     );
 
     const onKeyDownCapture = useNoteCaptureKeyEvent({ provider, undoManager, readOnly });
+    const syncActiveHeading = useCallback(() => {
+      if (!onActiveHeadingChange) {
+        return;
+      }
+      let activeId: string | undefined;
+      try {
+        const cursor = editor.getTextCursorPosition();
+        const currentId = cursor.block?.id;
+        if (!currentId) {
+          onActiveHeadingChange(undefined);
+          return;
+        }
+        const flat = flatBlocksRef.current;
+        activeId = resolveActiveHeadingId(flat, currentId);
+      } catch {
+        activeId = undefined;
+      }
+      onActiveHeadingChange(activeId);
+    }, [editor, onActiveHeadingChange]);
+
+    const handleSelectionChange = useCallback(() => {
+      syncSelectedText();
+      syncActiveHeading();
+    }, [syncActiveHeading, syncSelectedText]);
+
     const handleAskAi = useCallback(() => {
       if (!currentSessionId) {
         return;
@@ -156,7 +239,7 @@ const CustomBlockNote = forwardRef<NoteBodyEditorHandle, CustomBlockNoteProps>(
           formattingToolbar={false}
           slashMenu={false}
           editable={!readOnly}
-          onSelectionChange={syncSelectedText}
+          onSelectionChange={handleSelectionChange}
         >
           <NoteToolbar onAskAi={handleAskAi} />
           <NoteSlashMenu editor={editor} plugins={plugins} />
