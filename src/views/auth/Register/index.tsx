@@ -5,15 +5,17 @@ import { RiUserLine, RiLockLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
 import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/services';
-import { USERNAME_MAX_LENGTH, USERNAME_PATTERN, USERNAME_PATTERN_MESSAGE } from '@/constants/user';
+import { USERNAME_MAX_LENGTH, USERNAME_PATTERN } from '@/constants/user';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import auth from '../Auth.module.less';
 import type { RegisterRequest } from '@/services/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { useTranslation } from 'react-i18next';
 
 const Register: React.FC = () => {
   const authService = useAuthService();
   const message = useAppMessage();
+  const { t } = useTranslation('auth');
   const [agreement, setAgreement] = useState(false);
   const [contractOpen, setContractOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
@@ -29,14 +31,14 @@ const Register: React.FC = () => {
         setSuccessModalOpen(true);
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err, '注册失败'));
+        message.error(parseErrorMessage(err, t('register.registerFailed')));
       },
     }
   );
 
   const onFinish = (values: RegisterRequest) => {
     if (!agreement) {
-      message.error('请接受用户协议');
+      message.error(t('register.agreementRequired'));
       return;
     }
     submitRegister(values);
@@ -44,18 +46,18 @@ const Register: React.FC = () => {
 
   return (
     <div className={auth.authContainer}>
-      <Typography.Title>注册</Typography.Title>
+      <Typography.Title>{t('register.title')}</Typography.Title>
       <Form layout="vertical" form={form} onFinish={onFinish} requiredMark={false}>
         <Form.Item
-          label="用户名"
+          label={t('register.usernameLabel')}
           name="username"
           rules={[
-            { required: true, message: '请输入用户名' },
-            { pattern: USERNAME_PATTERN, message: USERNAME_PATTERN_MESSAGE },
+            { required: true, message: t('register.usernameRequired') },
+            { pattern: USERNAME_PATTERN, message: t('register.usernamePattern') },
           ]}
         >
           <Input
-            placeholder="4-20位字母、数字或下划线"
+            placeholder={t('register.usernamePlaceholder')}
             size="large"
             prefix={<RiUserLine />}
             maxLength={USERNAME_MAX_LENGTH}
@@ -63,24 +65,28 @@ const Register: React.FC = () => {
         </Form.Item>
 
         <Form.Item
-          label="密码"
+          label={t('register.passwordLabel')}
           name="password"
           rules={[
-            { required: true, message: '请输入密码' },
-            { min: 9, message: '密码至少长度为9位' },
-            { pattern: /[a-zA-Z]/, message: '密码必须包含字母' },
-            { pattern: /[0-9]/, message: '密码必须包含数字' },
+            { required: true, message: t('register.passwordRequired') },
+            { min: 9, message: t('register.passwordMinLength') },
+            { pattern: /[a-zA-Z]/, message: t('register.passwordContainsLetter') },
+            { pattern: /[0-9]/, message: t('register.passwordContainsNumber') },
           ]}
         >
-          <Input.Password placeholder="输入密码" size="large" prefix={<RiLockLine />} />
+          <Input.Password
+            placeholder={t('register.passwordPlaceholder')}
+            size="large"
+            prefix={<RiLockLine />}
+          />
         </Form.Item>
 
         <Form.Item>
           <Checkbox checked={agreement} onChange={(e) => setAgreement(e.target.checked)}>
-            我已阅读并接受
+            {t('register.agreementCheckedPrefix')}
           </Checkbox>
           <Link to="#" onClick={() => setContractOpen(true)}>
-            用户协议
+            {t('register.agreementLink')}
           </Link>
         </Form.Item>
 
@@ -92,19 +98,19 @@ const Register: React.FC = () => {
             className={auth.submitButton}
             loading={loading}
           >
-            注册
+            {t('register.submit')}
           </Button>
           <div className={auth.centerLinks}>
             <Typography.Text>
-              已有账号？
-              <Link to="/login">登录</Link>
+              {t('register.hasAccount')}
+              <Link to="/login">{t('register.toLogin')}</Link>
             </Typography.Text>
           </div>
         </Form.Item>
       </Form>
       <ServiceAgreement open={contractOpen} onCancel={() => setContractOpen(false)} />
       <Modal
-        title="注册成功"
+        title={t('register.registerSuccessTitle')}
         open={successModalOpen}
         onCancel={() => setSuccessModalOpen(false)}
         destroyOnHidden
@@ -117,7 +123,7 @@ const Register: React.FC = () => {
               setAgreement(false);
             }}
           >
-            留在当前页面
+            {t('register.stayHere')}
           </Button>,
           <Button
             key="login"
@@ -128,11 +134,11 @@ const Register: React.FC = () => {
               navigate('/login');
             }}
           >
-            去登录
+            {t('register.goToLogin')}
           </Button>,
         ]}
       >
-        <Typography.Text>恭喜您，注册成功！请前往登录页面登录。</Typography.Text>
+        <Typography.Text>{t('register.registerSuccessDescription')}</Typography.Text>
       </Modal>
     </div>
   );

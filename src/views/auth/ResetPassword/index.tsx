@@ -8,10 +8,12 @@ import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import auth from '../Auth.module.less';
 import type { ResetPasswordRequest } from '@/services/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { useTranslation } from 'react-i18next';
 
 const ResetPassword: React.FC = () => {
   const authService = useAuthService();
   const message = useAppMessage();
+  const { t } = useTranslation('auth');
   const [form] = Form.useForm<ResetPasswordRequest>();
 
   const { loading, run: submitResetPassword } = useRequest(
@@ -19,10 +21,10 @@ const ResetPassword: React.FC = () => {
     {
       manual: true,
       onSuccess: () => {
-        message.info('邮件将发送至您的学工号邮箱，请注意查收。');
+        message.info(t('resetPassword.sendSuccess'));
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err, '发送失败'));
+        message.error(parseErrorMessage(err, t('resetPassword.sendFailed')));
       },
     }
   );
@@ -33,15 +35,13 @@ const ResetPassword: React.FC = () => {
 
   return (
     <div className={auth.authContainer}>
-      <Typography.Title>找回密码</Typography.Title>
+      <Typography.Title>{t('resetPassword.title')}</Typography.Title>
       <Alert
         description={
           <>
-            找回密码：
-            <strong>
-              您需要登录校内邮箱查收密码重置链接，校内邮箱将默认为您的学号数字邮箱（与别名邮箱不冲突）。
-            </strong>
-            如因意外无法登录校内邮箱，请联系管理员协助重置你的密码。
+            {t('resetPassword.alertPrefix')}
+            <strong>{t('resetPassword.alertHighlight')}</strong>
+            {t('resetPassword.alertSuffix')}
           </>
         }
         type="warning"
@@ -55,11 +55,15 @@ const ResetPassword: React.FC = () => {
         requiredMark={false}
       >
         <Form.Item
-          label="学工号"
+          label={t('resetPassword.campusNumLabel')}
           name="campusNum"
-          rules={[{ required: true, message: '请输入学工号' }]}
+          rules={[{ required: true, message: t('resetPassword.campusNumRequired') }]}
         >
-          <Input placeholder="输入学工号" size="large" prefix={<RiMailLine />} />
+          <Input
+            placeholder={t('resetPassword.campusNumPlaceholder')}
+            size="large"
+            prefix={<RiMailLine />}
+          />
         </Form.Item>
 
         <Form.Item>
@@ -70,11 +74,11 @@ const ResetPassword: React.FC = () => {
             className={auth.submitButton}
             loading={loading}
           >
-            发送验证码
+            {t('resetPassword.submit')}
           </Button>
           <div className={auth.centerLinks}>
             <Typography.Text>
-              <Link to="/login">返回登录</Link>
+              <Link to="/login">{t('resetPassword.backToLogin')}</Link>
             </Typography.Text>
           </div>
         </Form.Item>

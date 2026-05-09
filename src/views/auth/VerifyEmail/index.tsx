@@ -7,10 +7,12 @@ import type { ConfirmEmailVerifyRequest } from '@/services/User';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import auth from '../Auth.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { useTranslation } from 'react-i18next';
 
 const VerifyEmail: React.FC = () => {
   const userService = useUserService();
   const message = useAppMessage();
+  const { t } = useTranslation('auth');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -25,18 +27,18 @@ const VerifyEmail: React.FC = () => {
     {
       manual: true,
       onSuccess: () => {
-        message.success('邮箱验证成功');
+        message.success(t('verifyEmail.verifySuccess'));
         setSuccessModalOpen(true);
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err, '验证失败'));
+        message.error(parseErrorMessage(err, t('verifyEmail.verifyFailed')));
       },
     }
   );
 
   const onVerify = () => {
     if (loading || !token) {
-      if (!token) message.error('链接无效或已过期');
+      if (!token) message.error(t('verifyEmail.invalidToken'));
       return;
     }
     runVerify(token);
@@ -49,10 +51,10 @@ const VerifyEmail: React.FC = () => {
 
   return (
     <div className={auth.authContainer}>
-      <Typography.Title>邮箱验证</Typography.Title>
+      <Typography.Title>{t('verifyEmail.title')}</Typography.Title>
       <Alert
         className={auth.bindAlert}
-        description="请点击下方按钮完成邮箱验证。"
+        description={t('verifyEmail.alertDescription')}
         type="info"
         showIcon
       />
@@ -65,21 +67,21 @@ const VerifyEmail: React.FC = () => {
           onClick={onVerify}
           disabled={!token}
         >
-          完成验证
+          {t('verifyEmail.submit')}
         </Button>
       </div>
       <Modal
-        title="邮箱验证成功"
+        title={t('verifyEmail.successTitle')}
         open={successModalOpen}
         onCancel={goToAccount}
         destroyOnHidden
         footer={[
           <Button key="close" type="primary" onClick={goToAccount}>
-            去账户设置
+            {t('verifyEmail.goToAccount')}
           </Button>,
         ]}
       >
-        <Typography.Text>验证成功，您可前往账户设置查看。</Typography.Text>
+        <Typography.Text>{t('verifyEmail.successDescription')}</Typography.Text>
       </Modal>
     </div>
   );

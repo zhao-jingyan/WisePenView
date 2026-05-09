@@ -8,12 +8,14 @@ import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import auth from '../Auth.module.less';
 import type { NewPasswordRequest } from '@/services/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { useTranslation } from 'react-i18next';
 
 type NewPasswordFormValues = Pick<NewPasswordRequest, 'newPassword'>;
 
 const NewPassword: React.FC = () => {
   const authService = useAuthService();
   const message = useAppMessage();
+  const { t } = useTranslation('auth');
   const [token, setToken] = useState('');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [form] = Form.useForm<NewPasswordFormValues>();
@@ -33,14 +35,14 @@ const NewPassword: React.FC = () => {
         setSuccessModalOpen(true);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '设置失败'));
+        message.error(parseErrorMessage(err, t('newPassword.setFailed')));
       },
     }
   );
 
   const onFinish = (values: NewPasswordFormValues) => {
     if (!token) {
-      message.error('token不存在');
+      message.error(t('newPassword.tokenMissing'));
       return;
     }
     submitNewPassword(values);
@@ -48,19 +50,23 @@ const NewPassword: React.FC = () => {
 
   return (
     <div className={auth.authContainer}>
-      <Typography.Title>设置新密码</Typography.Title>
+      <Typography.Title>{t('newPassword.title')}</Typography.Title>
       <Form layout="vertical" form={form} onFinish={onFinish} requiredMark={false}>
         <Form.Item
-          label="新密码"
+          label={t('newPassword.passwordLabel')}
           name="newPassword"
           rules={[
-            { required: true, message: '请输入新密码' },
-            { min: 9, message: '密码至少长度为9位' },
-            { pattern: /[a-zA-Z]/, message: '密码必须包含字母' },
-            { pattern: /[0-9]/, message: '密码必须包含数字' },
+            { required: true, message: t('newPassword.passwordRequired') },
+            { min: 9, message: t('newPassword.passwordMinLength') },
+            { pattern: /[a-zA-Z]/, message: t('newPassword.passwordContainsLetter') },
+            { pattern: /[0-9]/, message: t('newPassword.passwordContainsNumber') },
           ]}
         >
-          <Input.Password placeholder="输入新密码" size="large" prefix={<RiLockLine />} />
+          <Input.Password
+            placeholder={t('newPassword.passwordPlaceholder')}
+            size="large"
+            prefix={<RiLockLine />}
+          />
         </Form.Item>
 
         <Form.Item>
@@ -71,17 +77,17 @@ const NewPassword: React.FC = () => {
             className={auth.submitButton}
             loading={loading}
           >
-            确认
+            {t('newPassword.submit')}
           </Button>
           <div className={auth.centerLinks}>
             <Typography.Text>
-              <Link to="/login">返回登录</Link>
+              <Link to="/login">{t('newPassword.backToLogin')}</Link>
             </Typography.Text>
           </div>
         </Form.Item>
       </Form>
       <Modal
-        title="密码设置成功"
+        title={t('newPassword.successTitle')}
         open={successModalOpen}
         onCancel={() => setSuccessModalOpen(false)}
         destroyOnHidden
@@ -93,7 +99,7 @@ const NewPassword: React.FC = () => {
               form.resetFields(); // 清空表单
             }}
           >
-            留在当前页面
+            {t('newPassword.stayHere')}
           </Button>,
           <Button
             key="login"
@@ -103,11 +109,11 @@ const NewPassword: React.FC = () => {
               navigate('/login');
             }}
           >
-            去登录
+            {t('newPassword.goToLogin')}
           </Button>,
         ]}
       >
-        <Typography.Text>恭喜您，密码设置成功！请前往登录页面登录。</Typography.Text>
+        <Typography.Text>{t('newPassword.successDescription')}</Typography.Text>
       </Modal>
     </div>
   );
