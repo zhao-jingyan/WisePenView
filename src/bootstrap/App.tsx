@@ -6,7 +6,7 @@ import router from './router';
 import zhCN from 'antd/locale/zh_CN';
 
 import { ServicesProvider } from '@/contexts/ServicesContext';
-import appTheme from './theme';
+import appTheme from '@/theme';
 import styles from './App.module.less';
 import { clearAllServiceCaches } from '@/services/cacheRegistry';
 import { clearAllZustandStores } from '@/store';
