@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { clearAllZustandStores } from '@/store';
 import { clearAllServiceCaches } from '@/services/cacheRegistry';
-import { emitAuthChangeEvent } from '@/utils/authChange';
+import { emitAuthChangeEvent } from '@/utils/auth/authChange';
 import {
   awaitAddrReady,
   getApiBaseURL,

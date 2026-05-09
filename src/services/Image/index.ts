@@ -4,9 +4,4 @@ export type {
   ImageUploadRequest,
   ImageUploadResult,
 } from './index.type';
-export {
-  IMAGE_UPLOAD_MAX_BYTES,
-  IMAGE_UPLOAD_MAX_SIZE_LABEL,
-  assertImageProxyUploadLimit,
-  buildImagePublicUrl,
-} from './index.type';
+export { assertImageProxyUploadLimit, buildImagePublicUrl } from './index.type';

@@ -5,8 +5,8 @@ import {
   DOCUMENT_MAX_FILE_BYTES,
   type DocumentAllowedExtension,
 } from '@/constants/document';
-import { computeFileMd5 } from '@/utils/computeFileMd5';
-import { putOssPresignedUrl } from '@/utils/ossPresignedPut';
+import { computeFileMd5 } from '@/utils/oss/computeFileMd5';
+import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
 import type {
   DocDisplayInfoResponse,
   DocumentUploadInitRequestBody,

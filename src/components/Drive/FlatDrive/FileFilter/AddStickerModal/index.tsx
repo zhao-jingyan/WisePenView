@@ -4,7 +4,7 @@ import { useRequest } from 'ahooks';
 import { useStickerService } from '@/contexts/ServicesContext';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { validateReservedName } from '@/utils/validateReservedName';
+import { validateReservedName } from '@/utils/tag/validateReservedName';
 import type { AddStickerModalProps } from './index.type';
 
 const AddStickerModal: React.FC<AddStickerModalProps> = ({ open, onCancel, onSuccess }) => {

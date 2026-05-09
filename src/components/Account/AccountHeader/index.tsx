@@ -5,7 +5,7 @@ import { useRequest } from 'ahooks';
 import { RiCheckLine, RiCloseLine, RiErrorWarningLine } from 'react-icons/ri';
 import { useImageService, useUserService } from '@/contexts/ServicesContext';
 import { getIdentityTypeLabel, getVerificationModeLabel, USER_STATUS } from '@/constants/user';
-import { createBeforeUploadImageWithinLimit } from '@/utils/image';
+import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import type { AccountHeaderProps } from './index.type';

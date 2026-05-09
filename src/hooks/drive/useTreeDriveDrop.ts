@@ -4,7 +4,7 @@ import type { ResourceItem } from '@/types/resource';
 import type { Folder } from '@/types/folder';
 import type { IFolderService } from '@/services/Folder/index.type';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { getFolderDisplayName } from '@/utils/path';
+import { getFolderDisplayName } from '@/utils/tag/path';
 
 export interface UseTreeDriveDropParams {
   folderService: IFolderService;

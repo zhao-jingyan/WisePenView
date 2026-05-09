@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useClickFile } from '@/hooks/drive';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useChatPanelStore, useCurrentChatSessionStore, useRecentFilesStore } from '@/store';
-import { getOpenedResourceIdFromPath } from '@/utils/openedResourceRoute';
+import { getOpenedResourceIdFromPath } from '@/utils/url/openedResourceRoute';
 import { buildRecentFilesGroupItems } from '../RecentFilesGroup';
 import { useSessionListGroup } from '../SessionListGroup';
 import type { SidebarMenuProps, SidebarMenuRef } from './index.type';

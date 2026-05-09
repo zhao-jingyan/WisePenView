@@ -1,5 +1,5 @@
 import { apiGet, apiPost } from '@/apis/_runtime/request';
-import { serializeRepeatKeyQuery } from '@/utils/serializeRepeatKeyQuery';
+import { serializeRepeatKeyQuery } from '@/apis/_runtime/serializeRepeatKeyQuery';
 import type {
   AddTagApiRequest,
   ChangeResourceTagsApiRequest,

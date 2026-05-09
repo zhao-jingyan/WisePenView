@@ -9,7 +9,7 @@ import type {
 import type { IAuthService } from './index.type';
 import { clearAllZustandStores } from '@/store';
 import { clearAllServiceCaches } from '@/services/cacheRegistry';
-import { emitAuthChangeEvent } from '@/utils/authChange';
+import { emitAuthChangeEvent } from '@/utils/auth/authChange';
 
 const login = async (params: LoginRequest) => {
   await AuthApi.login(params);

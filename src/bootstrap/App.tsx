@@ -8,7 +8,7 @@ import zhCN from 'antd/locale/zh_CN';
 import { ServicesProvider } from '@/contexts/ServicesContext';
 import appTheme from '@/theme';
 import styles from './App.module.less';
-import { subscribeAuthChangeEvent } from '@/utils/authChange';
+import { subscribeAuthChangeEvent } from '@/utils/auth/authChange';
 
 const PageLoadingFallback: React.FC = () => (
   <div className={styles.pageLoadingFallback}>

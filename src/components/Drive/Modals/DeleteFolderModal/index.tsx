@@ -3,7 +3,7 @@ import { Modal, Button, Alert } from 'antd';
 import { useRequest } from 'ahooks';
 import { useFolderService } from '@/contexts/ServicesContext';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { getFolderDisplayName } from '@/utils/path';
+import { getFolderDisplayName } from '@/utils/tag/path';
 import type { DeleteFolderModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 

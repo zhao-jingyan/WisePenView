@@ -2,10 +2,7 @@
  * 图床 / 对象存储代理上传（对齐 WisePenCloud `POST /storage/imageUpload`）
  */
 
-/** 与后端 `wisepen.storage.max-small-file-size` 默认一致 */
-export const IMAGE_UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
-
-export const IMAGE_UPLOAD_MAX_SIZE_LABEL = '5MB';
+import { IMAGE_UPLOAD_MAX_BYTES, IMAGE_UPLOAD_MAX_SIZE_LABEL } from '@/utils/image/uploadLimit';
 
 /**
  * 与后端图床代理 `max-small-file-size` 一致；超过则抛错，供 `uploadImage` 与业务层复用。

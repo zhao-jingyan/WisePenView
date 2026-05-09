@@ -3,7 +3,7 @@ import { Modal, Button, Input } from 'antd';
 import { useRequest } from 'ahooks';
 import { useTagService } from '@/contexts/ServicesContext';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { validateReservedName } from '@/utils/validateReservedName';
+import { validateReservedName } from '@/utils/tag/validateReservedName';
 import type { NewTagModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 

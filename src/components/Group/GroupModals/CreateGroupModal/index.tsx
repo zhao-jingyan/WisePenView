@@ -7,7 +7,7 @@ import { useGroupService, useImageService, useUserService } from '@/contexts/Ser
 import type { CreateGroupRequest } from '@/services/Group';
 import type { GroupFileOrgLogic } from '@/types/group';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { createBeforeUploadImageWithinLimit } from '@/utils/image';
+import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { GROUP_TYPE, GROUP_TYPE_LABELS, ALLOWED_GROUP_TYPES_MAP } from '@/constants/group';
 import type { CreateGroupModalProps } from './index.type';

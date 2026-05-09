@@ -7,7 +7,7 @@ import type { Folder } from '@/types/folder';
 import { mapFolderToTagTreeNode } from '@/types/folder';
 import type { TagTreeNode } from '@/services/Tag/index.type';
 import { useFolderService } from '@/contexts/ServicesContext';
-import { getFolderDisplayName } from '@/utils/path';
+import { getFolderDisplayName } from '@/utils/tag/path';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import {

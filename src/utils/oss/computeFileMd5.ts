@@ -7,7 +7,7 @@ const CHUNK_SIZE = 2 * 1024 * 1024;
  */
 export const computeFileMd5 = (
   file: File,
-  onProgress?: (percent: number) => void,
+  onProgress?: (percent: number) => void
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const chunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
