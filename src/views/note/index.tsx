@@ -18,7 +18,7 @@ import type { NoteInfoDisplayData } from '@/domains/Note';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useNoteSession } from '@/session/note/useNoteSession';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { RESOURCE_TYPE } from '@/constants/resource';
+import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 import styles from './style.module.less';
 
 interface NoteViewConnectedProps {

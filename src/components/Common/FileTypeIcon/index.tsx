@@ -1,6 +1,6 @@
 import React from 'react';
 import { RiFileTextLine, RiPenNibFill } from 'react-icons/ri';
-import { RESOURCE_TYPE } from '@/constants/resource';
+import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 import type { FileTypeIconProps } from './index.type';
 
 /** 按资源类型展示图标：NOTE 为笔，FILE/MD 等为文件 */

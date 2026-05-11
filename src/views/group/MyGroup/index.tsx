@@ -7,7 +7,7 @@ import GroupCard from '@/components/Group/GroupCard';
 import { useGroupService } from '@/domains';
 import type { FetchGroupListRequest } from '@/domains/Group';
 import type { Group } from '@/types/group';
-import { GROUP_ROLE_FILTER_MAP } from '@/constants/group';
+import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group/enum';
 import { JoinGroupModal, CreateGroupModal } from '@/components/Group/GroupModals';
 import layout from '../style.module.less';
 import page from './style.module.less';

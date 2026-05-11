@@ -5,12 +5,14 @@ import { RiUserLine, RiLockLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
 import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/domains';
-import { USERNAME_MAX_LENGTH, USERNAME_PATTERN } from '@/constants/user';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import auth from '../Auth.module.less';
 import type { RegisterRequest } from '@/domains/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useTranslation } from 'react-i18next';
+
+const USERNAME_MAX_LENGTH = 20;
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]{4,20}$/;
 
 const Register: React.FC = () => {
   const authService = useAuthService();

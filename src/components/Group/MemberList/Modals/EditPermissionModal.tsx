@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { Modal, Button, Select, Alert } from 'antd';
 import { useRequest } from 'ahooks';
 import { useGroupService } from '@/domains';
-import type { UpdateMemberRoleRequest } from '@/domains/Group';
 import { useMemberEditGuard } from './useMemberEditGuard';
 import type { EditPermissionModalProps } from './index.type';
-import { ROLE_MAP } from '@/constants/group';
+import { ROLE_MAP, type GroupMemberRole } from '@/domains/Group/enum';
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
 import styles from './style.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';
@@ -24,7 +23,7 @@ const EditPermissionModal: React.FC<EditPermissionModalProps> = ({
 }) => {
   const groupService = useGroupService();
   const message = useAppMessage();
-  const [selectedPermission, setSelectedPermission] = useState<string>('MEMBER');
+  const [selectedPermission, setSelectedPermission] = useState<GroupMemberRole>('MEMBER');
   const { loading, run: runUpdatePermission } = useRequest(
     async (role: number) =>
       groupService.updateMemberRole({
@@ -88,7 +87,7 @@ const EditPermissionModal: React.FC<EditPermissionModalProps> = ({
           <label className={styles.permissionLabel}>将以下成员的权限设置为</label>
           <Select
             value={selectedPermission}
-            onChange={setSelectedPermission}
+            onChange={(value) => setSelectedPermission(value as GroupMemberRole)}
             className={styles.fullWidth}
           >
             {canPromoteToAdmin && <Option value="ADMIN">管理员</Option>}

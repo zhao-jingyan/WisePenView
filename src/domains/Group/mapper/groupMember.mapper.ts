@@ -1,4 +1,4 @@
-import { mapRoleCodeToGroupMemberRole } from '@/constants/group';
+import { mapRoleCodeToGroupMemberRole } from '@/domains/Group/enum';
 import type { GroupMember } from '@/types/group';
 import type { GroupMemberRawResponse } from '../service/index.type';
 

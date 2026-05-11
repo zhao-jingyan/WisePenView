@@ -3,7 +3,7 @@ import { Card, Image, Badge } from 'antd';
 import styles from './style.module.less';
 import type { GroupCardProps } from './index.type';
 import { PLACEHOLDER_IMAGE } from '@/utils/image/placeholder';
-import { GROUP_TYPE, getGroupTypeLabel } from '@/constants/group';
+import { GROUP_TYPE, getGroupTypeLabel } from '@/domains/Group/enum';
 import UserCapsule from '@/components/Common/UserCapsule';
 
 const { Meta } = Card;

@@ -6,7 +6,7 @@ import { Button, InputNumber, Skeleton } from 'antd';
 import { useRequest } from 'ahooks';
 import { useWalletService } from '@/domains';
 import { useGroupService } from '@/domains';
-import { WALLET_TOKEN_TRANSFER_TYPE } from '@/constants/wallet';
+import { WALLET_TOKEN_TRANSFER_TYPE } from '@/domains/Wallet/enum';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import type { OwnerGroupTokenTransferProps } from './index.type';

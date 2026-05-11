@@ -5,7 +5,7 @@ import { useRequest } from 'ahooks';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { RiAddCircleFill, RiFileTextLine, RiGroupFill, RiPenNibFill } from 'react-icons/ri';
 import { useChatService, useNoteService, useUserService } from '@/domains';
-import { RESOURCE_TYPE } from '@/constants/resource';
+import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useNewChatSessionStore, useNewNoteStore, useRecentFilesStore } from '@/store';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';

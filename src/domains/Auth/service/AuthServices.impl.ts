@@ -1,4 +1,3 @@
-import { USERNAME_PATTERN } from '@/constants/user';
 import { AuthApi } from '../apis/AuthApi';
 import { AuthServicesMap } from '../mapper/AuthServices.map';
 import type {
@@ -28,9 +27,6 @@ const logout = async () => {
 };
 
 const register = async (params: RegisterRequest) => {
-  if (!USERNAME_PATTERN.test(params.username)) {
-    throw new Error('用户名必须是4-20位字母、数字或下划线');
-  }
   const apiParams = AuthServicesMap.toRegisterApiRequest(params);
   await AuthApi.register(apiParams);
 };

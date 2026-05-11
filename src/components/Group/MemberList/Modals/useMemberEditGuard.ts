@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { GroupMemberRole } from '@/constants/group';
+import type { GroupMemberRole } from '@/domains/Group/enum';
 import {
   canEditSelectedMembers,
   canEditSelectedMembersForQuota,

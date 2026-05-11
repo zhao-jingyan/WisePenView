@@ -1,7 +1,10 @@
 /**
  * 钱包 Service：/user/wallet/*，成功码与全局一致 `code === 200`。
  */
-import { WALLET_LIST_TX_TYPE_QUERY_VALUE, WALLET_TX_TAB_MERGE_FETCH_CAP } from '@/constants/wallet';
+import {
+  WALLET_LIST_TX_TYPE_QUERY_VALUE,
+  WALLET_TX_TAB_MERGE_FETCH_CAP,
+} from '@/domains/Wallet/enum';
 import { UserWalletApi } from '../apis/UserApi';
 import type { WalletTransactionKind, WalletTransactionRecord } from '@/types/wallet';
 import type {

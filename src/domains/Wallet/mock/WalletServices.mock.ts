@@ -1,7 +1,7 @@
 /**
  * 钱包 Mock：MODE === 'mock'；接口形态与 /user/wallet 对齐。
  */
-import { WALLET_TX_TAB_MERGE_FETCH_CAP } from '@/constants/wallet';
+import { WALLET_TX_TAB_MERGE_FETCH_CAP } from '@/domains/Wallet/enum';
 import type { IWalletService } from '@/domains/Wallet';
 import type { WalletTransactionRecord } from '@/types/wallet';
 import mockdata from './mockdata.json';

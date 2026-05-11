@@ -8,7 +8,8 @@ import SelectedMemberList from '@/components/Common/SelectedMemberList';
 import styles from './style.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { GROUP_MEMBER_TOKEN_LIMIT_MAX } from '@/constants/quota';
+
+const GROUP_MEMBER_TOKEN_LIMIT_MAX = 100_000_000;
 
 const AssignQuotaModal: React.FC<AssignQuotaModalProps> = ({
   open,

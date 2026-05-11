@@ -4,7 +4,7 @@ import { RiMailLine, RiShieldUserLine } from 'react-icons/ri';
 import { useRequest, useUnmount } from 'ahooks';
 import { useUserService } from '@/domains';
 import type { InitiateUISVerifyRequest, SendEmailVerifyRequest } from '@/domains/User';
-import { USER_STATUS } from '@/constants/user';
+import { USER_STATUS } from '@/domains/User/enum';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import VerifyBanner from '../VerifyBanner';
 import { resolveUisQrImageDataUrl } from './resolveUisQrImageDataUrl';

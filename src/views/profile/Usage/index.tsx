@@ -6,7 +6,7 @@ import React from 'react';
 import { Divider } from 'antd';
 import QuotaByGroup from '@/components/Profile/QuotaByGroup';
 import ComputeWallet from '@/components/Wallet/ComputeWallet';
-import { WALLET_TARGET_TYPE } from '@/constants/wallet';
+import { WALLET_TARGET_TYPE } from '@/domains/Wallet/enum';
 import layout from '../style.module.less';
 
 const Usage: React.FC = () => {

@@ -11,7 +11,7 @@ import {
   getDocumentStatusLabel,
   isDocumentRetryableStatus,
   isDocumentTerminalStatus,
-} from '@/constants/document';
+} from '@/domains/Document/enum';
 import type { PendingDocItem } from '@/domains/Document';
 import styles from './style.module.less';
 

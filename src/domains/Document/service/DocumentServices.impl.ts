@@ -1,12 +1,8 @@
 import { DocumentApi } from '../apis/DocumentApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
-import {
-  DOCUMENT_ALLOWED_EXTENSIONS,
-  DOCUMENT_MAX_FILE_BYTES,
-  type DocumentAllowedExtension,
-} from '@/constants/document';
 import { computeFileMd5 } from '@/utils/oss/computeFileMd5';
 import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
+import { parseExtension } from '@/utils/parser/extensionParser';
 import type {
   DocDisplayInfoResponse,
   DocumentUploadInitRequestBody,
@@ -17,18 +13,30 @@ import type {
   UploadDocumentResult,
 } from './index.type';
 
-const parseExtension = (fileName: string): string => {
-  const i = fileName.lastIndexOf('.');
-  if (i <= 0 || i === fileName.length - 1) {
-    throw new Error('文件名须包含扩展名');
-  }
-  return fileName.slice(i + 1).toLowerCase();
-};
+/** 小写扩展名，不含点 */
+export const DOCUMENT_ALLOWED_EXTENSIONS = [
+  'pdf',
+  'doc',
+  'docx',
+  'ppt',
+  'pptx',
+  'xls',
+  'xlsx',
+] as const;
+
+export type DocumentAllowedExtension = (typeof DOCUMENT_ALLOWED_EXTENSIONS)[number];
+
+/** 文档资源类型（与后端 ResourceType 枚举序列化值对齐） */
+export const DOCUMENT_RESOURCE_TYPES = [...DOCUMENT_ALLOWED_EXTENSIONS, 'unknown'] as const;
+
+export type DocumentResourceType = (typeof DOCUMENT_RESOURCE_TYPES)[number];
 
 const ALLOWED_EXT_SET = new Set<string>(DOCUMENT_ALLOWED_EXTENSIONS);
 
 const isAllowedExtension = (ext: string): ext is DocumentAllowedExtension =>
   ALLOWED_EXT_SET.has(ext);
+
+const DOCUMENT_MAX_FILE_BYTES = 100 * 1024 * 1024;
 
 const assertDocumentUploadAllowed = (file: File): void => {
   if (file.size > DOCUMENT_MAX_FILE_BYTES) {

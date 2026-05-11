@@ -3,7 +3,7 @@ import { useRequest } from 'ahooks';
 import { Descriptions, Divider, Form, Spin } from 'antd';
 import { useUserService } from '@/domains';
 import type { GetUserInfoResponse } from '@/domains/User';
-import { IDENTITY_TYPE } from '@/constants/user';
+import { IDENTITY_TYPE } from '@/domains/User/enum';
 import {
   AccountForm,
   AccountHeader,

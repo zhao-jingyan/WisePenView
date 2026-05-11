@@ -3,12 +3,7 @@ import { Button, Descriptions, Form, Input, Select } from 'antd';
 import type { InputRef } from 'antd/es/input';
 import { useRequest } from 'ahooks';
 import { RiPencilLine } from 'react-icons/ri';
-import {
-  DEGREE_LEVEL_LABELS,
-  getDegreeLevelLabel,
-  getSexLabel,
-  SEX_LABELS,
-} from '@/constants/user';
+import { DEGREE, getDegreeLevelLabel, getSexLabel, SEX_ENUM } from '@/domains/User/enum';
 import { useUserService } from '@/domains';
 import type { UpdateUserInfoRequest } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
@@ -123,13 +118,13 @@ const AccountForm: React.FC<AccountFormProps> = ({
   const optionsMap = useMemo(
     () =>
       ({
-        sex: Object.entries(SEX_LABELS).map(([value, label]) => (
-          <Option key={value} value={Number(value)}>
+        sex: SEX_ENUM.options.map(({ value, label }) => (
+          <Option key={value} value={value}>
             {label}
           </Option>
         )),
-        degreeLevel: Object.entries(DEGREE_LEVEL_LABELS).map(([value, label]) => (
-          <Option key={value} value={Number(value)}>
+        degreeLevel: DEGREE.options.map(({ value, label }) => (
+          <Option key={value} value={value}>
             {label}
           </Option>
         )),

@@ -4,8 +4,8 @@ import type { TableColumnsType } from 'antd';
 import type { GroupMember } from '@/types/group';
 import type { GroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
 import QuotaBar from '@/components/Common/QuotaBar';
-import type { GroupMemberRole } from '@/constants/group';
-import { ROLE_LABEL, ROLE_MAP } from '@/constants/group';
+import type { GroupMemberRole } from '@/domains/Group/enum';
+import { ROLE_LABEL, ROLE_MAP } from '@/domains/Group/enum';
 import { formatTimestampToDate } from '@/utils/format/formatTime';
 
 type MemberRecord = GroupMember & { key: React.Key };

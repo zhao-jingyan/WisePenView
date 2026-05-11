@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ResourceItem } from '@/types/resource';
 import { usePdfPreviewProgressStore, useRecentFilesStore } from '@/store';
-import { RESOURCE_TYPE } from '@/constants/resource';
+import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 
 /**
  * 根据资源类型：NOTE 跳转笔记编辑器，其他类型跳转站内 PDF 预览（/app/pdf/:resourceId）

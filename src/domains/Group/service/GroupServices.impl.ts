@@ -1,6 +1,6 @@
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import { formatTimestampToDate } from '@/utils/format/formatTime';
-import { mapRoleCodeToGroupMemberRole } from '@/constants/group';
+import { mapRoleCodeToGroupMemberRole } from '@/domains/Group/enum';
 import type { Group, GroupFileOrgLogic, GroupMemberList, GroupResConfig } from '@/types/group';
 import { GroupApi, GroupMemberApi, GroupResConfigApi } from '../apis/GroupApi';
 import type {

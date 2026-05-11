@@ -1,4 +1,4 @@
-import type { DocumentResourceType } from '@/constants/document';
+import type { DocumentResourceType } from '@/domains/Document/service/DocumentServices.impl';
 import type { ResourceItem } from '@/types/resource';
 
 /** `POST /document/initDocUpload` 请求体，与后端 DocumentUploadInitRequest 一致 */

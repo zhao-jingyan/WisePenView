@@ -1,4 +1,4 @@
-import { getDegreeLevelLabel, getSexLabel } from '@/constants/user';
+import { getDegreeLevelLabel, getSexLabel } from '@/domains/User/enum';
 import type { GetUserInfoResponse } from '@/domains/User';
 import type { ProfileFieldKey } from '@/views/profile/profile.config';
 

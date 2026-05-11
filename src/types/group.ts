@@ -1,4 +1,4 @@
-import type { GroupMemberRole } from '@/constants/group';
+import type { GroupMemberRole } from '@/domains/Group/enum';
 
 /** 成员列表领域模型（由 OpenAPI GroupMemberDetailResponse 映射）；userId 对应接口 memberId，避免大数精度丢失 */
 export interface GroupMember {

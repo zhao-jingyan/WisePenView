@@ -8,7 +8,7 @@ import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import type { EditGroupRequest } from '@/domains/Group';
-import { GROUP_TYPE } from '@/constants/group';
+import { GROUP_TYPE } from '@/domains/Group/enum';
 import type { EditGroupInfoModalProps } from './index.type';
 
 import styles from './index.module.less';

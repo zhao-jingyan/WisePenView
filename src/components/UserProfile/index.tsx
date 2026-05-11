@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { useUserService } from '@/domains';
 import type { User } from '@/types/user';
-import { getIdentityTypeLabel } from '@/constants/user';
+import { getIdentityTypeLabel } from '@/domains/User/enum';
 
 import {
   RiArrowDownSLine,

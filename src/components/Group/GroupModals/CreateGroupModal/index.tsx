@@ -9,7 +9,7 @@ import type { GroupFileOrgLogic } from '@/types/group';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { GROUP_TYPE, GROUP_TYPE_LABELS, ALLOWED_GROUP_TYPES_MAP } from '@/constants/group';
+import { GROUP, GROUP_TYPE, ALLOWED_GROUP_TYPES_MAP } from '@/domains/Group/enum';
 import type { CreateGroupModalProps } from './index.type';
 
 import styles from './index.module.less';
@@ -28,10 +28,7 @@ const fileFromCoverField = (fileList?: UploadFile[]): File | undefined => {
   return raw instanceof File ? raw : undefined;
 };
 
-const groupTypeOptionsBase = Object.entries(GROUP_TYPE_LABELS).map(([value, label]) => ({
-  value: Number(value),
-  label,
-}));
+const groupTypeOptionsBase = GROUP.options;
 
 const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ open, onCancel, onSuccess }) => {
   const groupService = useGroupService();

@@ -6,7 +6,7 @@ import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useRecentFilesStore } from '@/store';
 import type { DeleteFileModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { RESOURCE_TYPE } from '@/constants/resource';
+import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 
 const DeleteFileModal: React.FC<DeleteFileModalProps> = ({ open, onCancel, onSuccess, file }) => {
   const documentService = useDocumentService();

@@ -1,4 +1,4 @@
-import { IDENTITY_TYPE } from '@/constants/user';
+import { IDENTITY_TYPE } from '@/domains/User/enum';
 import type { UpdateUserInfoRequest } from '@/domains/User';
 
 /** 基本档案字段显隐配置，按 identityType 计算 */

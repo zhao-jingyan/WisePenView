@@ -1,4 +1,4 @@
-import type { DegreeLevel, UserVerificationMode } from '@/constants/user';
+import type { DegreeLevel, UserVerificationMode } from '@/domains/User/enum';
 
 export interface GetUserInfoApiResponseUserInfo {
   id?: string;
