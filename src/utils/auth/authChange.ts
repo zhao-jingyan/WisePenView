@@ -1,4 +1,4 @@
-import { clearAllServiceCaches } from '@/services/cacheRegistry';
+import { clearAllServiceCaches } from '@/domains/_shared/cacheRegistry';
 import { clearAllZustandStores } from '@/store';
 
 interface AuthChangePayload {

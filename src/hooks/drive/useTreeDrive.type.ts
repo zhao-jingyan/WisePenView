@@ -1,5 +1,5 @@
 import type { ResourceItem } from '@/types/resource';
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { BreadcrumbItem } from '@/store';
 import type { TreeRowItem, LoadMoreRowItem } from '@/components/Drive/TreeDrive/index.type';
 

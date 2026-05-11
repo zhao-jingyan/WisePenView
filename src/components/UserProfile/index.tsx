@@ -4,7 +4,7 @@ import { Avatar, Button, Dropdown, Modal } from 'antd';
 import type { MenuProps } from 'antd';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
-import { useUserService } from '@/services';
+import { useUserService } from '@/domains';
 import type { User } from '@/types/user';
 import { getIdentityTypeLabel } from '@/constants/user';
 
@@ -20,7 +20,7 @@ import {
 } from 'react-icons/ri';
 
 import styles from './style.module.less';
-import { useAuthService } from '@/services';
+import { useAuthService } from '@/domains';
 
 /** 问卷星问题反馈页（内嵌 iframe） */
 const FEEDBACK_SURVEY_URL = 'https://v.wjx.cn/vm/PrUZetY.aspx';

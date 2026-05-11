@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Modal, Button, Input } from 'antd';
 import { useRequest } from 'ahooks';
-import { useResourceService } from '@/services';
+import { useResourceService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import type { RenameFileModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';

@@ -14,8 +14,8 @@ import clsx from 'clsx';
 
 import { OpenAI, Claude, Grok, DeepSeek, Doubao, Meta, Mistral, Gemini } from '@lobehub/icons';
 
-import { useChatService } from '@/services';
-import { mapApiModelsToFlatModels } from '@/services/Chat';
+import { useChatService } from '@/domains';
+import { mapApiModelsToFlatModels } from '@/domains/Chat';
 import { useChatModelPreferenceStore } from '@/store/useChatModelPreferenceStore';
 import type { Model } from '../index.type';
 

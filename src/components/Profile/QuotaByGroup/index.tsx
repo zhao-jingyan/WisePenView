@@ -4,7 +4,7 @@ import { Table } from 'antd';
 import type { TableColumnsType, TablePaginationConfig } from 'antd';
 import QuotaBar from '@/components/Common/QuotaBar';
 import type { QuotaByGroupProps, UserGroupQuota } from './index.type';
-import { useQuotaService } from '@/services';
+import { useQuotaService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import styles from './style.module.less';

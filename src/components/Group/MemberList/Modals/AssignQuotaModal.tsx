@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Modal, Button, InputNumber, Form, Alert } from 'antd';
 import { useRequest } from 'ahooks';
-import { useQuotaService } from '@/services';
+import { useQuotaService } from '@/domains';
 import { useMemberEditGuard } from './useMemberEditGuard';
 import type { AssignQuotaModalProps } from './index.type';
 import SelectedMemberList from '@/components/Common/SelectedMemberList';

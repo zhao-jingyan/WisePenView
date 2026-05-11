@@ -18,7 +18,7 @@ import {
 } from '@/components/Group/GroupModals';
 import ComputeWallet from '@/components/Wallet/ComputeWallet';
 import OwnerGroupTokenTransfer from '@/components/Group/OwnerGroupTokenTransfer';
-import { useGroupService } from '@/services';
+import { useGroupService } from '@/domains';
 import type { Group } from '@/types/group';
 import { GROUP_TYPE } from '@/constants/group';
 import { WALLET_TARGET_TYPE } from '@/constants/wallet';

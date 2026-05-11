@@ -1,4 +1,4 @@
-import type { NoteInfoDisplayData } from '@/services/Note';
+import type { NoteInfoDisplayData } from '@/domains/Note';
 
 export interface NoteInfoBarProps {
   noteInfoDisplay?: NoteInfoDisplayData;

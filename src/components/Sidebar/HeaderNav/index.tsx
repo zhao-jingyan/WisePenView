@@ -4,7 +4,7 @@ import type { MenuProps } from 'antd';
 import { useRequest } from 'ahooks';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { RiAddCircleFill, RiFileTextLine, RiGroupFill, RiPenNibFill } from 'react-icons/ri';
-import { useChatService, useNoteService, useUserService } from '@/services';
+import { useChatService, useNoteService, useUserService } from '@/domains';
 import { RESOURCE_TYPE } from '@/constants/resource';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useNewChatSessionStore, useNewNoteStore, useRecentFilesStore } from '@/store';

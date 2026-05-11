@@ -1,4 +1,4 @@
-import type { GetUserInfoResponse, UpdateUserInfoRequest } from '@/services/User';
+import type { GetUserInfoResponse, UpdateUserInfoRequest } from '@/domains/User';
 
 export function buildProfileFormValues(data: GetUserInfoResponse): UpdateUserInfoRequest {
   return {

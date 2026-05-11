@@ -2,7 +2,7 @@ import React, { forwardRef, useImperativeHandle, useMemo, useState } from 'react
 import { useMount, useRequest, useInterval, useUnmount } from 'ahooks';
 import { Button, Empty, Space, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useDocumentService } from '@/services';
+import { useDocumentService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { formatFileSize } from '@/utils/format/formatFileSize';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
@@ -12,7 +12,7 @@ import {
   isDocumentRetryableStatus,
   isDocumentTerminalStatus,
 } from '@/constants/document';
-import type { PendingDocItem } from '@/services/Document';
+import type { PendingDocItem } from '@/domains/Document';
 import styles from './style.module.less';
 
 const SYNC_INTERVAL_MS = 5000;

@@ -27,7 +27,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@services-registry": ["src/services/_registry/registry.impl.ts"]
+      "@services-registry": ["src/domains/_registry/registry.impl.ts"]
     }
   },
   "include": ["src"]

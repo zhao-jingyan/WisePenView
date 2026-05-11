@@ -1,6 +1,6 @@
 import type { DragEvent, HTMLAttributes } from 'react';
 import type { ResourceItem } from '@/types/resource';
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { TreeRowItem, TreeDriveMode } from '../index.type';
 
 /** HTML5 拖拽 dataTransfer 类型：文件 */

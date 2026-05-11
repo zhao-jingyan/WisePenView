@@ -5,9 +5,9 @@ import { zh } from '@blocknote/core/locales';
 import { useMount, useUnmount } from 'ahooks';
 import '@blocknote/mantine/style.css';
 
-import { useImageService } from '@/services';
+import { useImageService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { assertImageProxyUploadLimit } from '@/services/Image';
+import { assertImageProxyUploadLimit } from '@/domains/Image';
 import {
   useChatPanelStore,
   useCurrentChatSessionStore,

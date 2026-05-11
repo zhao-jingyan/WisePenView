@@ -3,10 +3,10 @@ import { useMount, useRequest } from 'ahooks';
 import { Form, Typography, Input, Button, Modal } from 'antd';
 import { RiLockLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuthService } from '@/services';
+import { useAuthService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import auth from '../Auth.module.less';
-import type { NewPasswordRequest } from '@/services/Auth';
+import type { NewPasswordRequest } from '@/domains/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useTranslation } from 'react-i18next';
 

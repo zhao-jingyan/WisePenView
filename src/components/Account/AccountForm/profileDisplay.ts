@@ -1,5 +1,5 @@
 import { getDegreeLevelLabel, getSexLabel } from '@/constants/user';
-import type { GetUserInfoResponse } from '@/services/User';
+import type { GetUserInfoResponse } from '@/domains/User';
 import type { ProfileFieldKey } from '@/views/profile/profile.config';
 
 /** 从完整用户信息中取出档案字段原始值；昵称/姓名在 userInfo，其余在 userProfile。 */
