@@ -7,7 +7,7 @@ import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import { LuEllipsisVertical, LuPencil, LuTrash2, LuTag } from 'react-icons/lu';
 import { formatFileSize } from '@/utils/format/formatFileSize';
 import type { ResourceItem } from '@/types/resource';
-import { useResourceService } from '@/services';
+import { useResourceService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { RenameFileModal, DeleteFileModal, EditStickerModal } from '@/components/Drive/Modals';
 import { useClickFile } from '@/hooks/drive';

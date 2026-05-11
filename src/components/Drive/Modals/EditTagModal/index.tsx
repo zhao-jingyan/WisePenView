@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Modal, Button } from 'antd';
 import { useRequest } from 'ahooks';
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { ResourceItem } from '@/types/resource';
-import { useResourceService } from '@/services';
+import { useResourceService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import TreeNav from '@/components/Drive/TreeNav';
 import { useAppMessage } from '@/hooks/useAppMessage';

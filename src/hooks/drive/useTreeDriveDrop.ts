@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import type { ResourceItem } from '@/types/resource';
 import type { Folder } from '@/types/folder';
-import type { IFolderService } from '@/services/Folder/index.type';
+import type { IFolderService } from '@/domains/Folder/service/index.type';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { getFolderDisplayName } from '@/utils/tag/path';
 

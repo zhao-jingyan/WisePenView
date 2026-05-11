@@ -3,8 +3,8 @@ import { Table, Button } from 'antd';
 import { LuTag, LuFolderPlus, LuChevronRight, LuChevronDown, LuHouse } from 'react-icons/lu';
 import { AiOutlineCloudUpload } from 'react-icons/ai';
 import type { ResourceItem } from '@/types/resource';
-import type { TagTreeNode } from '@/services/Tag/index.type';
-import { useTagService } from '@/services';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
+import { useTagService } from '@/domains';
 import {
   NewTagModal,
   RenameTagModal,

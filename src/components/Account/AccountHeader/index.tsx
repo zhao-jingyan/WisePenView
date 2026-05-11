@@ -3,7 +3,7 @@ import { Avatar, Button, Modal, Tooltip, Upload } from 'antd';
 import type { UploadFile } from 'antd';
 import { useRequest } from 'ahooks';
 import { RiCheckLine, RiCloseLine, RiErrorWarningLine } from 'react-icons/ri';
-import { useImageService, useUserService } from '@/services';
+import { useImageService, useUserService } from '@/domains';
 import { getIdentityTypeLabel, getVerificationModeLabel, USER_STATUS } from '@/constants/user';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
 import { useAppMessage } from '@/hooks/useAppMessage';

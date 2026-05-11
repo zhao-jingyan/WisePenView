@@ -9,8 +9,8 @@ import {
   getSexLabel,
   SEX_LABELS,
 } from '@/constants/user';
-import { useUserService } from '@/services';
-import type { UpdateUserInfoRequest } from '@/services/User';
+import { useUserService } from '@/domains';
+import type { UpdateUserInfoRequest } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { getProfileDisplayString } from './profileDisplay';
 import type { AccountFormProps } from './index.type';

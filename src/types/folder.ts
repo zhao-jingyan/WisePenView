@@ -4,7 +4,7 @@
  */
 
 import type { ResourceItem } from './resource';
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 
 /** 文件夹（路径 tag 节点），TagTreeNode 的语义别名 */
 export type Folder = Pick<TagTreeNode, 'tagId' | 'tagName' | 'groupId' | 'parentId' | 'children'>;

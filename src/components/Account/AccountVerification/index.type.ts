@@ -1,4 +1,4 @@
-import type { GetUserInfoResponse } from '@/services/User';
+import type { GetUserInfoResponse } from '@/domains/User';
 
 export type VerifyModalFormValues = {
   email?: string;

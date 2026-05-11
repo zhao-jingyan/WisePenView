@@ -1,12 +1,12 @@
 import React from 'react';
 import { Modal, Button, Alert } from 'antd';
 import { useRequest } from 'ahooks';
-import { useResourceService, useTagService } from '@/services';
+import { useResourceService, useTagService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useRecentFilesStore } from '@/store';
 import type { RemoveFileFromGroupModalProps } from './index.type';
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 
 const RemoveFileFromGroupModal: React.FC<RemoveFileFromGroupModalProps> = ({
   open,

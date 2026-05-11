@@ -5,7 +5,7 @@ import { useMount, useUnmount } from 'ahooks';
 import router from './router';
 import zhCN from 'antd/locale/zh_CN';
 
-import { ServicesProvider } from '@/services';
+import { ServicesProvider } from '@/domains';
 import appTheme from '@/theme';
 import styles from './App.module.less';
 import { subscribeAuthChangeEvent } from '@/utils/auth/authChange';

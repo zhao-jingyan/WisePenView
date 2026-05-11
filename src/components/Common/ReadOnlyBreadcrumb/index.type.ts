@@ -1,4 +1,4 @@
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 
 export interface ReadOnlyBreadcrumbProps {
   /** 当前活跃节点，为 null 时不渲染 */

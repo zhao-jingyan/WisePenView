@@ -4,7 +4,7 @@ import { RiIndentIncrease } from 'react-icons/ri';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import type { Message, Model } from '@/components/ChatPanel/index.type';
-import { useChatService } from '@/services';
+import { useChatService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import {
   clearNewChatSessionStore,
@@ -14,7 +14,7 @@ import {
   useNoteSelectionStore,
 } from '@/store';
 import { useChatSession } from '@/session/chat/useChatSession';
-import { mapApiModelsToFlatModels } from '@/services/Chat';
+import { mapApiModelsToFlatModels } from '@/domains/Chat';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import {
   HISTORY_PAGE_SIZE,

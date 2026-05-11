@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useRequest } from 'ahooks';
 import { Descriptions, Divider, Form, Spin } from 'antd';
-import { useUserService } from '@/services';
-import type { GetUserInfoResponse } from '@/services/User';
+import { useUserService } from '@/domains';
+import type { GetUserInfoResponse } from '@/domains/User';
 import { IDENTITY_TYPE } from '@/constants/user';
 import {
   AccountForm,

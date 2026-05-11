@@ -1,5 +1,5 @@
 import type { FormInstance } from 'antd/es/form';
-import type { GetUserInfoResponse, UpdateUserInfoRequest } from '@/services/User';
+import type { GetUserInfoResponse, UpdateUserInfoRequest } from '@/domains/User';
 import type { ProfileFieldConfig, ProfileFieldKey } from '@/views/profile/profile.config';
 
 export type ProfileFormValues = UpdateUserInfoRequest;

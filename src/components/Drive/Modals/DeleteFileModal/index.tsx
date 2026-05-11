@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Alert } from 'antd';
 import { useRequest } from 'ahooks';
-import { useDocumentService, useNoteService } from '@/services';
+import { useDocumentService, useNoteService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useRecentFilesStore } from '@/store';
 import type { DeleteFileModalProps } from './index.type';

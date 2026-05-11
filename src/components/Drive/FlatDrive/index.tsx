@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import FileList from './FileList';
 import FileFilter from './FileFilter';
-import { TAG_QUERY_LOGIC_MODE, RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/services/Resource';
+import { TAG_QUERY_LOGIC_MODE, RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
 import type { FileFilterValue } from './FileFilter/index.type';
 import type { FlatDriveProps } from './index.type';
 import styles from './style.module.less';

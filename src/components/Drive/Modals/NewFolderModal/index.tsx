@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useRequest } from 'ahooks';
 import { Modal, Button, Input } from 'antd';
-import { useFolderService } from '@/services';
+import { useFolderService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { getFolderDisplayName } from '@/utils/tag/path';
 import { validateReservedName } from '@/utils/tag/validateReservedName';

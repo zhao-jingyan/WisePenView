@@ -11,7 +11,7 @@ import { Button, Pagination, Skeleton, Table, Tabs } from 'antd';
 import { RiAddLine, RiArrowDownLine, RiArrowUpLine, RiSubtractLine } from 'react-icons/ri';
 import RechargeModal from '@/components/Wallet/RechargeModal';
 import { WALLET_TARGET_TYPE, WALLET_TOKEN_TX_TYPE } from '@/constants/wallet';
-import { useGroupService, useWalletService } from '@/services';
+import { useGroupService, useWalletService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import type { WalletTransactionKind, WalletTransactionRecord } from '@/types/wallet';
 import { formatCompactNumber } from '@/utils/format/formatNumber';

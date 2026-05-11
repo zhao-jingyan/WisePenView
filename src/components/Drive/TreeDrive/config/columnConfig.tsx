@@ -8,7 +8,7 @@ import { LuEllipsisVertical, LuPencil, LuTrash2, LuFolderInput, LuTag } from 're
 import { formatFileSize } from '@/utils/format/formatFileSize';
 import { getFolderDisplayName } from '@/utils/tag/path';
 import type { ResourceItem } from '@/types/resource';
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { MoveToFolderTarget } from '@/components/Drive/Modals';
 import type { GroupFileOrgLogic } from '@/types/group';
 import type { TreeRowItem, TreeDriveMode, LoadMoreRowItem } from '../index.type';

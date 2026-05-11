@@ -1,4 +1,4 @@
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 
 export interface RenameTagModalProps {
   open: boolean;

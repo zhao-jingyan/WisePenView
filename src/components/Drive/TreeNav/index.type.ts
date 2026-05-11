@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { TagTreeNode } from '@/services/Tag/index.type';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { ResourceItem } from '@/types/resource';
 
 export type NodeMap = Map<string, TagTreeNode>;

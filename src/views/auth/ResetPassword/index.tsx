@@ -3,10 +3,10 @@ import { useRequest } from 'ahooks';
 import { Alert, Form, Typography, Input, Button } from 'antd';
 import { RiMailLine } from 'react-icons/ri';
 import { Link } from 'react-router-dom';
-import { useAuthService } from '@/services';
+import { useAuthService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import auth from '../Auth.module.less';
-import type { ResetPasswordRequest } from '@/services/Auth';
+import type { ResetPasswordRequest } from '@/domains/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useTranslation } from 'react-i18next';
 

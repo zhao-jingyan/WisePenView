@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Button, Alert } from 'antd';
 import { useRequest } from 'ahooks';
-import { useGroupService } from '@/services';
-import type { KickMembersRequest } from '@/services/Group';
+import { useGroupService } from '@/domains';
+import type { KickMembersRequest } from '@/domains/Group';
 import { useMemberEditGuard } from './useMemberEditGuard';
 import type { DeleteMemberModalProps } from './index.type';
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
