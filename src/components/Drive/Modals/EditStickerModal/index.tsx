@@ -1,15 +1,15 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import clsx from 'clsx';
-import { Modal, Tag, Spin, Divider } from 'antd';
-import { useRequest } from 'ahooks';
-import { LuPlus } from 'react-icons/lu';
+import AddStickerModal from '@/components/Drive/FlatDrive/FileFilter/AddStickerModal';
 import { useStickerService } from '@/domains';
 import type { Sticker } from '@/domains/Sticker';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import AddStickerModal from '@/components/Drive/FlatDrive/FileFilter/AddStickerModal';
-import type { EditStickerModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Divider, Modal, Spin, Tag } from 'antd';
+import clsx from 'clsx';
+import React, { useCallback, useMemo, useState } from 'react';
+import { LuPlus } from 'react-icons/lu';
 import styles from './index.module.less';
+import type { EditStickerModalProps } from './index.type';
 
 const EditStickerModal: React.FC<EditStickerModalProps> = ({ open, onCancel, onSuccess, file }) => {
   const stickerService = useStickerService();

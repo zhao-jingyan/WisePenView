@@ -1,7 +1,6 @@
-import React from 'react';
+import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import type { MenuProps } from 'antd';
 import { RiCloseLine } from 'react-icons/ri';
-import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import type { RecentFilesGroupProps } from './index.type';
 import styles from './style.module.less';
 

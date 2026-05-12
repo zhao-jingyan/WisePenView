@@ -1,4 +1,4 @@
-import type { UserDisplayBase } from './user';
+import type { UserDisplayBase } from '@/domains/User';
 /**
  * Resource 领域模型
  * path 与 tags：path 为路径/文件夹归属；currentTags 与 docs/apis/resource.openapi.json ResourceItemResponse 字段一致

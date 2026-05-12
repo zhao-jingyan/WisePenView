@@ -1,21 +1,21 @@
-import React, { useRef, useState } from 'react';
-import { Alert, Button, Form, Input, Modal, Radio } from 'antd';
-import { RiMailLine, RiShieldUserLine } from 'react-icons/ri';
-import { useRequest, useUnmount } from 'ahooks';
 import { useUserService } from '@/domains';
 import type { InitiateUISVerifyRequest, SendEmailVerifyRequest } from '@/domains/User';
 import { USER_STATUS } from '@/domains/User/enum';
+import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest, useUnmount } from 'ahooks';
+import { Alert, Button, Form, Input, Modal, Radio } from 'antd';
+import React, { useRef, useState } from 'react';
+import { RiMailLine, RiShieldUserLine } from 'react-icons/ri';
 import VerifyBanner from '../VerifyBanner';
-import { resolveUisQrImageDataUrl } from './resolveUisQrImageDataUrl';
 import type {
   AccountVerificationProps,
   UisOutcomeState,
   VerifyModalFormValues,
   VerifyModalMode,
 } from './index.type';
+import { resolveUisQrImageDataUrl } from './resolveUisQrImageDataUrl';
 import styles from './style.module.less';
-import { useAppMessage } from '@/hooks/useAppMessage';
 
 const AccountVerification: React.FC<AccountVerificationProps> = ({ user, onUserInfoUpdated }) => {
   const userService = useUserService();

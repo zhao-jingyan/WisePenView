@@ -1,34 +1,34 @@
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
-import { useCreateBlockNote } from '@blocknote/react';
-import { BlockNoteView } from '@blocknote/mantine';
 import { zh } from '@blocknote/core/locales';
-import { useMount, useUnmount } from 'ahooks';
+import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
+import { useCreateBlockNote } from '@blocknote/react';
+import { useMount, useUnmount } from 'ahooks';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { useImageService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { assertImageProxyUploadLimit } from '@/domains/Image';
+import { useAppMessage } from '@/hooks/useAppMessage';
 import {
   useChatPanelStore,
   useCurrentChatSessionStore,
   useNewNoteStore,
   useNoteSelectionStore,
 } from '@/store';
+import NoteSlashMenu from '../NoteSlashMenu';
+import NoteToolbar from '../NoteToolbar';
+import { blockNoteSchema } from './blockNoteSchema';
+import { useAttachNoteYjsUndoStack, useNoteCaptureKeyEvent, useNoteYjsUndoManager } from './hooks';
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
 import {
   buildFlatBlocksFromEditor,
   buildOutlineItemsFromEditor,
   resolveActiveHeadingId,
 } from './Outline';
-import { blockNoteSchema } from './blockNoteSchema';
-import NoteToolbar from '../NoteToolbar';
-import NoteSlashMenu from '../NoteSlashMenu';
 import {
   collectNoteEditorExtensions,
   collectNoteEditorProps,
   getNoteEditorPlugins,
 } from './plugins';
-import { useAttachNoteYjsUndoStack, useNoteCaptureKeyEvent, useNoteYjsUndoManager } from './hooks';
 import styles from './style.module.less';
 
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;

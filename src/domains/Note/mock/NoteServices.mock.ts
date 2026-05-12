@@ -1,11 +1,11 @@
 import type {
-  INoteService,
-  SyncTitleRequest,
   CreateNoteRequest,
   CreateNoteResponse,
   DeleteNoteRequest,
   GetNoteInfoRequest,
+  INoteService,
   NoteInfoDisplayData,
+  SyncTitleRequest,
 } from '@/domains/Note';
 import { useRecentFilesStore } from '@/store';
 

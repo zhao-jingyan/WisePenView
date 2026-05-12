@@ -1,7 +1,7 @@
-import type { ResourceItem } from '@/types/resource';
+import type { LoadMoreRowItem, TreeRowItem } from '@/components/Drive/TreeDrive/index.type';
+import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { BreadcrumbItem } from '@/store';
-import type { TreeRowItem, LoadMoreRowItem } from '@/components/Drive/TreeDrive/index.type';
 
 /** 统一树节点：文件夹视图经 adapter 展宽为 TagTreeNode，与标签树一致 */
 export type TreeDriveNode = TagTreeNode;

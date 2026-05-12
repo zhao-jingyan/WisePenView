@@ -1,4 +1,4 @@
-import type { Folder } from '@/types/folder';
+import type { Folder } from '@/domains/Folder';
 
 export interface NewFolderModalProps {
   open: boolean;

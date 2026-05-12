@@ -1,7 +1,7 @@
-import React from 'react';
 import { Modal } from 'antd';
-import styles from './style.module.less';
+import React from 'react';
 import type { ContractModalProps } from './index.type';
+import styles from './style.module.less';
 
 const ServiceAgreement: React.FC<ContractModalProps> = ({ open, onCancel }) => {
   return (

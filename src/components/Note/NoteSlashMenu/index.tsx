@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
-import { SuggestionMenuController } from '@blocknote/react';
 import { filterSuggestionItems } from '@blocknote/core/extensions';
+import { SuggestionMenuController } from '@blocknote/react';
+import { useCallback } from 'react';
 
 import {
   collectPluginSlashMenuItems,

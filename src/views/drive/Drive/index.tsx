@@ -1,13 +1,13 @@
-import React, { useState, useCallback, useRef } from 'react';
+import FlatDrive from '@/components/Drive/FlatDrive';
+import { StickerManageModal } from '@/components/Drive/Modals';
+import FolderDrive from '@/components/Drive/TreeDrive/FolderDrive';
+import type { UploadQueueTabRef } from '@/components/Drive/UploadQueueTab';
+import UploadQueueTab from '@/components/Drive/UploadQueueTab';
+import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
 import { Button, Tabs } from 'antd';
+import React, { useCallback, useRef, useState } from 'react';
 import { AiOutlineCloudUpload } from 'react-icons/ai';
 import { LuTags } from 'react-icons/lu';
-import FlatDrive from '@/components/Drive/FlatDrive';
-import FolderDrive from '@/components/Drive/TreeDrive/FolderDrive';
-import UploadQueueTab from '@/components/Drive/UploadQueueTab';
-import type { UploadQueueTabRef } from '@/components/Drive/UploadQueueTab';
-import { StickerManageModal } from '@/components/Drive/Modals';
-import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
 
 import { UploadDocumentModal } from './UploadDocumentModal';
 import styles from './style.module.less';

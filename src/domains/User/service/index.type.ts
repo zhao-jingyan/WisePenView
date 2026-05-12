@@ -1,6 +1,5 @@
-import type { User } from '@/types/user';
-import type { DegreeLevel } from '@/domains/User/enum';
-import type { UserVerificationMode } from '@/domains/User/enum';
+import type { User } from '@/domains/User';
+import type { DegreeLevel, UserVerificationMode } from '@/domains/User/enum';
 
 /** UserService 接口：供依赖注入使用 */
 export interface IUserService {

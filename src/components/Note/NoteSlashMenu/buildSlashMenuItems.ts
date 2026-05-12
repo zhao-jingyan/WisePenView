@@ -1,5 +1,5 @@
-import { getDefaultReactSlashMenuItems } from '@blocknote/react';
 import type { DefaultReactSuggestionItem } from '@blocknote/react';
+import { getDefaultReactSlashMenuItems } from '@blocknote/react';
 
 import type { CustomBlockNoteEditor } from '../CustomBlockNote/blockNoteSchema';
 import type { NoteEditorPlugin, PluginEditor } from '../CustomBlockNote/plugins/types';

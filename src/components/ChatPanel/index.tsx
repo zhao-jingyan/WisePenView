@@ -1,11 +1,8 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { useMount, useRequest, useUpdateEffect } from 'ahooks';
-import { RiIndentIncrease } from 'react-icons/ri';
-import MessageList from './MessageList';
-import ChatInput from './ChatInput';
 import type { Message, Model } from '@/components/ChatPanel/index.type';
 import { useChatService } from '@/domains';
+import { mapApiModelsToFlatModels } from '@/domains/Chat';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { useChatSession } from '@/session/chat/useChatSession';
 import {
   clearNewChatSessionStore,
   useChatPanelStore,
@@ -13,9 +10,11 @@ import {
   useNewChatSessionStore,
   useNoteSelectionStore,
 } from '@/store';
-import { useChatSession } from '@/session/chat/useChatSession';
-import { mapApiModelsToFlatModels } from '@/domains/Chat';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useMount, useRequest, useUpdateEffect } from 'ahooks';
+import React, { useCallback, useMemo, useState } from 'react';
+import { RiIndentIncrease } from 'react-icons/ri';
+import ChatInput from './ChatInput';
 import {
   HISTORY_PAGE_SIZE,
   buildPanelMessages,
@@ -24,6 +23,7 @@ import {
   mapHistoryMessage,
   type ModelMeta,
 } from './ChatPanel';
+import MessageList from './MessageList';
 import styles from './style.module.less';
 
 interface ChatPanelProps {

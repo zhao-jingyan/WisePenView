@@ -1,5 +1,5 @@
-import React from 'react';
 import { Divider } from 'antd';
+import React from 'react';
 
 import UserCapsule from '@/components/Common/UserCapsule';
 import type { NoteInfoBarProps } from './index.type';

@@ -1,6 +1,6 @@
-import React from 'react';
-import { Progress } from 'antd';
 import type { ProgressProps } from 'antd';
+import { Progress } from 'antd';
+import React from 'react';
 import type { QuotaBarProps } from './index.type';
 import styles from './style.module.less';
 

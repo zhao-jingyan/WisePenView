@@ -1,15 +1,15 @@
-import type { ResourceListPage } from './index.type';
+import { useRecentFilesStore } from '@/store';
+import { ResourceItemApi } from '../apis/ResourceApi';
+import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
 import type {
   GetGroupResourceRequest,
   GetUserResourcesRequest,
+  IResourceService,
   RenameResourceRequest,
+  ResourceListPage,
   UpdateResourceTagsRequest,
 } from './index.type';
 import { TAG_QUERY_LOGIC_MODE } from './index.type';
-import type { IResourceService } from './index.type';
-import { ResourceItemApi } from '../apis/ResourceApi';
-import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
-import { useRecentFilesStore } from '@/store';
 
 const requestResourceItemList = async (
   params: GetUserResourcesRequest,

@@ -1,33 +1,32 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { Table, Button } from 'antd';
-import { LuFolderPlus, LuChevronRight, LuChevronDown, LuHouse, LuUpload } from 'react-icons/lu';
-import type { ResourceItem } from '@/types/resource';
-import type { GroupFileOrgLogic } from '@/types/group';
-import type { Folder } from '@/types/folder';
-import { mapFolderToTagTreeNode } from '@/types/folder';
-import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import { useFolderService } from '@/domains';
-import { getFolderDisplayName } from '@/utils/tag/path';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import {
-  NewFolderModal,
-  RenameFolderModal,
-  DeleteFolderModal,
-  RenameFileModal,
   DeleteFileModal,
+  DeleteFolderModal,
   MoveToFolderModal,
+  NewFolderModal,
+  RenameFileModal,
+  RenameFolderModal,
   type MoveToFolderTarget,
 } from '@/components/Drive/Modals';
-import { useClickFile, useTreeDriveDrop, useTreeDrive } from '@/hooks/drive';
+import { useFolderService } from '@/domains';
+import type { Folder } from '@/domains/Folder';
+import { mapFolderToTagTreeNode } from '@/domains/Folder';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
+import { useClickFile, useTreeDrive, useTreeDriveDrop } from '@/hooks/drive';
 import type { ITreeDriveAdapter } from '@/hooks/drive/useTreeDrive.type';
-import type { TreeRowItem } from '../index.type';
+import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { getFolderDisplayName } from '@/utils/tag/path';
+import { Button, Table } from 'antd';
+import React, { useCallback, useMemo, useState } from 'react';
+import { LuChevronDown, LuChevronRight, LuFolderPlus, LuHouse } from 'react-icons/lu';
 import { getTreeDriveColumns, type TreeDriveColumnConfigOptions } from '../config/columnConfig';
 import {
-  getTreeDriveRowProps,
   createOnRowClick,
+  getTreeDriveRowProps,
   type TreeDriveRowConfigOptions,
 } from '../config/rowConfig';
+import type { TreeRowItem } from '../index.type';
 import styles from '../style.module.less';
 
 const FolderDrive: React.FC = () => {

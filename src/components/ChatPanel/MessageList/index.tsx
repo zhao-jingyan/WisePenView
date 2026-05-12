@@ -1,9 +1,9 @@
-import React, { useCallback, useRef } from 'react';
+import type { Message } from '@/components/ChatPanel/index.type'; // 假设你有这个类型定义
 import { useMount, useUpdateEffect } from 'ahooks';
+import React, { useCallback, useRef } from 'react';
 import MessageItem from './MessageItem';
 import Welcome from './Welcome';
 import styles from './style.module.less';
-import type { Message } from '@/components/ChatPanel/index.type'; // 假设你有这个类型定义
 
 interface MessageListProps {
   messages: Message[];

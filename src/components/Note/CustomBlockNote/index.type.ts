@@ -1,7 +1,7 @@
 import type { Doc } from 'yjs';
 
-import type { WisepenProvider } from '@/session/note/WisepenProvider';
 import type { NoteOutlineItem } from '@/components/Note/NoteOutline/index.type';
+import type { WisepenProvider } from '@/session/note/WisepenProvider';
 
 export interface NoteBodyEditorHandle {
   focus: () => void;

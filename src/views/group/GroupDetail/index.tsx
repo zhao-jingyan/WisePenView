@@ -1,31 +1,30 @@
 /**
  * 小组详情：展示/ Tab / 小组盘只读等由 getGroupDisplayConfig（如 showWalletTabs、driveReadOnlyMode）驱动。
  */
-import React, { useState, useMemo, useRef, useCallback } from 'react';
-import { useRequest } from 'ahooks';
-import { useParams } from 'react-router-dom';
-import { Button, Spin, Tabs } from 'antd';
-import type { TabsProps } from 'antd';
-import { AiOutlineEdit, AiOutlineDelete, AiOutlineLogout } from 'react-icons/ai';
 import UserCapsule from '@/components/Common/UserCapsule';
-import { getGroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
 import TagDrive from '@/components/Drive/TreeDrive/TagDrive';
-import MemberList from '@/components/Group/MemberList';
+import { getGroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
 import {
-  EditGroupInfoModal,
   DissolveGroupModal,
+  EditGroupInfoModal,
   ExitGroupModal,
 } from '@/components/Group/GroupModals';
-import ComputeWallet from '@/components/Wallet/ComputeWallet';
+import MemberList from '@/components/Group/MemberList';
 import OwnerGroupTokenTransfer from '@/components/Group/OwnerGroupTokenTransfer';
+import ComputeWallet from '@/components/Wallet/ComputeWallet';
+import type { ComputeWalletRef } from '@/components/Wallet/ComputeWallet/index.type';
 import { useGroupService } from '@/domains';
-import type { Group } from '@/types/group';
+import type { Group, GroupResConfig } from '@/domains/Group';
 import { WALLET_TARGET_TYPE } from '@/domains/Wallet/enum';
+import { useAppMessage } from '@/hooks/useAppMessage';
+import { useRequest } from 'ahooks';
+import type { TabsProps } from 'antd';
+import { Button, Spin, Tabs } from 'antd';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { AiOutlineDelete, AiOutlineEdit, AiOutlineLogout } from 'react-icons/ai';
+import { useParams } from 'react-router-dom';
 import layout from '../style.module.less';
 import page from './style.module.less';
-import { useAppMessage } from '@/hooks/useAppMessage';
-import type { GroupResConfig } from '@/types/group';
-import type { ComputeWalletRef } from '@/components/Wallet/ComputeWallet/index.type';
 
 type GroupDetailLoaded = {
   group: Group;

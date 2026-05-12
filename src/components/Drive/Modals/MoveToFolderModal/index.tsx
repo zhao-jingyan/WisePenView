@@ -1,15 +1,15 @@
-import React, { useCallback, useState } from 'react';
-import { Modal, Button } from 'antd';
-import { useRequest } from 'ahooks';
-import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import type { ResourceItem } from '@/types/resource';
-import { useFolderService } from '@/domains';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import TreeNav from '@/components/Drive/TreeNav';
 import ReadOnlyBreadcrumb from '@/components/Common/ReadOnlyBreadcrumb';
-import type { MoveToFolderModalProps } from './index.type';
+import TreeNav from '@/components/Drive/TreeNav';
+import { useFolderService } from '@/domains';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Button, Modal } from 'antd';
+import React, { useCallback, useState } from 'react';
 import styles from './index.module.less';
+import type { MoveToFolderModalProps } from './index.type';
 
 const MoveToFolderModal: React.FC<MoveToFolderModalProps> = ({
   open,

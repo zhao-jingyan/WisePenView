@@ -1,9 +1,9 @@
-import { createExtension, getBlockInfo, inlineContentToNodes, nodeToBlock } from '@blocknote/core';
 import type {
   DefaultInlineContentSchema,
   DefaultStyleSchema,
   InlineContent,
 } from '@blocknote/core';
+import { createExtension, getBlockInfo, inlineContentToNodes, nodeToBlock } from '@blocknote/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 

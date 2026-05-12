@@ -1,14 +1,14 @@
+import type { Message } from '@/components/ChatPanel/index.type';
+import { useAppMessage } from '@/hooks/useAppMessage';
+import { useInterval } from 'ahooks';
+import { Button, Spin } from 'antd';
 import React from 'react';
 import { LuCheck, LuCopy } from 'react-icons/lu';
-import { Button, Spin } from 'antd';
-import { useInterval } from 'ahooks';
 import { LogoFactory } from '../../ModelSelector';
+import styles from './AiMessage.module.less';
 import MessageContent from './MessageContent';
 import ThinkingBlock from './ThinkingBlock';
 import ToolCallBlock from './ToolCallBlock';
-import styles from './AiMessage.module.less';
-import type { Message } from '@/components/ChatPanel/index.type';
-import { useAppMessage } from '@/hooks/useAppMessage';
 
 const LOADING_HINTS = ['正在生成回复...', '请稍等片刻...', '正在组织答案...'];
 const LOADING_HINT_SWITCH_MS = 2000;

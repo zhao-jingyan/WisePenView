@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useMount, useRequest } from 'ahooks';
-import { Form, Typography, Input, Button, Modal } from 'antd';
-import { RiLockLine } from 'react-icons/ri';
-import { Link, useNavigate } from 'react-router-dom';
 import { useAuthService } from '@/domains';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import auth from '../Auth.module.less';
 import type { NewPasswordRequest } from '@/domains/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useMount, useRequest } from 'ahooks';
+import { Button, Form, Input, Modal, Typography } from 'antd';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { RiLockLine } from 'react-icons/ri';
+import { Link, useNavigate } from 'react-router-dom';
+import auth from '../Auth.module.less';
 
 type NewPasswordFormValues = Pick<NewPasswordRequest, 'newPassword'>;
 

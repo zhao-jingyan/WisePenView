@@ -1,5 +1,5 @@
-import React from 'react';
 import { Alert, Button } from 'antd';
+import React from 'react';
 import type { VerifyBannerProps } from './index.type';
 import styles from './style.module.less';
 

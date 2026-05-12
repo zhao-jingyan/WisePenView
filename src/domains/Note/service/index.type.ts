@@ -3,7 +3,7 @@
  * 与 blocknote/docs/API.md 对齐
  */
 
-import type { SyncPayload, Block } from '@/types/note';
+import type { Block } from '@/domains/Note';
 
 /** NoteService 接口：供依赖注入使用 */
 /** web-socket服务放在了yjs目录下 */

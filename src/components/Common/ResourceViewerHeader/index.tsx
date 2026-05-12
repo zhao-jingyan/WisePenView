@@ -1,7 +1,7 @@
-import React from 'react';
 import clsx from 'clsx';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
 import { RiArrowLeftLine } from 'react-icons/ri';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import type { ResourceViewerHeaderProps } from './index.type';
 import styles from './style.module.less';

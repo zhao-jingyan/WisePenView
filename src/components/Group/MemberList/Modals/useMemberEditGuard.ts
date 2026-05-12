@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
-import type { GroupMemberRole } from '@/domains/Group/enum';
+import type { EditableRole, EditableRoleForQuota } from '@/components/Group/GroupDisplayConfig';
 import {
   canEditSelectedMembers,
   canEditSelectedMembersForQuota,
 } from '@/components/Group/GroupDisplayConfig';
-import type { EditableRole, EditableRoleForQuota } from '@/components/Group/GroupDisplayConfig';
+import type { GroupMemberRole } from '@/domains/Group/enum';
+import { useMemo } from 'react';
 
 interface UseMemberEditGuardOptions {
   /** 是否校验选中成员中是否包含 OWNER（删除、修改权限需要，分配配额不需要） */

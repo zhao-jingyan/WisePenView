@@ -7,9 +7,9 @@
  * - 提交：剔除横杠与空格，仅传 16 位纯字符。
  * - 防重复提交：进行中按钮文案为「充值中...」并禁用。
  */
-import React, { useState } from 'react';
-import { Input, Modal } from 'antd';
 import { useRequest } from 'ahooks';
+import { Input, Modal } from 'antd';
+import React, { useState } from 'react';
 import type { RechargeModalProps } from './index.type';
 import styles from './style.module.less';
 

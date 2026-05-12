@@ -1,10 +1,11 @@
+export type { Block, NoteInfoResponse, SyncPayload } from './entity/note';
 export type {
-  INoteService,
-  SyncTitleRequest,
   CreateNoteRequest,
   CreateNoteResponse,
   DeleteNoteRequest,
   GetNoteInfoRequest,
-  NoteInfoDisplayData,
+  INoteService,
   NoteInfoDisplayAuthor,
+  NoteInfoDisplayData,
+  SyncTitleRequest,
 } from './service/index.type';

@@ -1,11 +1,11 @@
-import React, { useCallback, useState } from 'react';
-import { Modal, Button, Input } from 'antd';
-import { useRequest } from 'ahooks';
 import { useFolderService } from '@/domains';
+import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { getFolderDisplayName } from '@/utils/tag/path';
+import { useRequest } from 'ahooks';
+import { Button, Input, Modal } from 'antd';
+import React, { useCallback, useState } from 'react';
 import type { RenameFolderModalProps } from './index.type';
-import { useAppMessage } from '@/hooks/useAppMessage';
 
 const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
   open,

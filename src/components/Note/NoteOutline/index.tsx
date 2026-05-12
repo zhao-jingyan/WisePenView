@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
 import clsx from 'clsx';
+import React, { useMemo } from 'react';
 
 import type { NoteOutlineItem, NoteOutlineProps } from './index.type';
 import styles from './style.module.less';

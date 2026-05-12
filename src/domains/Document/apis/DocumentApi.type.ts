@@ -1,5 +1,5 @@
-import type { ResourceItem } from '@/types/resource';
 import type { DocumentResourceType } from '@/domains/Document/service/DocumentServices.impl';
+import type { ResourceItem } from '@/domains/Resource';
 
 export interface UploadDocApiRequest {
   filename: string;

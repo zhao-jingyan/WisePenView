@@ -1,19 +1,18 @@
-import React, { useState, useMemo } from 'react';
-import { usePagination } from 'ahooks';
-import type { GroupMember } from '@/types/group';
-import type { MemberListProps } from './index.type';
-import { normalizeId } from '@/utils/normalize/normalizeId';
-import MemberListToolbar from './MemberListToolbar';
-import MemberListTable from './MemberListTable';
-import {
-  InviteUserModal,
-  EditPermissionModal,
-  DeleteMemberModal,
-  AssignQuotaModal,
-} from './Modals';
-import styles from './style.module.less';
 import { useGroupService } from '@/domains';
+import type { GroupMember } from '@/domains/Group';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { normalizeId } from '@/utils/normalize/normalizeId';
+import { usePagination } from 'ahooks';
+import React, { useMemo, useState } from 'react';
+import type { MemberListProps } from './index.type';
+import MemberListTable from './MemberListTable';
+import MemberListToolbar from './MemberListToolbar';
+import {
+  AssignQuotaModal,
+  DeleteMemberModal,
+  EditPermissionModal,
+  InviteUserModal,
+} from './Modals';
 
 const MemberList: React.FC<MemberListProps> = ({
   groupDisplayConfig,

@@ -1,31 +1,31 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Tree, Spin, Empty } from 'antd';
+import FileTypeIcon from '@/components/Common/FileTypeIcon';
+import { useFolderService, useTagService } from '@/domains';
+import { mapFolderToTagTreeNode } from '@/domains/Folder';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
+import type { ITreeDriveAdapter } from '@/hooks/drive/useTreeDrive.type';
+import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useLatest, useRequest } from 'ahooks';
+import { Empty, Spin, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { AiOutlineFolder, AiOutlineTag } from 'react-icons/ai';
 import { LuChevronDown } from 'react-icons/lu';
-import { useLatest, useRequest } from 'ahooks';
-import { useFolderService, useTagService } from '@/domains';
-import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import { mapFolderToTagTreeNode } from '@/types/folder';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { useAppMessage } from '@/hooks/useAppMessage';
-import type { ITreeDriveAdapter } from '@/hooks/drive/useTreeDrive.type';
-import FileTypeIcon from '@/components/Common/FileTypeIcon';
-import type { TreeNavProps, NodeMap, TreeNavNodeKind } from './index.type';
 import { ROOT_DISPLAY, createFolderDataNode, replaceNodeChildren } from './folderUtil';
+import type { NodeMap, TreeNavNodeKind, TreeNavProps } from './index.type';
+import styles from './style.module.less';
 import { tagToDataNode } from './tagUtil';
-import type { ResourceItem } from '@/types/resource';
 import {
   TREE_NAV_FILE_KEY_PREFIX,
   TREE_NAV_FILE_PAGE_SIZE,
-  type NavLoadMoreMeta,
-  type NavNodeBuildContext,
   buildFolderNavChildren,
   buildNavChildrenFromContents,
   replaceLoadMoreInNavTree,
   tagToLazyNavDataNode,
+  type NavLoadMoreMeta,
+  type NavNodeBuildContext,
 } from './treeNavDataUtil';
-import styles from './style.module.less';
 
 const LOAD_MORE_KEY_PREFIX = 'loadMore-';
 

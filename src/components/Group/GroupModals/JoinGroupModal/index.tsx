@@ -1,11 +1,11 @@
-import React from 'react';
-import { Modal, Button, Form, Input } from 'antd';
-import { useRequest } from 'ahooks';
 import { useGroupService } from '@/domains';
 import type { JoinGroupRequest } from '@/domains/Group';
-import type { JoinGroupModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Button, Form, Input, Modal } from 'antd';
+import React from 'react';
+import type { JoinGroupModalProps } from './index.type';
 
 import styles from './index.module.less';
 

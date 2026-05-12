@@ -1,10 +1,10 @@
 import type {
+  AddStickerRequest,
+  DeleteStickerRequest,
   IStickerService,
   Sticker,
-  AddStickerRequest,
-  UpdateStickerRequest,
-  DeleteStickerRequest,
   UpdateResourceStickersRequest,
+  UpdateStickerRequest,
 } from '@/domains/Sticker';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

@@ -1,10 +1,10 @@
-import React, { useCallback, useState } from 'react';
-import { Modal, Input } from 'antd';
-import { useRequest } from 'ahooks';
 import { useStickerService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { validateReservedName } from '@/utils/tag/validateReservedName';
+import { useRequest } from 'ahooks';
+import { Input, Modal } from 'antd';
+import React, { useCallback, useState } from 'react';
 import type { AddStickerModalProps } from './index.type';
 
 const AddStickerModal: React.FC<AddStickerModalProps> = ({ open, onCancel, onSuccess }) => {

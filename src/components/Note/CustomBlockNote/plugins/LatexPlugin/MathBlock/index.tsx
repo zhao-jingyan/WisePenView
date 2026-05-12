@@ -1,5 +1,4 @@
 /* eslint-disable react-refresh/only-export-components -- BlockNote block spec 与展示组件同文件 */
-import { useCallback, useRef, useState } from 'react';
 import type {
   BlockNoteEditor,
   BlockSchema,
@@ -7,19 +6,20 @@ import type {
   StyleSchema,
 } from '@blocknote/core';
 import { createReactBlockSpec, type ReactCustomBlockRenderProps } from '@blocknote/react';
+import { useCallback, useRef, useState } from 'react';
 
+import { useEffectForce } from '@/hooks/useEffectForce';
+import 'katex/dist/katex.min.css';
+import popoverStyles from '../InlineMath/style.module.less';
+import { renderKatexInto } from '../katexRender';
 import { LatexEditPopover } from '../LatexEditPopover';
 import {
   computeLatexPopoverPlacement,
   isLatexPopoverAnchorMeasurable,
 } from '../LatexEditPopover/latexPopoverGeometry';
-import popoverStyles from '../InlineMath/style.module.less';
-import { renderKatexInto } from '../katexRender';
 import { useFocusPopoverTextarea } from '../LatexEditPopover/useFocusPopoverTextarea';
 import { useLatexPopoverAnchorSync } from '../LatexEditPopover/useLatexPopoverAnchorSync';
 import styles from './style.module.less';
-import { useEffectForce } from '@/hooks/useEffectForce';
-import 'katex/dist/katex.min.css';
 
 const mathBlockPropSchema = {
   expression: {

@@ -1,13 +1,14 @@
-export type { ITagService } from './service/index.type';
+export type { TagListByTagResponse } from './entity/tag';
+export { TAG_VISIBILITY_MODE } from './service/index.type';
 export type {
-  TagTreeNode,
-  TagTreeResponse,
+  GetResByTagRequest,
+  ITagService,
   TagCreateRequest,
-  TagUpdateRequest,
   TagDeleteRequest,
   TagMoveRequest,
-  GetResByTagRequest,
+  TagTreeNode,
+  TagTreeResponse,
+  TagUpdateRequest,
   TagVisibilityMode,
   TagVisibilityModeString,
 } from './service/index.type';
-export { TAG_VISIBILITY_MODE } from './service/index.type';

@@ -1,26 +1,23 @@
-import React, { useState } from 'react';
-import { useMount } from 'ahooks';
-import { Avatar, Button, Dropdown, Modal } from 'antd';
-import type { MenuProps } from 'antd';
-import clsx from 'clsx';
-import { useNavigate } from 'react-router-dom';
 import { useUserService } from '@/domains';
-import type { User } from '@/types/user';
+import type { User } from '@/domains/User';
 import { getIdentityTypeLabel } from '@/domains/User/enum';
+import { useMount } from 'ahooks';
+import type { MenuProps } from 'antd';
+import { Avatar, Button, Dropdown, Modal } from 'antd';
+import clsx from 'clsx';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   RiArrowDownSLine,
-  RiBankCardLine,
+  RiFeedbackLine,
+  RiLogoutBoxRLine,
   RiPieChartLine,
   RiShieldUserLine,
-  RiFeedbackLine,
-  RiTranslate2,
-  RiSunLine,
-  RiLogoutBoxRLine,
 } from 'react-icons/ri';
 
-import styles from './style.module.less';
 import { useAuthService } from '@/domains';
+import styles from './style.module.less';
 
 /** 问卷星问题反馈页（内嵌 iframe） */
 const FEEDBACK_SURVEY_URL = 'https://v.wjx.cn/vm/PrUZetY.aspx';

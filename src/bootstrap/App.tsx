@@ -1,14 +1,14 @@
-import React, { Suspense, useRef } from 'react';
-import { App as AntdApp, ConfigProvider, Spin } from 'antd';
-import { RouterProvider } from 'react-router-dom';
 import { useMount, useUnmount } from 'ahooks';
-import router from './router';
+import { App as AntdApp, ConfigProvider, Spin } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
+import React, { Suspense, useRef } from 'react';
+import { RouterProvider } from 'react-router-dom';
+import router from './router';
 
 import { ServicesProvider } from '@/domains';
 import appTheme from '@/theme';
-import styles from './App.module.less';
 import { subscribeAuthChangeEvent } from '@/utils/auth/authChange';
+import styles from './App.module.less';
 
 const PageLoadingFallback: React.FC = () => (
   <div className={styles.pageLoadingFallback}>

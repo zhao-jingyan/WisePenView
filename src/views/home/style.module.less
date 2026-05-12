@@ -3,8 +3,12 @@
 @accent: #5790c8;
 @title-deep: #324f6a;
 @text-strong: rgba(0, 0, 0, 0.88);
-@shadow-card: 0 1px 2px rgba(23, 19, 71, 0.04), 0 8px 24px rgba(23, 19, 71, 0.06);
-@shadow-card-hover: 0 4px 12px rgba(23, 19, 71, 0.08), 0 16px 48px rgba(87, 144, 200, 0.12);
+@shadow-card:
+  0 1px 2px rgba(23, 19, 71, 0.04),
+  0 8px 24px rgba(23, 19, 71, 0.06);
+@shadow-card-hover:
+  0 4px 12px rgba(23, 19, 71, 0.08),
+  0 16px 48px rgba(87, 144, 200, 0.12);
 
 .landingPage {
   width: 100%;
@@ -155,7 +159,10 @@
   border: 1px solid var(--ant-color-border-secondary) !important;
   background: var(--ant-color-bg-container) !important;
   box-shadow: @shadow-card;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
 }
 
 .featureCard:hover {

@@ -1,10 +1,10 @@
-import React, { useCallback, useState } from 'react';
-import { Modal, Button, Input } from 'antd';
-import { useRequest } from 'ahooks';
 import { useResourceService } from '@/domains';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import type { RenameFileModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Button, Input, Modal } from 'antd';
+import React, { useCallback, useState } from 'react';
+import type { RenameFileModalProps } from './index.type';
 
 const RenameFileModal: React.FC<RenameFileModalProps> = ({ open, onCancel, onSuccess, file }) => {
   const resourceService = useResourceService();

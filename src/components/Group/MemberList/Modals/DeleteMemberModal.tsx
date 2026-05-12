@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { Modal, Button, Alert } from 'antd';
-import { useRequest } from 'ahooks';
-import { useGroupService } from '@/domains';
-import type { KickMembersRequest } from '@/domains/Group';
-import { useMemberEditGuard } from './useMemberEditGuard';
-import type { DeleteMemberModalProps } from './index.type';
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
+import { useGroupService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Alert, Button, Modal } from 'antd';
+import React from 'react';
+import type { DeleteMemberModalProps } from './index.type';
+import { useMemberEditGuard } from './useMemberEditGuard';
 
 const DeleteMemberModal: React.FC<DeleteMemberModalProps> = ({
   open,

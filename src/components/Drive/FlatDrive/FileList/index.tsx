@@ -1,17 +1,17 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { Table, Tag, Dropdown } from 'antd';
-import type { MenuProps } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { usePagination } from 'ahooks';
 import FileTypeIcon from '@/components/Common/FileTypeIcon';
-import { LuEllipsisVertical, LuPencil, LuTrash2, LuTag } from 'react-icons/lu';
-import { formatFileSize } from '@/utils/format/formatFileSize';
-import type { ResourceItem } from '@/types/resource';
+import { DeleteFileModal, EditStickerModal, RenameFileModal } from '@/components/Drive/Modals';
 import { useResourceService } from '@/domains';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { RenameFileModal, DeleteFileModal, EditStickerModal } from '@/components/Drive/Modals';
+import type { ResourceItem } from '@/domains/Resource';
 import { useClickFile } from '@/hooks/drive';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { formatFileSize } from '@/utils/format/formatFileSize';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { usePagination } from 'ahooks';
+import type { MenuProps } from 'antd';
+import { Dropdown, Table, Tag } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import React, { useCallback, useMemo, useState } from 'react';
+import { LuEllipsisVertical, LuPencil, LuTag, LuTrash2 } from 'react-icons/lu';
 import type { FileListProps } from './index.type';
 import styles from './style.module.less';
 

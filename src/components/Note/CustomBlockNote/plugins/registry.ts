@@ -1,5 +1,5 @@
-import { BlockNoteSchema } from '@blocknote/core';
 import type { BlockSpecs, ExtensionFactoryInstance } from '@blocknote/core';
+import { BlockNoteSchema } from '@blocknote/core';
 import type { EditorProps } from '@tiptap/pm/view';
 
 import type { NoteEditorPlugin, NoteInlineContentSpecs } from './types';

@@ -1,5 +1,5 @@
-import { WebsocketProvider } from 'y-websocket';
 import { getApiServerAddr, notifyAddrFailure } from '@/apis/apiServerAddr';
+import { WebsocketProvider } from 'y-websocket';
 import type * as Y from 'yjs';
 
 export function getNoteUrl(): string {

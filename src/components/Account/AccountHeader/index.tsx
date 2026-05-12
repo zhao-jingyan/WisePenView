@@ -1,13 +1,13 @@
-import React, { useMemo, useState } from 'react';
-import { Avatar, Button, Modal, Tooltip, Upload } from 'antd';
-import type { UploadFile } from 'antd';
-import { useRequest } from 'ahooks';
-import { RiCheckLine, RiCloseLine, RiErrorWarningLine } from 'react-icons/ri';
 import { useImageService, useUserService } from '@/domains';
 import { getIdentityTypeLabel, getVerificationModeLabel, USER_STATUS } from '@/domains/User/enum';
-import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import type { UploadFile } from 'antd';
+import { Avatar, Button, Modal, Tooltip, Upload } from 'antd';
+import React, { useMemo, useState } from 'react';
+import { RiCheckLine, RiCloseLine, RiErrorWarningLine } from 'react-icons/ri';
 import type { AccountHeaderProps } from './index.type';
 import styles from './style.module.less';
 

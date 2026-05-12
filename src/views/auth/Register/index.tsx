@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { useRequest } from 'ahooks';
-import { Checkbox, Form, Typography, Input, Button, Modal } from 'antd';
-import { RiUserLine, RiLockLine } from 'react-icons/ri';
-import { Link, useNavigate } from 'react-router-dom';
 import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/domains';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import auth from '../Auth.module.less';
 import type { RegisterRequest } from '@/domains/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Button, Checkbox, Form, Input, Modal, Typography } from 'antd';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { RiLockLine, RiUserLine } from 'react-icons/ri';
+import { Link, useNavigate } from 'react-router-dom';
+import auth from '../Auth.module.less';
 
 const USERNAME_MAX_LENGTH = 20;
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{4,20}$/;

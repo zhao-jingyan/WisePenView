@@ -1,4 +1,4 @@
-import type { Group } from '@/types/group';
+import type { Group } from '@/domains/Group';
 
 export interface GroupCardProps {
   group: Group;

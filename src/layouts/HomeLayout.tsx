@@ -1,5 +1,5 @@
-import React from 'react';
 import { Divider, Flex } from 'antd';
+import React from 'react';
 import { Outlet } from 'react-router-dom';
 
 import LandingNavbar from '@/components/LandingNavbar';

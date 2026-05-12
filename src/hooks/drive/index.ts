@@ -1,5 +1,4 @@
 export { useClickFile } from '../useClickFile';
-export { useTreeDriveDrop } from './useTreeDriveDrop';
 export { useTreeDrive } from './useTreeDrive';
 export type {
   ITreeDriveAdapter,
@@ -7,3 +6,4 @@ export type {
   UseTreeDriveParams,
   UseTreeDriveReturn,
 } from './useTreeDrive.type';
+export { useTreeDriveDrop } from './useTreeDriveDrop';

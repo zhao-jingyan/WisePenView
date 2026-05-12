@@ -1,5 +1,5 @@
-import { createPortal } from 'react-dom';
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react';
+import { createPortal } from 'react-dom';
 
 import popoverStyles from '../InlineMath/style.module.less';
 

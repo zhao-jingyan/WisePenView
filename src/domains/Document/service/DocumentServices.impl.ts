@@ -1,8 +1,8 @@
-import { DocumentApi } from '../apis/DocumentApi';
-import { ResourceItemApi } from '../apis/ResourceApi';
 import { computeFileMd5 } from '@/utils/oss/computeFileMd5';
 import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
 import { parseExtension } from '@/utils/parser/extensionParser';
+import { DocumentApi } from '../apis/DocumentApi';
+import { ResourceItemApi } from '../apis/ResourceApi';
 import type {
   DocDisplayInfoResponse,
   DocumentUploadInitRequestBody,

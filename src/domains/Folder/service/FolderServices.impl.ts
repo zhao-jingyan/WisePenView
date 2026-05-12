@@ -1,14 +1,14 @@
-import type { ResourceItem } from '@/types/resource';
-import type { Folder, FolderListByPathResponse } from '@/types/folder';
-import { mapTagToFolder } from '@/types/folder';
-import type { TagTreeResponse } from '@/domains/Tag/service/index.type';
-import { ResourceTagApi } from '../apis/ResourceApi';
-import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
+import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
+import type { Folder, FolderListByPathResponse } from '@/domains/Folder';
+import { mapTagToFolder } from '@/domains/Folder';
+import type { ResourceItem } from '@/domains/Resource';
 import type { IResourceService } from '@/domains/Resource/service/index.type';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource/service/index.type';
+import type { TagTreeResponse } from '@/domains/Tag/service/index.type';
 import { useTrashTagStore } from '@/store';
-import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
-import type { IFolderService, GetResByFolderRequest, GetFolderTreeRequest } from './index.type';
+import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
+import { ResourceTagApi } from '../apis/ResourceApi';
+import type { GetFolderTreeRequest, GetResByFolderRequest, IFolderService } from './index.type';
 
 const CACHE_KEY_DEFAULT = '__default__';
 /** 回收站节点名：与 `/` 同级的根节点之一，由 Folder 域负责识别与维护 */

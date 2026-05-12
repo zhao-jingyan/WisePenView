@@ -1,6 +1,6 @@
-import { createElement } from 'react';
 import { insertOrUpdateBlockForSlashMenu } from '@blocknote/core/extensions';
 import type { DefaultReactSuggestionItem } from '@blocknote/react';
+import { createElement } from 'react';
 import { RiFormula } from 'react-icons/ri';
 
 import type { PluginEditor } from '../types';

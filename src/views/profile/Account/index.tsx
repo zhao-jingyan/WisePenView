@@ -1,9 +1,3 @@
-import React, { useMemo, useState } from 'react';
-import { useRequest } from 'ahooks';
-import { Descriptions, Divider, Form, Spin } from 'antd';
-import { useUserService } from '@/domains';
-import type { GetUserInfoResponse } from '@/domains/User';
-import { IDENTITY_TYPE } from '@/domains/User/enum';
 import {
   AccountForm,
   AccountHeader,
@@ -11,11 +5,17 @@ import {
   buildProfileFormValues,
   type ProfileFormValues,
 } from '@/components/Account';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { getProfileFieldConfig, PROFILE_FIELDS } from '../profile.config';
-import type { ProfileFieldKey } from '../profile.config';
-import layout from '../style.module.less';
+import { useUserService } from '@/domains';
+import type { GetUserInfoResponse } from '@/domains/User';
+import { IDENTITY_TYPE } from '@/domains/User/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Descriptions, Divider, Form, Spin } from 'antd';
+import React, { useMemo, useState } from 'react';
+import type { ProfileFieldKey } from '../profile.config';
+import { getProfileFieldConfig, PROFILE_FIELDS } from '../profile.config';
+import layout from '../style.module.less';
 
 const Account: React.FC = () => {
   const userService = useUserService();

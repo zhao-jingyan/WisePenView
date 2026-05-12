@@ -1,5 +1,5 @@
-import React from 'react';
 import { Avatar } from 'antd';
+import React from 'react';
 
 import type { UserCapsuleProps } from './index.type';
 import styles from './style.module.less';

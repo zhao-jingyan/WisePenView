@@ -1,7 +1,7 @@
-import React from 'react';
-import clsx from 'clsx';
-import { RiIndentDecrease, RiIndentIncrease } from 'react-icons/ri';
 import logoImg from '@/assets/images/logo-icon.png';
+import clsx from 'clsx';
+import React from 'react';
+import { RiIndentDecrease, RiIndentIncrease } from 'react-icons/ri';
 import HeaderNav from '../HeaderNav';
 import type { SidebarHeaderProps } from './index.type';
 import styles from './style.module.less';

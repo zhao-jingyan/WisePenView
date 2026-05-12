@@ -1,16 +1,16 @@
+import type { User } from '@/domains/User';
+import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import { UserApi } from '../apis/UserApi';
-import type { User } from '@/types/user';
-import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import type {
   ConfirmEmailVerifyRequest,
   FudanUISVerifyStatusData,
   GetUserInfoResponse,
   InitiateUISVerifyRequest,
+  IUserService,
   SendEmailVerifyRequest,
   UpdateUserInfoRequest,
 } from './index.type';
-import type { IUserService } from './index.type';
 
 /** 仅缓存展示用字段和 id，不含 realName、campusNo 等敏感信息；id 归一化为 string 避免大数精度丢失 */
 type CachedUserSafe = Pick<User, 'id' | 'username' | 'nickname' | 'avatar' | 'identityType'>;

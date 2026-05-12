@@ -2,7 +2,7 @@
  * Tag 领域模型及组合类型
  */
 
-import type { ResourceItem } from './resource';
+import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 
 /** 按标签获取的子标签+文件列表响应（getResByTag 用） */

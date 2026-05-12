@@ -1,12 +1,12 @@
-import React from 'react';
-import { Avatar, Badge } from 'antd';
-import type { TableColumnsType } from 'antd';
-import type { GroupMember } from '@/types/group';
-import type { GroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
 import QuotaBar from '@/components/Common/QuotaBar';
+import type { GroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
+import type { GroupMember } from '@/domains/Group';
 import type { GroupMemberRole } from '@/domains/Group/enum';
 import { ROLE_LABEL, ROLE_MAP } from '@/domains/Group/enum';
 import { formatTimestampToDate } from '@/utils/format/formatTime';
+import type { TableColumnsType } from 'antd';
+import { Avatar, Badge } from 'antd';
+import React from 'react';
 
 type MemberRecord = GroupMember & { key: React.Key };
 

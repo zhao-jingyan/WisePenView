@@ -1,5 +1,5 @@
-import { type RefObject } from 'react';
 import { useUpdateEffect } from 'ahooks';
+import { type RefObject } from 'react';
 
 /**
  * 浮层已算出位置后，下一帧聚焦 textarea 并将选区移到末尾（行内 / 块级公式编辑共用）。

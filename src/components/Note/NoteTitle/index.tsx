@@ -1,18 +1,18 @@
-import React, { useCallback, useMemo, useRef } from 'react';
-import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
-import { useCreateBlockNote } from '@blocknote/react';
-import { BlockNoteView } from '@blocknote/mantine';
 import type { Block as BlockNoteBlock } from '@blocknote/core';
 import { zh } from '@blocknote/core/locales';
+import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
+import { useCreateBlockNote } from '@blocknote/react';
+import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { useNoteService } from '@/domains';
 import { useNewNoteStore } from '@/store';
 
-import type { NoteTitleProps } from './index.type';
-import styles from './style.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import type { NoteTitleProps } from './index.type';
+import styles from './style.module.less';
 
 /** 与 Pipeline 一致的防抖时长（ms） */
 const TITLE_DEBOUNCE_MS = 500;

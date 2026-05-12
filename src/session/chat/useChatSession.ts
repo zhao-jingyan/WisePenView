@@ -1,9 +1,9 @@
+import { getApiBaseURL } from '@/apis/apiServerAddr';
+import { useNoteSelectionStore } from '@/store';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useCallback } from 'react';
-import { useNoteSelectionStore } from '@/store';
-import { getApiBaseURL } from '@/apis/apiServerAddr';
-import type { ChatState, ChatRequestBody, UseChatSessionOptions } from './index.type';
+import type { ChatRequestBody, ChatState, UseChatSessionOptions } from './index.type';
 
 // 调用时求值：apiServerAddr 会在生产环境随网络变化运行时切换，固化会失效
 const getCompletionsApi = (): string => `${getApiBaseURL()}chat/completions`;

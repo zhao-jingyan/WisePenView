@@ -1,10 +1,10 @@
-import React, { useCallback, useRef } from 'react';
+import UserProfile from '@/components/UserProfile';
 import clsx from 'clsx';
-import styles from './style.module.less';
+import React, { useCallback, useRef } from 'react';
+import type { SidebarProps } from './index.type';
 import SidebarHeader from './SidebarHeader';
 import SidebarMenu, { type SidebarMenuRef } from './SidebarMenu';
-import UserProfile from '@/components/UserProfile';
-import type { SidebarProps } from './index.type';
+import styles from './style.module.less';
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const sidebarMenuRef = useRef<SidebarMenuRef>(null);

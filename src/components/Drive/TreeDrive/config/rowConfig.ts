@@ -1,7 +1,7 @@
-import type { DragEvent, HTMLAttributes } from 'react';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import type { TreeRowItem, TreeDriveMode } from '../index.type';
+import type { DragEvent, HTMLAttributes } from 'react';
+import type { TreeDriveMode, TreeRowItem } from '../index.type';
 
 /** HTML5 拖拽 dataTransfer 类型：文件 */
 export const DRAG_TYPE_FILE = 'application/x-wisepen-folder-file';

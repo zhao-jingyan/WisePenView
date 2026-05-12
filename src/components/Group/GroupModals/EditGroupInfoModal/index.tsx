@@ -1,14 +1,14 @@
-import React, { useMemo } from 'react';
-import { Modal, Button, Form, Input, Upload } from 'antd';
-import type { UploadFile } from 'antd';
-import { useRequest } from 'ahooks';
-import { LuUpload } from 'react-icons/lu';
 import { useGroupService, useImageService } from '@/domains';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import type { EditGroupRequest } from '@/domains/Group';
 import { GROUP_TYPE } from '@/domains/Group/enum';
+import { useAppMessage } from '@/hooks/useAppMessage';
+import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import type { UploadFile } from 'antd';
+import { Button, Form, Input, Modal, Upload } from 'antd';
+import React, { useMemo } from 'react';
+import { LuUpload } from 'react-icons/lu';
 import type { EditGroupInfoModalProps } from './index.type';
 
 import styles from './index.module.less';

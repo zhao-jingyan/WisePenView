@@ -3,7 +3,7 @@
  * 与 resource.openapi.json 对齐
  */
 
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 
 /** 资源列表分页（与 OpenAPI PageResultResourceItemResponse 一致） */
 export interface ResourceListPage {

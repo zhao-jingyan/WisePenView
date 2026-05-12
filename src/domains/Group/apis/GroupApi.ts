@@ -17,9 +17,9 @@ import type {
   GroupRoleApiResponse,
   JoinGroupApiRequest,
   KickMemberApiRequest,
-  ListMemberApiRequest,
   ListGroupApiRequest,
   ListGroupApiResponse,
+  ListMemberApiRequest,
   QuitGroupApiRequest,
   RemoveGroupApiRequest,
 } from './GroupApi.type';

@@ -1,5 +1,5 @@
-import type { GroupMember } from '@/types/group';
 import type { GroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
+import type { GroupMember } from '@/domains/Group';
 
 export interface MemberListPaginationConfig {
   defaultPageSize?: number;

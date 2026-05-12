@@ -1,7 +1,7 @@
-import React from 'react';
-import type { DataNode } from 'antd/es/tree';
-import { AiOutlineTag } from 'react-icons/ai';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
+import type { DataNode } from 'antd/es/tree';
+import React from 'react';
+import { AiOutlineTag } from 'react-icons/ai';
 import type { NodeMap } from './index.type';
 import styles from './style.module.less';
 

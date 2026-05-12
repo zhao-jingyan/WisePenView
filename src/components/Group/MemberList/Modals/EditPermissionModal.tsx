@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { Modal, Button, Select, Alert } from 'antd';
-import { useRequest } from 'ahooks';
-import { useGroupService } from '@/domains';
-import { useMemberEditGuard } from './useMemberEditGuard';
-import type { EditPermissionModalProps } from './index.type';
-import { ROLE_MAP, type GroupMemberRole } from '@/domains/Group/enum';
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
-import styles from './style.module.less';
+import { useGroupService } from '@/domains';
+import { ROLE_MAP, type GroupMemberRole } from '@/domains/Group/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Alert, Button, Modal, Select } from 'antd';
+import React, { useState } from 'react';
+import type { EditPermissionModalProps } from './index.type';
+import styles from './style.module.less';
+import { useMemberEditGuard } from './useMemberEditGuard';
 
 const { Option } = Select;
 

@@ -1,17 +1,25 @@
-export type { IGroupService } from './service/index.type';
 export type {
+  Group,
+  GroupFileOrgLogic,
+  GroupMember,
+  GroupMemberList,
+  GroupOwnerInfo,
+  GroupResConfig,
+} from './entity/group';
+export { mapGroupMemberRawResponse } from './mapper/groupMember.mapper';
+export type {
+  CreateGroupRequest,
+  DeleteGroupRequest,
+  EditGroupRequest,
   FetchGroupListRequest,
   FetchGroupListResponse,
   GetGroupWalletInfoRequest,
   GroupMemberBaseInfo,
   GroupMemberRawResponse,
-  CreateGroupRequest,
-  EditGroupRequest,
-  DeleteGroupRequest,
+  IGroupService,
   JoinGroupRequest,
-  QuitGroupRequest,
-  UpdateMemberRoleRequest,
   KickMembersRequest,
+  QuitGroupRequest,
   UpdateGroupResConfigRequest,
+  UpdateMemberRoleRequest,
 } from './service/index.type';
-export { mapGroupMemberRawResponse } from './mapper/groupMember.mapper';

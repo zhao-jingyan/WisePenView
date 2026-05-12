@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { Form, Typography, Input, Button } from 'antd';
-import { RiUserLine, RiLockLine } from 'react-icons/ri';
-import { Link, useNavigate } from 'react-router-dom';
 import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/domains';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import auth from '../Auth.module.less';
 import type { LoginRequest } from '@/domains/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useRequest } from 'ahooks';
+import { Button, Form, Input, Typography } from 'antd';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { RiLockLine, RiUserLine } from 'react-icons/ri';
+import { Link, useNavigate } from 'react-router-dom';
+import auth from '../Auth.module.less';
 
 const Login: React.FC = () => {
   const authService = useAuthService();

@@ -1,23 +1,23 @@
 /* eslint-disable react-refresh/only-export-components -- BlockNote inline spec 与展示组件同文件 */
-import { useCallback, useRef, useState } from 'react';
 import type { DefaultStyleSchema } from '@blocknote/core';
-import { TextSelection } from '@tiptap/pm/state';
-import type { Transaction } from '@tiptap/pm/state';
-import type { EditorView } from '@tiptap/pm/view';
-import { createReactInlineContentSpec } from '@blocknote/react';
 import type { ReactCustomInlineContentRenderProps } from '@blocknote/react';
+import { createReactInlineContentSpec } from '@blocknote/react';
+import type { Transaction } from '@tiptap/pm/state';
+import { TextSelection } from '@tiptap/pm/state';
+import type { EditorView } from '@tiptap/pm/view';
+import { useCallback, useRef, useState } from 'react';
 
+import { useEffectForce } from '@/hooks/useEffectForce';
+import 'katex/dist/katex.min.css';
 import { renderKatexInto } from '../katexRender';
 import { LatexEditPopover } from '../LatexEditPopover';
 import {
   computeLatexPopoverPlacement,
   isLatexPopoverAnchorMeasurable,
 } from '../LatexEditPopover/latexPopoverGeometry';
-import popoverStyles from './style.module.less';
 import { useFocusPopoverTextarea } from '../LatexEditPopover/useFocusPopoverTextarea';
 import { useLatexPopoverAnchorSync } from '../LatexEditPopover/useLatexPopoverAnchorSync';
-import { useEffectForce } from '@/hooks/useEffectForce';
-import 'katex/dist/katex.min.css';
+import popoverStyles from './style.module.less';
 
 const inlineMathConfig = {
   type: 'inlineMath',

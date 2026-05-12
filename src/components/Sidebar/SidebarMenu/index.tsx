@@ -1,12 +1,12 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
-import { Menu } from 'antd';
-import type { MenuProps } from 'antd';
-import { useUpdateEffect } from 'ahooks';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useClickFile } from '@/hooks/drive';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useChatPanelStore, useCurrentChatSessionStore, useRecentFilesStore } from '@/store';
 import { getOpenedResourceIdFromPath } from '@/utils/url/openedResourceRoute';
+import { useUpdateEffect } from 'ahooks';
+import type { MenuProps } from 'antd';
+import { Menu } from 'antd';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { buildRecentFilesGroupItems } from '../RecentFilesGroup';
 import { useSessionListGroup } from '../SessionListGroup';
 import type { SidebarMenuProps, SidebarMenuRef } from './index.type';

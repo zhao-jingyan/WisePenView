@@ -1,10 +1,10 @@
-import React from 'react';
-import { LuCopy, LuCheck } from 'react-icons/lu';
-import { Button } from 'antd';
-import MessageContent from './MessageContent';
-import styles from './UserMessage.module.less';
 import type { Message } from '@/components/ChatPanel/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { Button } from 'antd';
+import React from 'react';
+import { LuCheck, LuCopy } from 'react-icons/lu';
+import MessageContent from './MessageContent';
+import styles from './UserMessage.module.less';
 
 interface UserMessageProps {
   message: Message;

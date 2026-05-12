@@ -1,7 +1,7 @@
-import React from 'react';
-import UserMessage from './UserMessage';
-import AiMessage from './AiMessage';
 import type { Message } from '@/components/ChatPanel/index.type';
+import React from 'react';
+import AiMessage from './AiMessage';
+import UserMessage from './UserMessage';
 
 interface MessageItemProps {
   message: Message;

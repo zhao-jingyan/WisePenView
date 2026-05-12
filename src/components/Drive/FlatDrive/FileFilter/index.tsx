@@ -1,18 +1,17 @@
-import React, { useCallback, useState } from 'react';
-import clsx from 'clsx';
-import { Tag, Radio, Select, Spin, Button } from 'antd';
-import { LuX, LuPlus } from 'react-icons/lu';
-import { useRequest } from 'ahooks';
+import StickerManageModal from '@/components/Drive/Modals/StickerManageModal';
 import { useStickerService } from '@/domains';
-import { TAG_QUERY_LOGIC_MODE, RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import type { FileFilterProps, FileFilterValue } from './index.type';
+import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR, TAG_QUERY_LOGIC_MODE } from '@/domains/Resource';
 import type { Sticker } from '@/domains/Sticker';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Button, Radio, Select, Spin, Tag } from 'antd';
+import clsx from 'clsx';
+import React, { useCallback, useState } from 'react';
+import { LuPlus, LuTags, LuX } from 'react-icons/lu';
 import AddStickerModal from './AddStickerModal';
+import type { FileFilterProps, FileFilterValue } from './index.type';
 import styles from './style.module.less';
-import { LuTags } from 'react-icons/lu';
-import StickerManageModal from '@/components/Drive/Modals/StickerManageModal';
 
 const DEFAULT_VALUE: FileFilterValue = {
   tagIds: [],

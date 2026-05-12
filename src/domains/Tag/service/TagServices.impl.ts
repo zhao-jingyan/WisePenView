@@ -1,18 +1,18 @@
-import { ResourceTagApi } from '../apis/ResourceApi';
-import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
+import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import type { IResourceService } from '@/domains/Resource/service/index.type';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource/service/index.type';
-import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
-import type { TagListByTagResponse } from '@/types/tag';
+import type { TagListByTagResponse } from '@/domains/Tag';
+import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
+import { ResourceTagApi } from '../apis/ResourceApi';
 import type {
-  TagTreeResponse,
-  TagTreeNode,
-  TagCreateRequest,
-  TagUpdateRequest,
-  TagDeleteRequest,
-  TagMoveRequest,
   GetResByTagRequest,
   ITagService,
+  TagCreateRequest,
+  TagDeleteRequest,
+  TagMoveRequest,
+  TagTreeNode,
+  TagTreeResponse,
+  TagUpdateRequest,
 } from './index.type';
 
 const CACHE_KEY_DEFAULT = '__default__';

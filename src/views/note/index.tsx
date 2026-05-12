@@ -1,24 +1,24 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { Alert, Button, Result, Spin } from 'antd';
 import { useRequest, useUnmount } from 'ahooks';
+import { Alert, Button, Result, Spin } from 'antd';
+import React, { useCallback, useRef, useState } from 'react';
+import { RiArrowLeftDoubleLine, RiMenuLine } from 'react-icons/ri';
 import { Link, useParams } from 'react-router-dom';
-import { RiArrowLeftDoubleLine, RiArrowLeftLine, RiMenuLine } from 'react-icons/ri';
 
 import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import ResourceViewerHeader from '@/components/Common/ResourceViewerHeader';
 import rvhStyles from '@/components/Common/ResourceViewerHeader/style.module.less';
 import CustomBlockNote from '@/components/Note/CustomBlockNote';
 import type { NoteBodyEditorHandle } from '@/components/Note/CustomBlockNote/index.type';
+import NoteInfoBar from '@/components/Note/NoteInfoBar';
 import NoteOutline from '@/components/Note/NoteOutline';
 import type { NoteOutlineItem } from '@/components/Note/NoteOutline/index.type';
-import NoteInfoBar from '@/components/Note/NoteInfoBar';
 import NoteTitle from '@/components/Note/NoteTitle';
 import { useNoteService } from '@/domains';
 import type { NoteInfoDisplayData } from '@/domains/Note';
+import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useNoteSession } from '@/session/note/useNoteSession';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 import styles from './style.module.less';
 
 interface NoteViewConnectedProps {

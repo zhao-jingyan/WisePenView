@@ -1,19 +1,18 @@
-import React from 'react';
+import FileTypeIcon from '@/components/Common/FileTypeIcon';
+import type { Folder } from '@/domains/Folder';
+import { mapFolderToTagTreeNode } from '@/domains/Folder';
+import type { IFolderService } from '@/domains/Folder/service/index.type';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { DataNode } from 'antd/es/tree';
 import { AiOutlineTag } from 'react-icons/ai';
-import FileTypeIcon from '@/components/Common/FileTypeIcon';
-import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import type { ResourceItem } from '@/types/resource';
-import type { Folder } from '@/types/folder';
-import { mapFolderToTagTreeNode } from '@/types/folder';
-import type { IFolderService } from '@/domains/Folder/service/index.type';
+import { createFolderDataNode } from './folderUtil';
 import type {
   NodeMap,
   TreeNavDataMode,
   TreeNavIconRenderer,
   TreeNavSelectTarget,
 } from './index.type';
-import { createFolderDataNode } from './folderUtil';
 import styles from './style.module.less';
 
 export const TREE_NAV_FILE_PAGE_SIZE = 10;

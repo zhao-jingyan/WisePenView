@@ -1,8 +1,8 @@
 import type {
   LoginRequest,
+  NewPasswordRequest,
   RegisterRequest,
   ResetPasswordRequest,
-  NewPasswordRequest,
 } from './AuthService.type';
 
 /** AuthService 接口：供依赖注入使用 */

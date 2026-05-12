@@ -1,4 +1,4 @@
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 
 export interface RenameFileModalProps {
   open: boolean;

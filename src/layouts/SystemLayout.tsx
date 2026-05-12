@@ -1,11 +1,11 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { Layout } from 'antd';
+import ChatPanel from '@/components/ChatPanel';
+import Sidebar from '@/components/Sidebar';
+import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
 import { useMount, useUpdateEffect } from 'ahooks';
+import { Layout } from 'antd';
+import React, { useCallback, useRef, useState } from 'react';
 import { LuBot } from 'react-icons/lu';
 import { Outlet } from 'react-router-dom';
-import Sidebar from '@/components/Sidebar';
-import ChatPanel from '@/components/ChatPanel';
-import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
 import styles from './SystemLayout.module.less';
 
 const { Content, Sider } = Layout;

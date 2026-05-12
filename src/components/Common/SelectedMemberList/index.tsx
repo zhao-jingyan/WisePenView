@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
-import { List, Avatar } from 'antd';
-import type { GroupMember } from '@/types/group';
-import type { SelectedMemberListProps } from './index.type';
+import type { GroupMember } from '@/domains/Group';
 import { ROLE_LABEL } from '@/domains/Group/enum';
+import { Avatar, List } from 'antd';
+import React, { useMemo } from 'react';
+import type { SelectedMemberListProps } from './index.type';
 import styles from './style.module.less';
 
 const SelectedMemberList: React.FC<SelectedMemberListProps> = ({ members }) => {

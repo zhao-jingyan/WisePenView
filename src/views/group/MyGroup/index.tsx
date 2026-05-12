@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
-import { usePagination } from 'ahooks';
-import { useNavigate } from 'react-router-dom';
-import { Tabs, Button, Row, Col, Pagination, Empty, Spin } from 'antd';
-import { AiOutlinePlus, AiOutlineUserAdd } from 'react-icons/ai';
 import GroupCard from '@/components/Group/GroupCard';
+import { CreateGroupModal, JoinGroupModal } from '@/components/Group/GroupModals';
 import { useGroupService } from '@/domains';
-import type { FetchGroupListRequest } from '@/domains/Group';
-import type { Group } from '@/types/group';
+import type { FetchGroupListRequest, Group } from '@/domains/Group';
 import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group/enum';
-import { JoinGroupModal, CreateGroupModal } from '@/components/Group/GroupModals';
+import { useAppMessage } from '@/hooks/useAppMessage';
+import { usePagination } from 'ahooks';
+import { Button, Col, Empty, Pagination, Row, Spin, Tabs } from 'antd';
+import React, { useState } from 'react';
+import { AiOutlinePlus, AiOutlineUserAdd } from 'react-icons/ai';
+import { useNavigate } from 'react-router-dom';
 import layout from '../style.module.less';
 import page from './style.module.less';
-import { useAppMessage } from '@/hooks/useAppMessage';
 
 const MyGroup: React.FC = () => {
   const groupService = useGroupService();

@@ -1,7 +1,7 @@
-export type { IAuthService } from './service/index.type';
 export type {
   LoginRequest,
+  NewPasswordRequest,
   RegisterRequest,
   ResetPasswordRequest,
-  NewPasswordRequest,
 } from './service/AuthService.type';
+export type { IAuthService } from './service/index.type';

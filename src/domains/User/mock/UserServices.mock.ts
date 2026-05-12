@@ -1,6 +1,9 @@
-import type { User } from '@/types/user';
-import type { FudanUISVerifyStatusData, IUserService } from '@/domains/User';
-import type { GetUserInfoResponse } from '@/domains/User';
+import type {
+  FudanUISVerifyStatusData,
+  GetUserInfoResponse,
+  IUserService,
+  User,
+} from '@/domains/User';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

@@ -1,17 +1,16 @@
-import React from 'react';
-import { Dropdown, Spin } from 'antd';
-import type { MenuProps } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { AiOutlineFolder, AiOutlineTag } from 'react-icons/ai';
 import FileTypeIcon from '@/components/Common/FileTypeIcon';
-import { LuEllipsisVertical, LuPencil, LuTrash2, LuFolderInput, LuTag } from 'react-icons/lu';
+import type { MoveToFolderTarget } from '@/components/Drive/Modals';
+import type { GroupFileOrgLogic } from '@/domains/Group';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { formatFileSize } from '@/utils/format/formatFileSize';
 import { getFolderDisplayName } from '@/utils/tag/path';
-import type { ResourceItem } from '@/types/resource';
-import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import type { MoveToFolderTarget } from '@/components/Drive/Modals';
-import type { GroupFileOrgLogic } from '@/types/group';
-import type { TreeRowItem, TreeDriveMode, LoadMoreRowItem } from '../index.type';
+import type { MenuProps } from 'antd';
+import { Dropdown, Spin } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { AiOutlineFolder, AiOutlineTag } from 'react-icons/ai';
+import { LuEllipsisVertical, LuFolderInput, LuPencil, LuTag, LuTrash2 } from 'react-icons/lu';
+import type { LoadMoreRowItem, TreeDriveMode, TreeRowItem } from '../index.type';
 
 export interface TreeDriveColumnConfigOptions {
   /** 视图模式：tag 时树节点用 tag 图标 */

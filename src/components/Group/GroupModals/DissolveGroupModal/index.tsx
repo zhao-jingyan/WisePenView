@@ -1,12 +1,12 @@
-import React, { useCallback, useState } from 'react';
-import { Modal, Button, Input, Alert } from 'antd';
-import { useRequest } from 'ahooks';
-import { useNavigate } from 'react-router-dom';
 import { useGroupService } from '@/domains';
 import type { DeleteGroupRequest } from '@/domains/Group';
-import type { DissolveGroupModalProps } from './index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Alert, Button, Input, Modal } from 'antd';
+import React, { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { DissolveGroupModalProps } from './index.type';
 
 import styles from './index.module.less';
 

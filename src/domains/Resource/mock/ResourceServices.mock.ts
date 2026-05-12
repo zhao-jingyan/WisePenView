@@ -3,9 +3,9 @@ import type {
   GetUserResourcesRequest,
   IResourceService,
   RenameResourceRequest,
+  ResourceItem,
   ResourceListPage,
 } from '@/domains/Resource';
-import type { ResourceItem } from '@/types/resource';
 import { useRecentFilesStore } from '@/store';
 import mockdata from './mockdata.json';
 

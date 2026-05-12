@@ -27,8 +27,8 @@
  *
  * 2026-03-31 zhao-jingyan
  */
-import { useEffect } from 'react';
 import type { DependencyList, EffectCallback } from 'react';
+import { useEffect } from 'react';
 
 /**
  * 项目约定中 useEffect 的唯一合法入口。若非万不得已，请不要使用。

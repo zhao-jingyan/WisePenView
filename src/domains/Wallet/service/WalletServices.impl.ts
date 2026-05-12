@@ -1,20 +1,20 @@
 /**
  * 钱包 Service：/user/wallet/*，成功码与全局一致 `code === 200`。
  */
+import type { WalletTransactionKind, WalletTransactionRecord } from '@/domains/Wallet';
 import {
   WALLET_LIST_TX_TYPE_QUERY_VALUE,
   WALLET_TX_TAB_MERGE_FETCH_CAP,
 } from '@/domains/Wallet/enum';
 import { UserWalletApi } from '../apis/UserApi';
-import type { WalletTransactionKind, WalletTransactionRecord } from '@/types/wallet';
 import type {
   GetWalletInfoResponse,
-  RedeemVoucherRequest,
+  IWalletService,
+  ListMergedWalletTransactionsRequest,
   ListWalletTransactionsRequest,
   ListWalletTransactionsResponse,
-  ListMergedWalletTransactionsRequest,
+  RedeemVoucherRequest,
   TransferTokenBetweenGroupAndUserRequest,
-  IWalletService,
 } from './index.type';
 
 const toNum = (v: unknown, fallback = 0): number => {

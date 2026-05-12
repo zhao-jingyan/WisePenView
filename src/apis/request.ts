@@ -1,5 +1,5 @@
-import type { AxiosRequestConfig } from 'axios';
 import Axios from '@/apis/Axios';
+import type { AxiosRequestConfig } from 'axios';
 
 export interface ApiResponse<T = unknown> {
   code: number;

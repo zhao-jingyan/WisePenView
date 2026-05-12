@@ -12,9 +12,9 @@ export function getNoteEditorPlugins(): readonly NoteEditorPlugin[] {
   return NOTE_EDITOR_PLUGINS;
 }
 
-export type { NoteEditorPlugin } from './types';
 export {
   collectNoteEditorExtensions,
   collectNoteEditorProps,
   createNoteBlockNoteSchema,
 } from './registry';
+export type { NoteEditorPlugin } from './types';

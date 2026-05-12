@@ -1,9 +1,9 @@
-import type { ResourceItem } from '@/types/resource';
-import type { TagListByTagResponse } from '@/types/tag';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagListByTagResponse } from '@/domains/Tag';
 import type {
+  GetResByTagRequest,
   ITagService,
   TagTreeNode,
-  GetResByTagRequest,
 } from '@/domains/Tag/service/index.type';
 import mockdata from './mockdata.json';
 

@@ -1,14 +1,14 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { Modal, Button } from 'antd';
-import { useRequest } from 'ahooks';
-import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import type { ResourceItem } from '@/types/resource';
-import { useResourceService } from '@/domains';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import TreeNav from '@/components/Drive/TreeNav';
+import { useResourceService } from '@/domains';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import type { EditTagModalProps } from './index.type';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Button, Modal } from 'antd';
+import React, { useCallback, useMemo, useState } from 'react';
 import styles from './index.module.less';
+import type { EditTagModalProps } from './index.type';
 
 const EditTagModal: React.FC<EditTagModalProps> = ({
   open,

@@ -1,4 +1,3 @@
-import { useMemo, useRef } from 'react';
 import type {
   BlockNoteEditor,
   BlockSchema,
@@ -6,6 +5,7 @@ import type {
   StyleSchema,
 } from '@blocknote/core';
 import { useMount, useUnmount } from 'ahooks';
+import { useMemo, useRef } from 'react';
 import * as Y from 'yjs';
 
 /** 笔记正文在 Y.Doc 中的 XmlFragment 名；需与后端 observeDeep 及 BlockNote 绑定名一致 */

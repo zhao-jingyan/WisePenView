@@ -1,5 +1,11 @@
-import type { GetGroupWalletInfoRequest, IGroupService } from '@/domains/Group';
-import type { Group, GroupMember, GroupMemberList, GroupResConfig } from '@/types/group';
+import type {
+  GetGroupWalletInfoRequest,
+  Group,
+  GroupMember,
+  GroupMemberList,
+  GroupResConfig,
+  IGroupService,
+} from '@/domains/Group';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

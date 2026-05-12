@@ -1,17 +1,17 @@
+import type { NoteInfoResponse } from '@/domains/Note';
+import { useNoteSelectionStore, useRecentFilesStore } from '@/store';
+import { formatTimestampToDateTime } from '@/utils/format/formatTime';
+import { NoteApi } from '../apis/NoteApi';
+import { ResourceItemApi } from '../apis/ResourceApi';
 import type {
-  INoteService,
-  SyncTitleRequest,
   CreateNoteRequest,
   CreateNoteResponse,
   DeleteNoteRequest,
   GetNoteInfoRequest,
+  INoteService,
   NoteInfoDisplayData,
+  SyncTitleRequest,
 } from './index.type';
-import { NoteApi } from '../apis/NoteApi';
-import { ResourceItemApi } from '../apis/ResourceApi';
-import { formatTimestampToDateTime } from '@/utils/format/formatTime';
-import type { NoteInfoResponse } from '@/types/note';
-import { useNoteSelectionStore, useRecentFilesStore } from '@/store';
 
 // syncTitle是一个resource的工作，但是语义上属于note服务
 const syncTitle = async (params: SyncTitleRequest): Promise<void> => {

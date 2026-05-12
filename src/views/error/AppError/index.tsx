@@ -1,11 +1,11 @@
-import React from 'react';
 import { Button, Collapse, Result, Space, Tooltip, Typography } from 'antd';
+import React from 'react';
 import { RiFileCopyLine } from 'react-icons/ri';
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom';
 
 import LandingNavbar from '@/components/LandingNavbar';
-import ResourceNotFound from '@/views/error/ResourceNotFound';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import ResourceNotFound from '@/views/error/ResourceNotFound';
 import styles from './style.module.less';
 
 interface AppErrorInfo {

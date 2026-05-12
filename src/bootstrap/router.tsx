@@ -2,9 +2,9 @@ import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 // 引入布局（保持同步加载，保证首屏壳子稳定）
-import SystemLayout from '@/layouts/SystemLayout';
 import AuthLayout from '@/layouts/AuthLayout';
 import HomeLayout from '@/layouts/HomeLayout';
+import SystemLayout from '@/layouts/SystemLayout';
 
 // 页面使用 lazy load，按路由切分 chunk
 const Home = lazy(() => import('@/views/home'));

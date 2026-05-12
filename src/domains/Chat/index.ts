@@ -1,12 +1,15 @@
-export type { IChatService } from './service/index.type';
-export type { ModelListResponse } from './service/index.type';
+export { MODEL_PROVIDER_ID, MODEL_TYPE } from './entity/model';
+export type { Model as BackendModel, Model, ModelProviderId, ModelType } from './entity/model';
+export { mapApiModelsToFlatModels } from './mapper/model.mapper';
 export type {
+  ChatSession,
+  CreateSessionRequest,
   DeleteSessionRequest,
-  ListSessionsRequest,
+  IChatService,
   ListHistoryMessagesRequest,
+  ListSessionsRequest,
   MessageResponse,
+  ModelListResponse,
   PageResult,
   RenameSessionRequest,
 } from './service/index.type';
-export type { CreateSessionRequest, ChatSession } from './service/index.type';
-export { mapApiModelsToFlatModels } from './mapper/model.mapper';

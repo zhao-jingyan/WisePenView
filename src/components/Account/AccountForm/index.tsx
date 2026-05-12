@@ -1,15 +1,15 @@
-import React, { useMemo } from 'react';
-import { Button, Descriptions, Form, Input, Select } from 'antd';
-import type { InputRef } from 'antd/es/input';
-import { useRequest } from 'ahooks';
-import { RiPencilLine } from 'react-icons/ri';
-import { DEGREE, getDegreeLevelLabel, getSexLabel, SEX_ENUM } from '@/domains/User/enum';
 import { useUserService } from '@/domains';
 import type { UpdateUserInfoRequest } from '@/domains/User';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import { getProfileDisplayString } from './profileDisplay';
-import type { AccountFormProps } from './index.type';
+import { DEGREE, getDegreeLevelLabel, getSexLabel, SEX_ENUM } from '@/domains/User/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Button, Descriptions, Form, Input, Select } from 'antd';
+import type { InputRef } from 'antd/es/input';
+import React, { useMemo } from 'react';
+import { RiPencilLine } from 'react-icons/ri';
+import type { AccountFormProps } from './index.type';
+import { getProfileDisplayString } from './profileDisplay';
 import styles from './style.module.less';
 
 const { Option } = Select;

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import type { Model } from '@/components/ChatPanel/index.type';
 import { Input } from 'antd';
+import React, { useState } from 'react';
 import { LuX } from 'react-icons/lu';
 import ActionToolbar from './ActionToolbar';
-import type { Model } from '@/components/ChatPanel/index.type';
 import styles from './style.module.less';
 
 const { TextArea } = Input;

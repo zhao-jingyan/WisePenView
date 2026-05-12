@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { useRequest } from 'ahooks';
-import { Alert, Button, Modal, Typography } from 'antd';
-import { useNavigate } from 'react-router-dom';
 import { useUserService } from '@/domains';
 import type { ConfirmEmailVerifyRequest } from '@/domains/User';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
-import auth from '../Auth.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Alert, Button, Modal, Typography } from 'antd';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import auth from '../Auth.module.less';
 
 const VerifyEmail: React.FC = () => {
   const userService = useUserService();

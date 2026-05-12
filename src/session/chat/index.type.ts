@@ -17,4 +17,4 @@ interface UseChatSessionOptions {
   enableSelected?: boolean;
 }
 
-export type { ChatState, ChatRequestBody, UseChatSessionOptions };
+export type { ChatRequestBody, ChatState, UseChatSessionOptions };

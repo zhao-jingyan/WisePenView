@@ -1,24 +1,24 @@
-import { normalizeId } from '@/utils/normalize/normalizeId';
-import { formatTimestampToDate } from '@/utils/format/formatTime';
+import type { Group, GroupFileOrgLogic, GroupMemberList, GroupResConfig } from '@/domains/Group';
 import { mapRoleCodeToGroupMemberRole } from '@/domains/Group/enum';
-import type { Group, GroupFileOrgLogic, GroupMemberList, GroupResConfig } from '@/types/group';
+import { formatTimestampToDate } from '@/utils/format/formatTime';
+import { normalizeId } from '@/utils/normalize/normalizeId';
 import { GroupApi, GroupMemberApi, GroupResConfigApi } from '../apis/GroupApi';
+import { mapGroupMemberRawResponse } from '../mapper/groupMember.mapper';
 import type {
+  CreateGroupRequest,
+  DeleteGroupRequest,
+  EditGroupRequest,
   FetchGroupListRequest,
   FetchGroupListResponse,
   FetchGroupMembersResponse,
-  CreateGroupRequest,
-  EditGroupRequest,
-  DeleteGroupRequest,
-  JoinGroupRequest,
-  QuitGroupRequest,
-  UpdateMemberRoleRequest,
-  KickMembersRequest,
-  UpdateGroupResConfigRequest,
   GetGroupWalletInfoRequest,
+  IGroupService,
+  JoinGroupRequest,
+  KickMembersRequest,
+  QuitGroupRequest,
+  UpdateGroupResConfigRequest,
+  UpdateMemberRoleRequest,
 } from './index.type';
-import type { IGroupService } from './index.type';
-import { mapGroupMemberRawResponse } from '../mapper/groupMember.mapper';
 
 type GroupRaw = { groupId?: string | number } & Record<string, unknown>;
 

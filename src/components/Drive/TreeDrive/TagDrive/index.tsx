@@ -1,31 +1,31 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { Table, Button } from 'antd';
-import { LuTag, LuFolderPlus, LuChevronRight, LuChevronDown, LuHouse } from 'react-icons/lu';
-import { AiOutlineCloudUpload } from 'react-icons/ai';
-import type { ResourceItem } from '@/types/resource';
-import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import { useTagService } from '@/domains';
 import {
-  NewTagModal,
-  RenameTagModal,
   DeleteTagModal,
-  RenameFileModal,
-  RemoveFileFromGroupModal,
   EditTagModal,
+  NewTagModal,
+  RemoveFileFromGroupModal,
+  RenameFileModal,
+  RenameTagModal,
   UploadFileToGroupModal,
   type MoveToFolderTarget,
 } from '@/components/Drive/Modals';
+import { useTagService } from '@/domains';
+import type { GroupFileOrgLogic } from '@/domains/Group';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useClickFile, useTreeDrive } from '@/hooks/drive';
 import type { ITreeDriveAdapter, TreeDriveNode } from '@/hooks/drive/useTreeDrive.type';
-import type { TreeRowItem } from '../index.type';
+import { Button, Table } from 'antd';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { AiOutlineCloudUpload } from 'react-icons/ai';
+import { LuChevronDown, LuChevronRight, LuFolderPlus, LuHouse, LuTag } from 'react-icons/lu';
 import { getTreeDriveColumns, type TreeDriveColumnConfigOptions } from '../config/columnConfig';
 import {
-  getTreeDriveRowProps,
   createOnRowClick,
+  getTreeDriveRowProps,
   type TreeDriveRowConfigOptions,
 } from '../config/rowConfig';
+import type { TreeRowItem } from '../index.type';
 import styles from '../style.module.less';
-import type { GroupFileOrgLogic } from '@/types/group';
 
 export interface TagDriveProps {
   groupId?: string;

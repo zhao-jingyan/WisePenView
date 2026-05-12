@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
-import { useAppMessage } from '@/hooks/useAppMessage';
-import type { ResourceItem } from '@/types/resource';
-import type { Folder } from '@/types/folder';
+import type { Folder } from '@/domains/Folder';
 import type { IFolderService } from '@/domains/Folder/service/index.type';
+import type { ResourceItem } from '@/domains/Resource';
+import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { getFolderDisplayName } from '@/utils/tag/path';
+import { useCallback } from 'react';
 
 export interface UseTreeDriveDropParams {
   folderService: IFolderService;

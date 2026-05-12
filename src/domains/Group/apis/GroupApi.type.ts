@@ -1,4 +1,4 @@
-import type { Group, GroupFileOrgLogic } from '@/types/group';
+import type { Group, GroupFileOrgLogic } from '@/domains/Group';
 
 export interface ListGroupApiRequest {
   groupRoleFilter: 'JOINED' | 'MANAGED';

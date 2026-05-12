@@ -1,9 +1,9 @@
 import type {
   IAuthService,
   LoginRequest,
+  NewPasswordRequest,
   RegisterRequest,
   ResetPasswordRequest,
-  NewPasswordRequest,
 } from '@/domains/Auth';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

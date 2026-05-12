@@ -1,14 +1,9 @@
+import { Button } from 'antd';
 import React from 'react';
-import { Button, Tooltip } from 'antd';
-import {
-  LuPlus, // 对应上传
-  LuSettings, // 对应设置
-  LuHistory, // 对应搜索/历史
-  LuSend, // 对应发送
-} from 'react-icons/lu';
+import { LuSend } from 'react-icons/lu';
 
-import ModelSelector from '../ModelSelector';
 import type { Model } from '@/components/ChatPanel/index.type';
+import ModelSelector from '../ModelSelector';
 import styles from './style.module.less';
 
 interface ActionToolbarProps {

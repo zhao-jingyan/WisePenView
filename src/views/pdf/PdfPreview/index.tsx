@@ -1,7 +1,3 @@
-import React, { useCallback, useState } from 'react';
-import { Button, Result, Spin } from 'antd';
-import { Link, useParams } from 'react-router-dom';
-import { useRequest } from 'ahooks';
 import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import ResourceViewerHeader from '@/components/Common/ResourceViewerHeader';
 import rvhStyles from '@/components/Common/ResourceViewerHeader/style.module.less';
@@ -9,6 +5,10 @@ import PdfViewer from '@/components/Pdf/PdfViewer/index';
 import { useDocumentService } from '@/domains';
 import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useRequest } from 'ahooks';
+import { Button, Result, Spin } from 'antd';
+import React, { useCallback, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import styles from './style.module.less';
 
 const PdfPreview: React.FC = () => {

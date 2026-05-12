@@ -1,15 +1,15 @@
+import { clearAllServiceCaches } from '@/domains/_shared/cacheRegistry';
+import { clearAllZustandStores } from '@/store';
+import { emitAuthChangeEvent } from '@/utils/auth/authChange';
 import { AuthApi } from '../apis/AuthApi';
 import { AuthServicesMap } from '../mapper/AuthServices.map';
 import type {
   LoginRequest,
+  NewPasswordRequest,
   RegisterRequest,
   ResetPasswordRequest,
-  NewPasswordRequest,
 } from './AuthService.type';
 import type { IAuthService } from './index.type';
-import { clearAllZustandStores } from '@/store';
-import { clearAllServiceCaches } from '@/domains/_shared/cacheRegistry';
-import { emitAuthChangeEvent } from '@/utils/auth/authChange';
 
 const login = async (params: LoginRequest) => {
   const apiParams = AuthServicesMap.toLoginApiRequest(params);

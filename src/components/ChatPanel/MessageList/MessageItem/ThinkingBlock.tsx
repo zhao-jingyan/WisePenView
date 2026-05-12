@@ -1,8 +1,8 @@
+import { Collapse, Tag, Typography } from 'antd';
 import React from 'react';
-import { Collapse, Typography, Tag } from 'antd';
-const { Paragraph } = Typography;
 import { LuChevronRight, LuLoader } from 'react-icons/lu';
 import styles from './ThinkingBlock.module.less';
+const { Paragraph } = Typography;
 
 interface ThinkingBlockProps {
   content: string;

@@ -1,11 +1,11 @@
-import React from 'react';
 import { Button, Card, Space, Tag, Typography } from 'antd';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import searchSvg from '@/assets/images/backgrounds/search.svg';
 import nodeSvg from '@/assets/images/backgrounds/node.svg';
-import relationSvg from '@/assets/images/backgrounds/relation.svg';
 import polylineSvg from '@/assets/images/backgrounds/polyline-edit.svg';
+import relationSvg from '@/assets/images/backgrounds/relation.svg';
+import searchSvg from '@/assets/images/backgrounds/search.svg';
 import styles from './style.module.less';
 
 const { Paragraph, Text } = Typography;

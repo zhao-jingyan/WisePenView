@@ -1,10 +1,10 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import type { GroupMember } from '@/domains/Group';
+import type { TablePaginationConfig, TableProps } from 'antd';
 import { Table } from 'antd';
-import type { TableProps, TablePaginationConfig } from 'antd';
-import type { GroupMember } from '@/types/group';
+import React, { useCallback, useMemo, useRef } from 'react';
 import type { MemberListPaginationConfig, MemberListTableProps } from './index.type';
-import { getColumns } from './TableConfig';
 import styles from './style.module.less';
+import { getColumns } from './TableConfig';
 
 type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
 

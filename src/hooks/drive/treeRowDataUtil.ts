@@ -1,6 +1,6 @@
-import type { ResourceItem } from '@/types/resource';
-import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { LoadMoreRowItem, TreeRowItem } from '@/components/Drive/TreeDrive/index.type';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 
 // 将 TagTreeNode（树节点）与 ResourceItem（资源叶子）转为 TreeRowItem[]，供 Table 树渲染
 // 语义上，Node对应folder/tag，Leaf对应file

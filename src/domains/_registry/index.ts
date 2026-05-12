@@ -27,8 +27,6 @@
  * 6. 通过 `src/domains/index.ts` barrel 重新导出新增的 hook
  */
 
-export type { ServicesContextValue } from './registry';
-export { ServicesProvider } from './ServicesProvider';
 export {
   useAuthService,
   useChatService,
@@ -44,3 +42,5 @@ export {
   useUserService,
   useWalletService,
 } from './hooks';
+export type { ServicesContextValue } from './registry';
+export { ServicesProvider } from './ServicesProvider';

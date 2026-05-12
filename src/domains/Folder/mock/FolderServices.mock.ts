@@ -1,10 +1,10 @@
-import type { Folder, FolderListByPathResponse } from '@/types/folder';
-import type { ResourceItem } from '@/types/resource';
+import type { Folder, FolderListByPathResponse } from '@/domains/Folder';
 import type {
-  IFolderService,
-  GetResByFolderRequest,
   GetFolderTreeRequest,
+  GetResByFolderRequest,
+  IFolderService,
 } from '@/domains/Folder/service/index.type';
+import type { ResourceItem } from '@/domains/Resource';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

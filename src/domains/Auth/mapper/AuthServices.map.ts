@@ -1,14 +1,14 @@
 import type {
   LoginApiRequest,
+  NewPasswordApiRequest,
   RegisterApiRequest,
   ResetPasswordApiRequest,
-  NewPasswordApiRequest,
 } from '../apis/AuthApi.type';
 import type {
   LoginRequest,
+  NewPasswordRequest,
   RegisterRequest,
   ResetPasswordRequest,
-  NewPasswordRequest,
 } from '../service/AuthService.type';
 
 const toLoginApiRequest = (params: LoginRequest): LoginApiRequest => ({

@@ -1,10 +1,10 @@
-import React from 'react';
-import { Card, Image, Badge } from 'antd';
-import styles from './style.module.less';
-import type { GroupCardProps } from './index.type';
-import { PLACEHOLDER_IMAGE } from '@/utils/image/placeholder';
-import { GROUP_TYPE, getGroupTypeLabel } from '@/domains/Group/enum';
 import UserCapsule from '@/components/Common/UserCapsule';
+import { GROUP_TYPE, getGroupTypeLabel } from '@/domains/Group/enum';
+import { PLACEHOLDER_IMAGE } from '@/utils/image/placeholder';
+import { Badge, Card, Image } from 'antd';
+import React from 'react';
+import type { GroupCardProps } from './index.type';
+import styles from './style.module.less';
 
 const { Meta } = Card;
 

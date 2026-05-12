@@ -1,13 +1,13 @@
-import { ResourceTagApi } from '../apis/ResourceApi';
 import type { IResourceService } from '@/domains/Resource/service/index.type';
 import type { TagTreeResponse } from '@/domains/Tag/service/index.type';
+import { ResourceTagApi } from '../apis/ResourceApi';
 import type {
+  AddStickerRequest,
+  DeleteStickerRequest,
   IStickerService,
   Sticker,
-  AddStickerRequest,
-  UpdateStickerRequest,
-  DeleteStickerRequest,
   UpdateResourceStickersRequest,
+  UpdateStickerRequest,
 } from './index.type';
 
 export interface StickerServicesDeps {

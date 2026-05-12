@@ -1,14 +1,14 @@
 // axios request 封装
-import axios, { AxiosHeaders } from 'axios';
-import { clearAllZustandStores } from '@/store';
-import { clearAllServiceCaches } from '@/domains/_shared/cacheRegistry';
-import { emitAuthChangeEvent } from '@/utils/auth/authChange';
 import {
   awaitAddrReady,
   getApiBaseURL,
   initApiServerAddrRuntime,
   notifyAddrFailure,
 } from '@/apis/apiServerAddr';
+import { clearAllServiceCaches } from '@/domains/_shared/cacheRegistry';
+import { clearAllZustandStores } from '@/store';
+import { emitAuthChangeEvent } from '@/utils/auth/authChange';
+import axios，{ AxiosHeaders } from 'axios';
 
 // 初始化 API 服务器地址运行时
 initApiServerAddrRuntime();

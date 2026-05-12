@@ -1,7 +1,7 @@
 import type { NoteEditorPlugin } from '../types';
 import { inlineMathContentSpec } from './InlineMath';
-import { createMathBlockSpec } from './MathBlock';
 import { inlineMathDollarExtension } from './InlineMath/inlineMathDollarExtension';
+import { createMathBlockSpec } from './MathBlock';
 import { createMathSlashMenuItem } from './slashMenuItem';
 
 /**

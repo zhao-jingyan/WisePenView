@@ -1,5 +1,5 @@
-import React, { forwardRef, useImperativeHandle } from 'react';
 import { Menu } from 'antd';
+import { forwardRef, useImperativeHandle } from 'react';
 import { useSessionListGroup } from '../SessionListGroup';
 import type { SessionSectionProps, SessionSectionRef } from './index.type';
 import styles from './style.module.less';

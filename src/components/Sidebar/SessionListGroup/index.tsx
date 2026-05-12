@@ -1,12 +1,12 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { Button } from 'antd';
-import type { MenuProps } from 'antd';
-import { useMount, useRequest } from 'ahooks';
 import { useChatService } from '@/domains';
+import type { ChatSession } from '@/domains/Chat';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
-import type { ChatSession } from '@/domains/Chat';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { useMount, useRequest } from 'ahooks';
+import type { MenuProps } from 'antd';
+import { Button } from 'antd';
+import { useCallback, useMemo, useState } from 'react';
 import SessionMenuItem from '../SessionMenuItem';
 import type { SessionListGroupProps } from './index.type';
 import styles from './style.module.less';
