@@ -1,5 +1,5 @@
-import type { ResourceItem } from '@/types/resource';
-import type { TagListByTagResponse } from '@/types/tag';
+import type { ResourceItem } from '@/domains/Resource';
+import type { TagListByTagResponse } from '@/domains/Tag';
 import type {
   ITagService,
   TagTreeNode,

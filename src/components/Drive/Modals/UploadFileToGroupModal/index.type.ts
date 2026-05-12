@@ -1,4 +1,4 @@
-import type { GroupFileOrgLogic } from '@/types/group';
+import type { GroupFileOrgLogic } from '@/domains/Group';
 
 export interface UploadFileToGroupModalProps {
   open: boolean;

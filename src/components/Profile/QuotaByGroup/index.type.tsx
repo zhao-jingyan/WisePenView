@@ -1,4 +1,4 @@
-import type { UserGroupQuota } from '@/types/quota';
+import type { UserGroupQuota } from '@/domains/Wallet';
 
 export type { UserGroupQuota };
 

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 import { usePdfPreviewProgressStore, useRecentFilesStore } from '@/store';
 import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 

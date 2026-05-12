@@ -1,5 +1,5 @@
-import type { Folder, FolderListByPathResponse } from '@/types/folder';
-import type { ResourceItem } from '@/types/resource';
+import type { Folder, FolderListByPathResponse } from '@/domains/Folder';
+import type { ResourceItem } from '@/domains/Resource';
 
 /** 按文件夹路径获取子文件夹与文件列表的请求参数 */
 export interface GetResByFolderRequest {

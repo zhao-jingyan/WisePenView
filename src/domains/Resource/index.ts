@@ -1,4 +1,5 @@
 export type { IResourceService } from './service/index.type';
+export type { ResourceItem } from './entity/resource';
 export type {
   GetGroupResourceRequest,
   GetUserResourcesRequest,

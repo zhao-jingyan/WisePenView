@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Table, Button } from 'antd';
 import { LuFolderPlus, LuChevronRight, LuChevronDown, LuHouse, LuUpload } from 'react-icons/lu';
-import type { ResourceItem } from '@/types/resource';
-import type { GroupFileOrgLogic } from '@/types/group';
-import type { Folder } from '@/types/folder';
-import { mapFolderToTagTreeNode } from '@/types/folder';
+import type { ResourceItem } from '@/domains/Resource';
+import type { GroupFileOrgLogic } from '@/domains/Group';
+import type { Folder } from '@/domains/Folder';
+import { mapFolderToTagTreeNode } from '@/domains/Folder';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useFolderService } from '@/domains';
 import { getFolderDisplayName } from '@/utils/tag/path';

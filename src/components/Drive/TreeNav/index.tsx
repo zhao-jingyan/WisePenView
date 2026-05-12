@@ -6,7 +6,7 @@ import { LuChevronDown } from 'react-icons/lu';
 import { useLatest, useRequest } from 'ahooks';
 import { useFolderService, useTagService } from '@/domains';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import { mapFolderToTagTreeNode } from '@/types/folder';
+import { mapFolderToTagTreeNode } from '@/domains/Folder';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import type { ITreeDriveAdapter } from '@/hooks/drive/useTreeDrive.type';
@@ -14,7 +14,7 @@ import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import type { TreeNavProps, NodeMap, TreeNavNodeKind } from './index.type';
 import { ROOT_DISPLAY, createFolderDataNode, replaceNodeChildren } from './folderUtil';
 import { tagToDataNode } from './tagUtil';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 import {
   TREE_NAV_FILE_KEY_PREFIX,
   TREE_NAV_FILE_PAGE_SIZE,

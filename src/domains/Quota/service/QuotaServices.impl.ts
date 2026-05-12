@@ -1,7 +1,7 @@
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import { GroupMemberApi } from '../apis/GroupApi';
-import type { UserGroupQuota } from '@/types/quota';
-import type { GroupQuotaInfo } from '@/types/quota';
+import type { UserGroupQuota } from '@/domains/Wallet';
+import type { GroupQuotaInfo } from '@/domains/Wallet';
 import type { SetGroupQuotaRequest } from './index.type';
 import type { IQuotaService } from './index.type';
 

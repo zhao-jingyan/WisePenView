@@ -1,6 +1,6 @@
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import { UserApi } from '../apis/UserApi';
-import type { User } from '@/types/user';
+import type { User } from '@/domains/User';
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import type {
   ConfirmEmailVerifyRequest,

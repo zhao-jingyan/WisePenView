@@ -7,10 +7,10 @@ import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import { LuEllipsisVertical, LuPencil, LuTrash2, LuFolderInput, LuTag } from 'react-icons/lu';
 import { formatFileSize } from '@/utils/format/formatFileSize';
 import { getFolderDisplayName } from '@/utils/tag/path';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { MoveToFolderTarget } from '@/components/Drive/Modals';
-import type { GroupFileOrgLogic } from '@/types/group';
+import type { GroupFileOrgLogic } from '@/domains/Group';
 import type { TreeRowItem, TreeDriveMode, LoadMoreRowItem } from '../index.type';
 
 export interface TreeDriveColumnConfigOptions {

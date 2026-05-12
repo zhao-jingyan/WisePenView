@@ -8,3 +8,4 @@ export type {
   NoteInfoDisplayData,
   NoteInfoDisplayAuthor,
 } from './service/index.type';
+export type { Block, NoteInfoResponse, SyncPayload } from './entity/note';

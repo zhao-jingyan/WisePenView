@@ -6,7 +6,7 @@ import {
   WALLET_TX_TAB_MERGE_FETCH_CAP,
 } from '@/domains/Wallet/enum';
 import { UserWalletApi } from '../apis/UserApi';
-import type { WalletTransactionKind, WalletTransactionRecord } from '@/types/wallet';
+import type { WalletTransactionKind, WalletTransactionRecord } from '@/domains/Wallet';
 import type {
   GetWalletInfoResponse,
   RedeemVoucherRequest,

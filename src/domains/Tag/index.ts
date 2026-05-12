@@ -1,4 +1,5 @@
 export type { ITagService } from './service/index.type';
+export type { TagListByTagResponse } from './entity/tag';
 export type {
   TagTreeNode,
   TagTreeResponse,

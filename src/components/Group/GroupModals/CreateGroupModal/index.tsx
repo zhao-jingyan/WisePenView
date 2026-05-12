@@ -5,7 +5,7 @@ import { useRequest } from 'ahooks';
 import { LuUpload } from 'react-icons/lu';
 import { useGroupService, useImageService, useUserService } from '@/domains';
 import type { CreateGroupRequest } from '@/domains/Group';
-import type { GroupFileOrgLogic } from '@/types/group';
+import type { GroupFileOrgLogic } from '@/domains/Group';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
 import { useAppMessage } from '@/hooks/useAppMessage';

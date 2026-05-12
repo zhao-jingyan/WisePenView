@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 
 export type NodeMap = Map<string, TagTreeNode>;
 export type TreeNavDataMode = 'folder' | 'tag';

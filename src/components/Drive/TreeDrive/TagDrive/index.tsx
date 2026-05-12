@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { Table, Button } from 'antd';
 import { LuTag, LuFolderPlus, LuChevronRight, LuChevronDown, LuHouse } from 'react-icons/lu';
 import { AiOutlineCloudUpload } from 'react-icons/ai';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useTagService } from '@/domains';
 import {
@@ -25,7 +25,7 @@ import {
   type TreeDriveRowConfigOptions,
 } from '../config/rowConfig';
 import styles from '../style.module.less';
-import type { GroupFileOrgLogic } from '@/types/group';
+import type { GroupFileOrgLogic } from '@/domains/Group';
 
 export interface TagDriveProps {
   groupId?: string;

@@ -1,4 +1,4 @@
-import type { Group, GroupFileOrgLogic, GroupMemberList, GroupResConfig } from '@/types/group';
+import type { Group, GroupFileOrgLogic, GroupMemberList, GroupResConfig } from '@/domains/Group';
 
 /** GroupService 接口：供依赖注入使用 */
 export interface IGroupService {

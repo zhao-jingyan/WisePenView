@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 import { Table } from 'antd';
 import type { TableProps, TablePaginationConfig } from 'antd';
-import type { GroupMember } from '@/types/group';
+import type { GroupMember } from '@/domains/Group';
 import type { MemberListPaginationConfig, MemberListTableProps } from './index.type';
 import { getColumns } from './TableConfig';
 import styles from './style.module.less';

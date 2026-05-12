@@ -6,7 +6,7 @@ import { usePagination } from 'ahooks';
 import FileTypeIcon from '@/components/Common/FileTypeIcon';
 import { LuEllipsisVertical, LuPencil, LuTrash2, LuTag } from 'react-icons/lu';
 import { formatFileSize } from '@/utils/format/formatFileSize';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 import { useResourceService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { RenameFileModal, DeleteFileModal, EditStickerModal } from '@/components/Drive/Modals';

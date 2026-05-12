@@ -1,4 +1,4 @@
-import { MODEL_TYPE } from '@/types/model';
+import { MODEL_TYPE } from '@/domains/Chat';
 import type { IChatService } from '@/domains/Chat';
 import type {
   ChatSession,

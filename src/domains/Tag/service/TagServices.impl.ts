@@ -3,7 +3,7 @@ import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
 import type { IResourceService } from '@/domains/Resource/service/index.type';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource/service/index.type';
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
-import type { TagListByTagResponse } from '@/types/tag';
+import type { TagListByTagResponse } from '@/domains/Tag';
 import type {
   TagTreeResponse,
   TagTreeNode,

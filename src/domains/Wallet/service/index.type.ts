@@ -1,4 +1,4 @@
-import type { WalletTransactionRecord } from '@/types/wallet';
+import type { WalletTransactionRecord } from '@/domains/Wallet';
 
 /**
  * IWalletService：/user/wallet 下个人钱包、流水、点卡兑换（仅本人）、组长↔小组划拨。

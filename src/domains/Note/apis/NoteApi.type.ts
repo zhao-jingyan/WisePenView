@@ -1,4 +1,4 @@
-import type { Block, NoteInfoResponse } from '@/types/note';
+import type { Block, NoteInfoResponse } from '@/domains/Note';
 
 export interface AddNoteApiRequest {
   title: string;

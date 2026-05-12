@@ -3,7 +3,7 @@
  * Folder 为 TagTreeNode 的别名，表示路径/文件夹语义
  */
 
-import type { ResourceItem } from './resource';
+import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 
 /** 文件夹（路径 tag 节点），TagTreeNode 的语义别名 */

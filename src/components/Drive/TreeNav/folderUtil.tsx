@@ -2,7 +2,7 @@ import React from 'react';
 import type { DataNode } from 'antd/es/tree';
 import { AiOutlineFolder } from 'react-icons/ai';
 import FileTypeIcon from '@/components/Common/FileTypeIcon';
-import type { Folder } from '@/types/folder';
+import type { Folder } from '@/domains/Folder';
 import type { IFolderService } from '@/domains/Folder/service/index.type';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { NodeMap } from './index.type';

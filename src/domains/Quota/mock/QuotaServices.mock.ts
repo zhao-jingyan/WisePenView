@@ -1,5 +1,5 @@
 import type { IQuotaService } from '@/domains/Quota';
-import type { UserGroupQuota, GroupQuotaInfo } from '@/types/quota';
+import type { UserGroupQuota, GroupQuotaInfo } from '@/domains/Wallet';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

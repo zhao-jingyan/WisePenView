@@ -1,5 +1,5 @@
 import type { DragEvent, HTMLAttributes } from 'react';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { TreeRowItem, TreeDriveMode } from '../index.type';
 

@@ -1,4 +1,4 @@
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 
 /** TreeDrive 视图模式：文件夹树（path tag） / 标签树（全量 tag） */

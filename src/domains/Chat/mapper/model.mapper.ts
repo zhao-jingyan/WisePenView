@@ -1,4 +1,4 @@
-import { MODEL_TYPE } from '@/types/model';
+import { MODEL_TYPE } from '@/domains/Chat';
 import type { Model } from '@/components/ChatPanel/index.type';
 import type { ModelListResponse } from '../service/index.type';
 

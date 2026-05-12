@@ -1,5 +1,5 @@
 import type { DocumentResourceType } from '@/domains/Document/service/DocumentServices.impl';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 
 /** `POST /document/initDocUpload` 请求体，与后端 DocumentUploadInitRequest 一致 */
 export interface DocumentUploadInitRequestBody {

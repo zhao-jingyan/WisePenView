@@ -1,4 +1,4 @@
-import type { Model as BackendModel } from '@/types/model';
+import type { Model as BackendModel } from '@/domains/Chat';
 
 /** ChatService 接口 */
 export interface IChatService {

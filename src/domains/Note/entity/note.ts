@@ -3,8 +3,8 @@
  * 与 blocknote/docs/API.md、design-editor-final 对齐
  */
 
-import type { ResourceItem } from './resource';
-import type { UserDisplayBase } from './user';
+import type { ResourceItem } from '@/domains/Resource';
+import type { UserDisplayBase } from '@/domains/User';
 
 export type DeltaOp = 'insert' | 'update' | 'delete' | 'move';
 

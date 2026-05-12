@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Modal, Button, Steps } from 'antd';
 import { useRequest } from 'ahooks';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
-import type { ResourceItem } from '@/types/resource';
+import type { ResourceItem } from '@/domains/Resource';
 import { useResourceService } from '@/domains';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import TreeNav from '@/components/Drive/TreeNav';

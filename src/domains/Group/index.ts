@@ -1,5 +1,13 @@
 export type { IGroupService } from './service/index.type';
 export type {
+  Group,
+  GroupFileOrgLogic,
+  GroupMember,
+  GroupMemberList,
+  GroupOwnerInfo,
+  GroupResConfig,
+} from './entity/group';
+export type {
   FetchGroupListRequest,
   FetchGroupListResponse,
   GetGroupWalletInfoRequest,

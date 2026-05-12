@@ -1,7 +1,7 @@
 import React from 'react';
 import { Avatar, Badge } from 'antd';
 import type { TableColumnsType } from 'antd';
-import type { GroupMember } from '@/types/group';
+import type { GroupMember } from '@/domains/Group';
 import type { GroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
 import QuotaBar from '@/components/Common/QuotaBar';
 import type { GroupMemberRole } from '@/domains/Group/enum';

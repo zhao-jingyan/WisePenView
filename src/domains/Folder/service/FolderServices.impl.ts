@@ -1,6 +1,6 @@
-import type { ResourceItem } from '@/types/resource';
-import type { Folder, FolderListByPathResponse } from '@/types/folder';
-import { mapTagToFolder } from '@/types/folder';
+import type { ResourceItem } from '@/domains/Resource';
+import type { Folder, FolderListByPathResponse } from '@/domains/Folder';
+import { mapTagToFolder } from '@/domains/Folder';
 import type { TagTreeResponse } from '@/domains/Tag/service/index.type';
 import { ResourceTagApi } from '../apis/ResourceApi';
 import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';

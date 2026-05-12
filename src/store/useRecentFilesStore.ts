@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { UserDisplayBase } from '@/types/user';
+import type { UserDisplayBase } from '@/domains/User';
 
 import { zustandSessionStorage } from './sessionStorage';
 import { usePdfPreviewProgressStore } from './usePdfPreviewProgressStore';

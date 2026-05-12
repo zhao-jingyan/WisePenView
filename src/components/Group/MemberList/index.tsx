@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { usePagination } from 'ahooks';
-import type { GroupMember } from '@/types/group';
+import type { GroupMember } from '@/domains/Group';
 import type { MemberListProps } from './index.type';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import MemberListToolbar from './MemberListToolbar';

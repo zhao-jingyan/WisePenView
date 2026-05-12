@@ -1,4 +1,4 @@
-import type { User } from '@/types/user';
+import type { User } from '@/domains/User';
 import type { FudanUISVerifyStatusData, IUserService } from '@/domains/User';
 import type { GetUserInfoResponse } from '@/domains/User';
 import mockdata from './mockdata.json';

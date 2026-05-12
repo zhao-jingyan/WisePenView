@@ -1,4 +1,4 @@
-import type { User } from '@/types/user';
+import type { User } from '@/domains/User';
 import type { DegreeLevel } from '@/domains/User/enum';
 import type { UserVerificationMode } from '@/domains/User/enum';
 

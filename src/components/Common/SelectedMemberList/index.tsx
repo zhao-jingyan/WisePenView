@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { List, Avatar } from 'antd';
-import type { GroupMember } from '@/types/group';
+import type { GroupMember } from '@/domains/Group';
 import type { SelectedMemberListProps } from './index.type';
 import { ROLE_LABEL } from '@/domains/Group/enum';
 import styles from './style.module.less';

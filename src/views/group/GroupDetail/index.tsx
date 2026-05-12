@@ -19,12 +19,12 @@ import {
 import ComputeWallet from '@/components/Wallet/ComputeWallet';
 import OwnerGroupTokenTransfer from '@/components/Group/OwnerGroupTokenTransfer';
 import { useGroupService } from '@/domains';
-import type { Group } from '@/types/group';
+import type { Group } from '@/domains/Group';
 import { WALLET_TARGET_TYPE } from '@/domains/Wallet/enum';
 import layout from '../style.module.less';
 import page from './style.module.less';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import type { GroupResConfig } from '@/types/group';
+import type { GroupResConfig } from '@/domains/Group';
 import type { ComputeWalletRef } from '@/components/Wallet/ComputeWallet/index.type';
 
 type GroupDetailLoaded = {

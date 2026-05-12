@@ -10,7 +10,7 @@ import type {
 import { NoteApi } from '../apis/NoteApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
 import { formatTimestampToDateTime } from '@/utils/format/formatTime';
-import type { NoteInfoResponse } from '@/types/note';
+import type { NoteInfoResponse } from '@/domains/Note';
 import { useNoteSelectionStore, useRecentFilesStore } from '@/store';
 
 // syncTitle是一个resource的工作，但是语义上属于note服务

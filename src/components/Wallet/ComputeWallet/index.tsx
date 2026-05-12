@@ -13,7 +13,7 @@ import RechargeModal from '@/components/Wallet/RechargeModal';
 import { WALLET_TARGET_TYPE, WALLET_TOKEN_TX_TYPE } from '@/domains/Wallet/enum';
 import { useGroupService, useWalletService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import type { WalletTransactionKind, WalletTransactionRecord } from '@/types/wallet';
+import type { WalletTransactionKind, WalletTransactionRecord } from '@/domains/Wallet';
 import { formatCompactNumber } from '@/utils/format/formatNumber';
 import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { formatTimestampToDateTime } from '@/utils/format/formatTime';

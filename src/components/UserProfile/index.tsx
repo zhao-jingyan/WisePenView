@@ -5,7 +5,7 @@ import type { MenuProps } from 'antd';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { useUserService } from '@/domains';
-import type { User } from '@/types/user';
+import type { User } from '@/domains/User';
 import { getIdentityTypeLabel } from '@/domains/User/enum';
 
 import {

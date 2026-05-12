@@ -6,7 +6,7 @@ import { AiOutlinePlus, AiOutlineUserAdd } from 'react-icons/ai';
 import GroupCard from '@/components/Group/GroupCard';
 import { useGroupService } from '@/domains';
 import type { FetchGroupListRequest } from '@/domains/Group';
-import type { Group } from '@/types/group';
+import type { Group } from '@/domains/Group';
 import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group/enum';
 import { JoinGroupModal, CreateGroupModal } from '@/components/Group/GroupModals';
 import layout from '../style.module.less';
