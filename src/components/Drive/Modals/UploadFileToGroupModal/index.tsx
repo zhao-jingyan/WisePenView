@@ -56,13 +56,15 @@ const UploadFileToGroupModal: React.FC<UploadFileToGroupModalProps> = ({
 
   const { loading: submitting, run: runUploadToGroup } = useRequest(
     async ({ validIds, tagIds }: { validIds: string[]; tagIds: string[] }) => {
-      for (const resourceId of validIds) {
-        await resourceService.updateResourceTags({
-          resourceId,
-          tagIds,
-          groupId,
-        });
-      }
+      await Promise.all(
+        validIds.map((resourceId) =>
+          resourceService.updateResourceTags({
+            resourceId,
+            tagIds,
+            groupId,
+          })
+        )
+      );
       return validIds.length;
     },
     {
