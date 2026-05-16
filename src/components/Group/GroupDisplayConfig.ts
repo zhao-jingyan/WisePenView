@@ -34,6 +34,8 @@ export interface GroupDisplayConfig {
   showWalletTabs: boolean;
   /** 是否可创建标签（OWNER、ADMIN） */
   canCreateTag: boolean;
+  /** 是否可管理标签权限（OWNER、ADMIN） */
+  canManageTag: boolean;
   /** 是否可邀请成员（OWNER、ADMIN） */
   canInviteMember: boolean;
 }
@@ -53,6 +55,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canRemoveMember: false,
       showWalletTabs: false,
       canCreateTag: false,
+      canManageTag: false,
       canInviteMember: false,
     },
     ADMIN: {
@@ -68,6 +71,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canRemoveMember: true,
       showWalletTabs: false,
       canCreateTag: true,
+      canManageTag: true,
       canInviteMember: true,
     },
     OWNER: {
@@ -83,6 +87,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canRemoveMember: true,
       showWalletTabs: false,
       canCreateTag: true,
+      canManageTag: true,
       canInviteMember: true,
     },
   },
@@ -100,6 +105,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canRemoveMember: false,
       showWalletTabs: false,
       canCreateTag: false,
+      canManageTag: false,
       canInviteMember: false,
     },
     ADMIN: {
@@ -115,6 +121,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canRemoveMember: true,
       showWalletTabs: false,
       canCreateTag: true,
+      canManageTag: true,
       canInviteMember: true,
     },
     OWNER: {
@@ -130,6 +137,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canRemoveMember: true,
       showWalletTabs: true,
       canCreateTag: true,
+      canManageTag: true,
       canInviteMember: true,
     },
   },
@@ -147,6 +155,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canRemoveMember: false,
       showWalletTabs: false,
       canCreateTag: false,
+      canManageTag: false,
       canInviteMember: false,
     },
     ADMIN: {
@@ -162,6 +171,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canRemoveMember: true,
       showWalletTabs: false,
       canCreateTag: true,
+      canManageTag: true,
       canInviteMember: true,
     },
     OWNER: {
@@ -177,6 +187,7 @@ const GroupDisplayConfigs: Record<number, Record<string, GroupDisplayConfig>> = 
       canRemoveMember: true,
       showWalletTabs: false,
       canCreateTag: true,
+      canManageTag: true,
       canInviteMember: true,
     },
   },
@@ -198,6 +209,7 @@ export const getGroupDisplayConfig = (groupType: number, userRole: string): Grou
       canAssignQuota: false,
       canRemoveMember: false,
       canCreateTag: false,
+      canManageTag: false,
       showWalletTabs: false,
       canInviteMember: false,
     }

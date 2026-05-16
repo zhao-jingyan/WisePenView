@@ -4,8 +4,13 @@
  */
 
 import type { TagListByTagResponse } from '@/domains/Tag';
-import type { EnumValue } from '@/utils/enum';
-import { createEnum } from '@/utils/enum';
+import type {
+  TagAclGrantMode,
+  TagResourceAction,
+  TagResourceMountMode,
+  TagVisibilityModeString,
+} from '@/domains/Tag/enum';
+import { TAG_RESOURCE_ACTION } from '@/domains/Tag/enum';
 
 /** TagService 接口：供依赖注入使用 */
 export interface ITagService {
@@ -28,18 +33,51 @@ export interface GetResByTagRequest {
   filePageSize?: number;
 }
 
-/** 与 OpenAPI 文档语义对应的别名，值为接口要求的字符串 */
-export const TAG_VISIBILITY_MODE = createEnum([
-  { value: '0', key: 'ALL', label: '全部可见' },
-  { value: '1', key: 'ONLY_ADMIN', label: '仅管理员' },
-  { value: '2', key: 'WHITELIST', label: '白名单' },
-  { value: '3', key: 'BLACKLIST', label: '黑名单' },
-] as const);
+export type { TagAclGrantMode, TagResourceAction, TagResourceMountMode, TagVisibilityModeString };
 
-/** OpenAPI TagTreeResponse.visibilityMode / TagCreateRequest / TagUpdateRequest */
-export type TagVisibilityModeString = EnumValue<typeof TAG_VISIBILITY_MODE>;
+const RESOURCE_ACTION_IMPLIED_MASK: Record<TagResourceAction, number> = {
+  [TAG_RESOURCE_ACTION.DISCOVER]: TAG_RESOURCE_ACTION.DISCOVER,
+  [TAG_RESOURCE_ACTION.VIEW]: TAG_RESOURCE_ACTION.VIEW | TAG_RESOURCE_ACTION.DISCOVER,
+  [TAG_RESOURCE_ACTION.EDIT]:
+    TAG_RESOURCE_ACTION.EDIT | TAG_RESOURCE_ACTION.VIEW | TAG_RESOURCE_ACTION.DISCOVER,
+  [TAG_RESOURCE_ACTION.DOWNLOAD_WATERMARK]:
+    TAG_RESOURCE_ACTION.DOWNLOAD_WATERMARK |
+    TAG_RESOURCE_ACTION.VIEW |
+    TAG_RESOURCE_ACTION.DISCOVER,
+  [TAG_RESOURCE_ACTION.DOWNLOAD_ORIGINAL]:
+    TAG_RESOURCE_ACTION.DOWNLOAD_ORIGINAL |
+    TAG_RESOURCE_ACTION.DOWNLOAD_WATERMARK |
+    TAG_RESOURCE_ACTION.VIEW |
+    TAG_RESOURCE_ACTION.DISCOVER,
+};
 
-export type TagVisibilityMode = EnumValue<typeof TAG_VISIBILITY_MODE>;
+const RESOURCE_ACTION_ORDER = TAG_RESOURCE_ACTION.options.map(
+  (item) => item.value as TagResourceAction
+);
+
+export const getResourceActionImpliedMask = (action: TagResourceAction): number =>
+  RESOURCE_ACTION_IMPLIED_MASK[action] ?? action;
+
+export const permissionCodeToActions = (permissionCode: number): TagResourceAction[] =>
+  TAG_RESOURCE_ACTION.options
+    .map((item) => item.value as TagResourceAction)
+    .filter((action) => (permissionCode & action) !== 0);
+
+export const actionsToPermissionCode = (actions?: TagResourceAction[]): number => {
+  if (!actions || actions.length === 0) return 0;
+  return actions.map((action) => getResourceActionImpliedMask(action)).reduce((a, b) => a | b, 0);
+};
+
+export const hasResourceAction = (permissionCode: number, action: TagResourceAction): boolean =>
+  (permissionCode & action) !== 0;
+
+export const getResourceActionImpliedActions = (action: TagResourceAction): TagResourceAction[] =>
+  permissionCodeToActions(getResourceActionImpliedMask(action)).filter((item) => item !== action);
+
+export const normalizeResourceActions = (actions?: TagResourceAction[]): TagResourceAction[] => {
+  const normalized = permissionCodeToActions(actionsToPermissionCode(actions));
+  return RESOURCE_ACTION_ORDER.filter((value) => normalized.includes(value));
+};
 
 /**
  * 标签树节点（OpenAPI TagTreeResponse）
@@ -51,7 +89,12 @@ export interface TagTreeResponse {
   groupId?: string;
   tagDesc?: string;
   visibilityMode?: TagVisibilityModeString;
-  specifiedUsers?: string[];
+  aclGrantMode?: TagAclGrantMode;
+  resourceMountMode?: TagResourceMountMode;
+  aclGrantSpecifiedUsers?: string[];
+  resourceMountSpecifiedUsers?: string[];
+  mountSpecifiedUsers?: string[];
+  grantedActions?: TagResourceAction[];
   parentId?: string;
   children?: TagTreeResponse[];
 }
@@ -66,7 +109,12 @@ export interface TagCreateRequest {
   tagName: string;
   tagDesc?: string;
   visibilityMode?: TagVisibilityModeString;
-  specifiedUsers?: string[];
+  aclGrantMode?: TagAclGrantMode;
+  resourceMountMode?: TagResourceMountMode;
+  aclGrantSpecifiedUsers?: string[];
+  resourceMountSpecifiedUsers?: string[];
+  mountSpecifiedUsers?: string[];
+  grantedActions?: TagResourceAction[];
 }
 
 /** POST /resource/tag/changeTag */
@@ -75,7 +123,12 @@ export interface TagUpdateRequest {
   tagName?: string;
   tagDesc?: string;
   visibilityMode?: TagVisibilityModeString;
-  specifiedUsers?: string[];
+  aclGrantMode?: TagAclGrantMode;
+  resourceMountMode?: TagResourceMountMode;
+  aclGrantSpecifiedUsers?: string[];
+  resourceMountSpecifiedUsers?: string[];
+  mountSpecifiedUsers?: string[];
+  grantedActions?: TagResourceAction[];
   targetTagId: string;
 }
 

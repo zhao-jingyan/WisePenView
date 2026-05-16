@@ -5,6 +5,7 @@ import {
   RemoveFileFromGroupModal,
   RenameFileModal,
   RenameTagModal,
+  TagPermissionModal,
   UploadFileToGroupModal,
   type MoveToFolderTarget,
 } from '@/components/Drive/Modals';
@@ -17,7 +18,14 @@ import type { ITreeDriveAdapter, TreeDriveNode } from '@/hooks/drive/useTreeDriv
 import { Button, Table } from 'antd';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { AiOutlineCloudUpload } from 'react-icons/ai';
-import { LuChevronDown, LuChevronRight, LuFolderPlus, LuHouse, LuTag } from 'react-icons/lu';
+import {
+  LuChevronDown,
+  LuChevronRight,
+  LuFolderPlus,
+  LuHouse,
+  LuShield,
+  LuTag,
+} from 'react-icons/lu';
 import { getTreeDriveColumns, type TreeDriveColumnConfigOptions } from '../config/columnConfig';
 import {
   createOnRowClick,
@@ -32,11 +40,17 @@ export interface TagDriveProps {
   /** 只读：隐藏新建标签与行内操作 */
   fileOrgLogic?: GroupFileOrgLogic;
   canCreateTag: boolean;
+  canManageTagPermission?: boolean;
 }
 
 const TAG_VIRTUAL_ROOT_ID = '__tag_root__';
 
-const TagDrive: React.FC<TagDriveProps> = ({ groupId, fileOrgLogic, canCreateTag }) => {
+const TagDrive: React.FC<TagDriveProps> = ({
+  groupId,
+  fileOrgLogic,
+  canCreateTag,
+  canManageTagPermission = false,
+}) => {
   const tagService = useTagService();
   const clickFile = useClickFile();
   const virtualRootRef = useRef<TreeDriveNode | null>(null);
@@ -96,6 +110,8 @@ const TagDrive: React.FC<TagDriveProps> = ({ groupId, fileOrgLogic, canCreateTag
   const [deleteTagTarget, setDeleteTagTarget] = useState<TagTreeNode | null>(null);
   const [editTagTarget, setEditTagTarget] = useState<MoveToFolderTarget | null>(null);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [tagPermissionModalOpen, setTagPermissionModalOpen] = useState(false);
+  const [tagPermissionTarget, setTagPermissionTarget] = useState<TagTreeNode | null>(null);
 
   const handleRenameFolder = useCallback((node: TagTreeNode) => {
     if (node.tagId === TAG_VIRTUAL_ROOT_ID) return;
@@ -113,6 +129,16 @@ const TagDrive: React.FC<TagDriveProps> = ({ groupId, fileOrgLogic, canCreateTag
   }, []);
   const handleEditTag = useCallback((t: MoveToFolderTarget) => {
     setEditTagTarget(t);
+  }, []);
+
+  const handleOpenTagPermission = useCallback((tag?: TagTreeNode) => {
+    setTagPermissionTarget(tag ?? null);
+    setTagPermissionModalOpen(true);
+  }, []);
+
+  const handleCloseTagPermission = useCallback(() => {
+    setTagPermissionModalOpen(false);
+    setTagPermissionTarget(null);
   }, []);
 
   const handleCloseEditTag = useCallback(() => {
@@ -183,11 +209,13 @@ const TagDrive: React.FC<TagDriveProps> = ({ groupId, fileOrgLogic, canCreateTag
     onEditTag: handleEditTag,
     onRenameFolder: handleRenameFolder,
     onDeleteFolder: handleDeleteFolder,
+    onManageTagPermission: canManageTagPermission ? handleOpenTagPermission : undefined,
     onRenameFile: handleRenameFile,
     onDeleteFile: handleDeleteFile,
     onLoadMore: handleLoadMore,
     loadingMoreKeys,
     fileOrgLogic,
+    canManageTagPermission,
   });
 
   const expandIcon = useCallback(
@@ -256,6 +284,17 @@ const TagDrive: React.FC<TagDriveProps> = ({ groupId, fileOrgLogic, canCreateTag
               上传文件
             </Button>
 
+            {canManageTagPermission && (
+              <Button
+                type="default"
+                size="small"
+                icon={<LuShield size={16} />}
+                onClick={() => handleOpenTagPermission()}
+              >
+                标签权限管理
+              </Button>
+            )}
+
             {canCreateTag && (
               <Button
                 type="default"
@@ -323,6 +362,15 @@ const TagDrive: React.FC<TagDriveProps> = ({ groupId, fileOrgLogic, canCreateTag
           target={editTagTarget}
           groupId={groupId}
           onCancel={handleCloseEditTag}
+          onSuccess={refresh}
+        />
+
+        <TagPermissionModal
+          open={tagPermissionModalOpen}
+          groupId={groupId}
+          fileOrgLogic={fileOrgLogic}
+          initialTagId={tagPermissionTarget?.tagId}
+          onCancel={handleCloseTagPermission}
           onSuccess={refresh}
         />
 

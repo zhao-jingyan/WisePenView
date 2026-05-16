@@ -1,0 +1,106 @@
+.modalFormPadding {
+  padding: var(--ant-padding-lg) 0;
+}
+
+.modalWrap {
+  :global(.ant-modal) {
+    max-width: calc(100vw - 32px);
+    margin: 16px auto;
+  }
+}
+
+.wrapper {
+  display: flex;
+  gap: var(--ant-margin-lg);
+  min-height: 420px;
+}
+
+.leftPane {
+  width: 260px;
+  border: 1px solid var(--ant-color-border);
+  border-radius: var(--ant-border-radius-lg);
+  background: var(--ant-color-bg-container);
+  padding: var(--ant-padding-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ant-margin-sm);
+}
+
+.leftTitle {
+  font-size: var(--ant-font-size-sm);
+  color: var(--ant-color-text-secondary);
+}
+
+.rightPane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ant-margin-lg);
+}
+
+.sectionCard {
+  border: 1px solid var(--ant-color-border-secondary);
+  border-radius: var(--ant-border-radius-lg);
+  padding: var(--ant-padding-md);
+  background: var(--ant-color-bg-container);
+}
+
+.sectionTitle {
+  font-size: var(--ant-font-size-base);
+  font-weight: 600;
+  margin-bottom: var(--ant-margin-sm);
+}
+
+.modeRow {
+  margin-bottom: var(--ant-margin-sm);
+}
+
+.actionGroup {
+  margin-bottom: 0;
+}
+
+.actionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ant-margin-xs);
+}
+
+.actionItem {
+  padding: var(--ant-padding-xs) var(--ant-padding-sm);
+  border-radius: var(--ant-border-radius);
+  border: 1px solid transparent;
+  background: var(--ant-color-bg-container);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.actionItemHighlight {
+  background: var(--ant-color-primary-bg);
+  border-color: var(--ant-color-primary-border);
+}
+
+.actionLabel {
+  font-weight: 500;
+}
+
+.actionHint {
+  margin-left: 24px;
+  margin-top: var(--ant-margin-xxs);
+  font-size: var(--ant-font-size-sm);
+  color: var(--ant-color-text-secondary);
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--ant-color-border);
+  border-radius: var(--ant-border-radius-lg);
+  background: var(--ant-color-bg-layout);
+}
+
+.selectHint {
+  font-size: var(--ant-font-size-sm);
+  color: var(--ant-color-text-secondary);
+  margin-bottom: var(--ant-margin-xs);
+}

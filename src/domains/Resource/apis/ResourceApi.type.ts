@@ -40,7 +40,12 @@ export interface AddTagApiRequest {
   tagName: string;
   tagDesc?: string;
   visibilityMode?: string;
-  specifiedUsers?: string[];
+  aclGrantMode?: number;
+  resourceMountMode?: number;
+  aclGrantSpecifiedUsers?: string[];
+  resourceMountSpecifiedUsers?: string[];
+  mountSpecifiedUsers?: string[];
+  grantedActions?: number[];
 }
 
 export interface ChangeTagApiRequest {
@@ -48,7 +53,12 @@ export interface ChangeTagApiRequest {
   tagName?: string;
   tagDesc?: string;
   visibilityMode?: string;
-  specifiedUsers?: string[];
+  aclGrantMode?: number;
+  resourceMountMode?: number;
+  aclGrantSpecifiedUsers?: string[];
+  resourceMountSpecifiedUsers?: string[];
+  mountSpecifiedUsers?: string[];
+  grantedActions?: number[];
   targetTagId: string;
 }
 
@@ -73,7 +83,12 @@ export interface TagTreeResponse {
   groupId?: string;
   tagDesc?: string;
   visibilityMode?: string;
-  specifiedUsers?: string[];
+  aclGrantMode?: number;
+  resourceMountMode?: number;
+  aclGrantSpecifiedUsers?: string[];
+  resourceMountSpecifiedUsers?: string[];
+  mountSpecifiedUsers?: string[];
+  grantedActions?: number[];
   parentId?: string;
   children?: TagTreeResponse[];
 }

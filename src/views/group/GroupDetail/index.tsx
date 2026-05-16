@@ -109,6 +109,7 @@ const GroupDetail: React.FC = () => {
               groupId={gid}
               fileOrgLogic={resConfig.fileOrgLogic}
               canCreateTag={groupDisplayConfig.canCreateTag}
+              canManageTagPermission={groupDisplayConfig.canManageTag}
             />
           </div>
         ),

@@ -11,6 +11,7 @@ export { default as RenameFileModal } from './RenameFileModal';
 export { default as RenameFolderModal } from './RenameFolderModal';
 export { default as RenameTagModal } from './RenameTagModal';
 export { default as StickerManageModal } from './StickerManageModal';
+export { default as TagPermissionModal } from './TagPermissionModal';
 export { default as UploadFileToGroupModal } from './UploadFileToGroupModal';
 
 export type { DeleteFileModalProps } from './DeleteFileModal/index.type';
@@ -26,5 +27,6 @@ export type { RenameFileModalProps } from './RenameFileModal/index.type';
 export type { RenameFolderModalProps } from './RenameFolderModal/index.type';
 export type { RenameTagModalProps } from './RenameTagModal/index.type';
 export type { StickerManageModalProps } from './StickerManageModal/index.type';
+export type { TagPermissionModalProps } from './TagPermissionModal/index.type';
 export type { MoveToFolderTarget } from './types';
 export type { UploadFileToGroupModalProps } from './UploadFileToGroupModal/index.type';

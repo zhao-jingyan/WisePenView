@@ -9,7 +9,14 @@ import type { MenuProps } from 'antd';
 import { Dropdown, Spin } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { AiOutlineFolder, AiOutlineTag } from 'react-icons/ai';
-import { LuEllipsisVertical, LuFolderInput, LuPencil, LuTag, LuTrash2 } from 'react-icons/lu';
+import {
+  LuEllipsisVertical,
+  LuFolderInput,
+  LuPencil,
+  LuShield,
+  LuTag,
+  LuTrash2,
+} from 'react-icons/lu';
 import type { LoadMoreRowItem, TreeDriveMode, TreeRowItem } from '../index.type';
 
 export interface TreeDriveColumnConfigOptions {
@@ -28,6 +35,8 @@ export interface TreeDriveColumnConfigOptions {
   onEditTag?: (target: MoveToFolderTarget) => void;
   onRenameFolder: (node: TagTreeNode) => void;
   onDeleteFolder: (node: TagTreeNode) => void;
+  /** tag 权限管理 */
+  onManageTagPermission?: (node: TagTreeNode) => void;
   onRenameFile: (file: ResourceItem) => void;
   onDeleteFile: (file: ResourceItem) => void;
   /** 「加载更多」点击回调 */
@@ -38,6 +47,8 @@ export interface TreeDriveColumnConfigOptions {
   readOnlyMode?: boolean;
   /** 小组文件组织模式：TAG/FOLDER，仅用于展示图标 */
   fileOrgLogic?: GroupFileOrgLogic;
+  /** 是否展示标签权限管理入口 */
+  canManageTagPermission?: boolean;
 }
 
 export function getTreeDriveColumns(
@@ -52,12 +63,14 @@ export function getTreeDriveColumns(
     onEditTag,
     onRenameFolder,
     onDeleteFolder,
+    onManageTagPermission,
     onRenameFile,
     onDeleteFile,
     onLoadMore,
     loadingMoreKeys,
     readOnlyMode = false,
     fileOrgLogic,
+    canManageTagPermission = false,
   } = options;
 
   const columns: ColumnsType<TreeRowItem> = [
@@ -160,6 +173,8 @@ export function getTreeDriveColumns(
         const disableTagTreeMutationOps = mode === 'tag';
         const showEditTag = false;
         const showMoveToFolder = mode === 'folder';
+        const showTagPermissionEntry =
+          canManageTagPermission && mode === 'tag' && record._type === 'folder';
         const handleEditTag = (info: Parameters<NonNullable<MenuProps['onClick']>>[0]) => {
           info.domEvent.stopPropagation();
           setOpenDropdownKey(null);
@@ -173,6 +188,15 @@ export function getTreeDriveColumns(
               ? { type: 'folder', data: record.data }
               : { type: 'file', data: record.data }
           );
+        };
+        const handleManageTagPermission = (
+          info: Parameters<NonNullable<MenuProps['onClick']>>[0]
+        ) => {
+          info.domEvent.stopPropagation();
+          setOpenDropdownKey(null);
+          if (record._type === 'folder') {
+            onManageTagPermission?.(record.data);
+          }
         };
         const firstItem: MenuProps['items'] =
           showEditTag && onEditTag
@@ -198,6 +222,16 @@ export function getTreeDriveColumns(
           record._type === 'folder'
             ? [
                 ...firstItem,
+                ...(showTagPermissionEntry
+                  ? [
+                      {
+                        key: 'permission',
+                        label: '标签权限管理',
+                        icon: <LuShield size={14} />,
+                        onClick: handleManageTagPermission,
+                      },
+                    ]
+                  : []),
                 ...(!disableTagTreeMutationOps
                   ? [
                       {
