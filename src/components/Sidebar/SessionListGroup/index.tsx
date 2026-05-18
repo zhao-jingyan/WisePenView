@@ -2,7 +2,7 @@ import { useChatService } from '@/domains';
 import type { ChatSession } from '@/domains/Chat';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useMount, useRequest } from 'ahooks';
 import type { MenuProps } from 'antd';
 import { Button } from 'antd';
@@ -63,7 +63,7 @@ export const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionLis
           return [...prev, ...extra];
         });
       } catch (err) {
-        messageApi.error(parseErrorMessage(err, '拉取会话列表失败'));
+        messageApi.error(parseErrorMessage(err));
       } finally {
         if (append) {
           setLoadingMoreSessions(false);

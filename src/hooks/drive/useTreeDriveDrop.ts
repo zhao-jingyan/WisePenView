@@ -2,7 +2,7 @@ import type { Folder } from '@/domains/Folder';
 import type { IFolderService } from '@/domains/Folder/service/index.type';
 import type { ResourceItem } from '@/domains/Resource';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { getFolderDisplayName } from '@/utils/tag/path';
 import { useCallback } from 'react';
 
@@ -33,7 +33,7 @@ export function useTreeDriveDrop(params: UseTreeDriveDropParams): {
         message.success(`已移动到「${getFolderDisplayName(targetFolder.tagName)}」`);
         refresh();
       } catch (err) {
-        message.error(parseErrorMessage(err, '移动失败'));
+        message.error(parseErrorMessage(err));
       }
     },
     [folderService, refresh, message]
@@ -48,7 +48,7 @@ export function useTreeDriveDrop(params: UseTreeDriveDropParams): {
         );
         refresh();
       } catch (err) {
-        message.error(parseErrorMessage(err, '移动失败'));
+        message.error(parseErrorMessage(err));
       }
     },
     [folderService, refresh, message]

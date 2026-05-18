@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import React from 'react';
 import { RiArrowLeftLine } from 'react-icons/ri';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -9,14 +8,14 @@ import styles from './style.module.less';
 const DEFAULT_FALLBACK_TO = '/app/drive';
 const DEFAULT_BACK_LABEL = '返回';
 
-const ResourceViewerHeader: React.FC<ResourceViewerHeaderProps> = ({
+function ResourceViewerHeader({
   fallbackTo = DEFAULT_FALLBACK_TO,
   backLabel = DEFAULT_BACK_LABEL,
   inlineTitle,
   extra,
   titleBlock,
   className,
-}) => {
+}: ResourceViewerHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -49,6 +48,6 @@ const ResourceViewerHeader: React.FC<ResourceViewerHeaderProps> = ({
       ) : null}
     </header>
   );
-};
+}
 
 export default ResourceViewerHeader;

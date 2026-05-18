@@ -1,5 +1,4 @@
 import { Button } from 'antd';
-import React from 'react';
 import { LuSend } from 'react-icons/lu';
 
 import type { Model } from '@/components/ChatPanel/index.type';
@@ -13,12 +12,7 @@ interface ActionToolbarProps {
   disabledSend: boolean;
 }
 
-const ActionToolbar: React.FC<ActionToolbarProps> = ({
-  modelValue,
-  onModelChange,
-  onSend,
-  disabledSend,
-}) => {
+function ActionToolbar({ modelValue, onModelChange, onSend, disabledSend }: ActionToolbarProps) {
   return (
     <div className={styles.actionToolbar}>
       {/* 左侧功能区 */}
@@ -71,6 +65,6 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default ActionToolbar;

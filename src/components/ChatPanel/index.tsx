@@ -10,9 +10,9 @@ import {
   useNewChatSessionStore,
   useNoteSelectionStore,
 } from '@/store';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { RiIndentIncrease } from 'react-icons/ri';
 import ChatInput from './ChatInput';
 import {
@@ -30,7 +30,7 @@ interface ChatPanelProps {
   collapsed: boolean;
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
+function ChatPanel({ collapsed }: ChatPanelProps) {
   const chatService = useChatService();
   const messageApi = useAppMessage();
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
@@ -140,7 +140,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
         setHistoryPage(payload.page ?? 1);
         setHistoryTotalPage(payload.total_page ?? 1);
       } catch (error) {
-        const errorMessage = parseErrorMessage(error, '拉取历史消息失败');
+        const errorMessage = parseErrorMessage(error);
         if (isSessionInvalidMessage(errorMessage)) {
           clearCurrentSession();
           setHistoryMessages([]);
@@ -182,7 +182,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
       setHistoryPage(payload.page ?? nextPage);
       setHistoryTotalPage(payload.total_page ?? historyTotalPage);
     } catch (error) {
-      messageApi.error(parseErrorMessage(error, '加载更多历史消息失败'));
+      messageApi.error(parseErrorMessage(error));
     } finally {
       setLoadingMoreHistory(false);
     }
@@ -212,7 +212,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
           });
           setCurrentSession({ id: createdSession.id, title: createdSession.title });
         } catch (error) {
-          messageApi.error(parseErrorMessage(error, '新建聊天失败'));
+          messageApi.error(parseErrorMessage(error));
           return;
         }
       }
@@ -318,6 +318,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ collapsed }) => {
       )}
     </div>
   );
-};
+}
 
 export default ChatPanel;

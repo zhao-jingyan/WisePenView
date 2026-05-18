@@ -38,6 +38,11 @@ export default defineConfig([
                 '项目约定禁止使用 useEffect，请改为事件驱动、显式回调或拆解为 ahooks 的 useMount、useUnmount、useUpdateEffect。',
             },
             {
+              name: 'react',
+              importNames: ['FC'],
+              message: '项目约定组件使用普通函数声明，请不要使用 React.FC / FC。',
+            },
+            {
               name: 'antd',
               importNames: ['message'],
               message:
@@ -85,6 +90,11 @@ export default defineConfig([
           selector:
             "CallExpression[callee.object.name='modal'][callee.property.name=/^(confirm|info|success|error|warning)$/]",
           message: '项目约定禁止使用 modal 静态方法，请改为受控 Antd <Modal /> 组件。',
+        },
+        {
+          selector:
+            "TSTypeReference[typeName.type='TSQualifiedName'][typeName.left.name='React'][typeName.right.name='FC']",
+          message: '项目约定组件使用普通函数声明，请不要使用 React.FC / FC。',
         },
         {
           selector: 'ExportAllDeclaration[source.value=/Services\\.impl(\\.[jt]sx?)?$/]',

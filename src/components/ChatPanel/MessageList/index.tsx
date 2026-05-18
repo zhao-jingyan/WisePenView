@@ -1,6 +1,6 @@
 import type { Message } from '@/components/ChatPanel/index.type'; // 假设你有这个类型定义
 import { useMount, useUpdateEffect } from 'ahooks';
-import React, { useCallback, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import MessageItem from './MessageItem';
 import Welcome from './Welcome';
 import styles from './style.module.less';
@@ -12,12 +12,12 @@ interface MessageListProps {
   onLoadMoreHistory: () => Promise<void>;
 }
 
-const MessageList: React.FC<MessageListProps> = ({
+function MessageList({
   messages,
   canLoadMoreHistory,
   loadingMoreHistory,
   onLoadMoreHistory,
-}) => {
+}: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastMessage = messages[messages.length - 1];
 
@@ -94,6 +94,6 @@ const MessageList: React.FC<MessageListProps> = ({
       )}
     </div>
   );
-};
+}
 
 export default MessageList;

@@ -1,9 +1,8 @@
 import { Modal } from 'antd';
-import React from 'react';
 import type { ContractModalProps } from './index.type';
 import styles from './style.module.less';
 
-const ServiceAgreement: React.FC<ContractModalProps> = ({ open, onCancel }) => {
+function ServiceAgreement({ open, onCancel }: ContractModalProps) {
   return (
     <Modal
       title="服务协议"
@@ -247,6 +246,6 @@ const ServiceAgreement: React.FC<ContractModalProps> = ({ open, onCancel }) => {
       </div>
     </Modal>
   );
-};
+}
 
 export default ServiceAgreement;

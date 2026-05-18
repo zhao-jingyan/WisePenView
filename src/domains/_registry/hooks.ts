@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { use } from 'react';
 
 import type { IAuthService } from '@/domains/Auth';
 import type { IChatService } from '@/domains/Chat';
@@ -19,7 +19,7 @@ import type { ServicesContextValue } from './registry';
 
 /** 内部 hook，供各 useXxxService 复用；必须在 ServicesProvider 内使用 */
 function useServicesContext(): ServicesContextValue {
-  const ctx = useContext(ServicesContext);
+  const ctx = use(ServicesContext);
   if (!ctx) {
     throw new Error('useServicesContext must be used within ServicesProvider');
   }

@@ -1,11 +1,10 @@
-import React from 'react';
 import styles from './ToolCallBlock.module.less';
 
 interface ToolCallBlockProps {
   content: string;
 }
 
-const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ content }) => {
+function ToolCallBlock({ content }: ToolCallBlockProps) {
   if (!content) return null;
 
   const toolNames = Array.from(
@@ -20,6 +19,6 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ content }) => {
   if (!displayText) return null;
 
   return <div className={styles.toolWrapper}>调用工具：{displayText}</div>;
-};
+}
 
 export default ToolCallBlock;

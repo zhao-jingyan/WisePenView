@@ -1,15 +1,15 @@
 import { useTagService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { validateReservedName } from '@/utils/tag/validateReservedName';
 import { useRequest } from 'ahooks';
 import { Button, Input, Modal } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { NewTagModalProps } from './index.type';
 
 import styles from './index.module.less';
 
-const NewTagModal: React.FC<NewTagModalProps> = ({
+function NewTagModal({
   open,
   onCancel,
   onSuccess,
@@ -17,7 +17,7 @@ const NewTagModal: React.FC<NewTagModalProps> = ({
   subjectLabel = '标签',
   parentTagId,
   parentDisplayName,
-}) => {
+}: NewTagModalProps) {
   const tagService = useTagService();
   const message = useAppMessage();
   const [name, setName] = useState('');
@@ -36,7 +36,7 @@ const NewTagModal: React.FC<NewTagModalProps> = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '新建失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -98,6 +98,6 @@ const NewTagModal: React.FC<NewTagModalProps> = ({
       />
     </Modal>
   );
-};
+}
 
 export default NewTagModal;

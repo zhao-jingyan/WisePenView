@@ -1,11 +1,10 @@
 import { Button } from 'antd';
-import React from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { RiMoneyDollarCircleLine, RiUserLine } from 'react-icons/ri';
 import type { MemberListToolbarProps } from './index.type';
 import styles from './style.module.less';
 
-const MemberListToolbar: React.FC<MemberListToolbarProps> = ({
+function MemberListToolbar({
   isEditMode,
   total,
   groupDisplayConfig,
@@ -15,7 +14,7 @@ const MemberListToolbar: React.FC<MemberListToolbarProps> = ({
   onDelete,
   onToggleEditMode,
   onInviteUser,
-}) => {
+}: MemberListToolbarProps) {
   if (isEditMode) {
     return (
       <div className={styles.toolbarEdit}>
@@ -71,6 +70,6 @@ const MemberListToolbar: React.FC<MemberListToolbarProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default MemberListToolbar;

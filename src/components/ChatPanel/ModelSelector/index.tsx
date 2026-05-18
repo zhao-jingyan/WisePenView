@@ -2,7 +2,7 @@ import { useRequest, useUpdateEffect } from 'ahooks';
 import type { MenuProps } from 'antd';
 import { Dropdown, Empty, Popover, Spin, Tag } from 'antd';
 import clsx from 'clsx';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   RiAppsLine,
   RiArrowDownSLine,
@@ -56,7 +56,7 @@ interface ModelSelectorProps {
   onChange: (model: Model) => void;
 }
 
-const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
+function ModelSelector({ value, onChange }: ModelSelectorProps) {
   const [open, setOpen] = useState(false);
   const [currentSort, setCurrentSort] = useState<string>('ratio');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -245,6 +245,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange }) => {
       </div>
     </Popover>
   );
-};
+}
 
 export default ModelSelector;

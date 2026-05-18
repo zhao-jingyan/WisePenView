@@ -5,7 +5,7 @@ import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import type { ITreeDriveAdapter } from '@/hooks/drive/useTreeDrive.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useLatest, useRequest } from 'ahooks';
 import { Empty, Spin, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
@@ -33,7 +33,7 @@ function isLoadMoreTreeKey(key: React.Key): boolean {
   return String(key).startsWith(LOAD_MORE_KEY_PREFIX);
 }
 
-const TreeNav: React.FC<TreeNavProps> = ({
+function TreeNav({
   dataMode,
   selectTarget,
   nodesMultiSelect,
@@ -44,7 +44,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
   onChange,
   refreshTrigger = 0,
   tagInitialCheckedIds,
-}) => {
+}: TreeNavProps) {
   const folderService = useFolderService();
   const tagService = useTagService();
   const message = useAppMessage();
@@ -164,7 +164,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
           )
         );
       } catch (err) {
-        message.error(parseErrorMessage(err, '加载更多文件失败'));
+        message.error(parseErrorMessage(err));
       } finally {
         inflightLoadMoreRef.current.delete(loadMoreKey);
       }
@@ -225,7 +225,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
         onChangeRef.current?.([], []);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '获取文件夹树失败'));
+        message.error(parseErrorMessage(err));
         setTreeData([]);
       },
     }
@@ -282,7 +282,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
         onChangeRef.current?.(selectedNodes, []);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '获取标签树失败'));
+        message.error(parseErrorMessage(err));
         setTreeData([]);
       },
     }
@@ -326,7 +326,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
         onChangeRef.current?.([], []);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '获取标签树失败'));
+        message.error(parseErrorMessage(err));
         setTreeData([]);
       },
     }
@@ -355,7 +355,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
         const children = await buildFolderNavChildren(folder, ctx, folderService);
         setTreeData((prev) => replaceNodeChildren(prev, key, children));
       } catch (err) {
-        message.error(parseErrorMessage(err, '加载文件夹内容失败'));
+        message.error(parseErrorMessage(err));
       }
     },
     [
@@ -405,7 +405,7 @@ const TreeNav: React.FC<TreeNavProps> = ({
         );
         setTreeData((prev) => replaceNodeChildren(prev, key, children));
       } catch (err) {
-        message.error(parseErrorMessage(err, '加载标签内容失败'));
+        message.error(parseErrorMessage(err));
       }
     },
     [adapter, selectTarget, dataMode, message, handleLoadMoreRef, resolveNodeIcon]
@@ -551,6 +551,6 @@ const TreeNav: React.FC<TreeNavProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default TreeNav;

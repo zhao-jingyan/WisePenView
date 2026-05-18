@@ -2,16 +2,16 @@ import AddStickerModal from '@/components/Drive/FlatDrive/FileFilter/AddStickerM
 import { useStickerService } from '@/domains';
 import type { Sticker } from '@/domains/Sticker';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Divider, Modal, Spin, Tag } from 'antd';
 import clsx from 'clsx';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
 import styles from './index.module.less';
 import type { EditStickerModalProps } from './index.type';
 
-const EditStickerModal: React.FC<EditStickerModalProps> = ({ open, onCancel, onSuccess, file }) => {
+function EditStickerModal({ open, onCancel, onSuccess, file }: EditStickerModalProps) {
   const stickerService = useStickerService();
   const message = useAppMessage();
 
@@ -35,7 +35,7 @@ const EditStickerModal: React.FC<EditStickerModalProps> = ({ open, onCancel, onS
         setSelectedIds(initial);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '获取标签列表失败'));
+        message.error(parseErrorMessage(err));
         setStickers([]);
         setSelectedIds([]);
       },
@@ -56,7 +56,7 @@ const EditStickerModal: React.FC<EditStickerModalProps> = ({ open, onCancel, onS
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '更新标签失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -75,7 +75,7 @@ const EditStickerModal: React.FC<EditStickerModalProps> = ({ open, onCancel, onS
         const list = await stickerService.getStickerList();
         setStickers(list);
       } catch (err) {
-        message.error(parseErrorMessage(err, '获取标签列表失败'));
+        message.error(parseErrorMessage(err));
       }
     })();
   }, [stickerService, message]);
@@ -160,6 +160,6 @@ const EditStickerModal: React.FC<EditStickerModalProps> = ({ open, onCancel, onS
       />
     </>
   );
-};
+}
 
 export default EditStickerModal;

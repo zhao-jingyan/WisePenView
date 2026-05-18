@@ -1,12 +1,11 @@
 import type { ProgressProps } from 'antd';
 import { Progress } from 'antd';
-import React from 'react';
 import type { QuotaBarProps } from './index.type';
 import styles from './style.module.less';
 
 // 样式参考https://ant.design/components/progress-cn的"自定义语义结构的样式和类"章节
 
-const QuotaBar: React.FC<QuotaBarProps> = ({ used = 0, limit }) => {
+function QuotaBar({ used = 0, limit }: QuotaBarProps) {
   const percentage = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
 
   const getProgressColor = (): string => {
@@ -43,6 +42,6 @@ const QuotaBar: React.FC<QuotaBarProps> = ({ used = 0, limit }) => {
       </span>
     </div>
   );
-};
+}
 
 export default QuotaBar;

@@ -8,7 +8,7 @@ import { getColumns } from './TableConfig';
 
 type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
 
-const MemberListTable: React.FC<MemberListTableProps> = ({
+function MemberListTable({
   groupDisplayConfig,
   pagination,
   members,
@@ -21,7 +21,7 @@ const MemberListTable: React.FC<MemberListTableProps> = ({
   onPageChange,
   onSelectedRowKeysChange,
   onSelectedMembersChange,
-}) => {
+}: MemberListTableProps) {
   const paginationConfig: Required<MemberListPaginationConfig> = {
     defaultPageSize: pagination?.defaultPageSize ?? 5,
     pageSizeOptions: pagination?.pageSizeOptions ?? [5, 10, 20, 50],
@@ -141,6 +141,6 @@ const MemberListTable: React.FC<MemberListTableProps> = ({
       }}
     />
   );
-};
+}
 
 export default MemberListTable;

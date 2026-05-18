@@ -2,10 +2,10 @@ import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/domains';
 import type { RegisterRequest } from '@/domains/Auth';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Button, Checkbox, Form, Input, Modal, Typography } from 'antd';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RiLockLine, RiUserLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ import auth from '../Auth.module.less';
 const USERNAME_MAX_LENGTH = 20;
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{4,20}$/;
 
-const Register: React.FC = () => {
+function Register() {
   const authService = useAuthService();
   const message = useAppMessage();
   const { t } = useTranslation('auth');
@@ -33,7 +33,7 @@ const Register: React.FC = () => {
         setSuccessModalOpen(true);
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err, t('register.registerFailed')));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -144,6 +144,6 @@ const Register: React.FC = () => {
       </Modal>
     </div>
   );
-};
+}
 
 export default Register;

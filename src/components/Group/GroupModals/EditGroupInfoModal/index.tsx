@@ -2,12 +2,12 @@ import { useGroupService, useImageService } from '@/domains';
 import type { EditGroupRequest } from '@/domains/Group';
 import { GROUP_TYPE } from '@/domains/Group/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useRequest } from 'ahooks';
 import type { UploadFile } from 'antd';
 import { Button, Form, Input, Modal, Upload } from 'antd';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { LuUpload } from 'react-icons/lu';
 import type { EditGroupInfoModalProps } from './index.type';
 
@@ -26,7 +26,7 @@ const fileFromCoverField = (fileList?: UploadFile[]): File | undefined => {
   return raw instanceof File ? raw : undefined;
 };
 
-const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
+function EditGroupInfoModal({
   open,
   onCancel,
   groupId,
@@ -35,7 +35,7 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
   cover,
   groupType = GROUP_TYPE.NORMAL,
   onSuccess,
-}) => {
+}: EditGroupInfoModalProps) {
   const groupService = useGroupService();
   const imageService = useImageService();
   const message = useAppMessage();
@@ -74,7 +74,7 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
         onCancel();
       },
       onError: (error: unknown) => {
-        message.error(parseErrorMessage(error, '编辑小组信息失败，请重试'));
+        message.error(parseErrorMessage(error));
       },
     }
   );
@@ -137,6 +137,6 @@ const EditGroupInfoModal: React.FC<EditGroupInfoModalProps> = ({
       </Form>
     </Modal>
   );
-};
+}
 
 export default EditGroupInfoModal;

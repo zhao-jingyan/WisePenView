@@ -1,7 +1,7 @@
 import type { LoadMoreRowItem, TreeRowItem } from '@/components/Drive/TreeDrive/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { getTreeDriveCwdStore } from '@/store';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -83,7 +83,7 @@ export function useTreeDrive({
         setExpandedKeys([]);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '加载内容失败'));
+        message.error(parseErrorMessage(err));
         setTreeData([]);
       },
     }
@@ -117,7 +117,7 @@ export function useTreeDrive({
         setTreeData((prev) => updateNodeChildren(prev, key, children));
         setExpandedKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
       } catch (err) {
-        message.error(parseErrorMessage(err, '加载内容失败'));
+        message.error(parseErrorMessage(err));
       }
     },
     [adapter, message]
@@ -147,7 +147,7 @@ export function useTreeDrive({
             : replaceLoadMoreInNode(prev, record, res.files, res.totalFiles)
         );
       } catch (err) {
-        message.error(parseErrorMessage(err, '加载更多文件失败'));
+        message.error(parseErrorMessage(err));
       } finally {
         setLoadingMoreKeys((prev) => {
           const next = new Set(prev);

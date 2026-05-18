@@ -3,20 +3,20 @@ import { useResourceService } from '@/domains';
 import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Button, Modal, Steps } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import styles from './index.module.less';
 import type { UploadFileToGroupModalProps } from './index.type';
 
-const UploadFileToGroupModal: React.FC<UploadFileToGroupModalProps> = ({
+function UploadFileToGroupModal({
   open,
   onCancel,
   groupId,
   fileOrgLogic,
   onSuccess,
-}) => {
+}: UploadFileToGroupModalProps) {
   const resourceService = useResourceService();
   const message = useAppMessage();
   const [step, setStep] = useState(0);
@@ -56,13 +56,15 @@ const UploadFileToGroupModal: React.FC<UploadFileToGroupModalProps> = ({
 
   const { loading: submitting, run: runUploadToGroup } = useRequest(
     async ({ validIds, tagIds }: { validIds: string[]; tagIds: string[] }) => {
-      for (const resourceId of validIds) {
-        await resourceService.updateResourceTags({
-          resourceId,
-          tagIds,
-          groupId,
-        });
-      }
+      await Promise.all(
+        validIds.map((resourceId) =>
+          resourceService.updateResourceTags({
+            resourceId,
+            tagIds,
+            groupId,
+          })
+        )
+      );
       return validIds.length;
     },
     {
@@ -73,7 +75,7 @@ const UploadFileToGroupModal: React.FC<UploadFileToGroupModalProps> = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '上传失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -194,6 +196,6 @@ const UploadFileToGroupModal: React.FC<UploadFileToGroupModalProps> = ({
       </div>
     </Modal>
   );
-};
+}
 
 export default UploadFileToGroupModal;

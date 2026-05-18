@@ -3,7 +3,7 @@ import type { GroupMember } from '@/domains/Group';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import { usePagination } from 'ahooks';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { MemberListProps } from './index.type';
 import MemberListTable from './MemberListTable';
 import MemberListToolbar from './MemberListToolbar';
@@ -14,12 +14,7 @@ import {
   InviteUserModal,
 } from './Modals';
 
-const MemberList: React.FC<MemberListProps> = ({
-  groupDisplayConfig,
-  pagination,
-  groupId,
-  inviteCode,
-}) => {
+function MemberList({ groupDisplayConfig, pagination, groupId, inviteCode }: MemberListProps) {
   const groupService = useGroupService();
   const message = useAppMessage();
   const [isEditMode, setIsEditMode] = useState(false);
@@ -152,6 +147,6 @@ const MemberList: React.FC<MemberListProps> = ({
       />
     </div>
   );
-};
+}
 
 export default MemberList;

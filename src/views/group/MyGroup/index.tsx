@@ -6,13 +6,13 @@ import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { usePagination } from 'ahooks';
 import { Button, Col, Empty, Pagination, Row, Spin, Tabs } from 'antd';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AiOutlinePlus, AiOutlineUserAdd } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
 import layout from '../style.module.less';
 import page from './style.module.less';
 
-const MyGroup: React.FC = () => {
+function MyGroup() {
   const groupService = useGroupService();
   const message = useAppMessage();
   const navigate = useNavigate();
@@ -141,6 +141,6 @@ const MyGroup: React.FC = () => {
       />
     </div>
   );
-};
+}
 
 export default MyGroup;

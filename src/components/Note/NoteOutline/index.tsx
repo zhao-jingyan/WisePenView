@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import type { NoteOutlineItem, NoteOutlineProps } from './index.type';
 import styles from './style.module.less';
@@ -18,7 +18,7 @@ function filterItems(items: NoteOutlineItem[], maxLevel?: number): NoteOutlineIt
   return items.filter((it) => it.level <= maxLevel);
 }
 
-const NoteOutline: React.FC<NoteOutlineProps> = ({ items, activeId, onNavigate, maxLevel }) => {
+function NoteOutline({ items, activeId, onNavigate, maxLevel }: NoteOutlineProps) {
   const displayItems = useMemo(() => filterItems(items, maxLevel), [items, maxLevel]);
 
   return (
@@ -53,6 +53,6 @@ const NoteOutline: React.FC<NoteOutlineProps> = ({ items, activeId, onNavigate, 
       </div>
     </div>
   );
-};
+}
 
 export default NoteOutline;

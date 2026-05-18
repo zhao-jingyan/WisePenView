@@ -9,7 +9,7 @@
  */
 import { useRequest } from 'ahooks';
 import { Input, Modal } from 'antd';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { RechargeModalProps } from './index.type';
 import styles from './style.module.less';
 
@@ -26,12 +26,7 @@ const formatVoucherDisplay = (raw: string): string => {
 /** 与后端 redeemVoucher 对齐：仅 16 位大写字母数字，无分隔符 */
 const toSubmitCode = (display: string): string => display.replace(/[^A-Z0-9]/gi, '').toUpperCase();
 
-const RechargeModal: React.FC<RechargeModalProps> = ({
-  open,
-  onCancel,
-  groupDisplayName,
-  onSubmit,
-}) => {
+function RechargeModal({ open, onCancel, groupDisplayName, onSubmit }: RechargeModalProps) {
   const [value, setValue] = useState('');
 
   const handleCancel = () => {
@@ -87,6 +82,6 @@ const RechargeModal: React.FC<RechargeModalProps> = ({
       <p className={styles.hint}>请输入 16 位兑换码，将自动转为大写并分段显示。</p>
     </Modal>
   );
-};
+}
 
 export default RechargeModal;

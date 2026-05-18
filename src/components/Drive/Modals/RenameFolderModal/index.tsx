@@ -1,18 +1,13 @@
 import { useFolderService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { getFolderDisplayName } from '@/utils/tag/path';
 import { useRequest } from 'ahooks';
 import { Button, Input, Modal } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { RenameFolderModalProps } from './index.type';
 
-const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
-  open,
-  onCancel,
-  onSuccess,
-  folder,
-}) => {
+function RenameFolderModal({ open, onCancel, onSuccess, folder }: RenameFolderModalProps) {
   const folderService = useFolderService();
   const message = useAppMessage();
   const [name, setName] = useState('');
@@ -36,7 +31,7 @@ const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '重命名失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -82,6 +77,6 @@ const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
       />
     </Modal>
   );
-};
+}
 
 export default RenameFolderModal;

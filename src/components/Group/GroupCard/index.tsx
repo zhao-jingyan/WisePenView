@@ -2,13 +2,12 @@ import UserCapsule from '@/components/Common/UserCapsule';
 import { GROUP_TYPE } from '@/domains/Group/enum';
 import { PLACEHOLDER_IMAGE } from '@/utils/image/placeholder';
 import { Badge, Card, Image } from 'antd';
-import React from 'react';
 import type { GroupCardProps } from './index.type';
 import styles from './style.module.less';
 
 const { Meta } = Card;
 
-const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
+function GroupCard({ group, onClick }: GroupCardProps) {
   const {
     groupName,
     ownerInfo,
@@ -69,6 +68,6 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
   }
 
   return cardContent;
-};
+}
 
 export default GroupCard;

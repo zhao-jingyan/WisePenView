@@ -1,9 +1,8 @@
 import { Alert, Button } from 'antd';
-import React from 'react';
 import type { VerifyBannerProps } from './index.type';
 import styles from './style.module.less';
 
-const VerifyBanner: React.FC<VerifyBannerProps> = ({ visible, onGoVerify }) => {
+function VerifyBanner({ visible, onGoVerify }: VerifyBannerProps) {
   if (!visible) return null;
   return (
     <Alert
@@ -18,6 +17,6 @@ const VerifyBanner: React.FC<VerifyBannerProps> = ({ visible, onGoVerify }) => {
       className={styles.statusBanner}
     />
   );
-};
+}
 
 export default VerifyBanner;

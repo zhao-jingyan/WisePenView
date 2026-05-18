@@ -4,14 +4,14 @@ import rvhStyles from '@/components/Common/ResourceViewerHeader/style.module.les
 import PdfViewer from '@/components/Pdf/PdfViewer/index';
 import { useDocumentService } from '@/domains';
 import { RESOURCE_TYPE } from '@/domains/Resource/enum';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Button, Result, Spin } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styles from './style.module.less';
 
-const PdfPreview: React.FC = () => {
+function PdfPreview() {
   const { resourceId } = useParams<{ resourceId: string }>();
   const [viewerErrorMap, setViewerErrorMap] = useState<Record<string, unknown>>({});
   const documentService = useDocumentService();
@@ -76,7 +76,7 @@ const PdfPreview: React.FC = () => {
               <Result
                 status="warning"
                 title="无法打开文档"
-                subTitle={parseErrorMessage(docInfoError, '文档不存在或无访问权限')}
+                subTitle={parseErrorMessage(docInfoError)}
                 extra={
                   <Link to="/app/drive">
                     <Button type="default">返回云盘</Button>
@@ -151,7 +151,7 @@ const PdfPreview: React.FC = () => {
               <Result
                 status="warning"
                 title="文档预览失败"
-                subTitle={parseErrorMessage(viewerError, '文档预览地址无效或已失效')}
+                subTitle={parseErrorMessage(viewerError)}
                 extra={
                   <Link to="/app/drive">
                     <Button type="default">返回云盘</Button>
@@ -186,6 +186,6 @@ const PdfPreview: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default PdfPreview;

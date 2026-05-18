@@ -1,5 +1,5 @@
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR, TAG_QUERY_LOGIC_MODE } from '@/domains/Resource/enum';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import FileFilter from './FileFilter';
 import type { FileFilterValue } from './FileFilter/index.type';
 import FileList from './FileList';
@@ -14,7 +14,7 @@ const DEFAULT_FILTER: FileFilterValue = {
   sortDir: RESOURCE_SORT_DIR.DESC,
 };
 
-const FlatDrive: React.FC<FlatDriveProps> = ({ groupId }) => {
+function FlatDrive({ groupId }: FlatDriveProps) {
   const [filter, setFilter] = useState<FileFilterValue>(DEFAULT_FILTER);
 
   return (
@@ -27,6 +27,6 @@ const FlatDrive: React.FC<FlatDriveProps> = ({ groupId }) => {
       </main>
     </div>
   );
-};
+}
 
 export default FlatDrive;

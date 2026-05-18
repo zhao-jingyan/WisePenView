@@ -1,12 +1,11 @@
 import { Avatar } from 'antd';
-import React from 'react';
 
 import type { UserCapsuleProps } from './index.type';
 import styles from './style.module.less';
 
 const AVATAR_SIZE = 20;
 
-const UserCapsule: React.FC<UserCapsuleProps> = ({ name, avatar, variant = 'bare' }) => {
+function UserCapsule({ name, avatar, variant = 'bare' }: UserCapsuleProps) {
   const displayName = name.trim() || '-';
   const avatarText = displayName === '-' ? '?' : displayName.charAt(0).toUpperCase();
 
@@ -18,6 +17,6 @@ const UserCapsule: React.FC<UserCapsuleProps> = ({ name, avatar, variant = 'bare
       <span className={styles.name}>{displayName}</span>
     </span>
   );
-};
+}
 
 export default UserCapsule;

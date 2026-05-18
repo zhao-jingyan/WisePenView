@@ -15,7 +15,7 @@ import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useClickFile, useTreeDrive, useTreeDriveDrop } from '@/hooks/drive';
 import type { ITreeDriveAdapter } from '@/hooks/drive/useTreeDrive.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { getFolderDisplayName } from '@/utils/tag/path';
 import { Button, Table } from 'antd';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -29,7 +29,7 @@ import {
 import type { TreeRowItem } from '../index.type';
 import styles from '../style.module.less';
 
-const FolderDrive: React.FC = () => {
+function FolderDrive() {
   const folderService = useFolderService();
   const message = useAppMessage();
   const clickFile = useClickFile();
@@ -87,7 +87,7 @@ const FolderDrive: React.FC = () => {
       setNewFolderParent(parent);
       setNewFolderOpen(true);
     } catch (err) {
-      message.error(parseErrorMessage(err, '加载目录失败'));
+      message.error(parseErrorMessage(err));
     }
   }, [folderService, breadcrumb, message]);
 
@@ -306,6 +306,6 @@ const FolderDrive: React.FC = () => {
       </div>
     </main>
   );
-};
+}
 
 export default FolderDrive;

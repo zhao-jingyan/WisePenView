@@ -1,11 +1,11 @@
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { Button, Modal } from 'antd';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { LuCopy } from 'react-icons/lu';
 import type { InviteUserModalProps } from './index.type';
 import styles from './style.module.less';
 
-const InviteUserModal: React.FC<InviteUserModalProps> = ({ open, onCancel, inviteCode }) => {
+function InviteUserModal({ open, onCancel, inviteCode }: InviteUserModalProps) {
   const message = useAppMessage();
   const [copied, setCopied] = useState(false);
 
@@ -34,7 +34,13 @@ const InviteUserModal: React.FC<InviteUserModalProps> = ({ open, onCancel, invit
         <Button key="cancel" onClick={handleCancel}>
           关闭
         </Button>,
-        <Button type="primary" icon={<LuCopy />} onClick={handleCopy} disabled={!inviteCode}>
+        <Button
+          key="copy"
+          type="primary"
+          icon={<LuCopy />}
+          onClick={handleCopy}
+          disabled={!inviteCode}
+        >
           {copied ? '已复制' : '复制'}
         </Button>,
       ]}
@@ -48,6 +54,6 @@ const InviteUserModal: React.FC<InviteUserModalProps> = ({ open, onCancel, invit
       </div>
     </Modal>
   );
-};
+}
 
 export default InviteUserModal;

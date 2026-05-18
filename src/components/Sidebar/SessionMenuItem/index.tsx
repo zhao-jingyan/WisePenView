@@ -1,15 +1,15 @@
 import { useChatService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Input, Modal } from 'antd';
 import clsx from 'clsx';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { RiCheckLine, RiCloseLine, RiDeleteBinLine, RiEditLine } from 'react-icons/ri';
 import type { SessionMenuItemProps } from './index.type';
 import styles from './style.module.less';
 
-const SessionMenuItem: React.FC<SessionMenuItemProps> = ({ session, onUpdated, onDeleted }) => {
+function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps) {
   const chatService = useChatService();
   const messageApi = useAppMessage();
   const [editing, setEditing] = useState(false);
@@ -30,7 +30,7 @@ const SessionMenuItem: React.FC<SessionMenuItemProps> = ({ session, onUpdated, o
         await onUpdated();
       },
       onError: (err) => {
-        messageApi.error(parseErrorMessage(err, '重命名会话失败'));
+        messageApi.error(parseErrorMessage(err));
       },
     }
   );
@@ -48,7 +48,7 @@ const SessionMenuItem: React.FC<SessionMenuItemProps> = ({ session, onUpdated, o
         await onUpdated();
       },
       onError: (err) => {
-        messageApi.error(parseErrorMessage(err, '删除会话失败'));
+        messageApi.error(parseErrorMessage(err));
       },
     }
   );
@@ -173,6 +173,6 @@ const SessionMenuItem: React.FC<SessionMenuItemProps> = ({ session, onUpdated, o
       </Modal>
     </div>
   );
-};
+}
 
 export default SessionMenuItem;

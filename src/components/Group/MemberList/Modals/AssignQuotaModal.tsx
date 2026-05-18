@@ -1,17 +1,17 @@
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
 import { useQuotaService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Form, InputNumber, Modal } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { AssignQuotaModalProps } from './index.type';
 import styles from './style.module.less';
 import { useMemberEditGuard } from './useMemberEditGuard';
 
 const GROUP_MEMBER_TOKEN_LIMIT_MAX = 100_000_000;
 
-const AssignQuotaModal: React.FC<AssignQuotaModalProps> = ({
+function AssignQuotaModal({
   open,
   onCancel,
   onSuccess,
@@ -19,7 +19,7 @@ const AssignQuotaModal: React.FC<AssignQuotaModalProps> = ({
   memberIds,
   members,
   groupDisplayConfig,
-}) => {
+}: AssignQuotaModalProps) {
   const quotaService = useQuotaService();
   const message = useAppMessage();
   const [form] = Form.useForm();
@@ -65,7 +65,7 @@ const AssignQuotaModal: React.FC<AssignQuotaModalProps> = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '分配配额失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -170,6 +170,6 @@ const AssignQuotaModal: React.FC<AssignQuotaModalProps> = ({
       </Form>
     </Modal>
   );
-};
+}
 
 export default AssignQuotaModal;

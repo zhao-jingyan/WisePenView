@@ -1,11 +1,10 @@
 import { Button, Result, Space } from 'antd';
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import LandingNavbar from '@/components/LandingNavbar';
 import styles from './style.module.less';
 
-const ResourceNotFound: React.FC = () => {
+function ResourceNotFound() {
   const navigate = useNavigate();
 
   return (
@@ -36,6 +35,6 @@ const ResourceNotFound: React.FC = () => {
       <footer className={styles.footerMini}>WisePen · 学术英语写作平台</footer>
     </div>
   );
-};
+}
 
 export default ResourceNotFound;

@@ -20,7 +20,7 @@ import { useAppMessage } from '@/hooks/useAppMessage';
 import { useRequest } from 'ahooks';
 import type { TabsProps } from 'antd';
 import { Button, Spin, Tabs } from 'antd';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { AiOutlineDelete, AiOutlineEdit, AiOutlineLogout } from 'react-icons/ai';
 import { useParams } from 'react-router-dom';
 import layout from '../style.module.less';
@@ -32,7 +32,7 @@ type GroupDetailLoaded = {
   resConfig: GroupResConfig;
 };
 
-const GroupDetail: React.FC = () => {
+function GroupDetail() {
   const groupService = useGroupService();
   const message = useAppMessage();
   const { id } = useParams<{ id: string }>();
@@ -277,6 +277,6 @@ const GroupDetail: React.FC = () => {
       />
     </div>
   );
-};
+}
 
 export default GroupDetail;

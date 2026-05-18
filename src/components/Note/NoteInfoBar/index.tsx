@@ -1,11 +1,10 @@
 import { Divider } from 'antd';
-import React from 'react';
 
 import UserCapsule from '@/components/Common/UserCapsule';
 import type { NoteInfoBarProps } from './index.type';
 import styles from './style.module.less';
 
-const NoteInfoBar: React.FC<NoteInfoBarProps> = ({ noteInfoDisplay }) => {
+function NoteInfoBar({ noteInfoDisplay }: NoteInfoBarProps) {
   const authors = noteInfoDisplay?.authors ?? [];
   const lastEditedAtText = noteInfoDisplay?.lastEditedAtText ?? '暂无';
 
@@ -34,6 +33,6 @@ const NoteInfoBar: React.FC<NoteInfoBarProps> = ({ noteInfoDisplay }) => {
       </div>
     </div>
   );
-};
+}
 
 export default NoteInfoBar;

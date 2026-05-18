@@ -1,11 +1,11 @@
 import type { GroupMember } from '@/domains/Group';
 import { ROLE } from '@/domains/Group/enum';
 import { Avatar, List } from 'antd';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import type { SelectedMemberListProps } from './index.type';
 import styles from './style.module.less';
 
-const SelectedMemberList: React.FC<SelectedMemberListProps> = ({ members }) => {
+function SelectedMemberList({ members }: SelectedMemberListProps) {
   const formatDescription = (member: GroupMember) => {
     const parts = [];
     if (member.nickname) parts.push(member.nickname);
@@ -39,6 +39,6 @@ const SelectedMemberList: React.FC<SelectedMemberListProps> = ({ members }) => {
       />
     </div>
   );
-};
+}
 
 export default SelectedMemberList;

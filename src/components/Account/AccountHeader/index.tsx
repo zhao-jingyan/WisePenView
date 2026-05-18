@@ -1,17 +1,17 @@
 import { useImageService, useUserService } from '@/domains';
 import { getVerificationModeLabel, IDENTITY, USER_STATUS } from '@/domains/User/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useRequest } from 'ahooks';
 import type { UploadFile } from 'antd';
 import { Avatar, Button, Modal, Tooltip, Upload } from 'antd';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { RiCheckLine, RiCloseLine, RiErrorWarningLine } from 'react-icons/ri';
 import type { AccountHeaderProps } from './index.type';
 import styles from './style.module.less';
 
-const AccountHeader: React.FC<AccountHeaderProps> = ({ user, onUserInfoUpdated }) => {
+function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
   const userService = useUserService();
   const imageService = useImageService();
   const message = useAppMessage();
@@ -45,7 +45,7 @@ const AccountHeader: React.FC<AccountHeaderProps> = ({ user, onUserInfoUpdated }
         setAvatarModalOpen(false);
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err, '头像更新失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -174,6 +174,6 @@ const AccountHeader: React.FC<AccountHeaderProps> = ({ user, onUserInfoUpdated }
       </Modal>
     </>
   );
-};
+}
 
 export default AccountHeader;

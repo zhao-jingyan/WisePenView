@@ -3,20 +3,14 @@ import { useResourceService } from '@/domains';
 import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Button, Modal } from 'antd';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import styles from './index.module.less';
 import type { EditTagModalProps } from './index.type';
 
-const EditTagModal: React.FC<EditTagModalProps> = ({
-  open,
-  onCancel,
-  onSuccess,
-  groupId,
-  target,
-}) => {
+function EditTagModal({ open, onCancel, onSuccess, groupId, target }: EditTagModalProps) {
   const resourceService = useResourceService();
   const message = useAppMessage();
   const [selectedNodes, setSelectedNodes] = useState<TagTreeNode[]>([]);
@@ -56,7 +50,7 @@ const EditTagModal: React.FC<EditTagModalProps> = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '更新标签失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -116,6 +110,6 @@ const EditTagModal: React.FC<EditTagModalProps> = ({
       </div>
     </Modal>
   );
-};
+}
 
 export default EditTagModal;

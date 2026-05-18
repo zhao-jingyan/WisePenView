@@ -26,7 +26,7 @@ interface PdfViewerHandle {
   }>;
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = ({ resourceId, config, className, onLoadError }) => {
+function PdfViewer({ resourceId, config, className, onLoadError }: PdfViewerProps) {
   const viewerRef = useRef<PdfViewerHandle | null>(null);
   const onDocumentErrorCleanupRef = useRef<(() => void) | null>(null);
 
@@ -86,6 +86,6 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ resourceId, config, className, on
       className={clsx(styles.viewer, className)}
     />
   );
-};
+}
 
 export default PdfViewer;

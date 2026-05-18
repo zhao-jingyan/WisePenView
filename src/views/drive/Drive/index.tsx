@@ -5,7 +5,7 @@ import type { UploadQueueTabRef } from '@/components/Drive/UploadQueueTab';
 import UploadQueueTab from '@/components/Drive/UploadQueueTab';
 import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
 import { Button, Tabs } from 'antd';
-import React, { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { AiOutlineCloudUpload } from 'react-icons/ai';
 import { LuTags } from 'react-icons/lu';
 
@@ -18,7 +18,7 @@ const VIEW_TABS: { key: DriveViewMode; label: string }[] = [
   { key: 'uploadQueue', label: '上传队列' },
 ];
 
-const Drive: React.FC = () => {
+function Drive() {
   const viewMode = useDrivePreferencesStore((s) => s.viewMode);
   const setViewMode = useDrivePreferencesStore((s) => s.setViewMode);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -75,6 +75,6 @@ const Drive: React.FC = () => {
       <StickerManageModal open={stickerManageOpen} onCancel={() => setStickerManageOpen(false)} />
     </div>
   );
-};
+}
 
 export default Drive;

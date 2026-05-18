@@ -21,7 +21,7 @@ const getMaxChatPanelWidth = (): number => {
   return Math.max(MIN_CHAT_PANEL_WIDTH, Math.min(MAX_CHAT_PANEL_WIDTH, viewportBasedMax));
 };
 
-const SystemLayout: React.FC = () => {
+function SystemLayout() {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const chatResizeGuideRef = useRef<HTMLDivElement | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -179,6 +179,6 @@ const SystemLayout: React.FC = () => {
       </Sider>
     </Layout>
   );
-};
+}
 
 export default SystemLayout;

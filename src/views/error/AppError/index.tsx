@@ -1,5 +1,4 @@
 import { Button, Collapse, Result, Space, Tooltip, Typography } from 'antd';
-import React from 'react';
 import { RiFileCopyLine } from 'react-icons/ri';
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom';
 
@@ -50,7 +49,7 @@ const buildAppErrorInfo = (error: unknown): AppErrorInfo => {
   };
 };
 
-const AppError: React.FC = () => {
+function AppError() {
   const navigate = useNavigate();
   const error = useRouteError();
   const message = useAppMessage();
@@ -140,6 +139,6 @@ const AppError: React.FC = () => {
       <footer className={styles.footerMini}>WisePen · 学术英语写作平台</footer>
     </div>
   );
-};
+}
 
 export default AppError;

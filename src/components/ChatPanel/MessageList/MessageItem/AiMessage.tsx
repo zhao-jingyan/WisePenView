@@ -13,7 +13,7 @@ import ToolCallBlock from './ToolCallBlock';
 const LOADING_HINTS = ['正在生成回复...', '请稍等片刻...', '正在组织答案...'];
 const LOADING_HINT_SWITCH_MS = 2000;
 
-const AiMessage: React.FC<{ message: Message }> = ({ message }) => {
+function AiMessage({ message }: { message: Message }) {
   const hasReasoning = message.reasoningContent !== undefined;
   const showLoadingIndicator = Boolean(message.loading && !message.content);
   const messageApi = useAppMessage();
@@ -107,6 +107,6 @@ const AiMessage: React.FC<{ message: Message }> = ({ message }) => {
       </div>
     </div>
   );
-};
+}
 
 export default AiMessage;

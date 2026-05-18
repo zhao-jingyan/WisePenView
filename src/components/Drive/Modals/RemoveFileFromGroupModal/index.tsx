@@ -2,19 +2,18 @@ import { useResourceService, useTagService } from '@/domains';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useRecentFilesStore } from '@/store';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal } from 'antd';
-import React from 'react';
 import type { RemoveFileFromGroupModalProps } from './index.type';
 
-const RemoveFileFromGroupModal: React.FC<RemoveFileFromGroupModalProps> = ({
+function RemoveFileFromGroupModal({
   open,
   onCancel,
   onSuccess,
   groupId,
   file,
-}) => {
+}: RemoveFileFromGroupModalProps) {
   const tagService = useTagService();
   const resourceService = useResourceService();
   const message = useAppMessage();
@@ -61,7 +60,7 @@ const RemoveFileFromGroupModal: React.FC<RemoveFileFromGroupModalProps> = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '移出失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -97,6 +96,6 @@ const RemoveFileFromGroupModal: React.FC<RemoveFileFromGroupModalProps> = ({
       <Alert description="确定将该文件移出小组空间吗？此操作不可撤销！" type="warning" showIcon />
     </Modal>
   );
-};
+}
 
 export default RemoveFileFromGroupModal;

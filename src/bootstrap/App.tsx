@@ -1,7 +1,7 @@
 import { useMount, useUnmount } from 'ahooks';
 import { App as AntdApp, ConfigProvider, Spin } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
-import React, { Suspense, useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import router from './router';
 
@@ -10,13 +10,15 @@ import appTheme from '@/theme';
 import { subscribeAuthChangeEvent } from '@/utils/auth/authChange';
 import styles from './App.module.less';
 
-const PageLoadingFallback: React.FC = () => (
-  <div className={styles.pageLoadingFallback}>
-    <Spin size="large" />
-  </div>
-);
+function PageLoadingFallback() {
+  return (
+    <div className={styles.pageLoadingFallback}>
+      <Spin size="large" />
+    </div>
+  );
+}
 
-const App: React.FC = () => {
+function App() {
   const unsubscribeAuthChangeRef = useRef<(() => void) | null>(null);
 
   // 挂载时订阅全局认证状态变化
@@ -40,6 +42,6 @@ const App: React.FC = () => {
       </ConfigProvider>
     </ServicesProvider>
   );
-};
+}
 
 export default App;

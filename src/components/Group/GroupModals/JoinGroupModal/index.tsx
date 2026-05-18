@@ -1,17 +1,16 @@
 import { useGroupService } from '@/domains';
 import type { JoinGroupRequest } from '@/domains/Group';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Button, Form, Input, Modal } from 'antd';
-import React from 'react';
 import type { JoinGroupModalProps } from './index.type';
 
 import styles from './index.module.less';
 
 const INVITE_CODE_LENGTH = 8;
 
-const JoinGroupModal: React.FC<JoinGroupModalProps> = ({ open, onCancel, onSuccess }) => {
+function JoinGroupModal({ open, onCancel, onSuccess }: JoinGroupModalProps) {
   const groupService = useGroupService();
   const message = useAppMessage();
   const [form] = Form.useForm<JoinGroupRequest>();
@@ -34,7 +33,7 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({ open, onCancel, onSucce
           'errorFields' in err &&
           Array.isArray((err as { errorFields?: unknown }).errorFields);
         if (!isValidationError) {
-          message.error(parseErrorMessage(err, '加入小组失败'));
+          message.error(parseErrorMessage(err));
         }
       },
     }
@@ -78,6 +77,6 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({ open, onCancel, onSucce
       </Form>
     </Modal>
   );
-};
+}
 
 export default JoinGroupModal;

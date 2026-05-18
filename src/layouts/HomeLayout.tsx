@@ -1,11 +1,10 @@
 import { Divider, Flex } from 'antd';
-import React from 'react';
 import { Outlet } from 'react-router-dom';
 
 import LandingNavbar from '@/components/LandingNavbar';
 import styles from './HomeLayout.module.less';
 
-const HomeLayout: React.FC = () => {
+function HomeLayout() {
   return (
     <Flex vertical align="stretch" className={styles.root}>
       <div className={styles.navShell}>
@@ -46,6 +45,6 @@ const HomeLayout: React.FC = () => {
       </Flex>
     </Flex>
   );
-};
+}
 
 export default HomeLayout;

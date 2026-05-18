@@ -6,10 +6,9 @@ import QuotaByGroup from '@/components/Profile/QuotaByGroup';
 import ComputeWallet from '@/components/Wallet/ComputeWallet';
 import { WALLET_TARGET_TYPE } from '@/domains/Wallet/enum';
 import { Divider } from 'antd';
-import React from 'react';
 import layout from '../style.module.less';
 
-const Usage: React.FC = () => {
+function Usage() {
   return (
     <div className={layout.pageContainer}>
       <div className={layout.pageHeader}>
@@ -31,6 +30,6 @@ const Usage: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Usage;

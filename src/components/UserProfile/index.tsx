@@ -5,7 +5,7 @@ import { useMount } from 'ahooks';
 import type { MenuProps } from 'antd';
 import { Avatar, Button, Dropdown, Modal } from 'antd';
 import clsx from 'clsx';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -26,7 +26,7 @@ interface UserProfileProps {
   collapsed: boolean;
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
+function UserProfile({ collapsed }: UserProfileProps) {
   const navigate = useNavigate();
   const userService = useUserService();
   const [user, setUser] = useState<User | null>(null);
@@ -188,6 +188,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ collapsed }) => {
       </Modal>
     </>
   );
-};
+}
 
 export default UserProfile;

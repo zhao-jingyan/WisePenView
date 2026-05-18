@@ -2,10 +2,10 @@ import { useUserService } from '@/domains';
 import type { InitiateUISVerifyRequest, SendEmailVerifyRequest } from '@/domains/User';
 import { USER_STATUS } from '@/domains/User/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest, useUnmount } from 'ahooks';
 import { Alert, Button, Form, Input, Modal, Radio } from 'antd';
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { RiMailLine, RiShieldUserLine } from 'react-icons/ri';
 import VerifyBanner from '../VerifyBanner';
 import type {
@@ -17,7 +17,7 @@ import type {
 import { resolveUisQrImageDataUrl } from './resolveUisQrImageDataUrl';
 import styles from './style.module.less';
 
-const AccountVerification: React.FC<AccountVerificationProps> = ({ user, onUserInfoUpdated }) => {
+function AccountVerification({ user, onUserInfoUpdated }: AccountVerificationProps) {
   const userService = useUserService();
   const message = useAppMessage();
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
@@ -67,7 +67,7 @@ const AccountVerification: React.FC<AccountVerificationProps> = ({ user, onUserI
       onError: (pollErr) => {
         if (!uisPollingActiveRef.current) return;
         endUisPolling();
-        message.error(parseErrorMessage(pollErr, '确认认证状态失败'));
+        message.error(parseErrorMessage(pollErr));
       },
     }
   );
@@ -90,7 +90,7 @@ const AccountVerification: React.FC<AccountVerificationProps> = ({ user, onUserI
       },
       onError: (err) => {
         if (err && typeof err === 'object' && 'errorFields' in err) return;
-        message.error(parseErrorMessage(err, '提交失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -117,7 +117,7 @@ const AccountVerification: React.FC<AccountVerificationProps> = ({ user, onUserI
       },
       onError: (err) => {
         if (err && typeof err === 'object' && 'errorFields' in err) return;
-        message.error(parseErrorMessage(err, '提交失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -327,6 +327,6 @@ const AccountVerification: React.FC<AccountVerificationProps> = ({ user, onUserI
       </Modal>
     </>
   );
-};
+}
 
 export default AccountVerification;

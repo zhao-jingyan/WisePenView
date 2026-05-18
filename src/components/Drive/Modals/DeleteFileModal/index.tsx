@@ -2,13 +2,12 @@ import { useDocumentService, useNoteService } from '@/domains';
 import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useRecentFilesStore } from '@/store';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal } from 'antd';
-import React from 'react';
 import type { DeleteFileModalProps } from './index.type';
 
-const DeleteFileModal: React.FC<DeleteFileModalProps> = ({ open, onCancel, onSuccess, file }) => {
+function DeleteFileModal({ open, onCancel, onSuccess, file }: DeleteFileModalProps) {
   const documentService = useDocumentService();
   const noteService = useNoteService();
   const message = useAppMessage();
@@ -35,7 +34,7 @@ const DeleteFileModal: React.FC<DeleteFileModalProps> = ({ open, onCancel, onSuc
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '删除失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -70,6 +69,6 @@ const DeleteFileModal: React.FC<DeleteFileModalProps> = ({ open, onCancel, onSuc
       />
     </Modal>
   );
-};
+}
 
 export default DeleteFileModal;

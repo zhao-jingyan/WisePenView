@@ -3,17 +3,17 @@ import { Flex, Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
 import styles from './AuthLayout.module.less';
 
-const AuthLayout: React.FC = () => {
+function AuthLayout() {
   return (
     <Layout className={styles.root}>
       <Flex className={styles.authSheet}>
-        <img src={loginImage} className={styles.loginImage} />
+        <img src={loginImage} className={styles.loginImage} alt="" />
         <Flex className={styles.formSection}>
           <Outlet />
         </Flex>
       </Flex>
     </Layout>
   );
-};
+}
 
 export default AuthLayout;

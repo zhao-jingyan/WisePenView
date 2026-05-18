@@ -13,7 +13,7 @@ const getDisplayName = (node: TagTreeNode, mode: 'folder' | 'tag'): string => {
   return node.tagName;
 };
 
-const ReadOnlyBreadcrumb: React.FC<ReadOnlyBreadcrumbProps> = ({ node, mode, groupId }) => {
+function ReadOnlyBreadcrumb({ node, mode, groupId }: ReadOnlyBreadcrumbProps) {
   const folderService = useFolderService();
   const tagService = useTagService();
 
@@ -49,6 +49,6 @@ const ReadOnlyBreadcrumb: React.FC<ReadOnlyBreadcrumbProps> = ({ node, mode, gro
       ))}
     </div>
   );
-};
+}
 
 export default ReadOnlyBreadcrumb;

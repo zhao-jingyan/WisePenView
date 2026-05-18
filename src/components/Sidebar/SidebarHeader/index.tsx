@@ -1,12 +1,11 @@
 import logoImg from '@/assets/images/logo-icon.png';
 import clsx from 'clsx';
-import React from 'react';
 import { RiIndentDecrease, RiIndentIncrease } from 'react-icons/ri';
 import HeaderNav from '../HeaderNav';
 import type { SidebarHeaderProps } from './index.type';
 import styles from './style.module.less';
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ collapsed, onToggle, onSessionCreated }) => {
+function SidebarHeader({ collapsed, onToggle, onSessionCreated }: SidebarHeaderProps) {
   return (
     <div className={styles.header}>
       <div className={clsx(styles.headerTop, collapsed && styles.collapsedHeaderTop)}>
@@ -38,6 +37,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ collapsed, onToggle, onSe
       </div>
     </div>
   );
-};
+}
 
 export default SidebarHeader;

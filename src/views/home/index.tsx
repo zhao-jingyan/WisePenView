@@ -1,5 +1,4 @@
 import { Button, Card, Space, Tag, Typography } from 'antd';
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import nodeSvg from '@/assets/images/backgrounds/node.svg';
@@ -10,7 +9,7 @@ import styles from './style.module.less';
 
 const { Paragraph, Text } = Typography;
 
-const Home: React.FC = () => {
+function Home() {
   const navigate = useNavigate();
 
   return (
@@ -112,6 +111,6 @@ const Home: React.FC = () => {
       </section>
     </div>
   );
-};
+}
 
 export default Home;

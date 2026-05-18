@@ -1,15 +1,15 @@
 import { useUserService } from '@/domains';
 import type { ConfirmEmailVerifyRequest } from '@/domains/User';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal, Typography } from 'antd';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import auth from '../Auth.module.less';
 
-const VerifyEmail: React.FC = () => {
+function VerifyEmail() {
   const userService = useUserService();
   const message = useAppMessage();
   const { t } = useTranslation('auth');
@@ -31,7 +31,7 @@ const VerifyEmail: React.FC = () => {
         setSuccessModalOpen(true);
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err, t('verifyEmail.verifyFailed')));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -85,6 +85,6 @@ const VerifyEmail: React.FC = () => {
       </Modal>
     </div>
   );
-};
+}
 
 export default VerifyEmail;

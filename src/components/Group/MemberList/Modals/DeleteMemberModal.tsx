@@ -1,14 +1,13 @@
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
 import { useGroupService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal } from 'antd';
-import React from 'react';
 import type { DeleteMemberModalProps } from './index.type';
 import { useMemberEditGuard } from './useMemberEditGuard';
 
-const DeleteMemberModal: React.FC<DeleteMemberModalProps> = ({
+function DeleteMemberModal({
   open,
   onCancel,
   onSuccess,
@@ -16,7 +15,7 @@ const DeleteMemberModal: React.FC<DeleteMemberModalProps> = ({
   members,
   groupId,
   groupDisplayConfig,
-}) => {
+}: DeleteMemberModalProps) {
   const groupService = useGroupService();
   const message = useAppMessage();
   const { loading, run: runDeleteMembers } = useRequest(
@@ -33,7 +32,7 @@ const DeleteMemberModal: React.FC<DeleteMemberModalProps> = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '删除成员失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -81,6 +80,6 @@ const DeleteMemberModal: React.FC<DeleteMemberModalProps> = ({
       <SelectedMemberList members={members} />
     </Modal>
   );
-};
+}
 
 export default DeleteMemberModal;

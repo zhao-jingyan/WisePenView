@@ -396,6 +396,6 @@ const TagDrive: React.FC<TagDriveProps> = ({
       </div>
     </main>
   );
-};
+}
 
 export default TagDrive;

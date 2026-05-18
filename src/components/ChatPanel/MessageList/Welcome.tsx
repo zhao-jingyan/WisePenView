@@ -1,8 +1,7 @@
-import React from 'react';
 import { LuBot } from 'react-icons/lu';
 import styles from './style.module.less';
 
-const Welcome: React.FC = () => {
+function Welcome() {
   return (
     <div className={styles.welcomeWrapper}>
       <div className={styles.logoIcon}>
@@ -16,6 +15,6 @@ const Welcome: React.FC = () => {
       <div className={styles.subtitle}>今天想做点什么？</div>
     </div>
   );
-};
+}
 
 export default Welcome;

@@ -7,12 +7,12 @@ import {
   isDocumentTerminalStatus,
 } from '@/domains/Document/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format/formatFileSize';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { useInterval, useMount, useRequest, useUnmount } from 'ahooks';
 import { Button, Empty, Space, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { forwardRef, useImperativeHandle, useMemo, useState } from 'react';
+import { useImperativeHandle, useMemo, useState, type Ref } from 'react';
 import styles from './style.module.less';
 
 const SYNC_INTERVAL_MS = 5000;
@@ -26,7 +26,7 @@ export interface UploadQueueTabRef {
   refresh: () => void;
 }
 
-const UploadQueueTab = forwardRef<UploadQueueTabRef>((_, ref) => {
+function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
   const documentService = useDocumentService();
   const message = useAppMessage();
   const [list, setList] = useState<PendingDocItem[]>([]);
@@ -63,7 +63,7 @@ const UploadQueueTab = forwardRef<UploadQueueTabRef>((_, ref) => {
       },
       onError: (err) => {
         setPollingActive(false);
-        message.error(parseErrorMessage(err, '获取上传队列失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -83,7 +83,7 @@ const UploadQueueTab = forwardRef<UploadQueueTabRef>((_, ref) => {
         runFetchPendingList(false);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '重试失败'));
+        message.error(parseErrorMessage(err));
       },
       onFinally: () => {
         setRetryingId(null);
@@ -106,7 +106,7 @@ const UploadQueueTab = forwardRef<UploadQueueTabRef>((_, ref) => {
         runFetchPendingList(false);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '取消失败'));
+        message.error(parseErrorMessage(err));
       },
       onFinally: () => {
         setCancelingId(null);
@@ -229,6 +229,6 @@ const UploadQueueTab = forwardRef<UploadQueueTabRef>((_, ref) => {
       </main>
     </div>
   );
-});
+}
 
 export default UploadQueueTab;

@@ -1,15 +1,18 @@
 import Axios from '@/apis/Axios';
+import type { ApiResponse } from '@/apis/api.type';
+import { WisePenError } from '@/utils/error';
 import type { AxiosRequestConfig } from 'axios';
 
-export interface ApiResponse<T = unknown> {
-  code: number;
-  msg: string;
-  data: T;
-}
+export type { ApiResponse } from '@/apis/api.type';
 
 function checkResponse(res: ApiResponse<unknown>): void {
   if (res.code !== 200) {
-    throw new Error(res.msg ?? '请求失败');
+    throw new WisePenError({
+      code: res.code,
+      source: 'api',
+      serverMsg: res.msg,
+      message: res.msg,
+    });
   }
 }
 

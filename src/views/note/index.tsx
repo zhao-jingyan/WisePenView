@@ -1,6 +1,6 @@
 import { useRequest, useUnmount } from 'ahooks';
 import { Alert, Button, Result, Spin } from 'antd';
-import React, { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { RiArrowLeftDoubleLine, RiMenuLine } from 'react-icons/ri';
 import { Link, useParams } from 'react-router-dom';
 
@@ -18,7 +18,7 @@ import type { NoteInfoDisplayData } from '@/domains/Note';
 import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useNoteSession } from '@/session/note/useNoteSession';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import styles from './style.module.less';
 
 interface NoteViewConnectedProps {
@@ -27,11 +27,7 @@ interface NoteViewConnectedProps {
   noteInfoDisplay: NoteInfoDisplayData;
 }
 
-const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({
-  noteId,
-  resourceId,
-  noteInfoDisplay,
-}) => {
+function NoteViewConnected({ noteId, resourceId, noteInfoDisplay }: NoteViewConnectedProps) {
   const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
   const mainScrollRef = useRef<HTMLDivElement>(null);
   const titleAnchorRef = useRef<HTMLDivElement>(null);
@@ -206,9 +202,9 @@ const NoteViewConnected: React.FC<NoteViewConnectedProps> = ({
       </div>
     </div>
   );
-};
+}
 
-const NoteView: React.FC = () => {
+function NoteView() {
   const { noteId } = useParams<{ noteId?: string }>();
   const resourceId = noteId ?? '';
   const noteService = useNoteService();
@@ -254,7 +250,7 @@ const NoteView: React.FC = () => {
               <Result
                 status="warning"
                 title="无法打开笔记"
-                subTitle={parseErrorMessage(noteInfoError, '笔记不存在或无访问权限')}
+                subTitle={parseErrorMessage(noteInfoError)}
                 extra={
                   <Link to="/app/drive">
                     <Button type="default">返回云盘</Button>
@@ -311,6 +307,6 @@ const NoteView: React.FC = () => {
   return (
     <NoteViewConnected noteId={noteId} resourceId={resourceId} noteInfoDisplay={noteInfoDisplay} />
   );
-};
+}
 
 export default NoteView;

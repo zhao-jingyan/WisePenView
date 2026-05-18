@@ -5,14 +5,14 @@ import { getOpenedResourceIdFromPath } from '@/utils/url/openedResourceRoute';
 import { useUpdateEffect } from 'ahooks';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
+import { useCallback, useImperativeHandle, useMemo, useState, type Ref } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { buildRecentFilesGroupItems } from '../RecentFilesGroup';
 import { useSessionListGroup } from '../SessionListGroup';
 import type { SidebarMenuProps, SidebarMenuRef } from './index.type';
 import styles from './style.module.less';
 
-const SidebarMenu = forwardRef<SidebarMenuRef, SidebarMenuProps>(({ collapsed }, ref) => {
+function SidebarMenu({ collapsed, ref }: SidebarMenuProps & { ref?: Ref<SidebarMenuRef> }) {
   const navigate = useNavigate();
   const location = useLocation();
   const recentItems = useRecentFilesStore((s) => s.items);
@@ -118,7 +118,7 @@ const SidebarMenu = forwardRef<SidebarMenuRef, SidebarMenuProps>(({ collapsed },
       />
     </div>
   );
-});
+}
 
 SidebarMenu.displayName = 'SidebarMenu';
 

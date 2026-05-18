@@ -17,7 +17,7 @@ interface ChatInputProps {
   onClearSelectedContext: () => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({
+function ChatInput({
   onSend,
   sending,
   currentModelId,
@@ -25,7 +25,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   hasSelectedContext,
   selectedContextText,
   onClearSelectedContext,
-}) => {
+}: ChatInputProps) {
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
   const selectedPreviewChars = Array.from(selectedContextText);
@@ -87,6 +87,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
       <div className={styles.footerTip}>AI 内容仅供参考，请仔细甄别</div>
     </div>
   );
-};
+}
 
 export default ChatInput;

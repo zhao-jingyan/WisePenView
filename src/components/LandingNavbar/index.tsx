@@ -1,12 +1,11 @@
 import { Menu } from 'antd';
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import logoImg from '@/assets/images/logo-icon.png';
 import type { LandingNavbarProps } from './index.type';
 import styles from './style.module.less';
 
-const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeKey }) => {
+function LandingNavbar({ activeKey }: LandingNavbarProps) {
   const navigate = useNavigate();
   const selectedKeys = activeKey !== undefined && activeKey !== '' ? [activeKey] : [];
 
@@ -42,6 +41,6 @@ const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeKey }) => {
       </div>
     </div>
   );
-};
+}
 
 export default LandingNavbar;

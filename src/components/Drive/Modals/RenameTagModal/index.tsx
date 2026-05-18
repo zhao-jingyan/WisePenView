@@ -1,18 +1,12 @@
 import { useTagService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Button, Input, Modal } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { RenameTagModalProps } from './index.type';
 
-const RenameTagModal: React.FC<RenameTagModalProps> = ({
-  open,
-  onCancel,
-  onSuccess,
-  tag,
-  groupId,
-}) => {
+function RenameTagModal({ open, onCancel, onSuccess, tag, groupId }: RenameTagModalProps) {
   const tagService = useTagService();
   const message = useAppMessage();
   const [name, setName] = useState('');
@@ -31,7 +25,7 @@ const RenameTagModal: React.FC<RenameTagModalProps> = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '重命名失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -86,6 +80,6 @@ const RenameTagModal: React.FC<RenameTagModalProps> = ({
       />
     </Modal>
   );
-};
+}
 
 export default RenameTagModal;

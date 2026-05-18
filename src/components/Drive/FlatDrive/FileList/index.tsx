@@ -4,13 +4,13 @@ import { useResourceService } from '@/domains';
 import type { ResourceItem } from '@/domains/Resource';
 import { useClickFile } from '@/hooks/drive';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format/formatFileSize';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
 import { usePagination } from 'ahooks';
 import type { MenuProps } from 'antd';
 import { Dropdown, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { LuEllipsisVertical, LuPencil, LuTag, LuTrash2 } from 'react-icons/lu';
 import type { FileListProps } from './index.type';
 import styles from './style.module.less';
@@ -139,7 +139,7 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
   },
 ];
 
-const FileList: React.FC<FileListProps> = ({ groupId, filter }) => {
+function FileList({ groupId, filter }: FileListProps) {
   const resourceService = useResourceService();
   const message = useAppMessage();
   const clickFile = useClickFile();
@@ -194,7 +194,7 @@ const FileList: React.FC<FileListProps> = ({ groupId, filter }) => {
         setTotal(res.total);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '获取资源列表失败'));
+        message.error(parseErrorMessage(err));
         setList([]);
         setTotal(0);
       },
@@ -308,6 +308,6 @@ const FileList: React.FC<FileListProps> = ({ groupId, filter }) => {
       />
     </>
   );
-};
+}
 
 export default FileList;

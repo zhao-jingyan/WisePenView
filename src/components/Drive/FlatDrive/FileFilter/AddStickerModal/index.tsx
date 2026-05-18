@@ -1,13 +1,13 @@
 import { useStickerService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { validateReservedName } from '@/utils/tag/validateReservedName';
 import { useRequest } from 'ahooks';
 import { Input, Modal } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { AddStickerModalProps } from './index.type';
 
-const AddStickerModal: React.FC<AddStickerModalProps> = ({ open, onCancel, onSuccess }) => {
+function AddStickerModal({ open, onCancel, onSuccess }: AddStickerModalProps) {
   const stickerService = useStickerService();
   const message = useAppMessage();
 
@@ -31,7 +31,7 @@ const AddStickerModal: React.FC<AddStickerModalProps> = ({ open, onCancel, onSuc
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '新增标签失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -66,6 +66,6 @@ const AddStickerModal: React.FC<AddStickerModalProps> = ({ open, onCancel, onSuc
       />
     </Modal>
   );
-};
+}
 
 export default AddStickerModal;

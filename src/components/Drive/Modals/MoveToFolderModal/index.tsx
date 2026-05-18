@@ -4,19 +4,14 @@ import { useFolderService } from '@/domains';
 import type { ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Button, Modal } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import styles from './index.module.less';
 import type { MoveToFolderModalProps } from './index.type';
 
-const MoveToFolderModal: React.FC<MoveToFolderModalProps> = ({
-  open,
-  onCancel,
-  onSuccess,
-  target,
-}) => {
+function MoveToFolderModal({ open, onCancel, onSuccess, target }: MoveToFolderModalProps) {
   const folderService = useFolderService();
   const message = useAppMessage();
   const [selectedNode, setSelectedNode] = useState<TagTreeNode | null>(null);
@@ -51,7 +46,7 @@ const MoveToFolderModal: React.FC<MoveToFolderModalProps> = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '移动失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -108,6 +103,6 @@ const MoveToFolderModal: React.FC<MoveToFolderModalProps> = ({
       </div>
     </Modal>
   );
-};
+}
 
 export default MoveToFolderModal;

@@ -11,7 +11,7 @@ interface UserMessageProps {
   onEdit?: (content: string) => void;
 }
 
-const UserMessage: React.FC<UserMessageProps> = ({ message }) => {
+function UserMessage({ message }: UserMessageProps) {
   const messageApi = useAppMessage();
   const [copied, setCopied] = React.useState(false);
 
@@ -50,6 +50,6 @@ const UserMessage: React.FC<UserMessageProps> = ({ message }) => {
       </div>
     </div>
   );
-};
+}
 
 export default UserMessage;
