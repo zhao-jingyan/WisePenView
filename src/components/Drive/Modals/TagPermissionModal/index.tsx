@@ -19,7 +19,7 @@ import {
   type TagResourceMountMode,
 } from '@/domains/Tag/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { parseErrorMessage } from '@/utils/parseErrorMessage';
+import { parseErrorMessage } from '@/utils/error/parseErrorMessage';
 import { useRequest } from 'ahooks';
 import { Button, Checkbox, Empty, Form, Modal, Radio, Select } from 'antd';
 import { useState } from 'react';
@@ -108,7 +108,7 @@ const TagPermissionModal = ({
     {
       manual: true,
       onError: (err) => {
-        message.error(parseErrorMessage(err, '获取成员列表失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
@@ -188,7 +188,7 @@ const TagPermissionModal = ({
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err, '更新标签权限失败'));
+        message.error(parseErrorMessage(err));
       },
     }
   );
