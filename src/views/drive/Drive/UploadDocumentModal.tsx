@@ -3,7 +3,6 @@ import type { UploadFile, UploadProps } from 'antd';
 import { Button, Modal, Progress, Upload } from 'antd';
 import { useCallback, useState } from 'react';
 import { AiOutlineInbox } from 'react-icons/ai';
-import { useNavigate } from 'react-router-dom';
 
 import { useDocumentService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
@@ -17,12 +16,9 @@ export interface UploadDocumentModalProps {
   onSuccess?: () => void;
 }
 
-/**
- * 文档上传：MD5 → init → OSS PUT，成功后跳转 PDF 预览。
- */
+/** 文档上传：MD5 -> init -> OSS PUT，成功后由调用方决定后续跳转。 */
 export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocumentModalProps) {
   const documentService = useDocumentService();
-  const navigate = useNavigate();
   const message = useAppMessage();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [phase, setPhase] = useState<'idle' | 'hash' | 'upload'>('idle');
@@ -53,7 +49,7 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
         setPhase('hash');
         setPercent(0);
       },
-      onSuccess: (result) => {
+      onSuccess: () => {
         message.success('上传成功');
         onSuccess?.();
         resetState();
@@ -88,13 +84,13 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
     },
   };
 
-  const handleOk = async () => {
+  const handleOk = () => {
     const raw = fileList[0]?.originFileObj;
     if (!(raw instanceof File)) {
       message.warning('请选择要上传的文件');
       return;
     }
-    submitUpload(raw as File);
+    submitUpload(raw);
   };
 
   return (

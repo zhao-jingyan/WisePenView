@@ -1,0 +1,23 @@
+.breadcrumb {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+
+  :global(.ant-breadcrumb) {
+    font-size: var(--ant-font-size-sm);
+  }
+
+  :global(.ant-breadcrumb ol) {
+    flex-wrap: nowrap;
+  }
+
+  :global(.ant-breadcrumb-link) {
+    padding: 2px 4px;
+    border-radius: var(--ant-border-radius-sm);
+  }
+}
+
+.current {
+  font-weight: 500;
+  color: var(--ant-color-text);
+}

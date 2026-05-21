@@ -1,28 +1,18 @@
-import { useClickFile } from '@/hooks/drive';
-import { useAppMessage } from '@/hooks/useAppMessage';
-import { useChatPanelStore, useCurrentChatSessionStore, useRecentFilesStore } from '@/store';
-import { getOpenedResourceIdFromPath } from '@/utils/url/openedResourceRoute';
+import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
 import { useUpdateEffect } from 'ahooks';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
-import { useCallback, useImperativeHandle, useMemo, useState, type Ref } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { buildRecentFilesGroupItems } from '../RecentFilesGroup';
+import { useImperativeHandle, useMemo, useState, type Ref } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSessionListGroup } from '../SessionListGroup';
 import type { SidebarMenuProps, SidebarMenuRef } from './index.type';
 import styles from './style.module.less';
 
 function SidebarMenu({ collapsed, ref }: SidebarMenuProps & { ref?: Ref<SidebarMenuRef> }) {
-  const navigate = useNavigate();
   const location = useLocation();
-  const recentItems = useRecentFilesStore((s) => s.items);
-  const removeRecentFile = useRecentFilesStore((s) => s.removeFile);
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
   const currentSessionId = useCurrentChatSessionStore((state) => state.currentSessionId);
   const setCurrentSession = useCurrentChatSessionStore((state) => state.setCurrentSession);
-  const clearCurrentSession = useCurrentChatSessionStore((state) => state.clearCurrentSession);
-  const clickFile = useClickFile();
-  const messageApi = useAppMessage();
   const [pendingCreatedSessionId, setPendingCreatedSessionId] = useState<string>();
 
   const { menuItems: sessionMenuItems, refresh } = useSessionListGroup({});
@@ -31,59 +21,15 @@ function SidebarMenu({ collapsed, ref }: SidebarMenuProps & { ref?: Ref<SidebarM
     if (currentSessionId) {
       return [`session-${currentSessionId}`];
     }
-
-    const pathname = location.pathname;
-    const baseSelectedKeys = [pathname];
-    const resourceId = getOpenedResourceIdFromPath(pathname);
-    if (resourceId == null) return baseSelectedKeys;
-
-    const existsInSidebar = recentItems.some((item) => item.resourceId === resourceId);
-    if (!existsInSidebar) return baseSelectedKeys;
-
-    return [`opened-file-${resourceId}`];
-  }, [currentSessionId, location.pathname, recentItems]);
-
-  const handleOpenFile = useCallback(
-    (resourceId: string) => {
-      const found = recentItems.find((i) => i.resourceId === resourceId);
-      if (found) {
-        clickFile({
-          resourceId: found.resourceId,
-          ownerInfo: found.ownerInfo,
-          resourceName: found.resourceName,
-          resourceType: found.resourceType,
-        });
-      } else {
-        messageApi.warning('文件不存在或已失效');
-      }
-    },
-    [clickFile, messageApi, recentItems]
-  );
-
-  const handleCloseRecentFile = useCallback(
-    (resourceId: string) => {
-      const currentId = getOpenedResourceIdFromPath(location.pathname);
-      removeRecentFile(resourceId);
-      if (currentId === resourceId) {
-        navigate('/app/drive');
-      }
-    },
-    [location.pathname, navigate, removeRecentFile]
-  );
+    return [location.pathname];
+  }, [currentSessionId, location.pathname]);
 
   const menuItems = useMemo<Required<MenuProps>['items']>(() => {
     if (collapsed) {
       return [];
     }
-    return [
-      ...buildRecentFilesGroupItems({
-        items: recentItems,
-        onOpenFile: handleOpenFile,
-        onCloseFile: handleCloseRecentFile,
-      }),
-      ...sessionMenuItems,
-    ];
-  }, [collapsed, handleCloseRecentFile, handleOpenFile, recentItems, sessionMenuItems]);
+    return [...sessionMenuItems];
+  }, [collapsed, sessionMenuItems]);
 
   useImperativeHandle(
     ref,

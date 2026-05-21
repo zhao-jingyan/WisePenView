@@ -1,7 +1,7 @@
 import IconText from '@/components/Common/IconText';
 import FlatDrive from '@/components/Drive/FlatDrive';
 import { StickerManageModal } from '@/components/Drive/Modals';
-import FolderDrive from '@/components/Drive/TreeDrive/FolderDrive';
+import TableDrive from '@/components/Drive/TableDrive';
 import type { UploadQueueTabRef } from '@/components/Drive/UploadQueueTab';
 import UploadQueueTab from '@/components/Drive/UploadQueueTab';
 import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
@@ -14,7 +14,7 @@ import { UploadDocumentModal } from './UploadDocumentModal';
 import styles from './style.module.less';
 
 const VIEW_TABS: { key: DriveViewMode; label: string }[] = [
-  { key: 'folder', label: '文件夹管理' },
+  { key: 'tableDrive', label: '云盘' },
   { key: 'flat', label: '标签管理' },
   { key: 'uploadQueue', label: '上传队列' },
 ];
@@ -29,6 +29,9 @@ function Drive() {
   const handleUploadSuccess = useCallback(() => {
     uploadQueueRef.current?.refresh();
   }, []);
+  const activeViewMode: DriveViewMode = VIEW_TABS.some((tab) => tab.key === viewMode)
+    ? viewMode
+    : 'tableDrive';
 
   return (
     <div className={styles.pageContainer}>
@@ -52,16 +55,16 @@ function Drive() {
       </div>
 
       <Tabs
-        activeKey={viewMode}
+        activeKey={activeViewMode}
         onChange={(k) => setViewMode(k as DriveViewMode)}
         items={VIEW_TABS}
         className={styles.detailTabs}
       />
 
       <div className={styles.previewContent}>
-        {viewMode === 'flat' && <FlatDrive />}
-        {viewMode === 'folder' && <FolderDrive />}
-        {viewMode === 'uploadQueue' && <UploadQueueTab ref={uploadQueueRef} />}
+        {activeViewMode === 'flat' && <FlatDrive />}
+        {activeViewMode === 'tableDrive' && <TableDrive />}
+        {activeViewMode === 'uploadQueue' && <UploadQueueTab ref={uploadQueueRef} />}
       </div>
 
       <UploadDocumentModal

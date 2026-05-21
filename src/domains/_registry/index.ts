@@ -31,7 +31,7 @@ export {
   useAuthService,
   useChatService,
   useDocumentService,
-  useFolderService,
+  useDriveService,
   useGroupService,
   useImageService,
   useNoteService,

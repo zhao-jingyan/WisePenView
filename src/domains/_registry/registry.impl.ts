@@ -13,7 +13,7 @@
 import { createAuthServices } from '@/domains/Auth/service/AuthServices.impl';
 import { createChatServices } from '@/domains/Chat/service/ChatServices.impl';
 import { createDocumentServices } from '@/domains/Document/service/DocumentServices.impl';
-import { createFolderServices } from '@/domains/Folder/service/FolderServices.impl';
+import { createDriveServices } from '@/domains/Drive/service/DriveServices.impl';
 import { createGroupServices } from '@/domains/Group/service/GroupServices.impl';
 import { createImageServices } from '@/domains/Image/service/ImageServices.impl';
 import { createNoteServices } from '@/domains/Note/service/NoteServices.impl';
@@ -41,13 +41,16 @@ const walletService = createWalletServices();
 // Level 1：依赖 Level 0
 const tagService = createTagServices({ resourceService: resourceService });
 const stickerService = createStickerServices({ resourceService: resourceService });
-const folderService = createFolderServices({ resourceService: resourceService });
+const driveService = createDriveServices({
+  tagService: tagService,
+  resourceService: resourceService,
+});
 
 const servicesValue: ServicesContextValue = {
   authService: authService,
   chatService: chatService,
   documentService: documentService,
-  folderService: folderService,
+  driveService: driveService,
   groupService: groupService,
   imageService: imageService,
   noteService: noteService,

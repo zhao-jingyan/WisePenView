@@ -3,10 +3,10 @@ import { persist } from 'zustand/middleware';
 
 import { zustandSessionStorage } from './sessionStorage';
 
-export type DriveViewMode = 'folder' | 'flat' | 'uploadQueue';
+export type DriveViewMode = 'flat' | 'uploadQueue' | 'tableDrive';
 
 const DEFAULT_DRIVE_PREFERENCES = {
-  viewMode: 'folder' as DriveViewMode,
+  viewMode: 'tableDrive' as DriveViewMode,
   filterCollapsed: true,
 };
 

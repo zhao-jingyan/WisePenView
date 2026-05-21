@@ -1,7 +1,7 @@
 import { useDocumentService, useNoteService } from '@/domains';
 import { RESOURCE_TYPE } from '@/domains/Resource/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { useRecentFilesStore } from '@/store';
+import { useNewNoteStore, usePdfPreviewProgressStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal } from 'antd';
@@ -11,7 +11,6 @@ function DeleteFileModal({ open, onCancel, onSuccess, file }: DeleteFileModalPro
   const documentService = useDocumentService();
   const noteService = useNoteService();
   const message = useAppMessage();
-  const removeFile = useRecentFilesStore((s) => s.removeFile);
 
   const { loading, run: runDeleteFile } = useRequest(
     async () => {
@@ -27,7 +26,9 @@ function DeleteFileModal({ open, onCancel, onSuccess, file }: DeleteFileModalPro
       manual: true,
       onSuccess: (deletedResourceId) => {
         if (deletedResourceId) {
-          removeFile(deletedResourceId);
+          // 资源已删除，同步清理与之绑定的临时状态
+          usePdfPreviewProgressStore.getState().removeProgress(deletedResourceId);
+          useNewNoteStore.getState().clearNewNoteResourceId(deletedResourceId);
         }
         message.success('文件已删除');
         onSuccess?.();

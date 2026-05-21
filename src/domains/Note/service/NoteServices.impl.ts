@@ -1,5 +1,5 @@
 import type { NoteInfoResponse } from '@/domains/Note';
-import { useNoteSelectionStore, useRecentFilesStore } from '@/store';
+import { useNewNoteStore, useNoteSelectionStore, usePdfPreviewProgressStore } from '@/store';
 import { formatTimestampToDateTime } from '@/utils/format/formatTime';
 import { NoteApi } from '../apis/NoteApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
@@ -20,7 +20,6 @@ const syncTitle = async (params: SyncTitleRequest): Promise<void> => {
     resourceId,
     newName,
   });
-  useRecentFilesStore.getState().updateFileName(resourceId, newName);
 };
 
 const createNote = async (params: CreateNoteRequest): Promise<CreateNoteResponse> => {
@@ -33,7 +32,9 @@ const createNote = async (params: CreateNoteRequest): Promise<CreateNoteResponse
 const deleteNote = async (params: DeleteNoteRequest): Promise<void> => {
   await ResourceItemApi.removeResources({ resourceIds: params.resourceIds });
   for (const resourceId of params.resourceIds) {
-    useRecentFilesStore.getState().removeFile(resourceId);
+    // 资源已删除，同步清理与之绑定的临时状态
+    usePdfPreviewProgressStore.getState().removeProgress(resourceId);
+    useNewNoteStore.getState().clearNewNoteResourceId(resourceId);
     useNoteSelectionStore.getState().clearSelectedText(resourceId);
   }
 };

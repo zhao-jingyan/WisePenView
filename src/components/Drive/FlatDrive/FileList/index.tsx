@@ -1,10 +1,10 @@
-import FileTypeIcon from '@/components/Common/FileTypeIcon';
+import EntryIcon from '@/components/Common/EntryIcon';
 import IconText from '@/components/Common/IconText';
 import { DeleteFileModal, EditStickerModal, RenameFileModal } from '@/components/Drive/Modals';
 import { useResourceService } from '@/domains';
 import type { ResourceItem } from '@/domains/Resource';
-import { useClickFile } from '@/hooks/drive';
 import { useAppMessage } from '@/hooks/useAppMessage';
+import { useNavigateResource } from '@/hooks/useNavigateResource';
 import { parseErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format/formatFileSize';
 import { usePagination } from 'ahooks';
@@ -37,7 +37,7 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
       <IconText
         as="div"
         className={styles.nameCell}
-        icon={<FileTypeIcon resourceType={record.resourceType} color="#666" />}
+        icon={<EntryIcon entryType="resource" resourceType={record.resourceType} color="#666" />}
         iconSize={18}
         gap="var(--ant-margin-sm)"
         ellipsis
@@ -149,7 +149,7 @@ const buildColumns = (props: ColumnBuildProps): ColumnsType<ResourceItem> => [
 function FileList({ groupId, filter }: FileListProps) {
   const resourceService = useResourceService();
   const message = useAppMessage();
-  const clickFile = useClickFile();
+  const navigateResource = useNavigateResource(groupId);
   const [openDropdownKey, setOpenDropdownKey] = useState<string | null>(null);
   const [list, setList] = useState<ResourceItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -262,9 +262,12 @@ function FileList({ groupId, filter }: FileListProps) {
 
   const handleRowClick = useCallback(
     (record: ResourceItem) => ({
-      onClick: () => clickFile(record),
+      onClick: () => {
+        if (!record.resourceId) return;
+        navigateResource(record.resourceId, record.resourceType);
+      },
     }),
-    [clickFile]
+    [navigateResource]
   );
 
   return (

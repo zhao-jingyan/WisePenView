@@ -2,7 +2,7 @@
 import type { IAuthService } from '@/domains/Auth';
 import type { IChatService } from '@/domains/Chat';
 import type { IDocumentService } from '@/domains/Document';
-import type { IFolderService } from '@/domains/Folder';
+import type { IDriveService } from '@/domains/Drive';
 import type { IGroupService } from '@/domains/Group';
 import type { IImageService } from '@/domains/Image';
 import type { INoteService } from '@/domains/Note';
@@ -17,7 +17,7 @@ export interface ServicesContextValue {
   authService: IAuthService;
   chatService: IChatService;
   documentService: IDocumentService;
-  folderService: IFolderService;
+  driveService: IDriveService;
   groupService: IGroupService;
   imageService: IImageService;
   noteService: INoteService;

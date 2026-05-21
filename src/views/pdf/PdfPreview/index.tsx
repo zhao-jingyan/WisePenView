@@ -1,4 +1,4 @@
-import FileTypeIcon from '@/components/Common/FileTypeIcon';
+import EntryIcon from '@/components/Common/EntryIcon';
 import IconText from '@/components/Common/IconText';
 import ResourceViewerHeader from '@/components/Common/ResourceViewerHeader';
 import rvhStyles from '@/components/Common/ResourceViewerHeader/style.module.less';
@@ -139,7 +139,8 @@ function PdfPreview() {
             <IconText
               className={rvhStyles.inlineTitleText}
               icon={
-                <FileTypeIcon
+                <EntryIcon
+                  entryType="resource"
                   resourceType={docInfo.resourceInfo.resourceType ?? RESOURCE_TYPE.FILE}
                 />
               }
@@ -178,7 +179,8 @@ function PdfPreview() {
           <IconText
             className={rvhStyles.inlineTitleText}
             icon={
-              <FileTypeIcon
+              <EntryIcon
+                entryType="resource"
                 resourceType={docInfo.resourceInfo.resourceType ?? RESOURCE_TYPE.FILE}
               />
             }

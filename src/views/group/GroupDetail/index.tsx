@@ -3,7 +3,7 @@
  */
 import IconText from '@/components/Common/IconText';
 import UserCapsule from '@/components/Common/UserCapsule';
-import TagDrive from '@/components/Drive/TreeDrive/TagDrive';
+import TableDrive from '@/components/Drive/TableDrive';
 import { getGroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
 import {
   DissolveGroupModal,
@@ -106,11 +106,21 @@ function GroupDetail() {
         label: '文件',
         children: (
           <div className={layout.tabPane}>
-            <TagDrive
-              groupId={gid}
-              fileOrgLogic={resConfig.fileOrgLogic}
-              canCreateTag={groupDisplayConfig.canCreateTag}
-              canManageTagPermission={groupDisplayConfig.canManageTag}
+            <TableDrive
+              scope={{ type: 'group', groupId: gid }}
+              actions={{
+                toolbar: {
+                  canCreateFolder: groupDisplayConfig.canCreateTag,
+                  canUploadToGroup: true,
+                  canManageTagPermission: groupDisplayConfig.canManageTag,
+                },
+                row: {
+                  canRename: groupDisplayConfig.canCreateTag,
+                  canDelete: groupDisplayConfig.canCreateTag,
+                  canMove: groupDisplayConfig.canCreateTag,
+                  canManageNodePermission: groupDisplayConfig.canManageTag,
+                },
+              }}
             />
           </div>
         ),

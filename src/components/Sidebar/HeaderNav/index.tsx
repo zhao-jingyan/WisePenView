@@ -1,7 +1,6 @@
-import { useChatService, useNoteService, useUserService } from '@/domains';
-import { RESOURCE_TYPE } from '@/domains/Resource/enum';
+import { useChatService, useNoteService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { useNewChatSessionStore, useNewNoteStore, useRecentFilesStore } from '@/store';
+import { useNewChatSessionStore, useNewNoteStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import type { MenuProps } from 'antd';
@@ -17,9 +16,7 @@ function HeaderNav({ collapsed, onSessionCreated }: HeaderNavProps) {
   const location = useLocation();
   const chatService = useChatService();
   const noteService = useNoteService();
-  const userService = useUserService();
   const messageApi = useAppMessage();
-  const addRecentFile = useRecentFilesStore((s) => s.addFile);
 
   const isDriveActive = location.pathname.startsWith('/app/drive');
   const isGroupActive = location.pathname.startsWith('/app/my-group');
@@ -57,22 +54,12 @@ function HeaderNav({ collapsed, onSessionCreated }: HeaderNavProps) {
       if (!resourceId) {
         throw new Error('创建笔记失败：未获取到资源ID');
       }
-      const currentUser = await userService.getUserInfo();
-      return {
-        resourceId,
-        ownerInfo: currentUser,
-      };
+      return { resourceId };
     },
     {
       manual: true,
-      onSuccess: ({ resourceId, ownerInfo }) => {
+      onSuccess: ({ resourceId }) => {
         useNewNoteStore.getState().setNewNoteResourceId(resourceId);
-        addRecentFile({
-          resourceId,
-          resourceName: '未命名笔记',
-          ownerInfo,
-          resourceType: RESOURCE_TYPE.NOTE,
-        });
         navigate(`/app/note/${encodeURIComponent(resourceId)}`);
       },
       onError: () => {

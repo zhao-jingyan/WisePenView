@@ -39,7 +39,7 @@ function RenameFileModal({ open, onCancel, onSuccess, file }: RenameFileModalPro
     }
   );
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!file?.resourceId) return;
     const trimmed = name.trim();
     if (!trimmed) {

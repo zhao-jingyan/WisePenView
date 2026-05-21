@@ -1,5 +1,6 @@
-import TreeNav from '@/components/Drive/TreeNav';
-import { useGroupService, useTagService } from '@/domains';
+import DriveNav from '@/components/Drive/DriveNav';
+import { useDriveService, useGroupService, useTagService } from '@/domains';
+import type { DriveNode } from '@/domains/Drive';
 import type { GroupMember } from '@/domains/Group';
 import {
   actionsToPermissionCode,
@@ -8,7 +9,6 @@ import {
   hasResourceAction,
   normalizeResourceActions,
   permissionCodeToActions,
-  type TagTreeNode,
 } from '@/domains/Tag';
 import {
   TAG_ACL_GRANT_MODE,
@@ -23,6 +23,7 @@ import { parseErrorMessage } from '@/utils/error/parseErrorMessage';
 import { useRequest } from 'ahooks';
 import { Button, Checkbox, Empty, Form, Modal, Radio, Select } from 'antd';
 import { useState } from 'react';
+import { DEFAULT_DRIVE_ROOT_ID, type DriveSelectionItem } from '../../common/driveComponentModel';
 import type { TagPermissionModalProps } from './index.type';
 import styles from './style.module.less';
 
@@ -65,23 +66,72 @@ const filterSelectableUserIds = (ids: string[] | undefined, selectableMemberIdSe
   return ids.filter((id) => selectableMemberIdSet.has(id));
 };
 
+async function findFolderNodeIdByTagId(params: {
+  rootId: string;
+  groupId?: string;
+  tagId: string;
+  loadNodeChildren: (nodeId: string, groupId?: string) => Promise<DriveNode[]>;
+}): Promise<string | undefined> {
+  const { rootId, groupId, tagId, loadNodeChildren } = params;
+  const queue: string[] = [rootId];
+  const visited = new Set<string>();
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    if (!currentId || visited.has(currentId)) continue;
+    visited.add(currentId);
+
+    const children = await loadNodeChildren(currentId, groupId);
+    for (const child of children) {
+      if (child.type !== 'folder') continue;
+      if (child.tagId === tagId) return child.id;
+      queue.push(child.id);
+    }
+  }
+
+  return undefined;
+}
+
 const TagPermissionModal = ({
   open,
   groupId,
-  fileOrgLogic,
   initialTagId,
   onCancel,
   onSuccess,
 }: TagPermissionModalProps) => {
   const tagService = useTagService();
+  const driveService = useDriveService();
   const groupService = useGroupService();
   const message = useAppMessage();
   const [form] = Form.useForm<TagPermissionFormValues>();
-  const [selectedTag, setSelectedTag] = useState<TagTreeNode | null>(null);
+  const [selectedTag, setSelectedTag] = useState<DriveSelectionItem | null>(null);
   const [tagRefreshSeed, setTagRefreshSeed] = useState(0);
   const [tagInitialIds, setTagInitialIds] = useState<string[] | undefined>(undefined);
   const [hoveredAction, setHoveredAction] = useState<TagResourceAction | null>(null);
   const watchedGrantedActions = Form.useWatch('grantedActions', form);
+
+  const { run: runResolveInitialNode } = useRequest(
+    async (tagId: string): Promise<string[] | undefined> => {
+      const nodeId = await findFolderNodeIdByTagId({
+        rootId: DEFAULT_DRIVE_ROOT_ID,
+        groupId,
+        tagId,
+        loadNodeChildren: (nodeId, currentGroupId) =>
+          driveService.loadNodeChildren({ nodeId, groupId: currentGroupId }),
+      });
+      return nodeId ? [nodeId] : undefined;
+    },
+    {
+      manual: true,
+      onSuccess: (ids) => {
+        setTagInitialIds(ids);
+      },
+      onError: (err) => {
+        message.error(parseErrorMessage(err));
+        setTagInitialIds(undefined);
+      },
+    }
+  );
 
   const {
     data: members,
@@ -130,32 +180,54 @@ const TagPermissionModal = ({
     setSelectedTag(null);
     form.resetFields();
     setTagRefreshSeed((prev) => prev + 1);
-    setTagInitialIds(initialTagId ? [initialTagId] : undefined);
+    setTagInitialIds(undefined);
+    if (initialTagId) {
+      runResolveInitialNode(initialTagId);
+    }
     if (groupId) {
       runFetchMembers();
     }
   };
 
-  const handleTagChange = (nodes: TagTreeNode[]) => {
-    const nextTag = nodes[0] ?? null;
-    setSelectedTag(nextTag);
-    if (!nextTag) {
+  const handleTagChange = (nodes: DriveSelectionItem[]) => {
+    const nextFolder = nodes.find((node) => node.kind === 'folder');
+    if (!nextFolder) {
+      setSelectedTag(null);
       form.resetFields();
       return;
     }
-    form.setFieldsValue({
-      aclGrantMode: nextTag.aclGrantMode ?? TAG_ACL_GRANT_MODE.ALL,
-      aclGrantSpecifiedUsers: filterSelectableUserIds(
-        nextTag.aclGrantSpecifiedUsers,
-        selectableMemberIdSet
-      ),
-      grantedActions: normalizeResourceActions(nextTag.grantedActions),
-      resourceMountMode: nextTag.resourceMountMode ?? TAG_RESOURCE_MOUNT_MODE.ALL,
-      resourceMountSpecifiedUsers: filterSelectableUserIds(
-        nextTag.resourceMountSpecifiedUsers,
-        selectableMemberIdSet
-      ),
-    });
+    if (!nextFolder.tagId) {
+      setSelectedTag(null);
+      form.resetFields();
+      return;
+    }
+    const selectedTagId = nextFolder.tagId;
+    setSelectedTag(nextFolder);
+    const fillFormByTag = async () => {
+      let nextTag = tagService.getTagById(selectedTagId, groupId);
+      if (!nextTag) {
+        await tagService.getTagTree(groupId);
+        nextTag = tagService.getTagById(selectedTagId, groupId);
+      }
+      if (!nextTag) {
+        form.resetFields();
+        return;
+      }
+      form.setFieldsValue({
+        aclGrantMode: nextTag.aclGrantMode ?? TAG_ACL_GRANT_MODE.ALL,
+        aclGrantSpecifiedUsers: filterSelectableUserIds(
+          nextTag.aclGrantSpecifiedUsers,
+          selectableMemberIdSet
+        ),
+        grantedActions: normalizeResourceActions(nextTag.grantedActions),
+        resourceMountMode: nextTag.resourceMountMode ?? TAG_RESOURCE_MOUNT_MODE.ALL,
+        resourceMountSpecifiedUsers: filterSelectableUserIds(
+          nextTag.resourceMountSpecifiedUsers,
+          selectableMemberIdSet
+        ),
+      });
+    };
+    void fillFormByTag();
   };
 
   const { loading: saving, run: runSavePermission } = useRequest(
@@ -222,8 +294,6 @@ const TagPermissionModal = ({
     form.setFieldValue('grantedActions', next);
   };
 
-  const iconMode = fileOrgLogic === 'FOLDER' ? 'folder' : 'tag';
-
   return (
     <Modal
       title="标签权限管理"
@@ -252,14 +322,13 @@ const TagPermissionModal = ({
         <div className={styles.wrapper}>
           <div className={styles.leftPane}>
             <div className={styles.leftTitle}>选择标签</div>
-            <TreeNav
-              dataMode="tag"
-              selectTarget="nodes"
-              nodesMultiSelect={false}
-              iconMode={iconMode}
-              groupId={groupId}
+            <DriveNav
+              scope={groupId ? { type: 'group', groupId } : undefined}
+              renderableTypes={['folder']}
+              selectableTypes={['folder']}
+              multiple={false}
               refreshTrigger={tagRefreshSeed}
-              tagInitialCheckedIds={tagInitialIds}
+              initialSelectedIds={tagInitialIds}
               onChange={handleTagChange}
             />
           </div>

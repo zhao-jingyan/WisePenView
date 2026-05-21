@@ -5,21 +5,6 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--ant-padding-lg) var(--ant-padding-xl);
-
-  &:has(.splitterWrapper) {
-    max-width: none;
-    height: 100vh;
-    min-height: 100vh;
-    overflow: hidden;
-  }
-}
-
-.pageHeader {
-  margin-bottom: var(--ant-margin-lg);
-}
-
-.sectionDivider {
-  margin: var(--ant-margin-lg) 0;
 }
 
 .pageHeaderWithActions {
@@ -48,111 +33,10 @@
   margin-bottom: var(--ant-margin-lg);
 }
 
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ant-margin-xs);
-
-  .backLinkContent {
-    display: flex;
-    align-items: center;
-    gap: var(--ant-margin-xs);
-  }
-  color: var(--ant-color-text-secondary);
-  text-decoration: none;
-  margin-bottom: var(--ant-margin-md);
-
-  &:hover {
-    color: var(--ant-color-text);
-  }
-}
-
-.searchInput {
-  width: 240px;
-  border-radius: var(--ant-border-radius-lg);
-  margin-bottom: var(--ant-margin-sm);
-}
-
 .previewContent {
   display: flex;
   flex-direction: row;
   gap: var(--ant-margin-lg);
   flex: 1;
   min-height: 0;
-}
-
-.filterPanel {
-  flex-shrink: 0;
-  width: 320px;
-  border: 1px solid var(--ant-color-border);
-  border-radius: var(--ant-border-radius-lg);
-  padding: var(--ant-padding-md);
-  height: fit-content;
-}
-
-.listArea {
-  flex: 1;
-  min-width: 0;
-  padding-left: var(--ant-margin-lg);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.listAreaTopBar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  padding-bottom: var(--ant-padding-sm);
-}
-
-.filterToggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ant-margin-xs);
-  padding: 6px 12px;
-  font-size: var(--ant-font-size-sm);
-  color: var(--ant-color-text-secondary);
-  background: var(--ant-color-fill-quaternary);
-  border: 1px solid var(--ant-color-border);
-  border-radius: var(--ant-border-radius);
-  cursor: pointer;
-  transition:
-    color 0.2s,
-    background 0.2s,
-    border-color 0.2s;
-
-  &:hover {
-    color: var(--ant-color-text);
-    background: var(--ant-color-fill-tertiary);
-    border-color: var(--ant-color-border-secondary);
-  }
-}
-
-.filterToggleText {
-  @media (max-width: 768px) {
-    display: none;
-  }
-}
-
-.listAreaNoDivider {
-  padding-left: 0;
-  border-left: none;
-}
-
-.folderPlaceholder {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ant-color-text-tertiary);
-  font-size: var(--ant-font-size-sm);
-}
-
-.splitterWrapper {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }

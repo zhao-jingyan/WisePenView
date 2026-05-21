@@ -1,11 +1,12 @@
 import ChatPanel from '@/components/ChatPanel';
 import Sidebar from '@/components/Sidebar';
+import ResourceSidebar from '@/components/Sidebar/ResourceSidebar';
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
 import { useMount, useUpdateEffect } from 'ahooks';
 import { Layout } from 'antd';
 import React, { useCallback, useRef, useState } from 'react';
 import { LuBot } from 'react-icons/lu';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import styles from './SystemLayout.module.less';
 
 const { Content, Sider } = Layout;
@@ -21,11 +22,15 @@ const getMaxChatPanelWidth = (): number => {
   return Math.max(MIN_CHAT_PANEL_WIDTH, Math.min(MAX_CHAT_PANEL_WIDTH, viewportBasedMax));
 };
 
+const RESOURCE_SIDEBAR_PATH_REGEX = /^\/app\/(note|pdf)\//;
+
 function SystemLayout() {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const chatResizeGuideRef = useRef<HTMLDivElement | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [chatResizing, setChatResizing] = useState(false);
+  const location = useLocation();
+  const isResourceContext = RESOURCE_SIDEBAR_PATH_REGEX.test(location.pathname);
   const chatPanelCollapsed = useChatPanelStore((state) => state.chatPanelCollapsed);
   const chatPanelWidth = useChatPanelStore((state) => state.chatPanelWidth);
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
@@ -129,12 +134,19 @@ function SystemLayout() {
       style={{ ['--chat-panel-width' as string]: `${chatPanelWidth}px` }}
     >
       {chatResizing && <div ref={chatResizeGuideRef} className={styles.chatResizeGuide} />}
-      {/* 左侧 Sidebar */}
+      {/* 左侧 Sidebar：note/pdf 路由下切换为 ResourceSidebar 形态 */}
       <Sider className={styles.leftSider} width={308} theme="light" collapsed={sidebarCollapsed}>
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
+        {isResourceContext ? (
+          <ResourceSidebar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+        ) : (
+          <Sidebar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+        )}
       </Sider>
 
       {/* 中间布局 */}

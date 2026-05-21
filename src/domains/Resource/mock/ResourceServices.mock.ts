@@ -6,7 +6,6 @@ import type {
   ResourceItem,
   ResourceListPage,
 } from '@/domains/Resource';
-import { useRecentFilesStore } from '@/store';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -69,9 +68,8 @@ const getGroupResources = async (params: GetGroupResourceRequest): Promise<Resou
   return paginateMockResources(params);
 };
 
-const renameResource = async (params: RenameResourceRequest): Promise<void> => {
+const renameResource = async (_params: RenameResourceRequest): Promise<void> => {
   await delay(150);
-  useRecentFilesStore.getState().updateFileName(params.resourceId, params.newName);
 };
 
 const updateResourceTags = async (): Promise<void> => {

@@ -1,0 +1,760 @@
+{
+  "rootId": "drive-root",
+  "nodes": {
+    "drive-root": {
+      "id": "drive-root",
+      "type": "folder",
+      "parentId": null,
+      "tagId": "tag-root",
+      "name": "个人云盘",
+      "expanded": true,
+      "childrenIds": [
+        "folder-work",
+        "folder-study",
+        "folder-life",
+        "folder-bulk",
+        "link-shared-doc",
+        "trash-root"
+      ]
+    },
+    "folder-work": {
+      "id": "folder-work",
+      "type": "folder",
+      "parentId": "drive-root",
+      "tagId": "tag-work",
+      "name": "工作",
+      "expanded": false,
+      "childrenIds": [
+        "folder-work-pa",
+        "folder-work-pb",
+        "folder-work-meeting",
+        "res-w-001",
+        "res-w-002"
+      ]
+    },
+    "folder-work-pa": {
+      "id": "folder-work-pa",
+      "type": "folder",
+      "parentId": "folder-work",
+      "tagId": "tag-work-pa",
+      "name": "项目A",
+      "expanded": false,
+      "childrenIds": ["res-pa-001", "res-pa-002", "res-pa-003"]
+    },
+    "folder-work-pb": {
+      "id": "folder-work-pb",
+      "type": "folder",
+      "parentId": "folder-work",
+      "tagId": "tag-work-pb",
+      "name": "项目B",
+      "expanded": false,
+      "childrenIds": ["res-pb-001"]
+    },
+    "folder-work-meeting": {
+      "id": "folder-work-meeting",
+      "type": "folder",
+      "parentId": "folder-work",
+      "tagId": "tag-work-meeting",
+      "name": "会议记录",
+      "expanded": false,
+      "childrenIds": ["res-m-001", "res-m-002"]
+    },
+    "res-pa-001": {
+      "id": "res-pa-001",
+      "type": "resource",
+      "parentId": "folder-work-pa",
+      "resourceId": "res-pa-001",
+      "title": "项目A 需求文档.md",
+      "resourceType": "note"
+    },
+    "res-pa-002": {
+      "id": "res-pa-002",
+      "type": "resource",
+      "parentId": "folder-work-pa",
+      "resourceId": "res-pa-002",
+      "title": "项目A 接口说明.docx",
+      "resourceType": "document"
+    },
+    "res-pa-003": {
+      "id": "res-pa-003",
+      "type": "resource",
+      "parentId": "folder-work-pa",
+      "resourceId": "res-pa-003",
+      "title": "项目A 评审纪要",
+      "resourceType": "note"
+    },
+    "res-pb-001": {
+      "id": "res-pb-001",
+      "type": "resource",
+      "parentId": "folder-work-pb",
+      "resourceId": "res-pb-001",
+      "title": "项目B 计划.docx",
+      "resourceType": "document"
+    },
+    "res-m-001": {
+      "id": "res-m-001",
+      "type": "resource",
+      "parentId": "folder-work-meeting",
+      "resourceId": "res-m-001",
+      "title": "周会 2026-05-10",
+      "resourceType": "note"
+    },
+    "res-m-002": {
+      "id": "res-m-002",
+      "type": "resource",
+      "parentId": "folder-work-meeting",
+      "resourceId": "res-m-002",
+      "title": "周会 2026-05-17",
+      "resourceType": "note"
+    },
+    "res-w-001": {
+      "id": "res-w-001",
+      "type": "resource",
+      "parentId": "folder-work",
+      "resourceId": "res-w-001",
+      "title": "工作计划.docx",
+      "resourceType": "document"
+    },
+    "res-w-002": {
+      "id": "res-w-002",
+      "type": "resource",
+      "parentId": "folder-work",
+      "resourceId": "res-w-002",
+      "title": "工作总结",
+      "resourceType": "note"
+    },
+    "folder-study": {
+      "id": "folder-study",
+      "type": "folder",
+      "parentId": "drive-root",
+      "tagId": "tag-study",
+      "name": "学习",
+      "expanded": false,
+      "childrenIds": ["folder-study-tech", "folder-study-lang"]
+    },
+    "folder-study-tech": {
+      "id": "folder-study-tech",
+      "type": "folder",
+      "parentId": "folder-study",
+      "tagId": "tag-study-tech",
+      "name": "技术",
+      "expanded": false,
+      "childrenIds": ["res-st-001", "res-st-002"]
+    },
+    "folder-study-lang": {
+      "id": "folder-study-lang",
+      "type": "folder",
+      "parentId": "folder-study",
+      "tagId": "tag-study-lang",
+      "name": "语言",
+      "expanded": false,
+      "childrenIds": ["res-sl-001"]
+    },
+    "res-st-001": {
+      "id": "res-st-001",
+      "type": "resource",
+      "parentId": "folder-study-tech",
+      "resourceId": "res-st-001",
+      "title": "React 18 笔记",
+      "resourceType": "note"
+    },
+    "res-st-002": {
+      "id": "res-st-002",
+      "type": "resource",
+      "parentId": "folder-study-tech",
+      "resourceId": "res-st-002",
+      "title": "TS 高级类型",
+      "resourceType": "skill"
+    },
+    "res-sl-001": {
+      "id": "res-sl-001",
+      "type": "resource",
+      "parentId": "folder-study-lang",
+      "resourceId": "res-sl-001",
+      "title": "英语单词本",
+      "resourceType": "note"
+    },
+    "folder-life": {
+      "id": "folder-life",
+      "type": "folder",
+      "parentId": "drive-root",
+      "tagId": "tag-life",
+      "name": "生活",
+      "expanded": false,
+      "childrenIds": ["res-l-001"]
+    },
+    "res-l-001": {
+      "id": "res-l-001",
+      "type": "resource",
+      "parentId": "folder-life",
+      "resourceId": "res-l-001",
+      "title": "旅行清单",
+      "resourceType": "note"
+    },
+    "folder-bulk": {
+      "id": "folder-bulk",
+      "type": "folder",
+      "parentId": "drive-root",
+      "tagId": "tag-bulk",
+      "name": "大目录（loadMore 验证）",
+      "expanded": false,
+      "childrenIds": [
+        "res-bulk-001",
+        "res-bulk-002",
+        "res-bulk-003",
+        "res-bulk-004",
+        "res-bulk-005",
+        "res-bulk-006",
+        "res-bulk-007",
+        "res-bulk-008",
+        "res-bulk-009",
+        "res-bulk-010",
+        "res-bulk-011",
+        "res-bulk-012",
+        "res-bulk-013",
+        "res-bulk-014",
+        "res-bulk-015",
+        "res-bulk-016",
+        "res-bulk-017",
+        "res-bulk-018",
+        "res-bulk-019",
+        "res-bulk-020",
+        "res-bulk-021",
+        "res-bulk-022",
+        "res-bulk-023",
+        "res-bulk-024",
+        "res-bulk-025",
+        "res-bulk-026",
+        "res-bulk-027",
+        "res-bulk-028",
+        "res-bulk-029",
+        "res-bulk-030",
+        "res-bulk-031",
+        "res-bulk-032",
+        "res-bulk-033",
+        "res-bulk-034",
+        "res-bulk-035",
+        "res-bulk-036",
+        "res-bulk-037",
+        "res-bulk-038",
+        "res-bulk-039",
+        "res-bulk-040",
+        "res-bulk-041",
+        "res-bulk-042",
+        "res-bulk-043",
+        "res-bulk-044",
+        "res-bulk-045",
+        "res-bulk-046",
+        "res-bulk-047",
+        "res-bulk-048",
+        "res-bulk-049",
+        "res-bulk-050",
+        "res-bulk-051",
+        "res-bulk-052",
+        "res-bulk-053",
+        "res-bulk-054",
+        "res-bulk-055",
+        "res-bulk-056",
+        "res-bulk-057",
+        "res-bulk-058",
+        "res-bulk-059",
+        "res-bulk-060"
+      ]
+    },
+    "res-bulk-001": {
+      "id": "res-bulk-001",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-001",
+      "title": "批量资源 001",
+      "resourceType": "document"
+    },
+    "res-bulk-002": {
+      "id": "res-bulk-002",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-002",
+      "title": "批量资源 002",
+      "resourceType": "note"
+    },
+    "res-bulk-003": {
+      "id": "res-bulk-003",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-003",
+      "title": "批量资源 003",
+      "resourceType": "skill"
+    },
+    "res-bulk-004": {
+      "id": "res-bulk-004",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-004",
+      "title": "批量资源 004",
+      "resourceType": "document"
+    },
+    "res-bulk-005": {
+      "id": "res-bulk-005",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-005",
+      "title": "批量资源 005",
+      "resourceType": "note"
+    },
+    "res-bulk-006": {
+      "id": "res-bulk-006",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-006",
+      "title": "批量资源 006",
+      "resourceType": "skill"
+    },
+    "res-bulk-007": {
+      "id": "res-bulk-007",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-007",
+      "title": "批量资源 007",
+      "resourceType": "document"
+    },
+    "res-bulk-008": {
+      "id": "res-bulk-008",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-008",
+      "title": "批量资源 008",
+      "resourceType": "note"
+    },
+    "res-bulk-009": {
+      "id": "res-bulk-009",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-009",
+      "title": "批量资源 009",
+      "resourceType": "skill"
+    },
+    "res-bulk-010": {
+      "id": "res-bulk-010",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-010",
+      "title": "批量资源 010",
+      "resourceType": "document"
+    },
+    "res-bulk-011": {
+      "id": "res-bulk-011",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-011",
+      "title": "批量资源 011",
+      "resourceType": "note"
+    },
+    "res-bulk-012": {
+      "id": "res-bulk-012",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-012",
+      "title": "批量资源 012",
+      "resourceType": "skill"
+    },
+    "res-bulk-013": {
+      "id": "res-bulk-013",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-013",
+      "title": "批量资源 013",
+      "resourceType": "document"
+    },
+    "res-bulk-014": {
+      "id": "res-bulk-014",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-014",
+      "title": "批量资源 014",
+      "resourceType": "note"
+    },
+    "res-bulk-015": {
+      "id": "res-bulk-015",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-015",
+      "title": "批量资源 015",
+      "resourceType": "skill"
+    },
+    "res-bulk-016": {
+      "id": "res-bulk-016",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-016",
+      "title": "批量资源 016",
+      "resourceType": "document"
+    },
+    "res-bulk-017": {
+      "id": "res-bulk-017",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-017",
+      "title": "批量资源 017",
+      "resourceType": "note"
+    },
+    "res-bulk-018": {
+      "id": "res-bulk-018",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-018",
+      "title": "批量资源 018",
+      "resourceType": "skill"
+    },
+    "res-bulk-019": {
+      "id": "res-bulk-019",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-019",
+      "title": "批量资源 019",
+      "resourceType": "document"
+    },
+    "res-bulk-020": {
+      "id": "res-bulk-020",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-020",
+      "title": "批量资源 020",
+      "resourceType": "note"
+    },
+    "res-bulk-021": {
+      "id": "res-bulk-021",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-021",
+      "title": "批量资源 021",
+      "resourceType": "skill"
+    },
+    "res-bulk-022": {
+      "id": "res-bulk-022",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-022",
+      "title": "批量资源 022",
+      "resourceType": "document"
+    },
+    "res-bulk-023": {
+      "id": "res-bulk-023",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-023",
+      "title": "批量资源 023",
+      "resourceType": "note"
+    },
+    "res-bulk-024": {
+      "id": "res-bulk-024",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-024",
+      "title": "批量资源 024",
+      "resourceType": "skill"
+    },
+    "res-bulk-025": {
+      "id": "res-bulk-025",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-025",
+      "title": "批量资源 025",
+      "resourceType": "document"
+    },
+    "res-bulk-026": {
+      "id": "res-bulk-026",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-026",
+      "title": "批量资源 026",
+      "resourceType": "note"
+    },
+    "res-bulk-027": {
+      "id": "res-bulk-027",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-027",
+      "title": "批量资源 027",
+      "resourceType": "skill"
+    },
+    "res-bulk-028": {
+      "id": "res-bulk-028",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-028",
+      "title": "批量资源 028",
+      "resourceType": "document"
+    },
+    "res-bulk-029": {
+      "id": "res-bulk-029",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-029",
+      "title": "批量资源 029",
+      "resourceType": "note"
+    },
+    "res-bulk-030": {
+      "id": "res-bulk-030",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-030",
+      "title": "批量资源 030",
+      "resourceType": "skill"
+    },
+    "res-bulk-031": {
+      "id": "res-bulk-031",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-031",
+      "title": "批量资源 031",
+      "resourceType": "document"
+    },
+    "res-bulk-032": {
+      "id": "res-bulk-032",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-032",
+      "title": "批量资源 032",
+      "resourceType": "note"
+    },
+    "res-bulk-033": {
+      "id": "res-bulk-033",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-033",
+      "title": "批量资源 033",
+      "resourceType": "skill"
+    },
+    "res-bulk-034": {
+      "id": "res-bulk-034",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-034",
+      "title": "批量资源 034",
+      "resourceType": "document"
+    },
+    "res-bulk-035": {
+      "id": "res-bulk-035",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-035",
+      "title": "批量资源 035",
+      "resourceType": "note"
+    },
+    "res-bulk-036": {
+      "id": "res-bulk-036",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-036",
+      "title": "批量资源 036",
+      "resourceType": "skill"
+    },
+    "res-bulk-037": {
+      "id": "res-bulk-037",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-037",
+      "title": "批量资源 037",
+      "resourceType": "document"
+    },
+    "res-bulk-038": {
+      "id": "res-bulk-038",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-038",
+      "title": "批量资源 038",
+      "resourceType": "note"
+    },
+    "res-bulk-039": {
+      "id": "res-bulk-039",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-039",
+      "title": "批量资源 039",
+      "resourceType": "skill"
+    },
+    "res-bulk-040": {
+      "id": "res-bulk-040",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-040",
+      "title": "批量资源 040",
+      "resourceType": "document"
+    },
+    "res-bulk-041": {
+      "id": "res-bulk-041",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-041",
+      "title": "批量资源 041",
+      "resourceType": "note"
+    },
+    "res-bulk-042": {
+      "id": "res-bulk-042",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-042",
+      "title": "批量资源 042",
+      "resourceType": "skill"
+    },
+    "res-bulk-043": {
+      "id": "res-bulk-043",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-043",
+      "title": "批量资源 043",
+      "resourceType": "document"
+    },
+    "res-bulk-044": {
+      "id": "res-bulk-044",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-044",
+      "title": "批量资源 044",
+      "resourceType": "note"
+    },
+    "res-bulk-045": {
+      "id": "res-bulk-045",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-045",
+      "title": "批量资源 045",
+      "resourceType": "skill"
+    },
+    "res-bulk-046": {
+      "id": "res-bulk-046",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-046",
+      "title": "批量资源 046",
+      "resourceType": "document"
+    },
+    "res-bulk-047": {
+      "id": "res-bulk-047",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-047",
+      "title": "批量资源 047",
+      "resourceType": "note"
+    },
+    "res-bulk-048": {
+      "id": "res-bulk-048",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-048",
+      "title": "批量资源 048",
+      "resourceType": "skill"
+    },
+    "res-bulk-049": {
+      "id": "res-bulk-049",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-049",
+      "title": "批量资源 049",
+      "resourceType": "document"
+    },
+    "res-bulk-050": {
+      "id": "res-bulk-050",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-050",
+      "title": "批量资源 050",
+      "resourceType": "note"
+    },
+    "res-bulk-051": {
+      "id": "res-bulk-051",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-051",
+      "title": "批量资源 051",
+      "resourceType": "skill"
+    },
+    "res-bulk-052": {
+      "id": "res-bulk-052",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-052",
+      "title": "批量资源 052",
+      "resourceType": "document"
+    },
+    "res-bulk-053": {
+      "id": "res-bulk-053",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-053",
+      "title": "批量资源 053",
+      "resourceType": "note"
+    },
+    "res-bulk-054": {
+      "id": "res-bulk-054",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-054",
+      "title": "批量资源 054",
+      "resourceType": "skill"
+    },
+    "res-bulk-055": {
+      "id": "res-bulk-055",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-055",
+      "title": "批量资源 055",
+      "resourceType": "document"
+    },
+    "res-bulk-056": {
+      "id": "res-bulk-056",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-056",
+      "title": "批量资源 056",
+      "resourceType": "note"
+    },
+    "res-bulk-057": {
+      "id": "res-bulk-057",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-057",
+      "title": "批量资源 057",
+      "resourceType": "skill"
+    },
+    "res-bulk-058": {
+      "id": "res-bulk-058",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-058",
+      "title": "批量资源 058",
+      "resourceType": "document"
+    },
+    "res-bulk-059": {
+      "id": "res-bulk-059",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-059",
+      "title": "批量资源 059",
+      "resourceType": "note"
+    },
+    "res-bulk-060": {
+      "id": "res-bulk-060",
+      "type": "resource",
+      "parentId": "folder-bulk",
+      "resourceId": "res-bulk-060",
+      "title": "批量资源 060",
+      "resourceType": "skill"
+    },
+    "link-shared-doc": {
+      "id": "link-shared-doc",
+      "type": "link",
+      "parentId": "drive-root",
+      "resourceId": "res-w-001",
+      "title": "工作计划（链接）",
+      "resourceType": "document"
+    },
+    "trash-root": {
+      "id": "trash-root",
+      "type": "trash",
+      "parentId": "drive-root",
+      "tagId": "tag-trash",
+      "childrenIds": []
+    }
+  }
+}

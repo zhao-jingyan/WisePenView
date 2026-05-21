@@ -16,4 +16,8 @@ export interface ResourceItem {
   path?: string;
   /** 当前标签映射（tagId → tagName），与接口返回一致 */
   currentTags?: Record<string, string>;
+  /** 主挂载标签（约定取 currentTags 的第一项） */
+  mainTagId?: string;
+  /** 链接挂载标签（currentTags 去掉 mainTagId 后的其余项） */
+  linkTagIds?: string[];
 }

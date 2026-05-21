@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { RiArrowLeftDoubleLine, RiMenuLine } from 'react-icons/ri';
 import { Link, useParams } from 'react-router-dom';
 
-import FileTypeIcon from '@/components/Common/FileTypeIcon';
+import EntryIcon from '@/components/Common/EntryIcon';
 import IconText from '@/components/Common/IconText';
 import ResourceViewerHeader from '@/components/Common/ResourceViewerHeader';
 import rvhStyles from '@/components/Common/ResourceViewerHeader/style.module.less';
@@ -86,7 +86,7 @@ function NoteViewConnected({ noteId, resourceId, noteInfoDisplay }: NoteViewConn
         inlineTitle={
           <IconText
             className={rvhStyles.inlineTitleText}
-            icon={<FileTypeIcon resourceType={RESOURCE_TYPE.NOTE} />}
+            icon={<EntryIcon entryType="resource" resourceType={RESOURCE_TYPE.NOTE} />}
             iconSize={18}
             gap="var(--ant-margin-sm)"
             ellipsis

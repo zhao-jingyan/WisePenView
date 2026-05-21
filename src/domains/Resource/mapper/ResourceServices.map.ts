@@ -1,2 +1,16 @@
-// 该域强制保留 mapper 文件；当前接口无需字段转换时可保持空映射。
-export const ResourceServicesMap = {};
+import type { ResourceItem } from '@/domains/Resource';
+
+const mapResourceItemFromApi = (item: ResourceItem): ResourceItem => {
+  const tagIds = Object.keys(item.currentTags ?? {});
+  const mainTagId = tagIds[0];
+  const linkTagIds = tagIds.slice(1);
+  return {
+    ...item,
+    mainTagId,
+    linkTagIds,
+  };
+};
+
+export const ResourceServicesMap = {
+  mapResourceItemFromApi,
+};

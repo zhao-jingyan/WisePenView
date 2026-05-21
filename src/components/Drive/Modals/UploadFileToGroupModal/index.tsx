@@ -1,12 +1,11 @@
-import TreeNav from '@/components/Drive/TreeNav';
+import DriveNav from '@/components/Drive/DriveNav';
 import { useResourceService } from '@/domains';
-import type { ResourceItem } from '@/domains/Resource';
-import type { TagTreeNode } from '@/domains/Tag/service/index.type';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';
 import { Button, Modal, Steps } from 'antd';
 import { useCallback, useState } from 'react';
+import type { DriveSelectionItem } from '../../common/driveComponentModel';
 import styles from './index.module.less';
 import type { UploadFileToGroupModalProps } from './index.type';
 
@@ -14,58 +13,45 @@ function UploadFileToGroupModal({
   open,
   onCancel,
   groupId,
-  fileOrgLogic,
   onSuccess,
 }: UploadFileToGroupModalProps) {
   const resourceService = useResourceService();
   const message = useAppMessage();
   const [step, setStep] = useState(0);
   const [navRefreshKey, setNavRefreshKey] = useState(0);
-  const [selectedFiles, setSelectedFiles] = useState<ResourceItem[]>([]);
-  const [selectedTags, setSelectedTags] = useState<TagTreeNode[]>([]);
+  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+  const [selectedTargetTagId, setSelectedTargetTagId] = useState<string>();
 
   const handleOpenChange = useCallback((visible: boolean) => {
     setStep(0);
-    setSelectedFiles([]);
-    setSelectedTags([]);
+    setSelectedFileIds([]);
+    setSelectedTargetTagId(undefined);
     if (visible) {
       setNavRefreshKey((k) => k + 1);
     }
   }, []);
 
-  const handleCancel = useCallback(() => {
-    onCancel();
-  }, [onCancel]);
-
-  const handleFilesChange = useCallback((_nodes: TagTreeNode[], leaves: ResourceItem[]) => {
-    setSelectedFiles(leaves);
+  const handleFilesChange = useCallback((nodes: DriveSelectionItem[]) => {
+    const ids = nodes
+      .filter((node) => node.kind === 'resource' || node.kind === 'link')
+      .map((node) => node.resourceId)
+      .filter((id): id is string => Boolean(id?.trim()));
+    setSelectedFileIds(ids);
   }, []);
 
-  const handleTagsChange = useCallback((nodes: TagTreeNode[], _leaves: ResourceItem[]) => {
-    setSelectedTags(nodes);
-  }, []);
-
-  const handleNext = useCallback(() => {
-    if (selectedFiles.length === 0) return;
-    setStep(1);
-  }, [selectedFiles.length]);
-
-  const handleBack = useCallback(() => {
-    setStep(0);
+  const handleTagsChange = useCallback((nodes: DriveSelectionItem[]) => {
+    const target = nodes.find((node) => node.kind === 'folder' && Boolean(node.tagId?.trim()));
+    setSelectedTargetTagId(target?.tagId);
   }, []);
 
   const { loading: submitting, run: runUploadToGroup } = useRequest(
-    async ({ validIds, tagIds }: { validIds: string[]; tagIds: string[] }) => {
+    async ({ resourceIds, tagIds }: { resourceIds: string[]; tagIds: string[] }) => {
       await Promise.all(
-        validIds.map((resourceId) =>
-          resourceService.updateResourceTags({
-            resourceId,
-            tagIds,
-            groupId,
-          })
+        resourceIds.map((resourceId) =>
+          resourceService.updateResourceTags({ resourceId, tagIds, groupId })
         )
       );
-      return validIds.length;
+      return resourceIds.length;
     },
     {
       manual: true,
@@ -80,32 +66,19 @@ function UploadFileToGroupModal({
     }
   );
 
-  const handleSubmit = useCallback(async () => {
-    const validIds = selectedFiles
-      .map((f) => f.resourceId)
-      .filter((id): id is string => Boolean(id?.trim()));
-    const tagIds = selectedTags.map((n) => n.tagId).filter((id) => Boolean(id?.trim()));
+  const handleSubmit = () => {
+    if (selectedFileIds.length === 0 || !selectedTargetTagId) return;
+    runUploadToGroup({ resourceIds: selectedFileIds, tagIds: [selectedTargetTagId] });
+  };
 
-    if (validIds.length === 0 || tagIds.length === 0) return;
-
-    runUploadToGroup({ validIds, tagIds });
-  }, [selectedFiles, selectedTags, runUploadToGroup]);
-
-  const hasFileIds = selectedFiles.some((f) => Boolean(f.resourceId?.trim()));
-  const canNext = hasFileIds;
-  const canSubmit = hasFileIds && selectedTags.length > 0;
-
-  /** 与小组主盘一致：FOLDER → FolderService 树；TAG → TagService 树（TreeNav 内部按 dataMode 选用 Service） */
-  const groupTreeDataMode = 'tag';
-  const step2Title = fileOrgLogic === 'FOLDER' ? '选择小组文件夹' : '选择小组标签';
-  const step2Hint =
-    fileOrgLogic === 'FOLDER' ? '选择文件要上传到的小组文件夹' : '选择文件要上传到的小组标签';
+  const canNext = selectedFileIds.length > 0;
+  const canSubmit = canNext && Boolean(selectedTargetTagId);
 
   return (
     <Modal
       title="上传文件到小组"
       open={open}
-      onCancel={handleCancel}
+      onCancel={onCancel}
       afterOpenChange={handleOpenChange}
       destroyOnHidden
       width={560}
@@ -117,7 +90,7 @@ function UploadFileToGroupModal({
             size="small"
             type="dot"
             current={step}
-            items={[{ title: '选择个人文件' }, { title: step2Title }]}
+            items={[{ title: '选择个人文件' }, { title: '选择目标文件夹' }]}
           />
         </div>
 
@@ -126,11 +99,12 @@ function UploadFileToGroupModal({
             <div className={styles.slidePane}>
               <div className={styles.treeSection}>
                 <div className={styles.hint}>选择要上传的文件（可多选）</div>
-                <div className={styles.treeNav}>
-                  <TreeNav
+                <div className={styles.navTree}>
+                  <DriveNav
                     key={`personal-${navRefreshKey}`}
-                    dataMode="folder"
-                    selectTarget="leaves"
+                    renderableTypes={['folder', 'resource', 'link']}
+                    selectableTypes={['resource', 'link']}
+                    multiple
                     refreshTrigger={navRefreshKey}
                     onChange={handleFilesChange}
                   />
@@ -139,29 +113,15 @@ function UploadFileToGroupModal({
             </div>
             <div className={styles.slidePane}>
               <div className={styles.treeSection}>
-                <div className={styles.hint}>{step2Hint}</div>
-                <div className={styles.treeNav}>
-                  {fileOrgLogic === 'FOLDER' ? (
-                    <TreeNav
-                      key={`group-tree-${groupTreeDataMode}-${groupId}-${navRefreshKey}`}
-                      dataMode={groupTreeDataMode}
-                      selectTarget="nodes"
-                      groupId={groupId}
-                      iconMode="folder"
-                      nodesMultiSelect={false}
-                      onChange={handleTagsChange}
-                    />
-                  ) : (
-                    <TreeNav
-                      key={`group-tree-${groupTreeDataMode}-${groupId}-${navRefreshKey}`}
-                      dataMode={groupTreeDataMode}
-                      selectTarget="nodes"
-                      groupId={groupId}
-                      iconMode="tag"
-                      nodesMultiSelect={true}
-                      onChange={handleTagsChange}
-                    />
-                  )}
+                <div className={styles.hint}>选择文件要上传到的小组文件夹（只能选择一个）</div>
+                <div className={styles.navTree}>
+                  <DriveNav
+                    key={`group-tree-tag-${groupId}-${navRefreshKey}`}
+                    scope={{ type: 'group', groupId }}
+                    renderableTypes={['folder']}
+                    selectableTypes={['folder']}
+                    onChange={handleTagsChange}
+                  />
                 </div>
               </div>
             </div>
@@ -169,23 +129,16 @@ function UploadFileToGroupModal({
         </div>
 
         <div className={styles.footer}>
-          <Button key="cancel" onClick={handleCancel}>
-            取消
-          </Button>
-          {step === 1 && (
-            <Button key="back" onClick={handleBack}>
-              上一步
-            </Button>
-          )}
+          <Button onClick={onCancel}>取消</Button>
+          {step === 1 && <Button onClick={() => setStep(0)}>上一步</Button>}
           {step === 0 ? (
-            <Button key="next" type="primary" onClick={handleNext} disabled={!canNext}>
+            <Button type="primary" onClick={() => setStep(1)} disabled={!canNext}>
               下一步
             </Button>
           ) : (
             <Button
-              key="confirm"
               type="primary"
-              onClick={() => void handleSubmit()}
+              onClick={handleSubmit}
               loading={submitting}
               disabled={!canSubmit}
             >

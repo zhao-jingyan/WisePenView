@@ -1,7 +1,7 @@
-import { useRecentFilesStore } from '@/store';
 import { ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
 import { TAG_QUERY_LOGIC_MODE } from '../enum';
+import { ResourceServicesMap } from '../mapper/ResourceServices.map';
 import type {
   GetGroupResourceRequest,
   GetUserResourcesRequest,
@@ -31,7 +31,7 @@ const requestResourceItemList = async (
   }
   const d = await ResourceItemApi.listResources(query);
   return {
-    list: d?.list ?? [],
+    list: (d?.list ?? []).map(ResourceServicesMap.mapResourceItemFromApi),
     total: d?.total ?? 0,
     page: d?.page ?? params.page,
     size: d?.size ?? params.size,
@@ -49,8 +49,6 @@ const getGroupResources = async (params: GetGroupResourceRequest): Promise<Resou
 
 const renameResource = async (params: RenameResourceRequest): Promise<void> => {
   await ResourceItemApi.renameResource(params);
-  // 重命名成功后，更新最近文件列表的文件名
-  useRecentFilesStore.getState().updateFileName(params.resourceId, params.newName);
 };
 
 const updateResourceTags = async (params: UpdateResourceTagsRequest): Promise<void> => {

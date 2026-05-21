@@ -4,7 +4,7 @@
 import { AuthServicesMock } from '@/domains/Auth/mock/AuthServices.mock';
 import { ChatServicesMock } from '@/domains/Chat/mock/ChatServices.mock';
 import { DocumentServicesMock } from '@/domains/Document/mock/DocumentServices.mock';
-import { FolderServicesMock } from '@/domains/Folder/mock/FolderServices.mock';
+import { DriveServicesMock } from '@/domains/Drive/mock/DriveServices.mock';
 import { GroupServicesMock } from '@/domains/Group/mock/GroupServices.mock';
 import { ImageServicesMock } from '@/domains/Image/mock/ImageServices.mock';
 import { NoteServicesMock } from '@/domains/Note/mock/NoteServices.mock';
@@ -21,7 +21,7 @@ const mockServicesValue: ServicesContextValue = {
   authService: AuthServicesMock,
   chatService: ChatServicesMock,
   documentService: DocumentServicesMock,
-  folderService: FolderServicesMock,
+  driveService: DriveServicesMock,
   groupService: GroupServicesMock,
   imageService: ImageServicesMock,
   noteService: NoteServicesMock,

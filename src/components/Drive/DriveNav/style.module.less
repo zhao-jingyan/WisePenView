@@ -1,0 +1,48 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ant-margin-xs);
+  padding: var(--ant-padding-sm);
+  min-height: 80px;
+}
+
+.tree {
+  font-size: var(--ant-font-size-md);
+
+  :global(.ant-tree-treenode) {
+    padding: 1px 0;
+  }
+
+  :global(.ant-tree-switcher),
+  :global(.ant-tree-switcher-icon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+  }
+
+  :global(.ant-tree-node-content-wrapper) {
+    min-height: 22px;
+  }
+
+  :global(.ant-tree-title) {
+    line-height: 22px;
+  }
+}
+
+.nodeTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ant-margin-xxs);
+}
+
+.loadMoreBtn {
+  color: var(--ant-color-primary);
+  cursor: pointer;
+  font-size: var(--ant-font-size-sm);
+
+  &:hover {
+    opacity: 0.85;
+  }
+}

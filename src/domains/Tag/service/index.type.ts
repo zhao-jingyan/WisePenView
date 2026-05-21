@@ -13,6 +13,10 @@ import type {
 
 /** TagService 接口：供依赖注入使用 */
 export interface ITagService {
+  /** 获取未过滤的原始标签树（包含路径标签与系统隐藏标签） */
+  getRawTagTree(groupId?: string): Promise<TagTreeNode[]>;
+  /** 从原始标签索引中按 tagId 查找节点（需先调用 getRawTagTree） */
+  getRawTagById(tagId: string, groupId?: string): TagTreeNode | undefined;
   /** 获取标签树（带缓存），返回多个根节点 */
   getTagTree(groupId?: string): Promise<TagTreeNode[]>;
   /** 从已缓存的扁平索引中按 tagId 查找标签节点（需先调用 getTagTree） */
