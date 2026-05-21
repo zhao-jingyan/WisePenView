@@ -307,7 +307,7 @@ function mergeAiEditChains(
         return false;
       if (mergeOptions.breakOnClauseBoundary && containsClauseBoundary(sharedText)) return false;
     }
-    return currentVisibleLen + visibleLen(sharedText) <= mergeOptions.maxMergedVisibleLength;
+    return currentVisibleLen + visibleLen(sharedText) <= mergeOptions.maxMergedLength;
   };
 
   let i = 0;
@@ -334,7 +334,7 @@ function mergeAiEditChains(
       oldText += shared.text + (toStringOrEmpty(next.old_text) || toStringOrEmpty(next.text_old));
       newText += shared.text + (toStringOrEmpty(next.new_text) || toStringOrEmpty(next.text_new));
       mergedVisibleLen = Math.max(oldText.length, newText.length);
-      if (mergedVisibleLen > mergeOptions.maxMergedVisibleLength) break;
+      if (mergedVisibleLen > mergeOptions.maxMergedLength) break;
       cursor += 2;
     }
 

@@ -340,7 +340,7 @@ function MathBlockView(props: MathBlockRenderProps) {
 
   const applyAiDiffAction = useCallback(
     (mode: MathAiDiffActionMode) => {
-      const editor = props.editor as MathBlockEditor;
+      const editor = props.editor as unknown as MathBlockEditor;
       const baseProps = clearMathAiDiffProps(props.block.props);
 
       if (aiDiffType === 'create') {
