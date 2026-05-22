@@ -1,7 +1,6 @@
 import IconText from '@/components/Common/IconText';
 import { useGroupService, useImageService, useUserService } from '@/domains';
-import type { CreateGroupRequest } from '@/domains/Group';
-import { ALLOWED_GROUP_TYPES_MAP, GROUP_FILE_ORG_LOGIC, GROUP_TYPE } from '@/domains/Group/enum';
+import { ALLOWED_GROUP_TYPES_MAP, GROUP_TYPE } from '@/domains/Group/enum';
 import { IDENTITY } from '@/domains/User/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
@@ -18,7 +17,10 @@ import styles from './index.module.less';
 const { TextArea } = Input;
 const { Option } = Select;
 
-type CreateGroupFormValues = Omit<CreateGroupRequest, 'groupCoverUrl'> & {
+type CreateGroupFormValues = {
+  groupName: string;
+  groupType: number;
+  groupDesc: string;
   cover?: UploadFile[];
 };
 
@@ -80,15 +82,8 @@ function CreateGroupModal({ open, onCancel, onSuccess }: CreateGroupModalProps) 
         groupDesc: values.groupDesc,
         groupCoverUrl,
       });
-      try {
-        await groupService.updateGroupResConfig({
-          groupId,
-          fileOrgLogic: GROUP_FILE_ORG_LOGIC.TAG,
-        });
-        message.success('创建成功');
-      } catch (configErr: unknown) {
-        message.warning(parseErrorMessage(configErr));
-      }
+      message.success('创建成功');
+      return groupId;
     },
     {
       manual: true,

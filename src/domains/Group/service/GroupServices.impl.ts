@@ -89,6 +89,14 @@ const createGroup = async (params: CreateGroupRequest): Promise<string> => {
   if (!groupId) {
     throw new Error('创建小组失败');
   }
+  try {
+    await updateGroupResConfig({
+      groupId,
+      fileOrgLogic: GROUP_FILE_ORG_LOGIC.TAG,
+    });
+  } catch {
+    // 创建小组已成功，资源组织模式配置失败不阻塞后续流程。
+  }
   return groupId;
 };
 
