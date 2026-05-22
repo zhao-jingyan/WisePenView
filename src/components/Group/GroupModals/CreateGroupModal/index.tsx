@@ -1,13 +1,14 @@
 import IconText from '@/components/Common/IconText';
 import { useGroupService, useImageService, useUserService } from '@/domains';
-import type { CreateGroupRequest, GroupFileOrgLogic } from '@/domains/Group';
+import type { CreateGroupRequest } from '@/domains/Group';
 import { ALLOWED_GROUP_TYPES_MAP, GROUP_FILE_ORG_LOGIC, GROUP_TYPE } from '@/domains/Group/enum';
+import { IDENTITY } from '@/domains/User/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
 import { useRequest } from 'ahooks';
 import type { UploadFile } from 'antd';
-import { Button, Form, Input, Modal, Radio, Select, Upload } from 'antd';
+import { Button, Form, Input, Modal, Select, Upload } from 'antd';
 import { useMemo, useState } from 'react';
 import { LuUpload } from 'react-icons/lu';
 import type { CreateGroupModalProps } from './index.type';
@@ -19,7 +20,6 @@ const { Option } = Select;
 
 type CreateGroupFormValues = Omit<CreateGroupRequest, 'groupCoverUrl'> & {
   cover?: UploadFile[];
-  fileOrgLogic: GroupFileOrgLogic;
 };
 
 const fileFromCoverField = (fileList?: UploadFile[]): File | undefined => {
@@ -48,6 +48,7 @@ function CreateGroupModal({ open, onCancel, onSuccess }: CreateGroupModalProps) 
     },
   });
 
+  const isStudent = identityType === IDENTITY.STUDENT;
   const allowedGroupTypes = ALLOWED_GROUP_TYPES_MAP[identityType ?? 3];
   const groupTypeOptions = groupTypeOptionsBase.filter((opt) =>
     allowedGroupTypes.includes(opt.value)
@@ -75,14 +76,14 @@ function CreateGroupModal({ open, onCancel, onSuccess }: CreateGroupModalProps) 
       }
       const groupId = await groupService.createGroup({
         groupName: values.groupName,
-        groupType: values.groupType,
+        groupType: isStudent ? GROUP_TYPE.NORMAL : values.groupType,
         groupDesc: values.groupDesc,
         groupCoverUrl,
       });
       try {
         await groupService.updateGroupResConfig({
           groupId,
-          fileOrgLogic: values.fileOrgLogic,
+          fileOrgLogic: GROUP_FILE_ORG_LOGIC.TAG,
         });
         message.success('创建成功');
       } catch (configErr: unknown) {
@@ -145,34 +146,22 @@ function CreateGroupModal({ open, onCancel, onSuccess }: CreateGroupModalProps) 
         >
           <TextArea rows={4} placeholder="请输入小组描述" />
         </Form.Item>
-        <Form.Item
-          label="小组类型"
-          name="groupType"
-          initialValue={GROUP_TYPE.NORMAL}
-          rules={[{ required: true, message: '请选择小组类型' }]}
-        >
-          <Select>
-            {groupTypeOptions.map((opt) => (
-              <Option key={opt.value} value={opt.value}>
-                {opt.label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item
-          label="文件管理方式"
-          name="fileOrgLogic"
-          initialValue={GROUP_FILE_ORG_LOGIC.FOLDER}
-          rules={[{ required: true, message: '请选择文件管理方式（创建后无法更改）' }]}
-        >
-          <Radio.Group>
-            {GROUP_FILE_ORG_LOGIC.options.map((option) => (
-              <Radio key={option.value} value={option.value}>
-                {option.label}
-              </Radio>
-            ))}
-          </Radio.Group>
-        </Form.Item>
+        {!isStudent && (
+          <Form.Item
+            label="小组类型"
+            name="groupType"
+            initialValue={GROUP_TYPE.NORMAL}
+            rules={[{ required: true, message: '请选择小组类型' }]}
+          >
+            <Select>
+              {groupTypeOptions.map((opt) => (
+                <Option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
         <Form.Item
           label="封面图片"
           name="cover"
