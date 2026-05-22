@@ -1,7 +1,7 @@
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import type { DriveNode, FolderNode, LinkNode, ResourceNode, TrashNode } from '@/domains/Drive';
 import type { IResourceService, ResourceItem } from '@/domains/Resource';
-import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource/enum';
+import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
 import type { ITagService, TagTreeNode } from '@/domains/Tag';
 import { useTrashTagStore } from '@/store';
 import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';

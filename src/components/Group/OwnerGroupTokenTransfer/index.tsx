@@ -2,7 +2,7 @@
  * 高级组组长：个人计算点与小组池之间的 Token 划拨（transferTokenBetweenGroupAndUser）。
  */
 import { useGroupService, useWalletService } from '@/domains';
-import { WALLET_TOKEN_TRANSFER_TYPE } from '@/domains/Wallet/enum';
+import { WALLET_TOKEN_TRANSFER_TYPE } from '@/domains/Wallet';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';

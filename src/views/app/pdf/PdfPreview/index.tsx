@@ -6,7 +6,7 @@ import ResourceViewerHeader from '@/components/Common/ResourceViewerHeader';
 import rvhStyles from '@/components/Common/ResourceViewerHeader/style.module.less';
 import PdfViewer from '@/components/Pdf/PdfViewer/index';
 import { useDocumentService, useResourceService } from '@/domains';
-import { RESOURCE_TYPE } from '@/domains/Resource/enum';
+import { RESOURCE_TYPE } from '@/domains/Resource';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';

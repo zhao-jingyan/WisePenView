@@ -2,7 +2,7 @@
  * 钱包 Mock：MODE === 'mock'；接口形态与 /user/wallet 对齐。
  */
 import type { IWalletService, WalletTransactionRecord } from '@/domains/Wallet';
-import { WALLET_TX_TAB_MERGE_FETCH_CAP } from '@/domains/Wallet/enum';
+import { WALLET_TX_TAB_MERGE_FETCH_CAP } from '@/domains/Wallet';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

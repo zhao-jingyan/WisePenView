@@ -1,4 +1,4 @@
-import type { GROUP_FILE_ORG_LOGIC, ROLE } from '@/domains/Group/enum';
+import type { GROUP_FILE_ORG_LOGIC, ROLE } from '@/domains/Group';
 import type { EnumKey, EnumValue } from '@/utils/enum';
 
 /** 成员列表领域模型（由 OpenAPI GroupMemberDetailResponse 映射）；userId 对应接口 memberId，避免大数精度丢失 */

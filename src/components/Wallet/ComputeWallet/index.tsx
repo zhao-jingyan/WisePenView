@@ -9,11 +9,12 @@ import IconText from '@/components/Common/IconText';
 import RechargeModal from '@/components/Wallet/RechargeModal';
 import { useGroupService, useWalletService } from '@/domains';
 import {
+  WALLET_TARGET_TYPE,
+  WALLET_TOKEN_TX_TYPE,
   WALLET_TRANSACTION_KIND,
   type WalletTransactionKind,
   type WalletTransactionRecord,
 } from '@/domains/Wallet';
-import { WALLET_TARGET_TYPE, WALLET_TOKEN_TX_TYPE } from '@/domains/Wallet/enum';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import type { EnumValue } from '@/utils/enum';
 import { parseErrorMessage } from '@/utils/error';

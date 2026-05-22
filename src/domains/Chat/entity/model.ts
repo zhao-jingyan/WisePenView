@@ -2,7 +2,7 @@
  * Chat 模型类型定义
  * 与 /chat/model/listModels 的响应结构对齐
  */
-import type { ModelType } from '@/domains/Chat/enum';
+import type { ModelType } from '@/domains/Chat';
 
 /** 对齐后端 ModelInfo */
 export interface Model {

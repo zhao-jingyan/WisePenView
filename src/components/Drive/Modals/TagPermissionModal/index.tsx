@@ -9,15 +9,13 @@ import {
   hasResourceAction,
   normalizeResourceActions,
   permissionCodeToActions,
-} from '@/domains/Tag';
-import {
   TAG_ACL_GRANT_MODE,
   TAG_RESOURCE_ACTION,
   TAG_RESOURCE_MOUNT_MODE,
   type TagAclGrantMode,
   type TagResourceAction,
   type TagResourceMountMode,
-} from '@/domains/Tag/enum';
+} from '@/domains/Tag';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error/parseErrorMessage';
 import { useRequest } from 'ahooks';

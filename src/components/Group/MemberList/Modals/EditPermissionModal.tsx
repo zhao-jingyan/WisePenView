@@ -1,6 +1,6 @@
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
 import { useGroupService } from '@/domains';
-import { ROLE } from '@/domains/Group/enum';
+import { ROLE } from '@/domains/Group';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import type { EnumKey } from '@/utils/enum';
 import { parseErrorMessage } from '@/utils/error';

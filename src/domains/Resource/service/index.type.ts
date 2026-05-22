@@ -3,8 +3,12 @@
  * 与 resource.openapi.json 对齐
  */
 
-import type { ResourceItem } from '@/domains/Resource';
-import type { ResourceSortBy, ResourceSortDir, TagQueryLogicMode } from '@/domains/Resource/enum';
+import type {
+  ResourceItem,
+  ResourceSortBy,
+  ResourceSortDir,
+  TagQueryLogicMode,
+} from '@/domains/Resource';
 
 /** 资源列表分页（与 OpenAPI PageResultResourceItemResponse 一致） */
 export interface ResourceListPage {

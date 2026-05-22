@@ -1,4 +1,4 @@
-import type { ResourceItem } from '@/domains/Resource/entity/resource';
+import type { ResourceItem } from '@/domains/Resource';
 
 /**
  * 归一化后端返回的 ResourceItem：将 Java `Long` 在 JSON 中以字符串形式返回的字段

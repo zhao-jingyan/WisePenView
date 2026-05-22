@@ -5,7 +5,7 @@ import {
   isDocumentCancelableStatus,
   isDocumentRetryableStatus,
   isDocumentTerminalStatus,
-} from '@/domains/Document/enum';
+} from '@/domains/Document';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format/formatFileSize';

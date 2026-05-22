@@ -6,6 +6,7 @@ import { DocumentApi } from '../apis/DocumentApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
 import type {
   DocDisplayInfoResponse,
+  DocumentAllowedExtension,
   DocumentUploadInitRequestBody,
   DocumentUploadInitResponse,
   IDocumentService,
@@ -13,24 +14,7 @@ import type {
   UploadDocumentParams,
   UploadDocumentResult,
 } from './index.type';
-
-/** 小写扩展名，不含点 */
-export const DOCUMENT_ALLOWED_EXTENSIONS = [
-  'pdf',
-  'doc',
-  'docx',
-  'ppt',
-  'pptx',
-  'xls',
-  'xlsx',
-] as const;
-
-export type DocumentAllowedExtension = (typeof DOCUMENT_ALLOWED_EXTENSIONS)[number];
-
-/** 文档资源类型（与后端 ResourceType 枚举序列化值对齐） */
-export const DOCUMENT_RESOURCE_TYPES = [...DOCUMENT_ALLOWED_EXTENSIONS, 'unknown'] as const;
-
-export type DocumentResourceType = (typeof DOCUMENT_RESOURCE_TYPES)[number];
+import { DOCUMENT_ALLOWED_EXTENSIONS } from './index.type';
 
 const ALLOWED_EXT_SET = new Set<string>(DOCUMENT_ALLOWED_EXTENSIONS);
 

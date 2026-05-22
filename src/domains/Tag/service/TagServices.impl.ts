@@ -1,6 +1,6 @@
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
-import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource/enum';
-import type { IResourceService } from '@/domains/Resource/service/index.type';
+import type { IResourceService } from '@/domains/Resource';
+import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
 import type { TagListByTagResponse } from '@/domains/Tag';
 import { useTrashTagStore } from '@/store';
 import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';

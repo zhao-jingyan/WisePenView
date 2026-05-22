@@ -1,6 +1,6 @@
 import { useUserService } from '@/domains';
 import type { InitiateUISVerifyRequest, SendEmailVerifyRequest } from '@/domains/User';
-import { USER_STATUS } from '@/domains/User/enum';
+import { USER_STATUS } from '@/domains/User';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { useRequest, useUnmount } from 'ahooks';

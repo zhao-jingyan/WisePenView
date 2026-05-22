@@ -1,5 +1,5 @@
 import type { Group, GroupFileOrgLogic, GroupMemberList, GroupResConfig } from '@/domains/Group';
-import { GROUP_FILE_ORG_LOGIC, ROLE } from '@/domains/Group/enum';
+import { GROUP_FILE_ORG_LOGIC, ROLE } from '@/domains/Group';
 import type { EnumKey } from '@/utils/enum';
 import { formatTimestampToDate } from '@/utils/format/formatTime';
 import { normalizeId } from '@/utils/normalize/normalizeId';

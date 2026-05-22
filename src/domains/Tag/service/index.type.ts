@@ -3,13 +3,13 @@
  * 与 docs/apis/resource.openapi.json 中 Tag 相关 schema、路径一致（无字段重命名）
  */
 
-import type { TagListByTagResponse } from '@/domains/Tag';
 import type {
   TagAclGrantMode,
+  TagListByTagResponse,
   TagResourceAction,
   TagResourceMountMode,
   TagVisibilityModeString,
-} from '@/domains/Tag/enum';
+} from '@/domains/Tag';
 
 /** TagService 接口：供依赖注入使用 */
 export interface ITagService {

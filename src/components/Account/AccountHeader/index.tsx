@@ -1,5 +1,5 @@
 import { useImageService, useUserService } from '@/domains';
-import { getVerificationModeLabel, IDENTITY, USER_STATUS } from '@/domains/User/enum';
+import { getVerificationModeLabel, IDENTITY, USER_STATUS } from '@/domains/User';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';

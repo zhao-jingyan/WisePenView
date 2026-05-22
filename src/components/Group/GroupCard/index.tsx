@@ -1,5 +1,5 @@
 import UserCapsule from '@/components/Common/UserCapsule';
-import { GROUP_TYPE } from '@/domains/Group/enum';
+import { GROUP_TYPE } from '@/domains/Group';
 import { PLACEHOLDER_IMAGE } from '@/utils/image/placeholder';
 import { Badge, Card, Image } from 'antd';
 import type { GroupCardProps } from './index.type';

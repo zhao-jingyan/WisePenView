@@ -7,7 +7,7 @@ import {
 } from '@/components/Account';
 import { useUserService } from '@/domains';
 import type { GetUserInfoResponse } from '@/domains/User';
-import { IDENTITY } from '@/domains/User/enum';
+import { IDENTITY } from '@/domains/User';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';

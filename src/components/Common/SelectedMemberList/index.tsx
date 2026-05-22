@@ -1,5 +1,5 @@
 import type { GroupMember } from '@/domains/Group';
-import { ROLE } from '@/domains/Group/enum';
+import { ROLE } from '@/domains/Group';
 import { Avatar, List } from 'antd';
 import { useMemo } from 'react';
 import type { SelectedMemberListProps } from './index.type';

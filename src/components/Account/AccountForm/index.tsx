@@ -1,7 +1,7 @@
 import IconText from '@/components/Common/IconText';
 import { useUserService } from '@/domains';
 import type { UpdateUserInfoRequest } from '@/domains/User';
-import { DEGREE, SEX } from '@/domains/User/enum';
+import { DEGREE, SEX } from '@/domains/User';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { useRequest } from 'ahooks';

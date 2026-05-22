@@ -1,6 +1,6 @@
 import { useUserService } from '@/domains';
 import type { User } from '@/domains/User';
-import { IDENTITY } from '@/domains/User/enum';
+import { IDENTITY } from '@/domains/User';
 import { useMount } from 'ahooks';
 import type { MenuProps } from 'antd';
 import { Avatar, Button, Dropdown, Modal } from 'antd';

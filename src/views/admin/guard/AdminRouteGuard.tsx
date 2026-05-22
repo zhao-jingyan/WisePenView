@@ -1,5 +1,5 @@
 import { useUserService } from '@/domains';
-import { IDENTITY } from '@/domains/User/enum';
+import { IDENTITY } from '@/domains/User';
 import { useMount, useUpdateEffect } from 'ahooks';
 import { Spin } from 'antd';
 import { useCallback, useState } from 'react';

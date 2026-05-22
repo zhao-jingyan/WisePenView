@@ -1,7 +1,7 @@
 import IconText from '@/components/Common/IconText';
 import StickerManageModal from '@/components/Drive/Modals/StickerManageModal';
 import { useStickerService } from '@/domains';
-import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR, TAG_QUERY_LOGIC_MODE } from '@/domains/Resource/enum';
+import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR, TAG_QUERY_LOGIC_MODE } from '@/domains/Resource';
 import type { Sticker } from '@/domains/Sticker';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';

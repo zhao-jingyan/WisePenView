@@ -4,7 +4,7 @@
  */
 import QuotaByGroup from '@/components/Profile/QuotaByGroup';
 import ComputeWallet from '@/components/Wallet/ComputeWallet';
-import { WALLET_TARGET_TYPE } from '@/domains/Wallet/enum';
+import { WALLET_TARGET_TYPE } from '@/domains/Wallet';
 import { Divider } from 'antd';
 import layout from '../style.module.less';
 

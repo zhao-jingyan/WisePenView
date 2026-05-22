@@ -1,8 +1,7 @@
 import type { Doc } from 'yjs';
 
 import type { NoteOutlineItem } from '@/components/Note/NoteOutline/index.type';
-import type { WisepenProvider } from '@/domains/Note';
-import type { AiDiffDisplayMode } from '@/domains/Note/enum';
+import type { AiDiffDisplayMode, WisepenProvider } from '@/domains/Note';
 
 export interface NoteBodyEditorHandle {
   focus: () => void;

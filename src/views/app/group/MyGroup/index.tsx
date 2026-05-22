@@ -3,7 +3,7 @@ import GroupCard from '@/components/Group/GroupCard';
 import { CreateGroupModal, JoinGroupModal } from '@/components/Group/GroupModals';
 import { useGroupService } from '@/domains';
 import type { FetchGroupListRequest, Group } from '@/domains/Group';
-import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group/enum';
+import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { usePagination } from 'ahooks';
 import { Button, Col, Empty, Pagination, Row, Spin, Tabs } from 'antd';

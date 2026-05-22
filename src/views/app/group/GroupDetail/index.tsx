@@ -16,7 +16,7 @@ import ComputeWallet from '@/components/Wallet/ComputeWallet';
 import type { ComputeWalletRef } from '@/components/Wallet/ComputeWallet/index.type';
 import { useGroupService } from '@/domains';
 import type { Group, GroupResConfig } from '@/domains/Group';
-import { WALLET_TARGET_TYPE } from '@/domains/Wallet/enum';
+import { WALLET_TARGET_TYPE } from '@/domains/Wallet';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useRequest } from 'ahooks';
 import type { TabsProps } from 'antd';

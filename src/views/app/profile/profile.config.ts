@@ -1,4 +1,4 @@
-import { IDENTITY } from '@/domains/User/enum';
+import { IDENTITY } from '@/domains/User';
 
 /** 基本档案字段显隐配置，按 identityType 计算 */
 export const getProfileFieldConfig = (identityType: number) => {

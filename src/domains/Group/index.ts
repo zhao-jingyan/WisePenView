@@ -6,6 +6,13 @@ export type {
   GroupOwnerInfo,
   GroupResConfig,
 } from './entity/group';
+export {
+  ALLOWED_GROUP_TYPES_MAP,
+  GROUP_FILE_ORG_LOGIC,
+  GROUP_ROLE_FILTER_MAP,
+  GROUP_TYPE,
+  ROLE,
+} from './enum';
 export { mapGroupMemberRawResponse } from './mapper/groupMember.mapper';
 export type {
   CreateGroupRequest,

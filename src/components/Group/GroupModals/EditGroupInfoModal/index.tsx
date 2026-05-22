@@ -1,7 +1,7 @@
 import IconText from '@/components/Common/IconText';
 import { useGroupService, useImageService } from '@/domains';
 import type { EditGroupRequest } from '@/domains/Group';
-import { GROUP_TYPE } from '@/domains/Group/enum';
+import { GROUP_TYPE } from '@/domains/Group';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';

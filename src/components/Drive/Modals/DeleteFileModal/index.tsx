@@ -1,5 +1,5 @@
 import { useDocumentService, useNoteService } from '@/domains';
-import { RESOURCE_TYPE } from '@/domains/Resource/enum';
+import { RESOURCE_TYPE } from '@/domains/Resource';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useNewNoteStore, usePdfPreviewProgressStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
