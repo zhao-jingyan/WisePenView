@@ -9,3 +9,7 @@ export type {
   NoteInfoDisplayData,
   SyncTitleRequest,
 } from './service/index.type';
+export { NoteStatusObserver } from './session/NoteStatusObserver';
+export type { NoteSessionStatus } from './session/NoteStatusObserver';
+export { noteYjsIdbRoomName, useNoteSession } from './session/useNoteSession';
+export { WisepenProvider, getNoteUrl } from './session/WisepenProvider';

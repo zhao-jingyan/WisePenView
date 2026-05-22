@@ -1,8 +1,7 @@
 import type { Message, Model } from '@/components/ChatPanel/index.type';
 import { useChatService } from '@/domains';
-import { mapApiModelsToFlatModels } from '@/domains/Chat';
+import { mapApiModelsToFlatModels, useChatSession } from '@/domains/Chat';
 import { useAppMessage } from '@/hooks/useAppMessage';
-import { useChatSession } from '@/session/chat/useChatSession';
 import {
   clearNewChatSessionStore,
   useChatPanelStore,

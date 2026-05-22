@@ -14,3 +14,4 @@ export type {
   PageResult,
   RenameSessionRequest,
 } from './service/index.type';
+export { useChatSession } from './session/useChatSession';
