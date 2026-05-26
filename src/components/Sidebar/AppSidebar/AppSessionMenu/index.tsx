@@ -1,10 +1,8 @@
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
 import { useUpdateEffect } from 'ahooks';
-import type { MenuProps } from 'antd';
-import { Menu } from 'antd';
-import { useImperativeHandle, useMemo, useState, type Ref } from 'react';
+import { useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useSessionListGroup } from '../SessionListGroup';
+import SessionListGroup, { type SessionListGroupRef } from '../SessionListGroup';
 import type { AppSessionMenuProps, AppSessionMenuRef } from './index.type';
 import styles from './style.module.less';
 
@@ -16,9 +14,8 @@ function AppSessionMenu({
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
   const currentSessionId = useCurrentChatSessionStore((state) => state.currentSessionId);
   const setCurrentSession = useCurrentChatSessionStore((state) => state.setCurrentSession);
+  const sessionListGroupRef = useRef<SessionListGroupRef>(null);
   const [pendingCreatedSessionId, setPendingCreatedSessionId] = useState<string>();
-
-  const { menuItems: sessionMenuItems, refresh } = useSessionListGroup({});
 
   const selectedKeys = useMemo(() => {
     if (currentSessionId) {
@@ -26,13 +23,6 @@ function AppSessionMenu({
     }
     return [location.pathname];
   }, [currentSessionId, location.pathname]);
-
-  const menuItems = useMemo<Required<MenuProps>['items']>(() => {
-    if (collapsed) {
-      return [];
-    }
-    return [...sessionMenuItems];
-  }, [collapsed, sessionMenuItems]);
 
   useImperativeHandle(
     ref,
@@ -44,27 +34,21 @@ function AppSessionMenu({
           setPendingCreatedSessionId(sessionId);
           return;
         }
-        await refresh();
+        await sessionListGroupRef.current?.refresh();
       },
     }),
-    [collapsed, refresh, setChatPanelCollapsed, setCurrentSession]
+    [collapsed, setChatPanelCollapsed, setCurrentSession]
   );
 
   useUpdateEffect(() => {
     if (collapsed || pendingCreatedSessionId == null) return;
-    void refresh();
+    void sessionListGroupRef.current?.refresh();
     setPendingCreatedSessionId(undefined);
-  }, [collapsed, pendingCreatedSessionId, refresh]);
+  }, [collapsed, pendingCreatedSessionId]);
 
   return (
     <div className={styles.menuContainer}>
-      <Menu
-        mode="inline"
-        theme="light"
-        selectedKeys={selectedKeys}
-        inlineCollapsed={collapsed}
-        items={menuItems}
-      />
+      {!collapsed && <SessionListGroup ref={sessionListGroupRef} selectedKeys={selectedKeys} />}
     </div>
   );
 }

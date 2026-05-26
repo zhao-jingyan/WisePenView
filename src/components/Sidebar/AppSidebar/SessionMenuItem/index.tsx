@@ -1,18 +1,18 @@
 import { useChatService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { Button, Input, Modal, TextField } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Input, Modal } from 'antd';
 import clsx from 'clsx';
 import { useCallback, useState } from 'react';
-import { RiCheckLine, RiCloseLine, RiDeleteBinLine, RiEditLine } from 'react-icons/ri';
+import { RiDeleteBinLine, RiEditLine } from 'react-icons/ri';
 import type { SessionMenuItemProps } from './index.type';
 import styles from './style.module.less';
 
 function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps) {
   const chatService = useChatService();
   const messageApi = useAppMessage();
-  const [editing, setEditing] = useState(false);
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [editingTitle, setEditingTitle] = useState(session.title || '');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
@@ -26,7 +26,7 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
       manual: true,
       onSuccess: async () => {
         messageApi.success('重命名成功');
-        setEditing(false);
+        setRenameModalOpen(false);
         await onUpdated();
       },
       onError: (err) => {
@@ -68,108 +68,115 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
   }, [runDeleteSession]);
 
   return (
-    <div className={clsx(styles.sessionMenuLabel, editing && styles.sessionMenuLabelEditing)}>
-      {editing ? (
-        <Input
-          size="small"
-          value={editingTitle}
-          className={styles.sessionInlineInput}
-          placeholder="请输入会话名称"
-          autoFocus
-          onChange={(event) => setEditingTitle(event.target.value)}
+    <div className={styles.sessionMenuLabel}>
+      <span className={styles.sessionMenuLabelText}>{session.title || '未命名会话'}</span>
+
+      <div className={`${styles.sessionActions} sessionActionsVisibleOnItem`}>
+        <button
+          type="button"
+          className={styles.sessionActionBtn}
+          aria-label={`重命名 ${session.title || '未命名会话'}`}
+          onPointerDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
+            setEditingTitle(session.title || '');
+            setRenameModalOpen(true);
           }}
-          onPressEnter={async (event) => {
+        >
+          <RiEditLine size={16} />
+        </button>
+        <button
+          type="button"
+          className={clsx(styles.sessionActionBtn, styles.sessionDeleteBtn)}
+          aria-label={`删除 ${session.title || '未命名会话'}`}
+          onPointerDown={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            await submitRename();
           }}
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') {
-              event.preventDefault();
-              event.stopPropagation();
-              setEditing(false);
-              setEditingTitle(session.title || '');
-            }
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setDeleteConfirmOpen(true);
           }}
-        />
-      ) : (
-        <span className={styles.sessionMenuLabelText}>{session.title || '未命名会话'}</span>
-      )}
-
-      <div className={styles.sessionActions}>
-        {editing ? (
-          <>
-            <button
-              type="button"
-              className={styles.sessionActionBtn}
-              aria-label="确认重命名"
-              onClick={async (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                await submitRename();
-              }}
-            >
-              <RiCheckLine size={16} />
-            </button>
-            <button
-              type="button"
-              className={styles.sessionActionBtn}
-              aria-label="取消重命名"
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setEditing(false);
-                setEditingTitle(session.title || '');
-              }}
-            >
-              <RiCloseLine size={16} />
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              className={styles.sessionActionBtn}
-              aria-label={`重命名 ${session.title || '未命名会话'}`}
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setEditing(true);
-                setEditingTitle(session.title || '');
-              }}
-            >
-              <RiEditLine size={16} />
-            </button>
-            <button
-              type="button"
-              className={clsx(styles.sessionActionBtn, styles.sessionDeleteBtn)}
-              aria-label={`删除 ${session.title || '未命名会话'}`}
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setDeleteConfirmOpen(true);
-              }}
-            >
-              <RiDeleteBinLine size={16} />
-            </button>
-          </>
-        )}
+        >
+          <RiDeleteBinLine size={16} />
+        </button>
       </div>
-      <Modal
-        title="删除会话"
-        open={deleteConfirmOpen}
-        onCancel={() => setDeleteConfirmOpen(false)}
-        onOk={confirmDeleteSession}
-        okText="删除"
-        okButtonProps={{ danger: true }}
-        cancelText="取消"
-        confirmLoading={deleting}
-        destroyOnHidden
-      >
-        删除后不可恢复，是否继续？
+      <Modal isOpen={renameModalOpen} onOpenChange={setRenameModalOpen}>
+        <Modal.Backdrop isDismissable>
+          <Modal.Container size="sm" placement="center">
+            <Modal.Dialog>
+              <Modal.Header>
+                <Modal.Heading>修改对话标题</Modal.Heading>
+              </Modal.Header>
+              <Modal.Body>
+                <TextField
+                  aria-label="对话标题"
+                  value={editingTitle}
+                  autoFocus
+                  onChange={setEditingTitle}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      void submitRename();
+                    }
+                  }}
+                >
+                  <Input placeholder="请输入对话标题" />
+                </TextField>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button
+                  variant="secondary"
+                  onPress={() => {
+                    setRenameModalOpen(false);
+                    setEditingTitle(session.title || '');
+                  }}
+                >
+                  取消
+                </Button>
+                <Button
+                  variant="primary"
+                  onPress={() => {
+                    void submitRename();
+                  }}
+                >
+                  保存
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
+      <Modal isOpen={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <Modal.Backdrop isDismissable>
+          <Modal.Container size="sm" placement="center">
+            <Modal.Dialog>
+              <Modal.Header>
+                <Modal.Heading>删除会话</Modal.Heading>
+              </Modal.Header>
+              <Modal.Body>删除后不可恢复，是否继续？</Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onPress={() => setDeleteConfirmOpen(false)}>
+                  取消
+                </Button>
+                <Button
+                  variant="danger"
+                  isDisabled={deleting}
+                  onPress={() => {
+                    void confirmDeleteSession();
+                  }}
+                >
+                  删除
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
       </Modal>
     </div>
   );

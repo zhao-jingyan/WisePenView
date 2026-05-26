@@ -3,18 +3,21 @@ import type { ChatSession } from '@/domains/Chat';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
+import { Button, Header, ListBox, ListBoxItem, ListBoxSection } from '@heroui/react';
 import { useMount, useRequest } from 'ahooks';
-import type { MenuProps } from 'antd';
-import { Button } from 'antd';
-import { useCallback, useMemo, useState } from 'react';
+import clsx from 'clsx';
+import { useCallback, useImperativeHandle, useState, type Ref } from 'react';
+import styles from '../AppSessionMenu/style.module.less';
 import SessionMenuItem from '../SessionMenuItem';
-import type { SessionListGroupProps } from './index.type';
-import styles from './style.module.less';
+import type {
+  SessionListGroupComponentProps,
+  SessionListGroupProps,
+  SessionListGroupRef,
+} from './index.type';
 
 const SESSION_PAGE_SIZE = 20;
-type MenuItem = Required<MenuProps>['items'][number];
 
-export const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionListGroupProps) => {
+const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionListGroupProps) => {
   const chatService = useChatService();
   const messageApi = useAppMessage();
   const [sessionItems, setSessionItems] = useState<ChatSession[]>([]);
@@ -95,110 +98,146 @@ export const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionLis
     [clearCurrentSession, currentSessionId, onActiveSessionMenuKeyChange]
   );
 
-  const createSessionItem = useCallback(
-    (session: ChatSession): MenuItem => ({
-      key: `session-${session.id}`,
-      onClick: () => {
-        setCurrentSession({ id: session.id, title: session.title });
-        setChatPanelCollapsed(false);
-      },
-      label: (
-        <SessionMenuItem
-          session={session}
-          onUpdated={async () => {
-            await loadSessionPage(1, false);
-          }}
-          onDeleted={handleDeleted}
-        />
-      ),
-    }),
-    [handleDeleted, loadSessionPage, setChatPanelCollapsed, setCurrentSession]
+  const selectSession = useCallback(
+    (session: ChatSession) => {
+      setCurrentSession({ id: session.id, title: session.title });
+      setChatPanelCollapsed(false);
+    },
+    [setChatPanelCollapsed, setCurrentSession]
   );
 
-  const menuItems = useMemo<MenuItem[]>(() => {
-    if (sessionListLoading && sessionItems.length === 0) {
-      return [
-        {
-          key: 'recent-session',
-          type: 'group',
-          label: '聊天记录',
-          children: [
-            {
-              key: 'session-loading',
-              label: '会话加载中...',
-              disabled: true,
-            },
-          ],
-        },
-      ];
-    }
+  const loadMoreSessions = useCallback(() => {
+    if (loadingMoreSessions || !hasMoreSessions) return;
+    void loadSessionPage(sessionPage + 1, true);
+  }, [hasMoreSessions, loadSessionPage, loadingMoreSessions, sessionPage]);
 
-    const items: MenuItem[] = [];
-
-    if (pinnedSessions.length > 0) {
-      items.push({
-        key: 'pinned-session',
-        type: 'group',
-        label: '置顶会话',
-        children: pinnedSessions.map(createSessionItem),
-      });
-    }
-
-    const normalChildren: MenuItem[] =
-      normalSessions.length === 0
-        ? [
-            {
-              key: 'empty-normal-session',
-              label: '暂无会话',
-              disabled: true,
-            },
-          ]
-        : normalSessions.map(createSessionItem);
-
-    if (hasMoreSessions || loadingMoreSessions) {
-      normalChildren.push({
-        key: 'session-load-more',
-        disabled: true,
-        label: (
-          <Button
-            type="text"
-            className={styles.sessionLoadMoreBtn}
-            loading={loadingMoreSessions}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              if (loadingMoreSessions || !hasMoreSessions) return;
-              void loadSessionPage(sessionPage + 1, true);
-            }}
-          >
-            {hasMoreSessions ? '加载更多' : '没有更多了'}
-          </Button>
-        ),
-      });
-    }
-
-    items.push({
-      key: 'recent-session',
-      type: 'group',
-      label: '聊天记录',
-      children: normalChildren,
-    });
-
-    return items;
-  }, [
-    createSessionItem,
+  return {
     hasMoreSessions,
+    handleDeleted,
+    loadMoreSessions,
     loadingMoreSessions,
     normalSessions,
     pinnedSessions,
-    sessionItems.length,
-    sessionListLoading,
-    sessionPage,
-    loadSessionPage,
-  ]);
-
-  return {
-    menuItems,
     refresh,
+    selectSession,
+    sessionItems,
+    sessionListLoading,
   };
 };
+
+function SessionListGroup({
+  ref,
+  selectedKeys,
+  ...listGroupProps
+}: SessionListGroupComponentProps & { ref?: Ref<SessionListGroupRef> }) {
+  const {
+    handleDeleted,
+    hasMoreSessions,
+    loadMoreSessions,
+    loadingMoreSessions,
+    normalSessions,
+    pinnedSessions,
+    refresh,
+    selectSession,
+    sessionItems,
+    sessionListLoading,
+  } = useSessionListGroup(listGroupProps);
+
+  useImperativeHandle(ref, () => ({ refresh }), [refresh]);
+
+  return (
+    <ListBox
+      aria-label="聊天记录"
+      selectionMode="single"
+      className={styles.sessionMenu}
+      selectedKeys={selectedKeys}
+    >
+      {pinnedSessions.length > 0 && (
+        <ListBoxSection id="pinned-session" className={styles.section}>
+          <Header className={styles.sectionTitle}>置顶会话</Header>
+          {pinnedSessions.map((session) => (
+            <ListBoxItem
+              key={session.id}
+              id={`session-${session.id}`}
+              textValue={session.title || '未命名会话'}
+              className={clsx(styles.sessionItem, styles.sessionItemWithActions)}
+              onPress={() => selectSession(session)}
+            >
+              <SessionMenuItem session={session} onUpdated={refresh} onDeleted={handleDeleted} />
+            </ListBoxItem>
+          ))}
+        </ListBoxSection>
+      )}
+      <ListBoxSection id="recent-session" className={styles.section}>
+        <Header className={styles.sectionTitle}>聊天记录</Header>
+        {sessionListLoading && sessionItems.length === 0 ? (
+          <ListBoxItem
+            id="session-loading"
+            textValue="会话加载中..."
+            isDisabled
+            className={styles.sessionItem}
+          >
+            会话加载中...
+          </ListBoxItem>
+        ) : (
+          <>
+            {normalSessions.length === 0 ? (
+              <ListBoxItem
+                id="empty-normal-session"
+                textValue="暂无会话"
+                isDisabled
+                className={styles.sessionItem}
+              >
+                暂无会话
+              </ListBoxItem>
+            ) : (
+              normalSessions.map((session) => (
+                <ListBoxItem
+                  key={session.id}
+                  id={`session-${session.id}`}
+                  textValue={session.title || '未命名会话'}
+                  className={clsx(styles.sessionItem, styles.sessionItemWithActions)}
+                  onPress={() => selectSession(session)}
+                >
+                  <SessionMenuItem
+                    session={session}
+                    onUpdated={refresh}
+                    onDeleted={handleDeleted}
+                  />
+                </ListBoxItem>
+              ))
+            )}
+            {(hasMoreSessions || loadingMoreSessions) && (
+              <ListBoxItem
+                id="session-load-more"
+                textValue={hasMoreSessions ? '加载更多' : '没有更多了'}
+                isDisabled
+                className={styles.sessionItem}
+              >
+                <Button
+                  variant="secondary"
+                  isDisabled={loadingMoreSessions}
+                  className={styles.sessionLoadMoreBtn}
+                  onPress={() => {
+                    loadMoreSessions();
+                  }}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
+                >
+                  {hasMoreSessions ? '加载更多' : '没有更多了'}
+                </Button>
+              </ListBoxItem>
+            )}
+          </>
+        )}
+      </ListBoxSection>
+    </ListBox>
+  );
+}
+
+SessionListGroup.displayName = 'SessionListGroup';
+
+export type { SessionListGroupRef };
+export default SessionListGroup;

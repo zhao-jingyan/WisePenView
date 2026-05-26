@@ -2,9 +2,9 @@ import { useChatService, useNoteService } from '@/domains';
 import { useAppMessage } from '@/hooks/useAppMessage';
 import { useNewChatSessionStore, useNewNoteStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
+import { ListBox, ListBoxItem } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import type { MenuProps } from 'antd';
-import { Menu } from 'antd';
+import clsx from 'clsx';
 import { useCallback } from 'react';
 import { RiAddCircleFill, RiFileTextLine, RiGroupFill, RiPenNibFill } from 'react-icons/ri';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -78,44 +78,60 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
     runCreateNote();
   }, [creatingNote, navigate, runCreateNote]);
 
-  const menuItems: MenuProps['items'] = [
-    {
-      key: 'new-chat',
-      icon: <RiAddCircleFill size={18} />,
-      onClick: () => handleCreateSession(),
-      disabled: createSessionLoading,
-      label: '新建对话',
-    },
-    {
-      key: 'new-note',
-      icon: <RiPenNibFill size={18} />,
-      onClick: () => handleCreateNote(),
-      disabled: creatingNote,
-      label: '新建笔记',
-    },
-    {
-      key: '/app/drive',
-      icon: <RiFileTextLine size={18} />,
-      onClick: () => navigate('/app/drive'),
-      label: '文档与云盘',
-    },
-    {
-      key: '/app/my-group',
-      icon: <RiGroupFill size={18} />,
-      onClick: () => navigate('/app/my-group'),
-      label: '我的小组',
-    },
-  ];
-
   return (
-    <Menu
-      mode="inline"
-      theme="light"
-      className={styles.headerMenu}
+    <ListBox
+      aria-label="应用导航"
+      selectionMode="single"
       selectedKeys={selectedKeys}
-      inlineCollapsed={collapsed}
-      items={menuItems}
-    />
+      className={clsx(styles.headerMenu, collapsed && styles.headerMenuCollapsed)}
+    >
+      <ListBoxItem
+        id="new-chat"
+        textValue="新建对话"
+        isDisabled={createSessionLoading}
+        className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+        onPress={handleCreateSession}
+      >
+        <span className={styles.menuIcon}>
+          <RiAddCircleFill size={18} />
+        </span>
+        {!collapsed && <span className={styles.menuLabel}>新建对话</span>}
+      </ListBoxItem>
+      <ListBoxItem
+        id="new-note"
+        textValue="新建笔记"
+        isDisabled={creatingNote}
+        className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+        onPress={handleCreateNote}
+      >
+        <span className={styles.menuIcon}>
+          <RiPenNibFill size={18} />
+        </span>
+        {!collapsed && <span className={styles.menuLabel}>新建笔记</span>}
+      </ListBoxItem>
+      <ListBoxItem
+        id="/app/drive"
+        textValue="文档与云盘"
+        className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+        onPress={() => navigate('/app/drive')}
+      >
+        <span className={styles.menuIcon}>
+          <RiFileTextLine size={18} />
+        </span>
+        {!collapsed && <span className={styles.menuLabel}>文档与云盘</span>}
+      </ListBoxItem>
+      <ListBoxItem
+        id="/app/my-group"
+        textValue="我的小组"
+        className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+        onPress={() => navigate('/app/my-group')}
+      >
+        <span className={styles.menuIcon}>
+          <RiGroupFill size={18} />
+        </span>
+        {!collapsed && <span className={styles.menuLabel}>我的小组</span>}
+      </ListBoxItem>
+    </ListBox>
   );
 }
 

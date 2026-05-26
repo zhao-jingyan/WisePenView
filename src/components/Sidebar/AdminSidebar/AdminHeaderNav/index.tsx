@@ -1,6 +1,6 @@
 import { ADMIN_PAGE_CONFIGS } from '@/views/admin/pages';
-import type { MenuProps } from 'antd';
-import { Menu } from 'antd';
+import { ListBox, ListBoxItem, ListBoxSection } from '@heroui/react';
+import clsx from 'clsx';
 import {
   RiFileList3Line,
   RiGroupLine,
@@ -25,75 +25,117 @@ function AdminHeaderNav({ collapsed }: AdminHeaderNavProps) {
 
   const selectedKeys = [location.pathname];
 
-  const menuItems: MenuProps['items'] = [
-    {
-      key: users.path,
-      icon: <RiUserSettingsLine size={18} />,
-      onClick: () => navigate(users.path),
-      label: users.title,
-    },
-    {
-      key: resources.path,
-      icon: <RiFileList3Line size={18} />,
-      onClick: () => navigate(resources.path),
-      label: resources.title,
-    },
-    {
-      key: groups.path,
-      icon: <RiGroupLine size={18} />,
-      onClick: () => navigate(groups.path),
-      label: groups.title,
-    },
-    {
-      key: announcements.path,
-      icon: <RiMegaphoneLine size={18} />,
-      onClick: () => navigate(announcements.path),
-      label: announcements.title,
-    },
-    {
-      key: statistics.path,
-      icon: <RiStackLine size={18} />,
-      onClick: () => navigate(statistics.path),
-      label: statistics.title,
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: permissions.path,
-      icon: <RiShieldKeyholeLine size={18} />,
-      onClick: () => navigate(permissions.path),
-      label: permissions.title,
-    },
-    {
-      key: settings.path,
-      icon: <RiSettings3Line size={18} />,
-      onClick: () => navigate(settings.path),
-      label: settings.title,
-    },
-    {
-      key: logs.path,
-      icon: <RiLockPasswordLine size={18} />,
-      onClick: () => navigate(logs.path),
-      label: logs.title,
-    },
-    {
-      key: tasks.path,
-      icon: <RiTaskLine size={18} />,
-      onClick: () => navigate(tasks.path),
-      label: tasks.title,
-    },
-  ];
-
   return (
-    <Menu
-      mode="inline"
-      theme="light"
-      className={styles.headerMenu}
+    <ListBox
+      aria-label="管理后台导航"
+      selectionMode="single"
       selectedKeys={selectedKeys}
-      inlineCollapsed={collapsed}
-      items={menuItems}
-    />
+      className={clsx(styles.headerMenu, collapsed && styles.headerMenuCollapsed)}
+    >
+      <ListBoxSection id="admin-main-pages" className={styles.menuSection}>
+        <ListBoxItem
+          id={users.path}
+          textValue={users.title}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate(users.path)}
+        >
+          <span className={styles.menuIcon}>
+            <RiUserSettingsLine size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>{users.title}</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id={resources.path}
+          textValue={resources.title}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate(resources.path)}
+        >
+          <span className={styles.menuIcon}>
+            <RiFileList3Line size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>{resources.title}</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id={groups.path}
+          textValue={groups.title}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate(groups.path)}
+        >
+          <span className={styles.menuIcon}>
+            <RiGroupLine size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>{groups.title}</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id={announcements.path}
+          textValue={announcements.title}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate(announcements.path)}
+        >
+          <span className={styles.menuIcon}>
+            <RiMegaphoneLine size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>{announcements.title}</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id={statistics.path}
+          textValue={statistics.title}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate(statistics.path)}
+        >
+          <span className={styles.menuIcon}>
+            <RiStackLine size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>{statistics.title}</span>}
+        </ListBoxItem>
+      </ListBoxSection>
+      <ListBoxSection id="admin-system-pages" className={styles.menuSection}>
+        <ListBoxItem
+          id={permissions.path}
+          textValue={permissions.title}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate(permissions.path)}
+        >
+          <span className={styles.menuIcon}>
+            <RiShieldKeyholeLine size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>{permissions.title}</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id={settings.path}
+          textValue={settings.title}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate(settings.path)}
+        >
+          <span className={styles.menuIcon}>
+            <RiSettings3Line size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>{settings.title}</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id={logs.path}
+          textValue={logs.title}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate(logs.path)}
+        >
+          <span className={styles.menuIcon}>
+            <RiLockPasswordLine size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>{logs.title}</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id={tasks.path}
+          textValue={tasks.title}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate(tasks.path)}
+        >
+          <span className={styles.menuIcon}>
+            <RiTaskLine size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>{tasks.title}</span>}
+        </ListBoxItem>
+      </ListBoxSection>
+    </ListBox>
   );
 }
 

@@ -1,39 +1,32 @@
-import { Menu } from 'antd';
-import { useImperativeHandle, type Ref } from 'react';
-import { useSessionListGroup } from '../SessionListGroup';
+import { useImperativeHandle, useRef, type Ref } from 'react';
+import SessionListGroup, { type SessionListGroupRef } from '../SessionListGroup';
 import type { SessionSectionProps, SessionSectionRef } from './index.type';
-import styles from './style.module.less';
 
 function SessionSection({
   activeSessionMenuKey,
   onActiveSessionMenuKeyChange,
   ref,
 }: SessionSectionProps & { ref?: Ref<SessionSectionRef> }) {
-  const { menuItems, refresh } = useSessionListGroup({
-    activeSessionMenuKey,
-    onActiveSessionMenuKeyChange,
-  });
+  const sessionListGroupRef = useRef<SessionListGroupRef>(null);
 
   useImperativeHandle(
     ref,
     () => ({
       handleCreatedSession: async (sessionId: string) => {
         onActiveSessionMenuKeyChange(`session-${sessionId}`);
-        await refresh();
+        await sessionListGroupRef.current?.refresh();
       },
     }),
-    [onActiveSessionMenuKeyChange, refresh]
+    [onActiveSessionMenuKeyChange]
   );
 
   return (
-    <div className={styles.sessionSection}>
-      <Menu
-        mode="inline"
-        theme="light"
-        selectedKeys={activeSessionMenuKey ? [activeSessionMenuKey] : []}
-        items={menuItems}
-      />
-    </div>
+    <SessionListGroup
+      ref={sessionListGroupRef}
+      activeSessionMenuKey={activeSessionMenuKey}
+      onActiveSessionMenuKeyChange={onActiveSessionMenuKeyChange}
+      selectedKeys={activeSessionMenuKey ? [activeSessionMenuKey] : []}
+    />
   );
 }
 

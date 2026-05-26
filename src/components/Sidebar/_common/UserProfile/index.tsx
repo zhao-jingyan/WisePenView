@@ -1,19 +1,18 @@
 import { useUserService } from '@/domains';
 import type { User } from '@/domains/User';
 import { IDENTITY } from '@/domains/User';
+import { Avatar, Button, Dropdown, Modal } from '@heroui/react';
 import { useMount } from 'ahooks';
-import type { MenuProps } from 'antd';
-import { Avatar, Button, Dropdown, Modal } from 'antd';
 import clsx from 'clsx';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
-  RiArrowDownSLine,
   RiFeedbackLine,
   RiHomeLine,
   RiLogoutBoxRLine,
   RiPieChartLine,
+  RiSettings3Line,
   RiShieldKeyholeLine,
   RiShieldUserLine,
 } from 'react-icons/ri';
@@ -45,7 +44,7 @@ function UserProfile({ collapsed, menuMode = 'app' }: UserProfileProps) {
     user?.identityType !== undefined ? IDENTITY.getLabel(user.identityType) : '-';
   const isAdmin = user?.identityType === IDENTITY.ADMIN;
 
-  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+  const handleMenuAction = (key: React.Key) => {
     switch (key) {
       case 'enter-admin':
         navigate('/admin/users');
@@ -78,122 +77,137 @@ function UserProfile({ collapsed, menuMode = 'app' }: UserProfileProps) {
     }
   };
 
-  const appMenuItems: MenuProps['items'] = [
-    {
-      key: 'usage',
-      label: '余额与使用量',
-      icon: <RiPieChartLine size={16} />,
-    },
-    { type: 'divider' },
-    {
-      key: 'account',
-      label: '账号',
-      icon: <RiShieldUserLine size={16} />,
-    },
-    {
-      key: 'feedback',
-      label: '用户反馈',
-      icon: <RiFeedbackLine size={16} />,
-    },
-    { type: 'divider' },
-    ...(isAdmin
-      ? ([
-          {
-            key: 'enter-admin',
-            label: '进入管理',
-            icon: <RiShieldKeyholeLine size={16} />,
-          },
-        ] satisfies MenuProps['items'])
-      : []),
-    {
-      key: 'logout',
-      label: '退出登录',
-      icon: <RiLogoutBoxRLine size={16} />,
-    },
-  ];
-
-  const adminMenuItems: MenuProps['items'] = [
-    {
-      key: 'back-app',
-      label: '回到用户端',
-      icon: <RiHomeLine size={16} />,
-    },
-    {
-      key: 'logout',
-      label: '退出登录',
-      icon: <RiLogoutBoxRLine size={16} />,
-    },
-  ];
-
-  const items = menuMode === 'admin' ? adminMenuItems : appMenuItems;
-
-  // 下拉菜单配置
-  const dropdownProps = {
-    menu: {
-      items,
-      onClick: handleMenuClick,
-      style: { minWidth: 240 },
-    },
-    trigger: ['click'] as ('click' | 'hover' | 'contextMenu')[],
-    placement: 'topLeft' as const,
-  };
-
   const handleCloseFeedback = () => {
     setFeedbackModalOpen(false);
   };
 
   return (
     <>
-      <Dropdown {...dropdownProps}>
+      <Dropdown>
         <div className={clsx(styles.profile, !collapsed && styles.expanded)}>
-          <Avatar size="small" className={styles.avatar} src={user?.avatar} alt={displayName}>
-            {displayName.charAt(0).toUpperCase()}
-          </Avatar>
-
-          {!collapsed && (
+          {collapsed ? (
+            <Dropdown.Trigger aria-label="打开用户菜单" className={styles.avatarTrigger}>
+              <Avatar size="sm" className={styles.avatar}>
+                {user?.avatar ? <Avatar.Image src={user.avatar} alt={displayName} /> : null}
+                <Avatar.Fallback>{displayName.charAt(0).toUpperCase()}</Avatar.Fallback>
+              </Avatar>
+            </Dropdown.Trigger>
+          ) : (
             <>
+              <Avatar size="sm" className={styles.avatar}>
+                {user?.avatar ? <Avatar.Image src={user.avatar} alt={displayName} /> : null}
+                <Avatar.Fallback>{displayName.charAt(0).toUpperCase()}</Avatar.Fallback>
+              </Avatar>
               <div className={styles.info}>
                 <span className={styles.username}>{displayName}</span>
                 <span className={styles.tag}>{identityLabel}</span>
               </div>
-              <RiArrowDownSLine className={styles.icon} />
+              <Dropdown.Trigger aria-label="打开用户设置菜单" className={styles.menuTrigger}>
+                <RiSettings3Line className={styles.icon} />
+              </Dropdown.Trigger>
             </>
           )}
         </div>
+        <Dropdown.Popover placement="top left">
+          <Dropdown.Menu
+            aria-label="用户菜单"
+            className={styles.profileMenu}
+            onAction={handleMenuAction}
+          >
+            {menuMode === 'admin' ? (
+              <>
+                <Dropdown.Item
+                  id="back-app"
+                  textValue="回到用户端"
+                  className={styles.profileMenuItem}
+                >
+                  <RiHomeLine size={16} />
+                  <span>回到用户端</span>
+                </Dropdown.Item>
+                <Dropdown.Item id="logout" textValue="退出登录" className={styles.profileMenuItem}>
+                  <RiLogoutBoxRLine size={16} />
+                  <span>退出登录</span>
+                </Dropdown.Item>
+              </>
+            ) : (
+              <>
+                <Dropdown.Item
+                  id="usage"
+                  textValue="余额与使用量"
+                  className={styles.profileMenuItem}
+                >
+                  <RiPieChartLine size={16} />
+                  <span>余额与使用量</span>
+                </Dropdown.Item>
+                <Dropdown.Item id="account" textValue="账号" className={styles.profileMenuItem}>
+                  <RiShieldUserLine size={16} />
+                  <span>账号</span>
+                </Dropdown.Item>
+                <Dropdown.Item
+                  id="feedback"
+                  textValue="用户反馈"
+                  className={styles.profileMenuItem}
+                >
+                  <RiFeedbackLine size={16} />
+                  <span>用户反馈</span>
+                </Dropdown.Item>
+                {isAdmin && (
+                  <Dropdown.Item
+                    id="enter-admin"
+                    textValue="进入管理"
+                    className={styles.profileMenuItem}
+                  >
+                    <RiShieldKeyholeLine size={16} />
+                    <span>进入管理</span>
+                  </Dropdown.Item>
+                )}
+                <Dropdown.Item id="logout" textValue="退出登录" className={styles.profileMenuItem}>
+                  <RiLogoutBoxRLine size={16} />
+                  <span>退出登录</span>
+                </Dropdown.Item>
+              </>
+            )}
+          </Dropdown.Menu>
+        </Dropdown.Popover>
       </Dropdown>
 
-      <Modal
-        title="问题反馈"
-        open={feedbackModalOpen}
-        onCancel={handleCloseFeedback}
-        width={880}
-        destroyOnHidden
-        footer={
-          <Button type="primary" onClick={handleCloseFeedback}>
-            关闭
-          </Button>
-        }
-      >
-        <div className={styles.feedbackIframeWrap}>
-          <iframe
-            className={styles.feedbackIframe}
-            title="问卷星问题反馈"
-            src={FEEDBACK_SURVEY_URL}
-            allowFullScreen
-          />
-        </div>
-        <p className={styles.feedbackFallback}>
-          若页面无法显示，请
-          <a
-            className={styles.feedbackFallbackLink}
-            href={FEEDBACK_SURVEY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            在新窗口打开问卷
-          </a>
-          。
-        </p>
+      <Modal isOpen={feedbackModalOpen} onOpenChange={setFeedbackModalOpen}>
+        <Modal.Backdrop isDismissable>
+          <Modal.Container size="lg" placement="center" className={styles.feedbackModal}>
+            <Modal.Dialog>
+              <Modal.Header>
+                <Modal.Heading>问题反馈</Modal.Heading>
+              </Modal.Header>
+              <Modal.Body>
+                <div className={styles.feedbackIframeWrap}>
+                  <iframe
+                    className={styles.feedbackIframe}
+                    title="问卷星问题反馈"
+                    src={FEEDBACK_SURVEY_URL}
+                    allowFullScreen
+                  />
+                </div>
+                <p className={styles.feedbackFallback}>
+                  若页面无法显示，请
+                  <a
+                    className={styles.feedbackFallbackLink}
+                    href={FEEDBACK_SURVEY_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    在新窗口打开问卷
+                  </a>
+                  。
+                </p>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="primary" onPress={handleCloseFeedback}>
+                  关闭
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
       </Modal>
     </>
   );
