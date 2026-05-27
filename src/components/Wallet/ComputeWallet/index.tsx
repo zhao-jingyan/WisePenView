@@ -8,9 +8,9 @@
 import RechargeModal from '@/components/Wallet/RechargeModal';
 import { useGroupService, useWalletService } from '@/domains';
 import { WALLET_TARGET_TYPE, WALLET_TOKEN_TX_TYPE } from '@/domains/Wallet';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import type { EnumValue } from '@/utils/enum';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { usePagination, useRequest, useUnmount } from 'ahooks';
 import { useCallback, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import type { ComputeWalletProps, ComputeWalletRef } from './index.type';
@@ -32,8 +32,6 @@ function ComputeWallet({
 }: ComputeWalletProps & { ref?: Ref<ComputeWalletRef> }) {
   const walletService = useWalletService();
   const groupService = useGroupService();
-  const message = useAppMessage();
-
   const effectiveGroupId = targetType === WALLET_TARGET_TYPE.GROUP ? (targetId ?? '').trim() : '';
   const walletReady = targetType === WALLET_TARGET_TYPE.USER || Boolean(effectiveGroupId);
 
@@ -107,7 +105,7 @@ function ComputeWallet({
         }
       },
       onError: (err, params) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
         const options = params?.[0];
         if (!options?.silent) {
           setLoadingWallet(false);
@@ -166,7 +164,7 @@ function ComputeWallet({
       defaultPageSize: PAGE_SIZE,
       refreshDeps: [walletService, targetType, effectiveGroupId, txTab],
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -199,14 +197,14 @@ function ComputeWallet({
       manual: true,
       onSuccess: async () => {
         const from = displayBalanceRef.current;
-        message.success('充值成功');
+        toast.success('充值成功');
         await loadBalance({ animateFrom: from, silent: true });
         onTxPageChange(1, PAGE_SIZE);
         setFlashFirstRow(true);
         window.setTimeout(() => setFlashFirstRow(false), 2400);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

@@ -1,7 +1,6 @@
 import type { Message, Model } from '@/components/ChatPanel/index.type';
 import { useChatService } from '@/domains';
 import { mapApiModelsToFlatModels, useChatSession } from '@/domains/Chat';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import {
   clearNewChatSessionStore,
   useChatPanelStore,
@@ -10,6 +9,7 @@ import {
   useNoteSelectionStore,
 } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
 import { useCallback, useMemo, useState } from 'react';
 import { RiIndentIncrease } from 'react-icons/ri';
@@ -31,7 +31,6 @@ interface ChatPanelProps {
 
 function ChatPanel({ collapsed }: ChatPanelProps) {
   const chatService = useChatService();
-  const messageApi = useAppMessage();
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
   const currentSessionId = useCurrentChatSessionStore((state) => state.currentSessionId);
   const currentSessionTitle = useCurrentChatSessionStore((state) => state.currentSessionTitle);
@@ -148,20 +147,13 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
           setLiveMessages([]);
           return;
         }
-        messageApi.error(errorMessage);
+        toast.danger(errorMessage);
         setHistoryMessages([]);
         setHistoryPage(1);
         setHistoryTotalPage(1);
       }
     },
-    [
-      clearCurrentSession,
-      currentModel,
-      messageApi,
-      modelMetaMap,
-      runLoadSessionHistory,
-      setLiveMessages,
-    ]
+    [clearCurrentSession, currentModel, modelMetaMap, runLoadSessionHistory, setLiveMessages]
   );
 
   const loadMoreHistoryMessages = useCallback(async () => {
@@ -181,7 +173,7 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
       setHistoryPage(payload.page ?? nextPage);
       setHistoryTotalPage(payload.total_page ?? historyTotalPage);
     } catch (error) {
-      messageApi.error(parseErrorMessage(error));
+      toast.danger(parseErrorMessage(error));
     } finally {
       setLoadingMoreHistory(false);
     }
@@ -191,7 +183,6 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
     historyPage,
     historyTotalPage,
     loadingMoreHistory,
-    messageApi,
     modelMetaMap,
     runLoadSessionHistory,
   ]);
@@ -211,7 +202,7 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
           });
           setCurrentSession({ id: createdSession.id, title: createdSession.title });
         } catch (error) {
-          messageApi.error(parseErrorMessage(error));
+          toast.danger(parseErrorMessage(error));
           return;
         }
       }
@@ -231,7 +222,6 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
       currentModel,
       currentSessionId,
       hasSelectedContext,
-      messageApi,
       runCreateSession,
       sendSessionMessage,
       setCurrentSession,

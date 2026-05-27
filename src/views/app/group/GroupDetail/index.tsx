@@ -17,7 +17,7 @@ import type { ComputeWalletRef } from '@/components/Wallet/ComputeWallet/index.t
 import { useGroupService } from '@/domains';
 import type { Group, GroupResConfig } from '@/domains/Group';
 import { WALLET_TARGET_TYPE } from '@/domains/Wallet';
-import { useAppMessage } from '@/hooks/useAppMessage';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import type { TabsProps } from 'antd';
 import { Button, Spin, Tabs } from 'antd';
@@ -35,7 +35,6 @@ type GroupDetailLoaded = {
 
 function GroupDetail() {
   const groupService = useGroupService();
-  const message = useAppMessage();
   const { id } = useParams<{ id: string }>();
 
   const { loading, data, refresh } = useRequest(
@@ -51,7 +50,7 @@ function GroupDetail() {
       refreshDeps: [id],
       ready: Boolean(id),
       onError: () => {
-        message.error('获取小组详情失败');
+        toast.danger('获取小组详情失败');
       },
     }
   );

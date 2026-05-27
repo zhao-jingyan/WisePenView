@@ -1,8 +1,8 @@
 import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/domains';
 import type { RegisterRequest } from '@/domains/Auth';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Checkbox, Form, Input, Modal, Typography } from 'antd';
 import { useState } from 'react';
@@ -16,7 +16,6 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_]{4,20}$/;
 
 function Register() {
   const authService = useAuthService();
-  const message = useAppMessage();
   const { t } = useTranslation('auth');
   const [agreement, setAgreement] = useState(false);
   const [contractOpen, setContractOpen] = useState(false);
@@ -33,14 +32,14 @@ function Register() {
         setSuccessModalOpen(true);
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
 
   const onFinish = (values: RegisterRequest) => {
     if (!agreement) {
-      message.error(t('register.agreementRequired'));
+      toast.danger(t('register.agreementRequired'));
       return;
     }
     submitRegister(values);

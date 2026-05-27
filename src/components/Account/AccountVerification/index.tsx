@@ -1,8 +1,8 @@
 import { useUserService } from '@/domains';
 import type { InitiateUISVerifyRequest, SendEmailVerifyRequest } from '@/domains/User';
 import { USER_STATUS } from '@/domains/User';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest, useUnmount } from 'ahooks';
 import { Alert, Button, Form, Input, Modal, Radio } from 'antd';
 import { useRef, useState } from 'react';
@@ -19,7 +19,6 @@ import styles from './style.module.less';
 
 function AccountVerification({ user, onUserInfoUpdated }: AccountVerificationProps) {
   const userService = useUserService();
-  const message = useAppMessage();
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [verifyMode, setVerifyMode] = useState<VerifyModalMode>('uis');
   const [uisOutcomeOpen, setUisOutcomeOpen] = useState(false);
@@ -67,7 +66,7 @@ function AccountVerification({ user, onUserInfoUpdated }: AccountVerificationPro
       onError: (pollErr) => {
         if (!uisPollingActiveRef.current) return;
         endUisPolling();
-        message.error(parseErrorMessage(pollErr));
+        toast.danger(parseErrorMessage(pollErr));
       },
     }
   );
@@ -83,14 +82,14 @@ function AccountVerification({ user, onUserInfoUpdated }: AccountVerificationPro
     {
       manual: true,
       onSuccess: () => {
-        message.success('验证邮件已发送，请查收');
+        toast.success('验证邮件已发送，请查收');
         verifyForm.resetFields();
         setVerifyMode('uis');
         setVerifyModalOpen(false);
       },
       onError: (err) => {
         if (err && typeof err === 'object' && 'errorFields' in err) return;
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -112,12 +111,13 @@ function AccountVerification({ user, onUserInfoUpdated }: AccountVerificationPro
         setVerifyModalOpen(false);
         endUisPolling();
         uisPollingActiveRef.current = true;
-        uisPollLoadingRef.current = message.loading('正在确认 UIS 认证状态…', 0);
+        const toastId = toast('正在确认 UIS 认证状态…', { isLoading: true, timeout: 0 });
+        uisPollLoadingRef.current = () => toast.close(toastId);
         runUisPolling();
       },
       onError: (err) => {
         if (err && typeof err === 'object' && 'errorFields' in err) return;
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

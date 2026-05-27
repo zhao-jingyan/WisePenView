@@ -19,10 +19,10 @@ import { useNoteService, useResourceService } from '@/domains';
 import type { AiDiffDisplayMode, NoteInfoDisplayData } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, AI_DIFF_DISPLAY_MODE_LABELS, useNoteSession } from '@/domains/Note';
 import { RESOURCE_TYPE } from '@/domains/Resource';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useAiDiffDisplayStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import styles from './style.module.less';
 
 interface NoteViewConnectedProps {
@@ -56,7 +56,6 @@ function NoteViewConnected({
   const showFullPageSpin = status === 'connecting';
 
   const resourceService = useResourceService();
-  const message = useAppMessage();
   const [displayLiked, setDisplayLiked] = useState<boolean | undefined>(undefined);
   const [displayLikeCount, setDisplayLikeCount] = useState<number | null | undefined>(undefined);
   const [displayUserScore, setDisplayUserScore] = useState<number | null | undefined>(undefined);
@@ -77,7 +76,7 @@ function NoteViewConnected({
       onError: (err) => {
         setDisplayLiked(noteInfoDisplay?.liked ?? false);
         setDisplayLikeCount(noteInfoDisplay?.likeCount ?? null);
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -95,7 +94,7 @@ function NoteViewConnected({
         onRefreshNoteInfo();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

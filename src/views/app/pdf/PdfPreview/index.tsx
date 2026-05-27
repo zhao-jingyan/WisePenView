@@ -7,8 +7,8 @@ import rvhStyles from '@/components/Common/ResourceViewerHeader/style.module.les
 import PdfViewer from '@/components/Pdf/PdfViewer/index';
 import { useDocumentService, useResourceService } from '@/domains';
 import { RESOURCE_TYPE } from '@/domains/Resource';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Result, Spin } from 'antd';
 import { useCallback, useState } from 'react';
@@ -20,7 +20,6 @@ function PdfPreview() {
   const [viewerErrorMap, setViewerErrorMap] = useState<Record<string, unknown>>({});
   const documentService = useDocumentService();
   const resourceService = useResourceService();
-  const message = useAppMessage();
   const {
     data: docInfo,
     error: docInfoError,
@@ -58,7 +57,7 @@ function PdfPreview() {
       onError: (err) => {
         setDisplayLiked(resourceInfo?.liked ?? false);
         setDisplayLikeCount(resourceInfo?.likeCount ?? null);
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -72,7 +71,7 @@ function PdfPreview() {
         void refreshDocInfo();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

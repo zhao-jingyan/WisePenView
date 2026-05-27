@@ -1,7 +1,7 @@
 import { useDriveService } from '@/domains';
 import type { DriveNode, LoadMoreNode } from '@/domains/Drive';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useCallback, useMemo, useState } from 'react';
 import { useDriveTreeChildren } from '../common/useDriveTreeChildren';
@@ -37,7 +37,6 @@ interface UseTableDriveReturn {
  */
 export function useTableDrive({ rootId, groupId }: UseTableDriveParams): UseTableDriveReturn {
   const driveService = useDriveService();
-  const message = useAppMessage();
   const { childrenMap, loadChildren, loadMore, reset } = useDriveTreeChildren({ groupId });
 
   const [currentNodeId, setCurrentNodeId] = useState<string>(rootId);
@@ -67,7 +66,7 @@ export function useTableDrive({ rootId, groupId }: UseTableDriveParams): UseTabl
     {
       refreshDeps: [currentNodeId, groupId],
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
         if (currentNodeId !== rootId) setCurrentNodeId(rootId);
       },
     }

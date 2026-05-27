@@ -3,8 +3,8 @@ import { RiFileCopyLine } from 'react-icons/ri';
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom';
 
 import LandingNavbar from '@/components/LandingNavbar';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import ResourceNotFound from '@/views/app/error/ResourceNotFound';
+import { toast } from '@heroui/react';
 import styles from './style.module.less';
 
 interface AppErrorInfo {
@@ -52,8 +52,6 @@ const buildAppErrorInfo = (error: unknown): AppErrorInfo => {
 function AppError() {
   const navigate = useNavigate();
   const error = useRouteError();
-  const message = useAppMessage();
-
   // 路由未命中抛出的 404 走专用 ResourceNotFound 页，避免通用错误壳与业务 404 语义混淆
   if (isRouteErrorResponse(error) && error.status === 404) {
     return <ResourceNotFound />;
@@ -69,9 +67,9 @@ function AppError() {
 
     try {
       await navigator.clipboard.writeText(errorInfo.detail);
-      message.success('错误详情已复制');
+      toast.success('错误详情已复制');
     } catch {
-      message.error('复制失败，请手动复制');
+      toast.danger('复制失败，请手动复制');
     }
   };
 

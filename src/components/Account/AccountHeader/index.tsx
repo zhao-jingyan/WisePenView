@@ -1,8 +1,8 @@
 import { useImageService, useUserService } from '@/domains';
 import { getVerificationModeLabel, IDENTITY, USER_STATUS } from '@/domains/User';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import type { UploadFile } from 'antd';
 import { Avatar, Button, Modal, Tooltip, Upload } from 'antd';
@@ -14,10 +14,9 @@ import styles from './style.module.less';
 function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
   const userService = useUserService();
   const imageService = useImageService();
-  const message = useAppMessage();
   const beforeUploadAvatar = useMemo(
-    () => createBeforeUploadImageWithinLimit((text) => message.error(text)),
-    [message]
+    () => createBeforeUploadImageWithinLimit((text) => toast.danger(text)),
+    []
   );
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [avatarFileList, setAvatarFileList] = useState<UploadFile[]>([]);
@@ -40,12 +39,12 @@ function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
       manual: true,
       onSuccess: (data) => {
         onUserInfoUpdated(data);
-        message.success('头像已更新');
+        toast.success('头像已更新');
         setAvatarFileList([]);
         setAvatarModalOpen(false);
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -63,11 +62,11 @@ function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
   const handleAvatarModalOk = async () => {
     const raw = avatarFileList[0]?.originFileObj;
     if (!(raw instanceof File)) {
-      message.warning('请选择头像图片');
+      toast.warning('请选择头像图片');
       return Promise.reject(new Error('no_avatar_file'));
     }
     if (!user) {
-      message.error('用户信息未加载，请稍后重试');
+      toast.danger('用户信息未加载，请稍后重试');
       return Promise.reject(new Error('no_user'));
     }
     return runUpdateAvatar(raw, user);

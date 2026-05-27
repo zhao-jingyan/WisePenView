@@ -20,7 +20,7 @@ export function assertImageProxyUploadLimit(file: File): void {
 /**
  * 用于 Ant Design Upload `beforeUpload`：超过图床代理上限时不进入 fileList，并提示。
  * 返回 `false` 表示不自动上传（由业务在提交时再调 ImageService）。
- * `onOversize` 请传入 `useAppMessage().error` 等，避免使用静态 message。
+ * `onOversize` 请传入 `toast.danger` 等统一 toast 方法。
  */
 export const createBeforeUploadImageWithinLimit = (
   onOversize: (text: string) => void

@@ -1,7 +1,7 @@
 import { useUserService } from '@/domains';
 import type { ConfirmEmailVerifyRequest } from '@/domains/User';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal, Typography } from 'antd';
 import { useState } from 'react';
@@ -11,7 +11,6 @@ import auth from '../Auth.module.less';
 
 function VerifyEmail() {
   const userService = useUserService();
-  const message = useAppMessage();
   const { t } = useTranslation('auth');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -27,18 +26,18 @@ function VerifyEmail() {
     {
       manual: true,
       onSuccess: () => {
-        message.success(t('verifyEmail.verifySuccess'));
+        toast.success(t('verifyEmail.verifySuccess'));
         setSuccessModalOpen(true);
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
 
   const onVerify = () => {
     if (loading || !token) {
-      if (!token) message.error(t('verifyEmail.invalidToken'));
+      if (!token) toast.danger(t('verifyEmail.invalidToken'));
       return;
     }
     runVerify(token);

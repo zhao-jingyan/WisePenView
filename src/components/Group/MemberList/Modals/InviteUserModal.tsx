@@ -1,5 +1,5 @@
 import IconText from '@/components/Common/IconText';
-import { useAppMessage } from '@/hooks/useAppMessage';
+import { toast } from '@heroui/react';
 import { Button, Modal } from 'antd';
 import { useState } from 'react';
 import { LuCopy } from 'react-icons/lu';
@@ -7,7 +7,6 @@ import type { InviteUserModalProps } from './index.type';
 import styles from './style.module.less';
 
 function InviteUserModal({ open, onCancel, inviteCode }: InviteUserModalProps) {
-  const message = useAppMessage();
   const [copied, setCopied] = useState(false);
 
   const handleCancel = () => {
@@ -19,9 +18,9 @@ function InviteUserModal({ open, onCancel, inviteCode }: InviteUserModalProps) {
     try {
       await navigator.clipboard.writeText(inviteCode ?? '');
       setCopied(true);
-      message.success('邀请码已复制到剪贴板');
+      toast.success('邀请码已复制到剪贴板');
     } catch {
-      message.error('复制失败，请手动复制');
+      toast.danger('复制失败，请手动复制');
     }
   };
 

@@ -3,8 +3,8 @@ import StickerManageModal from '@/components/Drive/Modals/StickerManageModal';
 import { useStickerService } from '@/domains';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR, TAG_QUERY_LOGIC_MODE } from '@/domains/Resource';
 import type { Sticker } from '@/domains/Sticker';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Radio, Select, Spin, Tag } from 'antd';
 import clsx from 'clsx';
@@ -24,7 +24,6 @@ const DEFAULT_VALUE: FileFilterValue = {
 
 function FileFilter({ value, onChange }: FileFilterProps) {
   const stickerService = useStickerService();
-  const message = useAppMessage();
   const [innerValue, setInnerValue] = useState<FileFilterValue>(DEFAULT_VALUE);
   const isControlled = value !== undefined;
   const current = isControlled ? value : innerValue;
@@ -36,7 +35,7 @@ function FileFilter({ value, onChange }: FileFilterProps) {
       setStickers(list);
     },
     onError: (err) => {
-      message.error(parseErrorMessage(err));
+      toast.danger(parseErrorMessage(err));
       setStickers([]);
     },
   });

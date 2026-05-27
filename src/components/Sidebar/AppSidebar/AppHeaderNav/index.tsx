@@ -1,8 +1,7 @@
 import { useChatService, useNoteService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { useNewChatSessionStore, useNewNoteStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
-import { ListBox, ListBoxItem } from '@heroui/react';
+import { ListBox, ListBoxItem, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
 import { useCallback } from 'react';
@@ -16,8 +15,6 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
   const location = useLocation();
   const chatService = useChatService();
   const noteService = useNoteService();
-  const messageApi = useAppMessage();
-
   const isDriveActive = location.pathname.startsWith('/app/drive');
   const isGroupActive = location.pathname.startsWith('/app/my-group');
   const selectedKeys = isDriveActive ? ['/app/drive'] : isGroupActive ? ['/app/my-group'] : [];
@@ -33,7 +30,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
         onSessionCreated(session.id, session.title);
       },
       onError: (err) => {
-        messageApi.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -63,7 +60,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
         navigate(`/app/note/${encodeURIComponent(resourceId)}`);
       },
       onError: (err) => {
-        messageApi.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

@@ -1,7 +1,7 @@
 import { useAuthService } from '@/domains';
 import type { NewPasswordRequest } from '@/domains/Auth';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useMount, useRequest } from 'ahooks';
 import { Button, Form, Input, Modal, Typography } from 'antd';
 import { useState } from 'react';
@@ -14,7 +14,6 @@ type NewPasswordFormValues = Pick<NewPasswordRequest, 'newPassword'>;
 
 function NewPassword() {
   const authService = useAuthService();
-  const message = useAppMessage();
   const { t } = useTranslation('auth');
   const [token, setToken] = useState('');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
@@ -35,14 +34,14 @@ function NewPassword() {
         setSuccessModalOpen(true);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
 
   const onFinish = (values: NewPasswordFormValues) => {
     if (!token) {
-      message.error(t('newPassword.tokenMissing'));
+      toast.danger(t('newPassword.tokenMissing'));
       return;
     }
     submitNewPassword(values);

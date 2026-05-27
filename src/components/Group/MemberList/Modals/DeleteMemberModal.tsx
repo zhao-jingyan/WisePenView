@@ -1,7 +1,7 @@
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
 import { useGroupService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal } from 'antd';
 import type { DeleteMemberModalProps } from './index.type';
@@ -17,7 +17,6 @@ function DeleteMemberModal({
   groupDisplayConfig,
 }: DeleteMemberModalProps) {
   const groupService = useGroupService();
-  const message = useAppMessage();
   const { loading, run: runDeleteMembers } = useRequest(
     async () =>
       groupService.kickMembers({
@@ -27,12 +26,12 @@ function DeleteMemberModal({
     {
       manual: true,
       onSuccess: () => {
-        message.success(`已删除 ${memberIds.length} 位成员`);
+        toast.success(`已删除 ${memberIds.length} 位成员`);
         onSuccess?.();
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

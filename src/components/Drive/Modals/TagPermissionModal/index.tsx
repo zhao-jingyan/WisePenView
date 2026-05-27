@@ -16,8 +16,8 @@ import {
   type TagResourceAction,
   type TagResourceMountMode,
 } from '@/domains/Tag';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Checkbox, Empty, Form, Modal, Radio, Select } from 'antd';
 import { useState } from 'react';
@@ -100,7 +100,6 @@ const TagPermissionModal = ({
   const tagService = useTagService();
   const driveService = useDriveService();
   const groupService = useGroupService();
-  const message = useAppMessage();
   const [form] = Form.useForm<TagPermissionFormValues>();
   const [selectedTag, setSelectedTag] = useState<DriveSelectionItem | null>(null);
   const [tagRefreshSeed, setTagRefreshSeed] = useState(0);
@@ -125,7 +124,7 @@ const TagPermissionModal = ({
         setTagInitialIds(ids);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
         setTagInitialIds(undefined);
       },
     }
@@ -156,7 +155,7 @@ const TagPermissionModal = ({
     {
       manual: true,
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -253,19 +252,19 @@ const TagPermissionModal = ({
     {
       manual: true,
       onSuccess: () => {
-        message.success('标签权限已更新');
+        toast.success('标签权限已更新');
         onSuccess?.();
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
 
   const handleSubmit = async () => {
     if (!selectedTag?.tagId) {
-      message.warning('请先选择标签');
+      toast.warning('请先选择标签');
       return;
     }
     const formValues = await form.validateFields();

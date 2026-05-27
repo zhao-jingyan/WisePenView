@@ -5,8 +5,8 @@ import { useCallback, useState } from 'react';
 import { AiOutlineInbox } from 'react-icons/ai';
 
 import { useDocumentService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 
 import styles from './UploadDocumentModal.module.less';
 
@@ -19,7 +19,6 @@ export interface UploadDocumentModalProps {
 /** 文档上传：MD5 -> init -> OSS PUT，成功后由调用方决定后续跳转。 */
 export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocumentModalProps) {
   const documentService = useDocumentService();
-  const message = useAppMessage();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [phase, setPhase] = useState<'idle' | 'hash' | 'upload'>('idle');
   const [percent, setPercent] = useState(0);
@@ -50,13 +49,13 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
         setPercent(0);
       },
       onSuccess: () => {
-        message.success('上传成功');
+        toast.success('上传成功');
         onSuccess?.();
         resetState();
         onClose();
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
       onFinally: () => {
         setPhase('idle');
@@ -87,7 +86,7 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
   const handleOk = () => {
     const raw = fileList[0]?.originFileObj;
     if (!(raw instanceof File)) {
-      message.warning('请选择要上传的文件');
+      toast.warning('请选择要上传的文件');
       return;
     }
     submitUpload(raw);

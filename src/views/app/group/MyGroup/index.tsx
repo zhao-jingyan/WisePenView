@@ -4,7 +4,7 @@ import { CreateGroupModal, JoinGroupModal } from '@/components/Group/GroupModals
 import { useGroupService } from '@/domains';
 import type { FetchGroupListRequest, Group } from '@/domains/Group';
 import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group';
-import { useAppMessage } from '@/hooks/useAppMessage';
+import { toast } from '@heroui/react';
 import { usePagination } from 'ahooks';
 import { Button, Col, Empty, Pagination, Row, Spin, Tabs } from 'antd';
 import { useState } from 'react';
@@ -15,7 +15,6 @@ import page from './style.module.less';
 
 function MyGroup() {
   const groupService = useGroupService();
-  const message = useAppMessage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('joined');
   const [joinGroupModalOpen, setJoinGroupModalOpen] = useState(false);
@@ -43,7 +42,7 @@ function MyGroup() {
       defaultPageSize: 8,
       refreshDeps: [groupRoleFilter],
       onError: () => {
-        message.error('获取小组列表失败');
+        toast.danger('获取小组列表失败');
       },
     }
   );

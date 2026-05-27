@@ -1,9 +1,8 @@
 import { useChatService } from '@/domains';
 import type { ChatSession } from '@/domains/Chat';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, Header, ListBox, ListBoxItem, ListBoxSection } from '@heroui/react';
+import { Button, Header, ListBox, ListBoxItem, ListBoxSection, toast } from '@heroui/react';
 import { useMount, useRequest } from 'ahooks';
 import clsx from 'clsx';
 import { useCallback, useImperativeHandle, useState, type Ref } from 'react';
@@ -19,7 +18,6 @@ const SESSION_PAGE_SIZE = 20;
 
 const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionListGroupProps) => {
   const chatService = useChatService();
-  const messageApi = useAppMessage();
   const [sessionItems, setSessionItems] = useState<ChatSession[]>([]);
   const [sessionPage, setSessionPage] = useState(1);
   const [sessionTotalPage, setSessionTotalPage] = useState(1);
@@ -66,14 +64,14 @@ const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionListGroupP
           return [...prev, ...extra];
         });
       } catch (err) {
-        messageApi.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       } finally {
         if (append) {
           setLoadingMoreSessions(false);
         }
       }
     },
-    [messageApi, runListSessions, setCurrentSession]
+    [runListSessions, setCurrentSession]
   );
 
   const refresh = useCallback(async () => {

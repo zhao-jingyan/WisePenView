@@ -1,7 +1,6 @@
 import { useChatService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, Input, Modal, TextField } from '@heroui/react';
+import { Button, Input, Modal, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
 import { useCallback, useState } from 'react';
@@ -11,7 +10,6 @@ import styles from './style.module.less';
 
 function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps) {
   const chatService = useChatService();
-  const messageApi = useAppMessage();
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [editingTitle, setEditingTitle] = useState(session.title || '');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -25,12 +23,12 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
     {
       manual: true,
       onSuccess: async () => {
-        messageApi.success('重命名成功');
+        toast.success('重命名成功');
         setRenameModalOpen(false);
         await onUpdated();
       },
       onError: (err) => {
-        messageApi.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -43,12 +41,12 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
     {
       manual: true,
       onSuccess: async () => {
-        messageApi.success('删除成功');
+        toast.success('删除成功');
         onDeleted(session.id);
         await onUpdated();
       },
       onError: (err) => {
-        messageApi.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -56,11 +54,11 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
   const submitRename = useCallback(async () => {
     const trimmedTitle = editingTitle.trim();
     if (!trimmedTitle) {
-      messageApi.warning('请输入会话名称');
+      toast.warning('请输入会话名称');
       return;
     }
     await runRenameSession(trimmedTitle);
-  }, [editingTitle, messageApi, runRenameSession]);
+  }, [editingTitle, runRenameSession]);
 
   const confirmDeleteSession = useCallback(async () => {
     await runDeleteSession();

@@ -2,9 +2,9 @@ import IconText from '@/components/Common/IconText';
 import { useGroupService, useImageService } from '@/domains';
 import type { EditGroupRequest } from '@/domains/Group';
 import { GROUP_TYPE } from '@/domains/Group';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import type { UploadFile } from 'antd';
 import { Button, Form, Input, Modal, Upload } from 'antd';
@@ -39,10 +39,9 @@ function EditGroupInfoModal({
 }: EditGroupInfoModalProps) {
   const groupService = useGroupService();
   const imageService = useImageService();
-  const message = useAppMessage();
   const beforeUploadCover = useMemo(
-    () => createBeforeUploadImageWithinLimit((text) => message.error(text)),
-    [message]
+    () => createBeforeUploadImageWithinLimit((text) => toast.danger(text)),
+    []
   );
   const [form] = Form.useForm<EditGroupFormValues>();
   const { loading, run: runEditGroup } = useRequest(
@@ -69,13 +68,13 @@ function EditGroupInfoModal({
     {
       manual: true,
       onSuccess: () => {
-        message.success('小组信息已更新');
+        toast.success('小组信息已更新');
         form.resetFields();
         onSuccess?.();
         onCancel();
       },
       onError: (error: unknown) => {
-        message.error(parseErrorMessage(error));
+        toast.danger(parseErrorMessage(error));
       },
     }
   );
@@ -90,7 +89,7 @@ function EditGroupInfoModal({
 
   const handleConfirm = async () => {
     if (!groupId) {
-      message.error('小组ID不存在');
+      toast.danger('小组ID不存在');
       return;
     }
     const formValues = await form.validateFields();

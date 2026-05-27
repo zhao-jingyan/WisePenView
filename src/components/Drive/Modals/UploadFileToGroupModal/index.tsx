@@ -1,7 +1,7 @@
 import DriveNav from '@/components/Drive/DriveNav';
 import { useResourceService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Modal, Steps } from 'antd';
 import { useCallback, useState } from 'react';
@@ -16,7 +16,6 @@ function UploadFileToGroupModal({
   onSuccess,
 }: UploadFileToGroupModalProps) {
   const resourceService = useResourceService();
-  const message = useAppMessage();
   const [step, setStep] = useState(0);
   const [navRefreshKey, setNavRefreshKey] = useState(0);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
@@ -56,12 +55,12 @@ function UploadFileToGroupModal({
     {
       manual: true,
       onSuccess: (count) => {
-        message.success(`已上传 ${count} 个文件`);
+        toast.success(`已上传 ${count} 个文件`);
         onSuccess?.();
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

@@ -1,7 +1,7 @@
 import { useStickerService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { validateReservedName } from '@/utils/tag/validateReservedName';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Input, Modal } from 'antd';
 import { useCallback, useState } from 'react';
@@ -9,8 +9,6 @@ import type { AddStickerModalProps } from './index.type';
 
 function AddStickerModal({ open, onCancel, onSuccess }: AddStickerModalProps) {
   const stickerService = useStickerService();
-  const message = useAppMessage();
-
   const [name, setName] = useState('');
   const reset = useCallback(() => {
     setName('');
@@ -31,7 +29,7 @@ function AddStickerModal({ open, onCancel, onSuccess }: AddStickerModalProps) {
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -41,11 +39,11 @@ function AddStickerModal({ open, onCancel, onSuccess }: AddStickerModalProps) {
     if (!trimmed) return;
     const validation = validateReservedName(trimmed);
     if (!validation.valid) {
-      message.warning(validation.reason);
+      toast.warning(validation.reason);
       return;
     }
     runAddSticker(trimmed);
-  }, [name, runAddSticker, message]);
+  }, [name, runAddSticker]);
 
   return (
     <Modal

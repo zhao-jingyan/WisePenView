@@ -1,6 +1,6 @@
 import { useResourceService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Input, Modal } from 'antd';
 import { useCallback, useState } from 'react';
@@ -8,7 +8,6 @@ import type { RenameFileModalProps } from './index.type';
 
 function RenameFileModal({ open, onCancel, onSuccess, file }: RenameFileModalProps) {
   const resourceService = useResourceService();
-  const message = useAppMessage();
   const [name, setName] = useState('');
 
   const handleOpenChange = useCallback(
@@ -29,12 +28,12 @@ function RenameFileModal({ open, onCancel, onSuccess, file }: RenameFileModalPro
     {
       manual: true,
       onSuccess: () => {
-        message.success('重命名成功');
+        toast.success('重命名成功');
         onSuccess?.();
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -43,7 +42,7 @@ function RenameFileModal({ open, onCancel, onSuccess, file }: RenameFileModalPro
     if (!file?.resourceId) return;
     const trimmed = name.trim();
     if (!trimmed) {
-      message.warning('请输入文件名称');
+      toast.warning('请输入文件名称');
       return;
     }
     runRenameFile(trimmed);

@@ -1,9 +1,9 @@
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
 import { useGroupService } from '@/domains';
 import { ROLE } from '@/domains/Group';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import type { EnumKey } from '@/utils/enum';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal, Select } from 'antd';
 import { useState } from 'react';
@@ -23,7 +23,6 @@ function EditPermissionModal({
   groupDisplayConfig,
 }: EditPermissionModalProps) {
   const groupService = useGroupService();
-  const message = useAppMessage();
   const [selectedPermission, setSelectedPermission] = useState<EnumKey<typeof ROLE>>('MEMBER');
   const { loading, run: runUpdatePermission } = useRequest(
     async (role: number) =>
@@ -35,12 +34,12 @@ function EditPermissionModal({
     {
       manual: true,
       onSuccess: () => {
-        message.success(`已修改 ${memberIds.length} 位成员的权限`);
+        toast.success(`已修改 ${memberIds.length} 位成员的权限`);
         onSuccess?.();
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

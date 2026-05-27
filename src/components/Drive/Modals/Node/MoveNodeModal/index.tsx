@@ -1,8 +1,8 @@
 import DriveNav from '@/components/Drive/DriveNav';
 import { useDriveService } from '@/domains';
 import type { FolderNode, IDriveService } from '@/domains/Drive';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Modal } from 'antd';
 import { useMemo, useState } from 'react';
@@ -36,7 +36,6 @@ async function collectFolderDescendantIds(
 
 function MoveNodeModal({ open, node, rootId, groupId, onCancel, onSuccess }: MoveNodeModalProps) {
   const driveService = useDriveService();
-  const message = useAppMessage();
   const [selectedTargetId, setSelectedTargetId] = useState<string>();
 
   const { data: blockedIds } = useRequest(
@@ -54,7 +53,7 @@ function MoveNodeModal({ open, node, rootId, groupId, onCancel, onSuccess }: Mov
         setSelectedTargetId(undefined);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -69,12 +68,12 @@ function MoveNodeModal({ open, node, rootId, groupId, onCancel, onSuccess }: Mov
     {
       manual: true,
       onSuccess: () => {
-        message.success('移动成功');
+        toast.success('移动成功');
         onSuccess?.();
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

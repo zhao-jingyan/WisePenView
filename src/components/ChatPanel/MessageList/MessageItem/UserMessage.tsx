@@ -1,5 +1,5 @@
 import type { Message } from '@/components/ChatPanel/index.type';
-import { useAppMessage } from '@/hooks/useAppMessage';
+import { toast } from '@heroui/react';
 import { Button } from 'antd';
 import React from 'react';
 import { LuCheck, LuCopy } from 'react-icons/lu';
@@ -12,17 +12,16 @@ interface UserMessageProps {
 }
 
 function UserMessage({ message }: UserMessageProps) {
-  const messageApi = useAppMessage();
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(message.content);
-      messageApi.success('复制成功');
+      toast.success('复制成功');
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {
-      messageApi.error('复制失败');
+      toast.danger('复制失败');
     }
   };
 

@@ -3,9 +3,9 @@ import { useGroupService, useImageService, useUserService } from '@/domains';
 import type { CreateGroupRequest } from '@/domains/Group';
 import { ALLOWED_GROUP_TYPES_MAP, GROUP_FILE_ORG_LOGIC, GROUP_TYPE } from '@/domains/Group';
 import { IDENTITY } from '@/domains/User';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import type { UploadFile } from 'antd';
 import { Button, Form, Input, Modal, Select, Upload } from 'antd';
@@ -34,10 +34,9 @@ function CreateGroupModal({ open, onCancel, onSuccess }: CreateGroupModalProps) 
   const groupService = useGroupService();
   const imageService = useImageService();
   const userService = useUserService();
-  const message = useAppMessage();
   const beforeUploadCover = useMemo(
-    () => createBeforeUploadImageWithinLimit((text) => message.error(text)),
-    [message]
+    () => createBeforeUploadImageWithinLimit((text) => toast.danger(text)),
+    []
   );
   const [form] = Form.useForm<CreateGroupFormValues>();
   const [identityType, setIdentityType] = useState<number | undefined>();
@@ -85,9 +84,9 @@ function CreateGroupModal({ open, onCancel, onSuccess }: CreateGroupModalProps) 
           groupId,
           fileOrgLogic: GROUP_FILE_ORG_LOGIC.TAG,
         });
-        message.success('创建成功');
+        toast.success('创建成功');
       } catch (configErr: unknown) {
-        message.warning(parseErrorMessage(configErr));
+        toast.warning(parseErrorMessage(configErr));
       }
     },
     {
@@ -104,7 +103,7 @@ function CreateGroupModal({ open, onCancel, onSuccess }: CreateGroupModalProps) 
           'errorFields' in err &&
           Array.isArray((err as { errorFields?: unknown }).errorFields);
         if (!isValidationError) {
-          message.error(parseErrorMessage(err));
+          toast.danger(parseErrorMessage(err));
         }
       },
     }

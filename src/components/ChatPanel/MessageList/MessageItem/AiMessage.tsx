@@ -1,6 +1,6 @@
 import type { Message } from '@/components/ChatPanel/index.type';
 import IconText from '@/components/Common/IconText';
-import { useAppMessage } from '@/hooks/useAppMessage';
+import { toast } from '@heroui/react';
 import { useInterval } from 'ahooks';
 import { Button, Spin } from 'antd';
 import React from 'react';
@@ -17,7 +17,6 @@ const LOADING_HINT_SWITCH_MS = 2000;
 function AiMessage({ message }: { message: Message }) {
   const hasReasoning = message.reasoningContent !== undefined;
   const showLoadingIndicator = Boolean(message.loading && !message.content);
-  const messageApi = useAppMessage();
   const [copied, setCopied] = React.useState(false);
   const [loadingHintIndex, setLoadingHintIndex] = React.useState(0);
   const displayProvider = message.meta?.provider || 'openai';
@@ -33,11 +32,11 @@ function AiMessage({ message }: { message: Message }) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(message.content || '');
-      messageApi.success('复制成功');
+      toast.success('复制成功');
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {
-      messageApi.error('复制失败');
+      toast.danger('复制失败');
     }
   };
 

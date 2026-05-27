@@ -2,8 +2,8 @@ import IconText from '@/components/Common/IconText';
 import { useUserService } from '@/domains';
 import type { UpdateUserInfoRequest } from '@/domains/User';
 import { DEGREE, SEX } from '@/domains/User';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Descriptions, Form, Input, Select } from 'antd';
 import type { InputRef } from 'antd/es/input';
@@ -54,8 +54,6 @@ function AccountForm({
   onCancel,
 }: AccountFormProps) {
   const userService = useUserService();
-  const message = useAppMessage();
-
   const { loading: saving, runAsync: runSave } = useRequest(
     async () => {
       const values = await form.validateFields();
@@ -109,11 +107,11 @@ function AccountForm({
       onSuccess: (data) => {
         onUserInfoUpdated(data);
         onEditModeChange(false);
-        message.success('保存成功');
+        toast.success('保存成功');
       },
       onError: (err) => {
         if (err && typeof err === 'object' && 'errorFields' in err) return;
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

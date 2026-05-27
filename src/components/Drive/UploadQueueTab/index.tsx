@@ -6,9 +6,9 @@ import {
   isDocumentRetryableStatus,
   isDocumentTerminalStatus,
 } from '@/domains/Document';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format/formatFileSize';
+import { toast } from '@heroui/react';
 import { useInterval, useMount, useRequest, useUnmount } from 'ahooks';
 import { Button, Empty, Space, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -28,7 +28,6 @@ export interface UploadQueueTabRef {
 
 function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
   const documentService = useDocumentService();
-  const message = useAppMessage();
   const [list, setList] = useState<PendingDocItem[]>([]);
   const [pollingActive, setPollingActive] = useState(false);
   const [retryingId, setRetryingId] = useState<string | null>(null);
@@ -63,7 +62,7 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
       },
       onError: (err) => {
         setPollingActive(false);
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -79,11 +78,11 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
         setRetryingId(params[0] ?? null);
       },
       onSuccess: () => {
-        message.success('已提交重试');
+        toast.success('已提交重试');
         runFetchPendingList(false);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
       onFinally: () => {
         setRetryingId(null);
@@ -102,11 +101,11 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
         setCancelingId(params[0] ?? null);
       },
       onSuccess: () => {
-        message.success('已取消处理');
+        toast.success('已取消处理');
         runFetchPendingList(false);
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
       onFinally: () => {
         setCancelingId(null);

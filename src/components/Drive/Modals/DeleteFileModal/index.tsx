@@ -1,8 +1,8 @@
 import { useDocumentService, useNoteService } from '@/domains';
 import { RESOURCE_TYPE } from '@/domains/Resource';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { useNewNoteStore, usePdfPreviewProgressStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal } from 'antd';
 import type { DeleteFileModalProps } from './index.type';
@@ -10,8 +10,6 @@ import type { DeleteFileModalProps } from './index.type';
 function DeleteFileModal({ open, onCancel, onSuccess, file }: DeleteFileModalProps) {
   const documentService = useDocumentService();
   const noteService = useNoteService();
-  const message = useAppMessage();
-
   const { loading, run: runDeleteFile } = useRequest(
     async () => {
       const resourceId = file!.resourceId!;
@@ -30,12 +28,12 @@ function DeleteFileModal({ open, onCancel, onSuccess, file }: DeleteFileModalPro
           usePdfPreviewProgressStore.getState().removeProgress(deletedResourceId);
           useNewNoteStore.getState().clearNewNoteResourceId(deletedResourceId);
         }
-        message.success('文件已删除');
+        toast.success('文件已删除');
         onSuccess?.();
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

@@ -8,8 +8,8 @@ import {
 import { useUserService } from '@/domains';
 import type { GetUserInfoResponse } from '@/domains/User';
 import { IDENTITY } from '@/domains/User';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Descriptions, Divider, Form, Spin } from 'antd';
 import { useMemo, useState } from 'react';
@@ -19,7 +19,6 @@ import layout from '../style.module.less';
 
 function Account() {
   const userService = useUserService();
-  const message = useAppMessage();
   const [user, setUser] = useState<GetUserInfoResponse | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [form] = Form.useForm<ProfileFormValues>();
@@ -35,7 +34,7 @@ function Account() {
       form.setFieldsValue(buildProfileFormValues(data));
     },
     onError: (err: unknown) => {
-      message.error(parseErrorMessage(err));
+      toast.danger(parseErrorMessage(err));
     },
   });
 

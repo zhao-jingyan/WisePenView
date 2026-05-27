@@ -1,6 +1,6 @@
 import { useDriveService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal } from 'antd';
 import type { DeleteNodeModalProps } from './index.type';
@@ -13,8 +13,6 @@ function getNodeName(node: DeleteNodeModalProps['node']): string {
 
 function DeleteNodeModal({ open, node, groupId, onCancel, onSuccess }: DeleteNodeModalProps) {
   const driveService = useDriveService();
-  const message = useAppMessage();
-
   const { loading, run: runDeleteNode } = useRequest(
     async () => {
       if (!node) return;
@@ -23,12 +21,12 @@ function DeleteNodeModal({ open, node, groupId, onCancel, onSuccess }: DeleteNod
     {
       manual: true,
       onSuccess: () => {
-        message.success('删除成功');
+        toast.success('删除成功');
         onSuccess?.();
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

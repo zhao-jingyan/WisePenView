@@ -1,7 +1,7 @@
 import { useAuthService } from '@/domains';
 import type { ResetPasswordRequest } from '@/domains/Auth';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Form, Input, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,6 @@ import auth from '../Auth.module.less';
 
 function ResetPassword() {
   const authService = useAuthService();
-  const message = useAppMessage();
   const { t } = useTranslation('auth');
   const [form] = Form.useForm<ResetPasswordRequest>();
 
@@ -20,10 +19,10 @@ function ResetPassword() {
     {
       manual: true,
       onSuccess: () => {
-        message.info(t('resetPassword.sendSuccess'));
+        toast.info(t('resetPassword.sendSuccess'));
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

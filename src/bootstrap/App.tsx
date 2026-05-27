@@ -1,3 +1,4 @@
+import { Toast } from '@heroui/react';
 import { useMount, useUnmount } from 'ahooks';
 import { App as AntdApp, ConfigProvider, Spin } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
@@ -35,6 +36,7 @@ function App() {
     <ServicesProvider>
       <ConfigProvider locale={zhCN} theme={appTheme}>
         <AntdApp>
+          <Toast.Provider maxVisibleToasts={3} placement="top" />
           <Suspense fallback={<PageLoadingFallback />}>
             <RouterProvider router={router} />
           </Suspense>

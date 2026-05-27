@@ -1,6 +1,6 @@
 import { useDriveService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Input, Modal } from 'antd';
 import { useCallback, useState } from 'react';
@@ -16,7 +16,6 @@ function getDefaultName(node: DriveActionTarget | null): string {
 
 function RenameNodeModal({ open, node, groupId, onCancel, onSuccess }: RenameNodeModalProps) {
   const driveService = useDriveService();
-  const message = useAppMessage();
   const [name, setName] = useState('');
 
   const handleOpenChange = useCallback(
@@ -36,12 +35,12 @@ function RenameNodeModal({ open, node, groupId, onCancel, onSuccess }: RenameNod
     {
       manual: true,
       onSuccess: () => {
-        message.success('重命名成功');
+        toast.success('重命名成功');
         onSuccess?.();
         onCancel();
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -50,7 +49,7 @@ function RenameNodeModal({ open, node, groupId, onCancel, onSuccess }: RenameNod
     if (!node) return;
     const trimmed = name.trim();
     if (!trimmed) {
-      message.warning('请输入名称');
+      toast.warning('请输入名称');
       return;
     }
     runRenameNode(trimmed);

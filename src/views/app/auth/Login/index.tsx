@@ -1,8 +1,8 @@
 import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/domains';
 import type { LoginRequest } from '@/domains/Auth';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Button, Form, Input, Typography } from 'antd';
 import { useState } from 'react';
@@ -13,7 +13,6 @@ import auth from '../Auth.module.less';
 
 function Login() {
   const authService = useAuthService();
-  const message = useAppMessage();
   const { t } = useTranslation('auth');
   const [contractOpen, setContractOpen] = useState(false);
   const [form] = Form.useForm<LoginRequest>();
@@ -27,7 +26,7 @@ function Login() {
         navigate('/app/drive');
       },
       onError: (err: unknown) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );

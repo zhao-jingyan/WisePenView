@@ -1,7 +1,7 @@
 import { useGroupService } from '@/domains';
 import type { QuitGroupRequest } from '@/domains/Group';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Alert, Button, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +11,6 @@ import styles from './index.module.less';
 
 function ExitGroupModal({ open, onCancel, groupName, groupId, onSuccess }: ExitGroupModalProps) {
   const groupService = useGroupService();
-  const message = useAppMessage();
   const navigate = useNavigate();
 
   const { loading, run: runExitGroup } = useRequest(
@@ -22,20 +21,20 @@ function ExitGroupModal({ open, onCancel, groupName, groupId, onSuccess }: ExitG
     {
       manual: true,
       onSuccess: () => {
-        message.success('已退出小组');
+        toast.success('已退出小组');
         onSuccess?.();
         onCancel();
         navigate('/app/my-group');
       },
       onError: (err) => {
-        message.error(parseErrorMessage(err));
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
 
   const handleConfirm = () => {
     if (!groupId) {
-      message.error('小组ID不存在');
+      toast.danger('小组ID不存在');
       return;
     }
     runExitGroup();

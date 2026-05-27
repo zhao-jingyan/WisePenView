@@ -1,9 +1,7 @@
 import QuotaBar from '@/components/Common/QuotaBar';
 import { useQuotaService } from '@/domains';
-import { useAppMessage } from '@/hooks/useAppMessage';
 import { parseErrorMessage } from '@/utils/error';
-import type { SortDescriptor } from '@heroui/react';
-import { Pagination, Table } from '@heroui/react';
+import { Pagination, Table, toast, type SortDescriptor } from '@heroui/react';
 import { usePagination } from 'ahooks';
 import React, { useMemo } from 'react';
 import type { QuotaByGroupProps, UserGroupQuota } from './index.type';
@@ -20,8 +18,6 @@ function buildPages(totalPages: number) {
 
 function QuotaByGroup({ pagination }: QuotaByGroupProps) {
   const quotaService = useQuotaService();
-  const message = useAppMessage();
-
   const {
     data: quotaData,
     loading,
@@ -39,7 +35,7 @@ function QuotaByGroup({ pagination }: QuotaByGroupProps) {
       defaultCurrent: 1,
       defaultPageSize: pagination?.defaultPageSize ?? DEFAULT_PAGE_SIZE,
       onError: (error: unknown) => {
-        message.error(parseErrorMessage(error));
+        toast.danger(parseErrorMessage(error));
       },
     }
   );
