@@ -5,7 +5,6 @@
 import QuotaByGroup from '@/components/Profile/QuotaByGroup';
 import ComputeWallet from '@/components/Wallet/ComputeWallet';
 import { WALLET_TARGET_TYPE } from '@/domains/Wallet';
-import { Divider } from 'antd';
 import layout from '../style.module.less';
 
 function Usage() {
@@ -19,7 +18,7 @@ function Usage() {
       </div>
       <div className={layout.formSection}>
         <ComputeWallet targetType={WALLET_TARGET_TYPE.USER} canRecharge surface="plain" />
-        <Divider className={layout.sectionDivider} />
+        <div className={layout.sectionDivider} />
         <QuotaByGroup
           pagination={{
             defaultPageSize: 10,
