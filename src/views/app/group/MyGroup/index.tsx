@@ -4,14 +4,43 @@ import { CreateGroupModal, JoinGroupModal } from '@/components/Group/GroupModals
 import { useGroupService } from '@/domains';
 import type { FetchGroupListRequest, Group } from '@/domains/Group';
 import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group';
-import { Button, toast } from '@heroui/react';
+import { Button, Pagination, toast } from '@heroui/react';
 import { usePagination } from 'ahooks';
-import { Col, Empty, Pagination, Row, Spin, Tabs } from 'antd';
-import { useState } from 'react';
+import { Col, Empty, Row, Spin, Tabs } from 'antd';
+import { useMemo, useState } from 'react';
 import { AiOutlinePlus, AiOutlineUserAdd } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
 import layout from '../style.module.less';
 import page from './style.module.less';
+
+const PAGE_SIZE = 8;
+const PAGINATION_SIBLING_COUNT = 1;
+
+type PaginationPageItem = number | 'ellipsis';
+
+function buildPaginationItems(currentPage: number, totalPages: number): PaginationPageItem[] {
+  const pages = new Set<number>([1, totalPages]);
+
+  for (
+    let pageNumber = currentPage - PAGINATION_SIBLING_COUNT;
+    pageNumber <= currentPage + PAGINATION_SIBLING_COUNT;
+    pageNumber += 1
+  ) {
+    if (pageNumber > 1 && pageNumber < totalPages) {
+      pages.add(pageNumber);
+    }
+  }
+
+  const sortedPages = [...pages].sort((a, b) => a - b);
+
+  return sortedPages.flatMap((pageNumber, index) => {
+    const previousPage = sortedPages[index - 1];
+    if (previousPage && pageNumber - previousPage > 1) {
+      return ['ellipsis', pageNumber] as PaginationPageItem[];
+    }
+    return [pageNumber];
+  });
+}
 
 function MyGroup() {
   const groupService = useGroupService();
@@ -39,7 +68,7 @@ function MyGroup() {
     },
     {
       defaultCurrent: 1,
-      defaultPageSize: 8,
+      defaultPageSize: PAGE_SIZE,
       refreshDeps: [groupRoleFilter],
       onError: () => {
         toast.danger('获取小组列表失败');
@@ -48,6 +77,10 @@ function MyGroup() {
   );
   const groups: Group[] = groupsData?.list ?? [];
   const total = groupsData?.total ?? 0;
+  const totalPages = Math.max(Math.ceil(total / size), 1);
+  const pages = useMemo(() => buildPaginationItems(pageNum, totalPages), [pageNum, totalPages]);
+  const start = total === 0 ? 0 : (pageNum - 1) * size + 1;
+  const end = Math.min(pageNum * size, total);
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -115,16 +148,48 @@ function MyGroup() {
         )}
 
         {total > 0 && (
-          <div className={layout.paginationWrap}>
-            <Pagination
-              current={pageNum}
-              pageSize={size}
-              total={total}
-              showSizeChanger
-              showTotal={(t) => `共 ${t} 条`}
-              pageSizeOptions={['8', '16', '32', '64']}
-              onChange={onPageChange}
-            />
+          <div className={page.paginationWrap}>
+            <Pagination size="sm">
+              <Pagination.Summary>
+                {start} - {end} / 共 {total} 条
+              </Pagination.Summary>
+              <Pagination.Content>
+                <Pagination.Item>
+                  <Pagination.Previous
+                    isDisabled={pageNum <= 1}
+                    onPress={() => onPageChange(Math.max(1, pageNum - 1), size)}
+                  >
+                    <Pagination.PreviousIcon />
+                    上一页
+                  </Pagination.Previous>
+                </Pagination.Item>
+                {pages.map((targetPage, index) =>
+                  targetPage === 'ellipsis' ? (
+                    <Pagination.Item key={`ellipsis-${index}`}>
+                      <Pagination.Ellipsis />
+                    </Pagination.Item>
+                  ) : (
+                    <Pagination.Item key={targetPage}>
+                      <Pagination.Link
+                        isActive={targetPage === pageNum}
+                        onPress={() => onPageChange(targetPage, size)}
+                      >
+                        {targetPage}
+                      </Pagination.Link>
+                    </Pagination.Item>
+                  )
+                )}
+                <Pagination.Item>
+                  <Pagination.Next
+                    isDisabled={pageNum >= totalPages}
+                    onPress={() => onPageChange(Math.min(totalPages, pageNum + 1), size)}
+                  >
+                    下一页
+                    <Pagination.NextIcon />
+                  </Pagination.Next>
+                </Pagination.Item>
+              </Pagination.Content>
+            </Pagination>
           </div>
         )}
       </Spin>
