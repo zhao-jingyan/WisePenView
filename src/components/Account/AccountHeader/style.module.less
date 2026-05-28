@@ -61,11 +61,16 @@
 
 .avatar {
   flex-shrink: 0;
+  width: 96px;
+  height: 96px;
   background-color: var(--ant-color-fill-secondary);
   border: 1px solid var(--ant-color-border);
   color: var(--ant-color-text);
-  font-size: var(--ant-font-size-heading-3);
   font-weight: 500;
+}
+
+.avatarFallback {
+  font-size: var(--ant-font-size-heading-3);
 }
 
 .accountInfo {
@@ -95,6 +100,26 @@
   margin: 0 0 var(--ant-margin-md) 0;
   font-size: var(--ant-font-size-sm);
   color: var(--ant-color-text-secondary);
+}
+
+.avatarInput {
+  display: none;
+}
+
+.avatarPicker {
+  display: flex;
+  align-items: center;
+  gap: var(--ant-margin-sm);
+  min-width: 0;
+}
+
+.avatarFileName {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ant-color-text-secondary);
+  font-size: var(--ant-font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .identityTag {

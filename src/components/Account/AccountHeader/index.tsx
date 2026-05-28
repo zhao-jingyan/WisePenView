@@ -1,12 +1,12 @@
 import { useImageService, useUserService } from '@/domains';
+import { assertImageProxyUploadLimit } from '@/domains/Image';
 import { getVerificationModeLabel, IDENTITY, USER_STATUS } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
-import { createBeforeUploadImageWithinLimit } from '@/utils/image/uploadLimit';
-import { Button, toast } from '@heroui/react';
+import { IMAGE_UPLOAD_MAX_SIZE_LABEL } from '@/utils/image/uploadLimit';
+import { Avatar, Button, Modal, toast, Tooltip } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import type { UploadFile } from 'antd';
-import { Avatar, Modal, Tooltip, Upload } from 'antd';
-import { useMemo, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { useRef, useState } from 'react';
 import { RiCheckLine, RiCloseLine, RiErrorWarningLine } from 'react-icons/ri';
 import type { AccountHeaderProps } from './index.type';
 import styles from './style.module.less';
@@ -14,14 +14,11 @@ import styles from './style.module.less';
 function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
   const userService = useUserService();
   const imageService = useImageService();
-  const beforeUploadAvatar = useMemo(
-    () => createBeforeUploadImageWithinLimit((text) => toast.danger(text)),
-    []
-  );
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
-  const [avatarFileList, setAvatarFileList] = useState<UploadFile[]>([]);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
-  const { loading: avatarSubmitting, runAsync: runUpdateAvatar } = useRequest(
+  const { loading: avatarSubmitting, run: runUpdateAvatar } = useRequest(
     async (raw: File, currentUser: NonNullable<AccountHeaderProps['user']>) => {
       const { publicUrl } = await imageService.uploadImage({
         file: raw,
@@ -40,7 +37,7 @@ function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
       onSuccess: (data) => {
         onUserInfoUpdated(data);
         toast.success('头像已更新');
-        setAvatarFileList([]);
+        setAvatarFile(null);
         setAvatarModalOpen(false);
       },
       onError: (err: unknown) => {
@@ -50,26 +47,48 @@ function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
   );
 
   const openAvatarModal = () => {
-    setAvatarFileList([]);
+    setAvatarFile(null);
     setAvatarModalOpen(true);
   };
 
-  const handleAvatarModalCancel = () => {
-    setAvatarFileList([]);
+  const handleAvatarModalClose = () => {
+    if (avatarSubmitting) return;
+    setAvatarFile(null);
     setAvatarModalOpen(false);
   };
 
-  const handleAvatarModalOk = async () => {
-    const raw = avatarFileList[0]?.originFileObj;
-    if (!(raw instanceof File)) {
+  const handleAvatarModalOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      handleAvatarModalClose();
+      return;
+    }
+    setAvatarModalOpen(true);
+  };
+
+  const handleAvatarFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.files?.[0];
+    event.target.value = '';
+    if (!raw) return;
+
+    try {
+      assertImageProxyUploadLimit(raw);
+      setAvatarFile(raw);
+    } catch (err) {
+      toast.danger(parseErrorMessage(err));
+      setAvatarFile(null);
+    }
+  };
+
+  const handleAvatarModalOk = () => {
+    if (!avatarFile) {
       toast.warning('请选择头像图片');
-      return Promise.reject(new Error('no_avatar_file'));
+      return;
     }
     if (!user) {
       toast.danger('用户信息未加载，请稍后重试');
-      return Promise.reject(new Error('no_user'));
+      return;
     }
-    return runUpdateAvatar(raw, user);
+    runUpdateAvatar(avatarFile, user);
   };
 
   const nickname = user?.userInfo?.nickname ?? user?.userInfo?.username ?? '未设置昵称';
@@ -84,7 +103,7 @@ function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
     <>
       <div className={styles.accountHeader}>
         <div className={styles.accountHeaderLeft}>
-          <Tooltip title="修改头像">
+          <Tooltip content="修改头像">
             <span
               className={styles.avatarWrap}
               role="button"
@@ -97,13 +116,11 @@ function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
                 }
               }}
             >
-              <Avatar
-                size={96}
-                draggable={false}
-                className={styles.avatar}
-                src={user?.userInfo?.avatar ?? undefined}
-              >
-                {avatarLetter}
+              <Avatar aria-label={nickname} className={styles.avatar}>
+                {user?.userInfo?.avatar && (
+                  <Avatar.Image alt={nickname} draggable={false} src={user.userInfo.avatar} />
+                )}
+                <Avatar.Fallback className={styles.avatarFallback}>{avatarLetter}</Avatar.Fallback>
               </Avatar>
             </span>
           </Tooltip>
@@ -148,28 +165,56 @@ function AccountHeader({ user, onUserInfoUpdated }: AccountHeaderProps) {
         )}
       </div>
 
-      <Modal
-        title="更换头像"
-        open={avatarModalOpen}
-        onCancel={handleAvatarModalCancel}
-        destroyOnHidden
-        confirmLoading={avatarSubmitting}
-        okText="上传并保存"
-        cancelText="取消"
-        onOk={handleAvatarModalOk}
-        width={440}
-      >
-        <p className={styles.avatarModalHint}>支持 JPG、PNG、GIF、WebP，单张不超过 5MB。</p>
-        <Upload
-          name="avatar"
-          accept="image/*"
-          maxCount={1}
-          fileList={avatarFileList}
-          beforeUpload={beforeUploadAvatar}
-          onChange={({ fileList }) => setAvatarFileList(fileList)}
-        >
-          <Button variant="secondary">选择图片</Button>
-        </Upload>
+      <Modal isOpen={avatarModalOpen} onOpenChange={handleAvatarModalOpenChange}>
+        <Modal.Backdrop isDismissable={!avatarSubmitting}>
+          <Modal.Container size="sm" placement="center">
+            <Modal.Dialog>
+              <Modal.Header>
+                <Modal.Heading>更换头像</Modal.Heading>
+              </Modal.Header>
+              <Modal.Body>
+                <p className={styles.avatarModalHint}>
+                  支持 JPG、PNG、GIF、WebP，单张不超过 {IMAGE_UPLOAD_MAX_SIZE_LABEL}。
+                </p>
+                <input
+                  ref={avatarInputRef}
+                  className={styles.avatarInput}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarFileChange}
+                />
+                <div className={styles.avatarPicker}>
+                  <Button
+                    variant="secondary"
+                    isDisabled={avatarSubmitting}
+                    onPress={() => avatarInputRef.current?.click()}
+                  >
+                    选择图片
+                  </Button>
+                  <span className={styles.avatarFileName}>
+                    {avatarFile?.name ?? '尚未选择图片'}
+                  </span>
+                </div>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button
+                  variant="secondary"
+                  isDisabled={avatarSubmitting}
+                  onPress={handleAvatarModalClose}
+                >
+                  取消
+                </Button>
+                <Button
+                  variant="primary"
+                  isDisabled={!avatarFile || avatarSubmitting}
+                  onPress={handleAvatarModalOk}
+                >
+                  上传并保存
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
       </Modal>
     </>
   );
