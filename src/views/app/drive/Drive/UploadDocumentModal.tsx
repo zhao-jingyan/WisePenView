@@ -1,30 +1,32 @@
 import { useRequest } from 'ahooks';
-import type { UploadFile, UploadProps } from 'antd';
-import { Button, Modal, Progress, Upload } from 'antd';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { AiOutlineInbox } from 'react-icons/ai';
 
 import { useDocumentService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
-import { toast } from '@heroui/react';
+import { formatFileSize } from '@/utils/format/formatFileSize';
+import { Button, Modal, ProgressBar, toast } from '@heroui/react';
 
 import styles from './UploadDocumentModal.module.less';
 
 export interface UploadDocumentModalProps {
-  open: boolean;
-  onClose: () => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
 
 /** 文档上传：MD5 -> init -> OSS PUT，成功后由调用方决定后续跳转。 */
-export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocumentModalProps) {
+export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadDocumentModalProps) {
   const documentService = useDocumentService();
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'hash' | 'upload'>('idle');
   const [percent, setPercent] = useState(0);
 
   const resetState = useCallback(() => {
-    setFileList([]);
+    setSelectedFile(null);
+    setDragActive(false);
     setPhase('idle');
     setPercent(0);
   }, []);
@@ -52,7 +54,7 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
         toast.success('上传成功');
         onSuccess?.();
         resetState();
-        onClose();
+        onOpenChange(false);
       },
       onError: (err: unknown) => {
         toast.danger(parseErrorMessage(err));
@@ -67,70 +69,137 @@ export function UploadDocumentModal({ open, onClose, onSuccess }: UploadDocument
   const handleClose = () => {
     if (uploading) return;
     resetState();
-    onClose();
+    onOpenChange(false);
   };
 
-  const uploadProps: UploadProps = {
-    maxCount: 1,
-    disabled: uploading,
-    beforeUpload: () => false,
-    fileList,
-    onChange: ({ fileList: next }) => {
-      setFileList(next.slice(-1));
-    },
-    onRemove: () => {
-      if (!uploading) setFileList([]);
-    },
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      handleClose();
+      return;
+    }
+    onOpenChange(true);
+  };
+
+  const selectFile = (files: FileList | null) => {
+    if (uploading) return;
+    const file = files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
+  };
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    selectFile(event.target.files);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    setDragActive(false);
+    selectFile(event.dataTransfer.files);
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (!uploading) {
+      setDragActive(true);
+    }
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    setDragActive(false);
   };
 
   const handleOk = () => {
-    const raw = fileList[0]?.originFileObj;
-    if (!(raw instanceof File)) {
+    if (!selectedFile) {
       toast.warning('请选择要上传的文件');
       return;
     }
-    submitUpload(raw);
+    submitUpload(selectedFile);
   };
 
   return (
-    <Modal
-      title="上传文件"
-      open={open}
-      onCancel={handleClose}
-      onOk={handleOk}
-      okText="开始上传"
-      okButtonProps={{ loading: uploading, disabled: fileList.length === 0 }}
-      cancelButtonProps={{ disabled: uploading }}
-      destroyOnHidden
-      width={520}
-    >
-      <p className={styles.hint}>支持 pdf、Office 文档等，单文件最大 100MB。</p>
-      {fileList.length === 0 ? (
-        <Upload.Dragger {...uploadProps} className={styles.dragger}>
-          <p className="ant-upload-drag-icon">
-            <AiOutlineInbox size={48} />
-          </p>
-          <p className="ant-upload-text">点击或拖拽文件到此区域</p>
-          <p className="ant-upload-hint">仅可选择单个文件</p>
-        </Upload.Dragger>
-      ) : (
-        <div className={styles.selectedFile}>
-          <span className={styles.fileName} title={fileList[0].name}>
-            {fileList[0].name}
-          </span>
-          <Button type="link" size="small" disabled={uploading} onClick={() => setFileList([])}>
-            重新选择
-          </Button>
-        </div>
-      )}
-      {uploading && (
-        <div className={styles.progressWrap}>
-          <div className={styles.progressLabel}>
-            {phase === 'hash' ? '正在计算文件校验值' : '正在上传至存储'}
-          </div>
-          <Progress percent={percent} status="active" />
-        </div>
-      )}
+    <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
+      <Modal.Backdrop isDismissable={!uploading}>
+        <Modal.Container size="lg" placement="center">
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>上传文件</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <p className={styles.hint}>支持 pdf、Office 文档等，单文件最大 100MB。</p>
+              <input
+                ref={inputRef}
+                className={styles.nativeInput}
+                type="file"
+                onChange={handleInputChange}
+              />
+              {selectedFile ? (
+                <div className={styles.selectedFile}>
+                  <div className={styles.fileInfo}>
+                    <span className={styles.fileName} title={selectedFile.name}>
+                      {selectedFile.name}
+                    </span>
+                    <span className={styles.fileMeta}>{formatFileSize(selectedFile.size)}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    isDisabled={uploading}
+                    onPress={() => inputRef.current?.click()}
+                  >
+                    重新选择
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.dropArea}
+                  data-active={dragActive}
+                  disabled={uploading}
+                  onClick={() => inputRef.current?.click()}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                >
+                  <AiOutlineInbox className={styles.uploadIcon} size={44} />
+                  <span className={styles.uploadText}>点击或拖拽文件到此区域</span>
+                  <span className={styles.uploadHint}>仅可选择单个文件</span>
+                </button>
+              )}
+              {uploading && (
+                <div className={styles.progressWrap}>
+                  <div className={styles.progressLabel}>
+                    {phase === 'hash' ? '正在计算文件校验值' : '正在上传至存储'}
+                  </div>
+                  <ProgressBar
+                    aria-label="上传进度"
+                    value={percent}
+                    valueLabel={`${percent}%`}
+                    size="sm"
+                  >
+                    <ProgressBar.Track className={styles.progressTrack}>
+                      <ProgressBar.Fill />
+                    </ProgressBar.Track>
+                    <ProgressBar.Output className={styles.progressOutput} />
+                  </ProgressBar>
+                </div>
+              )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" isDisabled={uploading} onPress={handleClose}>
+                取消
+              </Button>
+              <Button variant="primary" isDisabled={!selectedFile || uploading} onPress={handleOk}>
+                开始上传
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal>
   );
 }

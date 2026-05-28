@@ -68,8 +68,8 @@ function Drive() {
       </div>
 
       <UploadDocumentModal
-        open={uploadModalOpen}
-        onClose={() => setUploadModalOpen(false)}
+        isOpen={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
         onSuccess={handleUploadSuccess}
       />
       <StickerManageModal open={stickerManageOpen} onCancel={() => setStickerManageOpen(false)} />
