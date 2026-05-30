@@ -15,9 +15,10 @@ import '@blocknote/mantine/style.css';
 import { useCreateBlockNote } from '@blocknote/react';
 import { toast } from '@heroui/react';
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
-import { useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
+import { useCallback, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import NoteSlashMenu from '../NoteSlashMenu';
 import NoteToolbar from '../NoteToolbar';
+import { hasAiDiffContentFromEditor } from './AiDiffPresence';
 import { blockNoteSchema } from './blockNoteSchema';
 import { useAttachNoteYjsUndoStack, useNoteCaptureKeyEvent, useNoteYjsUndoManager } from './hooks';
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
@@ -61,6 +62,7 @@ function CustomBlockNote({
   readOnly = false,
   onOutlineChange,
   onActiveHeadingChange,
+  onAiDiffPresenceChange,
   ref,
 }: CustomBlockNoteProps & { ref?: Ref<NoteBodyEditorHandle> }) {
   const imageService = useImageService();
@@ -99,6 +101,7 @@ function CustomBlockNote({
   const [exportDisplayModeOverride, setExportDisplayModeOverride] =
     useState<AiDiffDisplayMode | null>(null);
   const effectiveAiDiffDisplayMode = exportDisplayModeOverride ?? aiDiffDisplayMode;
+  const lastAiDiffPresenceRef = useRef<boolean | null>(null);
   const { noteFragment, undoManager } = useNoteYjsUndoManager(doc);
 
   const plugins = useMemo(() => getNoteEditorPlugins(), []);
@@ -147,10 +150,29 @@ function CustomBlockNote({
     setSelectedText(resourceId, editor.getSelectedText());
   });
 
+  const syncAiDiffPresence = useCallback(() => {
+    if (!onAiDiffPresenceChange) {
+      return;
+    }
+
+    const hasAiDiffContent = hasAiDiffContentFromEditor(editor);
+    if (lastAiDiffPresenceRef.current === hasAiDiffContent) {
+      return;
+    }
+
+    lastAiDiffPresenceRef.current = hasAiDiffContent;
+    onAiDiffPresenceChange(hasAiDiffContent);
+  }, [editor, onAiDiffPresenceChange]);
+
+  useMount(() => {
+    syncAiDiffPresence();
+  });
+
   useMount(() => {
     newNoteBodyOnChangeCleanupRef.current = editor.onChange(() => {
       const isNoteEmpty = composeNoteBlocksToMarkdownLossy(editor, plugins).trim().length === 0;
       useNewNoteStore.getState().syncNewNoteBodyFromEditor(resourceId, isNoteEmpty);
+      syncAiDiffPresence();
 
       const needOutline = Boolean(onOutlineChange);
       const needFlatBlocks = Boolean(onActiveHeadingChange);

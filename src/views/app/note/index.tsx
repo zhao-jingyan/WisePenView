@@ -1,6 +1,6 @@
 import { useRequest, useUnmount } from 'ahooks';
 import { Alert, Result, Segmented, Spin } from 'antd';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { RiArrowLeftDoubleLine, RiMenuLine } from 'react-icons/ri';
 import { Link, useParams } from 'react-router-dom';
 
@@ -77,6 +77,13 @@ function NoteViewConnected({
   const [activeHeadingId, setActiveHeadingId] = useState<string | undefined>(undefined);
   const [pdfExportLoading, setPdfExportLoading] = useState(false);
   const [isDownloadingMarkdown, setIsDownloadingMarkdown] = useState(false);
+  const [aiDiffPresence, setAiDiffPresence] = useState<{
+    resourceId: string;
+    hasAiDiffContent: boolean;
+  }>({
+    resourceId,
+    hasAiDiffContent: false,
+  });
   const { status, doc, provider, reconnect } = useNoteSession(resourceId);
 
   const isConnected = status === 'connected';
@@ -163,6 +170,15 @@ function NoteViewConnected({
       label: AI_DIFF_DISPLAY_MODE_LABELS[AI_DIFF_DISPLAY_MODE.COMPARE],
     },
   ];
+  const showAiDiffDisplayModeSwitch =
+    aiDiffPresence.resourceId === resourceId && aiDiffPresence.hasAiDiffContent;
+
+  const handleAiDiffPresenceChange = useCallback(
+    (hasAiDiffContent: boolean) => {
+      setAiDiffPresence({ resourceId, hasAiDiffContent });
+    },
+    [resourceId]
+  );
 
   const handlePrintPdf = async () => {
     const bodyApi = bodyEditorRef.current;
@@ -212,13 +228,15 @@ function NoteViewConnected({
         }
         extra={
           <div className={styles.headerToolbarExtra}>
-            <Segmented
-              value={aiDiffDisplayMode}
-              className={styles.aiDiffDisplayModeSwitch}
-              options={aiDiffDisplayOptions}
-              disabled={showFullPageSpin}
-              onChange={(value) => setAiDiffDisplayMode(value as AiDiffDisplayMode)}
-            />
+            {showAiDiffDisplayModeSwitch ? (
+              <Segmented
+                value={aiDiffDisplayMode}
+                className={styles.aiDiffDisplayModeSwitch}
+                options={aiDiffDisplayOptions}
+                disabled={showFullPageSpin}
+                onChange={(value) => setAiDiffDisplayMode(value as AiDiffDisplayMode)}
+              />
+            ) : null}
             <div className={styles.headerMoreWrap}>
               <Dropdown>
                 <Dropdown.Trigger>
@@ -353,6 +371,7 @@ function NoteViewConnected({
                     readOnly={isEditorReadOnly}
                     onOutlineChange={setOutlineItems}
                     onActiveHeadingChange={setActiveHeadingId}
+                    onAiDiffPresenceChange={handleAiDiffPresenceChange}
                   />
                 </div>
                 <ResourceInteractFooter

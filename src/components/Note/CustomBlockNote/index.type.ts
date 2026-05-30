@@ -20,4 +20,5 @@ export interface CustomBlockNoteProps {
   readOnly?: boolean;
   onOutlineChange?: (items: NoteOutlineItem[]) => void;
   onActiveHeadingChange?: (activeId: string | undefined) => void;
+  onAiDiffPresenceChange?: (hasAiDiffContent: boolean) => void;
 }
