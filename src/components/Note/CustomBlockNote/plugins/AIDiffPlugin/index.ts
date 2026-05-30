@@ -8,7 +8,6 @@ import { createElement } from 'react';
 import { RiSparklingLine } from 'react-icons/ri';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
-import { getAiDiffDisplayModeSnapshot, useAiDiffDisplayStore } from '@/store/useAiDiffDisplayStore';
 import type { NoteEditorPlugin } from '../types';
 import { isRecord, shouldFoldInlineContent } from './exportVisibility';
 import {
@@ -19,8 +18,14 @@ import {
   aiLinkDeleteInlineContentSpec,
 } from './inlineContentSpecs';
 import { aiGeneratedBlocksToBlockNoteBlocks } from './patch';
+import { aiProtoBlocksToAiGeneratedBlocks } from './proto';
 
 const aiDiffBlockFoldPluginKey = new PluginKey('AIDiffBlockFold');
+
+type AiDiffBlockFoldPluginState = {
+  displayMode: AiDiffDisplayMode;
+  decorations: DecorationSet;
+};
 
 // 针对于toggleListItem 如果包含子块且所有子块都折叠，容易“无法添加新子块”
 // 返回第一个子块的id，作为新增子块的锚点
@@ -126,12 +131,12 @@ const aiDiffBlockFoldExtension = createExtension(({ editor }) => {
   return {
     key: 'AIDiffBlockFold',
     prosemirrorPlugins: [
-      new Plugin({
+      new Plugin<AiDiffBlockFoldPluginState>({
         key: aiDiffBlockFoldPluginKey,
         state: {
           // 初始化插件状态
           init: (_config, state) => {
-            const displayMode = getAiDiffDisplayModeSnapshot();
+            const displayMode: AiDiffDisplayMode = AI_DIFF_DISPLAY_MODE.COMPARE;
             return {
               displayMode,
               decorations: buildAiDiffHiddenBlockDecorations({
@@ -174,7 +179,7 @@ const aiDiffBlockFoldExtension = createExtension(({ editor }) => {
           // 应当应用的装饰
           decorations: (state) => {
             const pluginState = aiDiffBlockFoldPluginKey.getState(state) as
-              | { decorations: DecorationSet }
+              | AiDiffBlockFoldPluginState
               | undefined;
             return pluginState?.decorations ?? null;
           },
@@ -189,7 +194,7 @@ const aiDiffBlockFoldExtension = createExtension(({ editor }) => {
 
             // 读取displayMode
             const pluginState = aiDiffBlockFoldPluginKey.getState(view.state) as
-              | { displayMode: AiDiffDisplayMode }
+              | AiDiffBlockFoldPluginState
               | undefined;
 
             // “新旧对比”时不起作用
@@ -244,28 +249,6 @@ const aiDiffBlockFoldExtension = createExtension(({ editor }) => {
 
             return true;
           },
-        },
-        view: (view) => {
-          // 记录上一次 displayMode
-          let lastMode = getAiDiffDisplayModeSnapshot();
-          // 订阅全局显示模式 store：一旦模式变化，派发 transaction 通知 ProseMirror 插件重算 decorations
-          // store.subscribe函数返回一个取消订阅的函数，用于销毁时取消订阅
-          const unsubscribe = useAiDiffDisplayStore.subscribe((s) => {
-            const nextMode = s.displayMode ?? AI_DIFF_DISPLAY_MODE.COMPARE;
-            if (nextMode === lastMode) return;
-            lastMode = nextMode;
-            view.dispatch(
-              view.state.tr
-                .setMeta(aiDiffBlockFoldPluginKey, { displayMode: nextMode })
-                // UI 模式切换不进入撤销栈，避免 Undo/Redo 污染
-                .setMeta('addToHistory', false)
-            );
-          });
-          return {
-            destroy: () => {
-              unsubscribe();
-            },
-          };
         },
       }),
     ],
@@ -360,15 +343,17 @@ function createMockAskAiSlashMenuItem(editor: unknown) {
     title: '问AI',
     group: 'AI',
     aliases: ['ai', 'ask', 'askai', '问', '问ai', 'ai-diff', 'diff'],
-    subtext: 'Mock：用 AIDiff.mock.ts 数据模拟 AI 修改笔记内容',
+    subtext: 'Mock：用 AIDiff_proto.mock.ts 数据模拟 AI 修改笔记内容',
     icon: createElement(RiSparklingLine, { size: 18 }),
     onItemClick: () => {
       if (import.meta.env.MODE !== 'mock') {
         return;
       }
       void (async () => {
-        const mod = await import('@/domains/Note/mock/AIDiff.mock');
-        const mapped = aiGeneratedBlocksToBlockNoteBlocks(mod.MOCK_AI_BLOCKS);
+        const mod = await import('@/domains/Note/mock/AIDiff_proto.mock');
+        const generated = aiProtoBlocksToAiGeneratedBlocks(mod.MOCK_AI_PROTO_BLOCKS);
+        if (!generated) return;
+        const mapped = aiGeneratedBlocksToBlockNoteBlocks(generated);
         if (!mapped) return;
         const ed = editor as unknown as {
           document?: unknown;
@@ -467,13 +452,10 @@ export const aiDiffPlugin = {
 
 export { filterDocumentBlocksForAiDiffExport } from './markdownExport';
 export {
-  acceptAiDiffInlineContent,
   aiGeneratedBlocksToBlockNoteBlocks,
-  aiPatchToInlineContent,
   applyAiDiffActionForKey,
-  discardAiDiffInlineContent,
-  hasAiDiffInlineContent,
   isInlineContentEffectivelyEmpty,
-  validateAiPatchAgainstOriginal,
 } from './patch';
-export type { AiGeneratedBlock, AiPatchItem } from './patch';
+export type { AiGeneratedBlock } from './patch';
+export { aiProtoBlocksToAiGeneratedBlocks, transformAiDiffProtoBlocks } from './proto';
+export type { AiDiffProtoBlock, AiDiffProtoTransformResult } from './proto';

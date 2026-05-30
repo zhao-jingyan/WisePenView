@@ -21,10 +21,6 @@ export const useAiDiffDisplayStore = create<AiDiffDisplayState>()(
   )
 );
 
-export function getAiDiffDisplayModeSnapshot(): AiDiffDisplayMode {
-  return useAiDiffDisplayStore.getState().displayMode ?? DEFAULT_AI_DIFF_DISPLAY_MODE;
-}
-
 export const clearAiDiffDisplayStore = (): void => {
   useAiDiffDisplayStore.setState({ displayMode: DEFAULT_AI_DIFF_DISPLAY_MODE });
   useAiDiffDisplayStore.persist.clearStorage();

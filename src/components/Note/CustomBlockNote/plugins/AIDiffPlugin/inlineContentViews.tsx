@@ -273,9 +273,12 @@ type AiLinkToolbarProps = {
   editor: unknown;
   changeKey: string;
   shellRef: RefObject<HTMLElement | null>;
-  anchorElement: HTMLAnchorElement | null;
   text: string;
   href: string;
+};
+
+type AiLinkHoverToolbarProps = AiLinkToolbarProps & {
+  anchorElement: HTMLAnchorElement | null;
 };
 
 function AiLinkToolbarEditButton({
@@ -412,7 +415,7 @@ function useAiLinkHoverToolbar({
   anchorElement,
   text,
   href,
-}: AiLinkToolbarProps): {
+}: AiLinkHoverToolbarProps): {
   toolbar: ReactNode;
   linkAnchorHandlers: {
     onMouseEnter: () => void;
@@ -506,7 +509,6 @@ function useAiLinkHoverToolbar({
             editor={editor}
             changeKey={changeKey}
             shellRef={shellRef}
-            anchorElement={anchorElement}
             text={text}
             href={href}
             setToolbarOpen={setToolbarOpen}
@@ -517,7 +519,6 @@ function useAiLinkHoverToolbar({
             editor={editor}
             changeKey={changeKey}
             shellRef={shellRef}
-            anchorElement={anchorElement}
             text={text}
             href={href}
             setToolbarOpen={setToolbarOpen}
