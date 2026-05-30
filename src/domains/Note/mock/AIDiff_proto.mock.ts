@@ -7,7 +7,8 @@
  * 覆盖范围：
  * - 当前 AI-Diff 渲染链路支持的块：paragraph / heading / quote / bulletListItem /
  *   numberedListItem / checkListItem / toggleListItem / math / divider
- * - 行内特殊内容：inlineMath edit/create/delete、link create/delete/edit
+ * - 行内特殊内容：inlineMath edit/create/delete、link create/delete/edit、文本/公式/链接混排、
+ *   结构无法可靠对齐时的可见文本级降级
  * - 边界情况：无修改、纯新增、纯删除、空内容、空白与标点变化、高变动率重写、
  *   中英混排、URL/邮箱/版本号、NBSP/窄连字符、嵌套 children、带 children 的整块新增/删除
  *
@@ -283,7 +284,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
     id: 'db_p_inline_math_create',
     type: 'paragraph',
     props: { textColor: 'default', backgroundColor: 'default', textAlignment: 'left' },
-    content: [{ type: 'text', text: '缓存命中率  可用来估计缓冲池是否足够。', styles: {} }],
+    content: [{ type: 'text', text: '缓存命中率可用来估计缓冲池是否足够。', styles: {} }],
     'AI-content': [
       { type: 'text', text: '缓存命中率 ', styles: {} },
       {
@@ -382,7 +383,83 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 18：分隔线，无内容 diff
+  // 场景 18：文本、公式、链接混排（结构可按 index 对齐）
+  // 期望：普通文本保留，inlineMath 走 edit，link edit 拆成 delete + create
+  // ────────────────────────────────────────────────────────────
+  {
+    id: 'db_p_mixed_inline_aligned',
+    type: 'paragraph',
+    props: { textColor: 'default', backgroundColor: 'default', textAlignment: 'left' },
+    content: [
+      { type: 'text', text: '在优化器评估中，代价函数 ', styles: {} },
+      { type: 'inlineMath', props: { expression: 'C = IO + CPU', autoOpenEdit: false } },
+      { type: 'text', text: ' 可与 ', styles: {} },
+      {
+        type: 'link',
+        href: 'https://example.com/volcano-model',
+        content: [{ type: 'text', text: 'Volcano 模型', styles: {} }],
+      },
+      { type: 'text', text: ' 共同说明搜索空间。', styles: {} },
+    ],
+    'AI-content': [
+      { type: 'text', text: '在优化器评估中，代价函数 ', styles: {} },
+      {
+        type: 'inlineMath',
+        props: { expression: 'C(q) = C_{io}(q) + C_{cpu}(q)', autoOpenEdit: false },
+      },
+      { type: 'text', text: ' 可与 ', styles: {} },
+      {
+        type: 'link',
+        href: 'https://dl.acm.org/doi/10.1145/38713.38742',
+        content: [{ type: 'text', text: 'Volcano/Cascades 优化框架', styles: {} }],
+      },
+      { type: 'text', text: ' 共同说明搜索空间。', styles: {} },
+    ],
+    children: [],
+  },
+
+  // ────────────────────────────────────────────────────────────
+  // 场景 19：混排结构无法可靠对齐，降级为可见文本级 AI-Edit
+  // 期望：公式和链接被 flatten 成可见文本，整体显示为一条文本 diff
+  // ────────────────────────────────────────────────────────────
+  {
+    id: 'db_p_mixed_inline_fallback',
+    type: 'paragraph',
+    props: { textColor: 'default', backgroundColor: 'default', textAlignment: 'left' },
+    content: [
+      { type: 'text', text: '原稿把 LSM 树写成 ', styles: {} },
+      { type: 'inlineMath', props: { expression: 'O(log N)', autoOpenEdit: false } },
+      { type: 'text', text: '，并引用 ', styles: {} },
+      {
+        type: 'link',
+        href: 'https://example.com/old-lsm-note',
+        content: [{ type: 'text', text: '旧版博客', styles: {} }],
+      },
+      { type: 'text', text: ' 作为依据。', styles: {} },
+    ],
+    'AI-content': [
+      { type: 'text', text: '修订稿将 LSM 树描述为 ', styles: {} },
+      {
+        type: 'link',
+        href: 'https://www.cs.umb.edu/~poneil/lsmtree.pdf',
+        content: [{ type: 'text', text: 'LSM-tree 论文', styles: {} }],
+      },
+      { type: 'text', text: '，', styles: {} },
+      { type: 'text', text: '并补充写放大公式 ', styles: {} },
+      {
+        type: 'inlineMath',
+        props: {
+          expression: 'WA = \\frac{bytes_{written}}{bytes_{user}}',
+          autoOpenEdit: false,
+        },
+      },
+      { type: 'text', text: '。', styles: {} },
+    ],
+    children: [],
+  },
+
+  // ────────────────────────────────────────────────────────────
+  // 场景 20：分隔线，无内容 diff
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_divider_methods',
@@ -394,7 +471,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 19：Heading 2 纯新增
+  // 场景 21：Heading 2 纯新增
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_h2_cloud_native_create',
@@ -411,7 +488,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 20：Heading 3 纯删除
+  // 场景 22：Heading 3 纯删除
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_h3_delete_duplicate',
@@ -428,7 +505,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 21：quote edit
+  // 场景 23：quote edit
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_quote_edit',
@@ -452,7 +529,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 22：quote create
+  // 场景 24：quote create
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_quote_create',
@@ -470,7 +547,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 23：quote delete
+  // 场景 25：quote delete
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_quote_delete',
@@ -482,7 +559,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 24：bulletListItem 带嵌套子项
+  // 场景 26：bulletListItem 带嵌套子项
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_bullet_arch_parent',
@@ -515,7 +592,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 25：numberedListItem 带 start
+  // 场景 27：numberedListItem 带 start
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_numbered_step_4',
@@ -544,7 +621,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 26：checkListItem 未完成项改写
+  // 场景 28：checkListItem 未完成项改写
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_check_open',
@@ -561,7 +638,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 27：checkListItem 已完成项改写
+  // 场景 29：checkListItem 已完成项改写
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_check_done',
@@ -578,7 +655,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 28：toggleListItem 父项 edit，子项 create/delete/edit
+  // 场景 30：toggleListItem 父项 edit，子项 create/delete/edit
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_toggle_related_work',
@@ -601,7 +678,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 29：整块新增 toggle，带子块
+  // 场景 31：整块新增 toggle，带子块
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_toggle_pure_create_with_children',
@@ -628,7 +705,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 30：整块删除 toggle，带子块
+  // 场景 32：整块删除 toggle，带子块
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_toggle_pure_delete_with_children',
@@ -655,7 +732,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 31：math block edit
+  // 场景 33：math block edit
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_math_edit',
@@ -669,7 +746,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 32：math block create
+  // 场景 34：math block create
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_math_create',
@@ -683,7 +760,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 33：math block delete
+  // 场景 35：math block delete
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_math_delete',
@@ -695,7 +772,7 @@ export const MOCK_AI_PROTO_BLOCKS = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // 场景 34：空 paragraph，双空内容边界
+  // 场景 36：空 paragraph，双空内容边界
   // ────────────────────────────────────────────────────────────
   {
     id: 'db_p_empty_both',
