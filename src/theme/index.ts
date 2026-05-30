@@ -87,3 +87,6 @@ const appTheme: ThemeConfig = {
 };
 
 export default appTheme;
+
+export { DEFAULT_HEROUI_THEME, HEROUI_SYSTEM_THEME } from './constants';
+export { ThemeApplier } from './ThemeApplier';
