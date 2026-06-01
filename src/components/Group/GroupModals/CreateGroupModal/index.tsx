@@ -1,7 +1,23 @@
 import UploadZone from '@/components/Common/UploadZone';
 import { useGroupService, useImageService, useUserService } from '@/domains';
-import type { CreateGroupRequest } from '@/domains/Group';
-import { ALLOWED_GROUP_TYPES_MAP, GROUP_FILE_ORG_LOGIC, GROUP_TYPE } from '@/domains/Group';
+import type { CreateGroupRequest, GroupFileOrgLogic } from '@/domains/Group';
+import {
+  ALLOWED_GROUP_TYPES_MAP,
+  DEFAULT_MEMBER_ACTIONS,
+  FILE_ORG_LOGIC_LABEL,
+  GROUP_FILE_ORG_LOGIC,
+  GROUP_TYPE,
+} from '@/domains/Group';
+import {
+  actionsToPermissionCode,
+  getResourceActionImpliedActions,
+  getResourceActionImpliedMask,
+  hasResourceAction,
+  normalizeResourceActions,
+  permissionCodeToActions,
+  TAG_RESOURCE_ACTION,
+  type TagResourceAction,
+} from '@/domains/Tag';
 import { IDENTITY } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
 import {
@@ -10,15 +26,19 @@ import {
 } from '@/utils/image/uploadLimit';
 import {
   Button,
+  Checkbox,
   Form,
   Input,
   Label,
   ListBox,
   Modal,
+  Radio,
+  RadioGroup,
   Select,
   TextArea,
   TextField,
   toast,
+  Tooltip,
 } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useCallback, useState, type FormEvent } from 'react';
@@ -28,6 +48,8 @@ import styles from './index.module.less';
 
 type CreateGroupFormValues = Omit<CreateGroupRequest, 'groupCoverUrl'> & {
   cover?: File | null;
+  fileOrgLogic?: GroupFileOrgLogic;
+  defaultMemberActions?: TagResourceAction[];
 };
 
 const groupTypeOptionsBase = GROUP_TYPE.options;
@@ -37,6 +59,14 @@ const DEFAULT_FORM_VALUES: CreateGroupFormValues = {
   groupDesc: '',
   groupType: GROUP_TYPE.NORMAL,
   cover: null,
+  fileOrgLogic: GROUP_FILE_ORG_LOGIC.FOLDER,
+  defaultMemberActions: DEFAULT_MEMBER_ACTIONS,
+};
+
+const FILE_ORG_LOGIC_INTRO: Record<GroupFileOrgLogic, string> = {
+  [GROUP_FILE_ORG_LOGIC.FOLDER]:
+    '文件夹模式：用常规文件夹模式组织资源，同一份资源只能上传到一个文件夹下。',
+  [GROUP_FILE_ORG_LOGIC.TAG]: '标签模式：用标签组织资源，同一份资源可以上传到多个标签下。',
 };
 
 function CreateGroupModal({ isOpen, onOpenChange, onSuccess }: CreateGroupModalProps) {
@@ -45,6 +75,7 @@ function CreateGroupModal({ isOpen, onOpenChange, onSuccess }: CreateGroupModalP
   const userService = useUserService();
   const [formValues, setFormValues] = useState<CreateGroupFormValues>(DEFAULT_FORM_VALUES);
   const [identityType, setIdentityType] = useState<number | undefined>();
+  const [hoveredAction, setHoveredAction] = useState<TagResourceAction | null>(null);
 
   useRequest(() => userService.getUserInfo(), {
     onSuccess: (u) => {
@@ -107,7 +138,10 @@ function CreateGroupModal({ isOpen, onOpenChange, onSuccess }: CreateGroupModalP
       try {
         await groupService.updateGroupResConfig({
           groupId,
-          fileOrgLogic: GROUP_FILE_ORG_LOGIC.TAG,
+          fileOrgLogic: values.fileOrgLogic ?? GROUP_FILE_ORG_LOGIC.FOLDER,
+          defaultMemberActions: normalizeResourceActions(
+            values.defaultMemberActions ?? DEFAULT_MEMBER_ACTIONS
+          ),
         });
         toast.success('创建成功');
       } catch (configErr: unknown) {
@@ -161,6 +195,29 @@ function CreateGroupModal({ isOpen, onOpenChange, onSuccess }: CreateGroupModalP
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     handleConfirm();
+  };
+
+  const selectedActions = normalizeResourceActions(
+    formValues.defaultMemberActions ?? DEFAULT_MEMBER_ACTIONS
+  );
+  const selectedActionSet = new Set(selectedActions);
+  const actionHighlightSet = hoveredAction
+    ? new Set([hoveredAction, ...getResourceActionImpliedActions(hoveredAction)])
+    : null;
+
+  const handleActionToggle = (action: TagResourceAction, checked: boolean) => {
+    const current = normalizeResourceActions(
+      formValues.defaultMemberActions ?? DEFAULT_MEMBER_ACTIONS
+    );
+    if (checked) {
+      const nextCode = actionsToPermissionCode([...current, action]);
+      updateFormValue('defaultMemberActions', permissionCodeToActions(nextCode));
+      return;
+    }
+    const next = normalizeResourceActions(
+      current.filter((item) => !hasResourceAction(getResourceActionImpliedMask(item), action))
+    );
+    updateFormValue('defaultMemberActions', next);
   };
 
   return (
@@ -222,6 +279,73 @@ function CreateGroupModal({ isOpen, onOpenChange, onSuccess }: CreateGroupModalP
                     description={`仅可选择单张图片，大小不超过 ${IMAGE_UPLOAD_MAX_SIZE_LABEL}`}
                     onFileChange={handleCoverChange}
                   />
+                </div>
+                <div className={styles.sectionCard}>
+                  <div className={styles.sectionTitle}>资源管理模式</div>
+                  <RadioGroup
+                    aria-label="资源管理模式"
+                    value={formValues.fileOrgLogic ?? GROUP_FILE_ORG_LOGIC.FOLDER}
+                    onChange={(value) =>
+                      updateFormValue('fileOrgLogic', value as GroupFileOrgLogic)
+                    }
+                    className={styles.modeRow}
+                    variant="secondary"
+                    orientation="horizontal"
+                  >
+                    {GROUP_FILE_ORG_LOGIC.options.map((item) => (
+                      <Radio key={item.key} value={item.value}>
+                        <Radio.Control>
+                          <Radio.Indicator />
+                        </Radio.Control>
+                        <Radio.Content>
+                          <Tooltip>
+                            <Tooltip.Trigger>
+                              <span>{FILE_ORG_LOGIC_LABEL[item.value]}</span>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content>{FILE_ORG_LOGIC_INTRO[item.value]}</Tooltip.Content>
+                          </Tooltip>
+                        </Radio.Content>
+                      </Radio>
+                    ))}
+                  </RadioGroup>
+                  <div className={styles.modeHint}>只能从文件夹模式切换至标签模式</div>
+                </div>
+                <div className={styles.sectionCard}>
+                  <div className={styles.sectionTitle}>小组成员默认权限</div>
+                  <div className={styles.actionGroup}>新成员默认可用的资源权限</div>
+                  <div className={styles.actionList}>
+                    {TAG_RESOURCE_ACTION.options.map((item) => {
+                      const action = item.value as TagResourceAction;
+                      const isHighlighted = actionHighlightSet?.has(action);
+                      return (
+                        <div
+                          key={item.key}
+                          className={
+                            isHighlighted
+                              ? `${styles.actionItem} ${styles.actionItemHighlight}`
+                              : styles.actionItem
+                          }
+                          onMouseEnter={() => setHoveredAction(action)}
+                          onMouseLeave={() => setHoveredAction(null)}
+                        >
+                          <Checkbox
+                            isSelected={selectedActionSet.has(action)}
+                            onChange={(isSelected) => handleActionToggle(action, isSelected)}
+                            variant="secondary"
+                          >
+                            <Checkbox.Control>
+                              <Checkbox.Indicator />
+                            </Checkbox.Control>
+                            <Checkbox.Content>
+                              <span data-slot="label" className={styles.actionLabel}>
+                                {item.label}
+                              </span>
+                            </Checkbox.Content>
+                          </Checkbox>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </Modal.Body>
               <Modal.Footer>

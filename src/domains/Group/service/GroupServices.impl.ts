@@ -1,5 +1,11 @@
 import type { Group, GroupFileOrgLogic, GroupMemberList, GroupResConfig } from '@/domains/Group';
 import { GROUP_FILE_ORG_LOGIC, ROLE } from '@/domains/Group';
+import {
+  normalizeResourceActions,
+  resourceActionsToApiKeys,
+  TAG_RESOURCE_ACTION,
+  type TagResourceAction,
+} from '@/domains/Tag';
 import type { EnumKey } from '@/utils/enum';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { formatTimestampToDate } from '@/utils/format/formatTime';
@@ -35,6 +41,37 @@ const normalizeGroup = (g: GroupRaw): Group =>
 const isGroupFileOrgLogic = (v: unknown): v is GroupFileOrgLogic =>
   typeof v === 'string' && GROUP_FILE_ORG_LOGIC.getKey(v) != null;
 
+const normalizeGroupFileOrgLogic = (v: unknown): GroupFileOrgLogic | undefined => {
+  if (isGroupFileOrgLogic(v)) return v;
+  const text = String(v ?? '').trim();
+  if (!text) return undefined;
+  if (text === '1') return GROUP_FILE_ORG_LOGIC.FOLDER;
+  if (text === '2') return GROUP_FILE_ORG_LOGIC.TAG;
+  const upperText = text.toUpperCase();
+  return isGroupFileOrgLogic(upperText) ? upperText : undefined;
+};
+
+const normalizeTagResourceAction = (v: unknown): TagResourceAction | undefined => {
+  if (typeof v === 'number' && TAG_RESOURCE_ACTION.getKey(v) != null) {
+    return v as TagResourceAction;
+  }
+  const text = String(v ?? '').trim();
+  if (!text) return undefined;
+  const numericValue = Number(text);
+  if (Number.isInteger(numericValue) && TAG_RESOURCE_ACTION.getKey(numericValue) != null) {
+    return numericValue as TagResourceAction;
+  }
+  const action = TAG_RESOURCE_ACTION.options.find((item) => item.key === text.toUpperCase())?.value;
+  return action != null && TAG_RESOURCE_ACTION.getKey(action) != null
+    ? (action as TagResourceAction)
+    : undefined;
+};
+
+const normalizeDefaultMemberActions = (actions?: unknown[]): TagResourceAction[] =>
+  normalizeResourceActions(
+    (actions ?? []).map(normalizeTagResourceAction).filter((v): v is TagResourceAction => v != null)
+  );
+
 const fetchGroupList = async (
   params: FetchGroupListRequest
 ): Promise<{ groups: Group[]; total: number }> => {
@@ -68,17 +105,22 @@ const fetchGroupResConfig = async (groupId: string): Promise<GroupResConfig> => 
   const data = await GroupResConfigApi.getConfig({ groupId });
   if (!data) throw createClientError(FRONTEND_CLIENT_ERROR.GROUP_RES_CONFIG_FETCH_FAILED);
   const { fileOrgLogic, groupId: gid } = data;
-  if (!isGroupFileOrgLogic(fileOrgLogic)) {
+  const normalizedFileOrgLogic = normalizeGroupFileOrgLogic(fileOrgLogic);
+  if (!normalizedFileOrgLogic) {
     throw createClientError(FRONTEND_CLIENT_ERROR.GROUP_RES_CONFIG_INVALID);
   }
   return {
     groupId: normalizeId(gid ?? groupId),
-    fileOrgLogic,
+    fileOrgLogic: normalizedFileOrgLogic,
+    defaultMemberActions: normalizeDefaultMemberActions(data.defaultMemberActions),
   };
 };
 
 const updateGroupResConfig = async (params: UpdateGroupResConfigRequest) => {
-  await GroupResConfigApi.changeConfig(params);
+  await GroupResConfigApi.changeConfig({
+    ...params,
+    defaultMemberActions: resourceActionsToApiKeys(params.defaultMemberActions),
+  });
 };
 
 const createGroup = async (params: CreateGroupRequest): Promise<string> => {
