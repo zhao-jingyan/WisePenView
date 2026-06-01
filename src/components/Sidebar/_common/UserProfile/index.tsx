@@ -11,6 +11,7 @@ import {
   RiFeedbackLine,
   RiHomeLine,
   RiLogoutBoxRLine,
+  RiPaletteLine,
   RiPieChartLine,
   RiSettings3Line,
   RiShieldKeyholeLine,
@@ -60,6 +61,9 @@ function UserProfile({ collapsed, menuMode = 'app' }: UserProfileProps) {
         break;
       case 'account':
         navigate('/app/profile/account');
+        break;
+      case 'appearance':
+        navigate('/app/profile/appearance');
         break;
       case 'feedback':
         setFeedbackModalOpen(true);
@@ -142,6 +146,10 @@ function UserProfile({ collapsed, menuMode = 'app' }: UserProfileProps) {
                 <Dropdown.Item id="account" textValue="账号" className={styles.profileMenuItem}>
                   <RiShieldUserLine size={16} />
                   <span>账号</span>
+                </Dropdown.Item>
+                <Dropdown.Item id="appearance" textValue="外观" className={styles.profileMenuItem}>
+                  <RiPaletteLine size={16} />
+                  <span>外观</span>
                 </Dropdown.Item>
                 <Dropdown.Item
                   id="feedback"

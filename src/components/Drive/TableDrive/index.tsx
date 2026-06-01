@@ -29,6 +29,7 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
     dataSource,
     pathNodes,
     loading,
+    loadingMoreParentId,
     expandedRowKeys,
     enterFolder,
     handleLoadMore,
@@ -126,12 +127,13 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
           loadMoreCell: styles.loadMoreCell,
           optionBtn: styles.optionBtn,
         },
+        loadingMoreParentId,
         actionConfig: actions,
         onRowAction,
         openDropdownKey,
         setOpenDropdownKey,
       }),
-    [actions, onRowAction, openDropdownKey, setOpenDropdownKey]
+    [actions, loadingMoreParentId, onRowAction, openDropdownKey, setOpenDropdownKey]
   );
 
   const expandIcon = useCallback(

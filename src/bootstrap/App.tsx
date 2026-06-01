@@ -7,7 +7,7 @@ import { RouterProvider } from 'react-router-dom';
 import router from './router';
 
 import { ServicesProvider } from '@/domains';
-import appTheme from '@/theme';
+import appTheme, { DEFAULT_HEROUI_THEME, ThemeApplier } from '@/theme';
 import { subscribeAuthChangeEvent } from '@/utils/auth/authChange';
 import styles from './App.module.less';
 
@@ -22,7 +22,6 @@ function PageLoadingFallback() {
 function App() {
   const unsubscribeAuthChangeRef = useRef<(() => void) | null>(null);
 
-  // 挂载时订阅全局认证状态变化
   useMount(() => {
     unsubscribeAuthChangeRef.current = subscribeAuthChangeEvent();
   });
@@ -33,16 +32,18 @@ function App() {
   });
 
   return (
-    <ServicesProvider>
-      <ConfigProvider locale={zhCN} theme={appTheme}>
-        <AntdApp>
-          <Toast.Provider maxVisibleToasts={3} placement="top" />
-          <Suspense fallback={<PageLoadingFallback />}>
-            <RouterProvider router={router} />
-          </Suspense>
-        </AntdApp>
-      </ConfigProvider>
-    </ServicesProvider>
+    <ThemeApplier defaultTheme={DEFAULT_HEROUI_THEME}>
+      <ServicesProvider>
+        <ConfigProvider locale={zhCN} theme={appTheme}>
+          <AntdApp>
+            <Toast.Provider maxVisibleToasts={3} placement="top" />
+            <Suspense fallback={<PageLoadingFallback />}>
+              <RouterProvider router={router} />
+            </Suspense>
+          </AntdApp>
+        </ConfigProvider>
+      </ServicesProvider>
+    </ThemeApplier>
   );
 }
 
