@@ -104,8 +104,8 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
     }
     const params = TagServicesMap.mapGetTagTreeRequest(normalizedGroupId);
     const data = await ResourceTagApi.getTagTree(params);
-    syncTrashTagIdToStore(normalizedGroupId, data);
     const roots = TagServicesMap.mapTagTreeFromApi(data);
+    syncTrashTagIdToStore(normalizedGroupId, roots);
     rawTagTreeCache.set(cacheKey, roots);
     rawTagFlatCache.set(cacheKey, buildFlatMap(roots));
     return roots;

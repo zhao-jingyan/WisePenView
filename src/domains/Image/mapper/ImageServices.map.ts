@@ -6,9 +6,9 @@ const mapImageUploadRequest = (params: ImageUploadRequest): ImageUploadApiReques
   const formData = new FormData();
   formData.append('file', params.file);
   formData.append('scene', params.scene);
-  const hasBizTag = params.bizTag !== undefined && params.bizTag !== '';
-  if (hasBizTag) {
-    formData.append('bizTag', params.bizTag);
+  const bizTag = params.bizTag;
+  if (bizTag !== undefined && bizTag !== '') {
+    formData.append('bizTag', bizTag);
   }
   return formData;
 };
