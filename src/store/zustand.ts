@@ -4,7 +4,11 @@
 
 export { clearAllZustandStores } from './clearAllStores';
 export { clearActiveDriveScopeStore, useActiveDriveScopeStore } from './useActiveDriveScopeStore';
-export { clearAiDiffDisplayStore, useAiDiffDisplayStore } from './useAiDiffDisplayStore';
+export {
+  clearAiDiffDisplayStore,
+  getAiDiffDisplayModeSnapshot,
+  useAiDiffDisplayStore,
+} from './useAiDiffDisplayStore';
 export { clearChatPanelStore, useChatPanelStore } from './useChatPanelStore';
 export {
   clearCurrentChatSessionStore,
@@ -28,3 +32,19 @@ export {
   useResourceDisplayNameStore,
 } from './useResourceDisplayNameStore';
 export { clearTrashTagStore, useTrashTagStore } from './useTrashTagStore';
+
+export { clearAdvancedModeStore, useAdvancedModeStore } from './useAdvancedModeStore';
+export {
+  clearChatAgentStore,
+  useChatAgentStore,
+  type ChatAgentOption,
+  type ChatAgentType,
+} from './useChatAgentStore';
+export {
+  clearChatCapabilityStore,
+  useChatCapabilityStore,
+  type TemporarySkillSelection,
+  type TemporaryToolSelection,
+} from './useChatCapabilityStore';
+export { clearChatPageStore, useChatPageStore } from './useChatPageStore';
+export type { ActiveAttachment, ActiveDocRef } from './useChatPageStore';

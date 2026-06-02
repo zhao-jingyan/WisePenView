@@ -4,7 +4,7 @@ import { Button, toast } from '@heroui/react';
 import { useInterval } from 'ahooks';
 import { Spin } from 'antd';
 import { Check, Copy } from 'lucide-react';
-import React from 'react';
+import { useState } from 'react';
 import { LogoFactory } from '../../ModelSelector';
 import styles from './AiMessage.module.less';
 import MessageContent from './MessageContent';
@@ -17,8 +17,8 @@ const LOADING_HINT_SWITCH_MS = 2000;
 function AiMessage({ message }: { message: Message }) {
   const hasReasoning = message.reasoningContent !== undefined;
   const showLoadingIndicator = Boolean(message.loading && !message.content);
-  const [copied, setCopied] = React.useState(false);
-  const [loadingHintIndex, setLoadingHintIndex] = React.useState(0);
+  const [copied, setCopied] = useState(false);
+  const [loadingHintIndex, setLoadingHintIndex] = useState(0);
   const displayProvider = message.meta?.provider || 'openai';
   const displayModelName = message.meta?.modelName || message.meta?.modelId || 'AI 助手';
 
@@ -35,7 +35,7 @@ function AiMessage({ message }: { message: Message }) {
       toast.success('复制成功');
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch (err) {
+    } catch {
       toast.danger('复制失败');
     }
   };
