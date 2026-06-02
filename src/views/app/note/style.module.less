@@ -48,7 +48,22 @@
   line-height: 1;
 }
 
+.headerToolbarExtra {
+  display: flex;
+  align-items: center;
+  gap: var(--ant-margin-sm);
+  min-width: 0;
+}
+
+.headerMoreWrap {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 .aiDiffDisplayModeSwitch {
+  flex: 1;
+  min-width: 0;
+
   :global(.ant-segmented-item-label) {
     padding-inline: var(--ant-padding-xs);
   }

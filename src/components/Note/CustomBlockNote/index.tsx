@@ -1,5 +1,7 @@
 import { useChatService, useImageService } from '@/domains';
 import { assertImageProxyUploadLimit } from '@/domains/Image';
+import type { AiDiffDisplayMode } from '@/domains/Note';
+import { AI_DIFF_DISPLAY_MODE } from '@/domains/Note';
 import {
   useChatPanelStore,
   useCurrentChatSessionStore,
@@ -13,7 +15,7 @@ import '@blocknote/mantine/style.css';
 import { useCreateBlockNote } from '@blocknote/react';
 import { toast } from '@heroui/react';
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
-import { useCallback, useImperativeHandle, useMemo, useRef, type Ref } from 'react';
+import { useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import NoteSlashMenu from '../NoteSlashMenu';
 import NoteToolbar from '../NoteToolbar';
 import { blockNoteSchema } from './blockNoteSchema';
@@ -31,6 +33,7 @@ import {
 } from './plugins';
 import { syncAiDiffBlockFoldDisplayMode } from './plugins/AIDiffPlugin';
 import { AiDiffDisplayModeProvider } from './plugins/AIDiffPlugin/displayModeContext';
+import { printNotePdfViaBrowser, waitForEditorPaint } from './plugins/noteBrowserPrint';
 import styles from './style.module.less';
 
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;
@@ -63,33 +66,34 @@ function CustomBlockNote({
   const clearSelectedText = useNoteSelectionStore((state) => state.clearSelectedText);
   const newNoteBodyOnChangeCleanupRef = useRef<(() => void) | null>(null);
   const flatBlocksRef = useRef<{ id: string; type: string }[]>([]);
+  const uploadContextRef = useRef({ imageService, resourceId });
+  uploadContextRef.current = { imageService, resourceId };
+  const uploadFile = useRef(async (file: File) => {
+    const { imageService: imageSvc, resourceId: noteResourceId } = uploadContextRef.current;
+    if (!file.type.startsWith('image/')) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.IMAGE_ONLY);
+    }
+    try {
+      assertImageProxyUploadLimit(file);
+    } catch (error) {
+      toast.danger(parseErrorMessage(error));
+      throw error;
+    }
+    const { publicUrl } = await imageSvc.uploadImage({
+      file,
+      scene: 'PRIVATE_IMAGE_FOR_NOTE',
+      bizTag: `notes/${noteResourceId}`,
+    });
+    return publicUrl;
+  }).current;
+  const [exportDisplayModeOverride, setExportDisplayModeOverride] =
+    useState<AiDiffDisplayMode | null>(null);
+  const effectiveAiDiffDisplayMode = exportDisplayModeOverride ?? aiDiffDisplayMode;
   const { noteFragment, undoManager } = useNoteYjsUndoManager(doc);
 
   const plugins = useMemo(() => getNoteEditorPlugins(), []);
   const editorExtensions = useMemo(() => collectNoteEditorExtensions(plugins), [plugins]);
   const editorProps = useMemo(() => collectNoteEditorProps(plugins), [plugins]);
-
-  const uploadFile = useCallback(
-    async (file: File) => {
-      // 只拦截图片：非图片文件让 BlockNote 走默认行为（或抛错以阻止插入）
-      if (!file.type.startsWith('image/')) {
-        throw createClientError(FRONTEND_CLIENT_ERROR.IMAGE_ONLY);
-      }
-      try {
-        assertImageProxyUploadLimit(file);
-      } catch (error) {
-        toast.danger(parseErrorMessage(error));
-        throw error;
-      }
-      const { publicUrl } = await imageService.uploadImage({
-        file,
-        scene: 'PRIVATE_IMAGE_FOR_NOTE',
-        bizTag: `notes/${resourceId}`,
-      });
-      return publicUrl;
-    },
-    [imageService, resourceId]
-  );
 
   const editor = useCreateBlockNote({
     schema: blockNoteSchema,
@@ -105,7 +109,6 @@ function CustomBlockNote({
       provider: provider as BlockNoteCollaborationConfig['provider'],
       fragment: noteFragment,
       user: {
-        // 单人模式下使用固定身份，避免业务层传 userId/color
         name: '',
         color: '#4096ff',
       },
@@ -114,7 +117,7 @@ function CustomBlockNote({
 
   useMount(() => {
     try {
-      syncAiDiffBlockFoldDisplayMode(editor.prosemirrorView, aiDiffDisplayMode);
+      syncAiDiffBlockFoldDisplayMode(editor.prosemirrorView, effectiveAiDiffDisplayMode);
     } catch {
       void 0;
     }
@@ -122,20 +125,16 @@ function CustomBlockNote({
 
   useUpdateEffect(() => {
     try {
-      syncAiDiffBlockFoldDisplayMode(editor.prosemirrorView, aiDiffDisplayMode);
+      syncAiDiffBlockFoldDisplayMode(editor.prosemirrorView, effectiveAiDiffDisplayMode);
     } catch {
       void 0;
     }
-  }, [aiDiffDisplayMode, editor]);
-
-  const syncSelectedText = useCallback(() => {
-    setSelectedText(resourceId, editor.getSelectedText());
-  }, [editor, resourceId, setSelectedText]);
+  }, [effectiveAiDiffDisplayMode, editor]);
 
   useAttachNoteYjsUndoStack(doc, editor, undoManager);
 
   useMount(() => {
-    syncSelectedText();
+    setSelectedText(resourceId, editor.getSelectedText());
   });
 
   useMount(() => {
@@ -176,7 +175,6 @@ function CustomBlockNote({
         try {
           editor.setTextCursorPosition(id, 'start');
           editor.focus();
-          // 再次触发 scrollIntoView，避免未滚动到可视区域
           const view = (
             editor as unknown as {
               prosemirrorView?: { state?: { tr?: unknown }; dispatch?: unknown };
@@ -204,12 +202,32 @@ function CustomBlockNote({
           editor.focus();
         }
       },
+      exportPdf: async (options) => {
+        try {
+          setExportDisplayModeOverride(AI_DIFF_DISPLAY_MODE.OLD_ONLY);
+          syncAiDiffBlockFoldDisplayMode(editor.prosemirrorView, AI_DIFF_DISPLAY_MODE.OLD_ONLY);
+          await waitForEditorPaint();
+          await printNotePdfViaBrowser(editor, {
+            title: options?.title,
+            titleRoot: options?.titleRoot,
+          });
+        } finally {
+          setExportDisplayModeOverride(null);
+          try {
+            syncAiDiffBlockFoldDisplayMode(editor.prosemirrorView, aiDiffDisplayMode);
+          } catch {
+            void 0;
+          }
+        }
+      },
     }),
-    [editor]
+    [aiDiffDisplayMode, editor]
   );
 
   const onKeyDownCapture = useNoteCaptureKeyEvent({ provider, undoManager, readOnly });
-  const syncActiveHeading = useCallback(() => {
+
+  const handleSelectionChange = () => {
+    setSelectedText(resourceId, editor.getSelectedText());
     if (!onActiveHeadingChange) {
       return;
     }
@@ -221,20 +239,14 @@ function CustomBlockNote({
         onActiveHeadingChange(undefined);
         return;
       }
-      const flat = flatBlocksRef.current;
-      activeId = resolveActiveHeadingId(flat, currentId);
+      activeId = resolveActiveHeadingId(flatBlocksRef.current, currentId);
     } catch {
       activeId = undefined;
     }
     onActiveHeadingChange(activeId);
-  }, [editor, onActiveHeadingChange]);
+  };
 
-  const handleSelectionChange = useCallback(() => {
-    syncSelectedText();
-    syncActiveHeading();
-  }, [syncActiveHeading, syncSelectedText]);
-
-  const handleAskAi = useCallback(async () => {
+  const handleAskAi = async () => {
     let targetSessionId = currentSessionId;
     const selectedSnapshot = editor.getSelectedText().trim() || selectedText.trim();
     if (!selectedSnapshot) {
@@ -257,20 +269,11 @@ function CustomBlockNote({
     setSelectedText(targetSessionId, selectedSnapshot);
     setEnableSelectedText(targetSessionId, true);
     setChatPanelCollapsed(false);
-  }, [
-    chatService,
-    currentSessionId,
-    editor,
-    selectedText,
-    setChatPanelCollapsed,
-    setCurrentSession,
-    setEnableSelectedText,
-    setSelectedText,
-  ]);
+  };
 
   return (
     <div className={styles.editorShell} onKeyDownCapture={onKeyDownCapture}>
-      <AiDiffDisplayModeProvider value={aiDiffDisplayMode}>
+      <AiDiffDisplayModeProvider value={effectiveAiDiffDisplayMode}>
         <BlockNoteView
           editor={editor}
           theme="light"

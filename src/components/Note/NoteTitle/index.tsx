@@ -4,14 +4,15 @@ import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
 import { useCreateBlockNote } from '@blocknote/react';
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
-import React, { useMemo, useRef } from 'react';
+import React, { useImperativeHandle, useMemo, useRef, type Ref } from 'react';
 
 import { useNoteService } from '@/domains';
 import { useNewNoteStore } from '@/store';
 
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
-import type { NoteTitleProps } from './index.type';
+import { getProseMirrorRoot } from '../CustomBlockNote/plugins/editorProseMirrorRoot';
+import type { NoteTitleHandle, NoteTitleProps } from './index.type';
 import styles from './style.module.less';
 
 /** 与 Pipeline 一致的防抖时长（ms） */
@@ -60,7 +61,13 @@ function toHeadingBlockFromTitle(title?: string): BlockNoteBlock[] {
   ];
 }
 
-function NoteTitle({ id, initialContent, onEnterKey, focusOnMount }: NoteTitleProps) {
+function NoteTitle({
+  id,
+  initialContent,
+  onEnterKey,
+  focusOnMount,
+  ref,
+}: NoteTitleProps & { ref?: Ref<NoteTitleHandle> }) {
   const noteService = useNoteService();
   const latestIdRef = useRef(id);
   const titleDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -89,6 +96,20 @@ function NoteTitle({ id, initialContent, onEnterKey, focusOnMount }: NoteTitlePr
     },
     trailingBlock: false,
   });
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      getPlainTitle: () => {
+        const firstBlock = editor.document[0];
+        const raw = getBlockPlainText(firstBlock as { content?: unknown[] } | undefined);
+        const trimmed = raw.trim();
+        return trimmed || '未命名笔记';
+      },
+      getProseMirrorRoot: () => getProseMirrorRoot(editor),
+    }),
+    [editor]
+  );
 
   useMount(() => {
     if (!focusOnMount) return;

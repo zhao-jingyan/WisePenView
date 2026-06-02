@@ -6,6 +6,8 @@ import type { AiDiffDisplayMode, WisepenProvider } from '@/domains/Note';
 export interface NoteBodyEditorHandle {
   focus: () => void;
   navigateToBlock: (id: string) => void;
+  /** 通过系统打印对话框另存为 PDF（克隆 DOM + 打印前临时仅旧文本） */
+  exportPdf: (options?: { title?: string; titleRoot?: HTMLElement | null }) => Promise<void>;
 }
 
 export interface CustomBlockNoteProps {

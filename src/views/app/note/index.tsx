@@ -15,6 +15,7 @@ import NoteInfoBar from '@/components/Note/NoteInfoBar';
 import NoteOutline from '@/components/Note/NoteOutline';
 import type { NoteOutlineItem } from '@/components/Note/NoteOutline/index.type';
 import NoteTitle from '@/components/Note/NoteTitle';
+import type { NoteTitleHandle } from '@/components/Note/NoteTitle/index.type';
 import { useNoteService, useResourceService } from '@/domains';
 import type { AiDiffDisplayMode, NoteInfoDisplayData } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, AI_DIFF_DISPLAY_MODE_LABELS, useNoteSession } from '@/domains/Note';
@@ -22,7 +23,7 @@ import { RESOURCE_TYPE } from '@/domains/Resource';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useAiDiffDisplayStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, toast } from '@heroui/react';
+import { Button, Dropdown, toast } from '@heroui/react';
 import styles from './style.module.less';
 
 interface NoteViewConnectedProps {
@@ -41,6 +42,7 @@ function NoteViewConnected({
   const aiDiffDisplayMode = useAiDiffDisplayStore((state) => state.displayMode);
   const setAiDiffDisplayMode = useAiDiffDisplayStore((state) => state.setDisplayMode);
   const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
+  const titleEditorRef = useRef<NoteTitleHandle>(null);
   const mainScrollRef = useRef<HTMLDivElement>(null);
   const titleAnchorRef = useRef<HTMLDivElement>(null);
   const reconnectTimerRef = useRef<number | null>(null);
@@ -48,6 +50,7 @@ function NoteViewConnected({
   const [isOutlineOpen, setIsOutlineOpen] = useState(true);
   const [outlineItems, setOutlineItems] = useState<NoteOutlineItem[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | undefined>(undefined);
+  const [pdfExportLoading, setPdfExportLoading] = useState(false);
   const { status, doc, provider, reconnect } = useNoteSession(resourceId);
 
   const isConnected = status === 'connected';
@@ -145,6 +148,25 @@ function NoteViewConnected({
     },
   ];
 
+  const handlePrintPdf = async () => {
+    const bodyApi = bodyEditorRef.current;
+    if (!bodyApi) {
+      toast.info('编辑器未就绪');
+      return;
+    }
+    const titleApi = titleEditorRef.current;
+    const title = titleApi?.getPlainTitle() ?? noteTitleText;
+    const titleRoot = titleApi?.getProseMirrorRoot() ?? null;
+    try {
+      setPdfExportLoading(true);
+      await bodyApi.exportPdf({ title, titleRoot });
+    } catch (err) {
+      toast.danger(parseErrorMessage(err));
+    } finally {
+      setPdfExportLoading(false);
+    }
+  };
+
   return (
     <div className={styles.pageWrap}>
       <ResourceViewerHeader
@@ -160,12 +182,42 @@ function NoteViewConnected({
           </IconText>
         }
         extra={
-          <Segmented
-            value={aiDiffDisplayMode}
-            className={styles.aiDiffDisplayModeSwitch}
-            options={aiDiffDisplayOptions}
-            onChange={(value) => setAiDiffDisplayMode(value as AiDiffDisplayMode)}
-          />
+          <div className={styles.headerToolbarExtra}>
+            <Segmented
+              value={aiDiffDisplayMode}
+              className={styles.aiDiffDisplayModeSwitch}
+              options={aiDiffDisplayOptions}
+              disabled={showFullPageSpin}
+              onChange={(value) => setAiDiffDisplayMode(value as AiDiffDisplayMode)}
+            />
+            <div className={styles.headerMoreWrap}>
+              <Dropdown>
+                <Dropdown.Trigger>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    isPending={pdfExportLoading}
+                    isDisabled={showFullPageSpin}
+                    aria-label="更多"
+                  >
+                    更多
+                  </Button>
+                </Dropdown.Trigger>
+                <Dropdown.Popover placement="bottom end">
+                  <Dropdown.Menu
+                    aria-label="笔记更多操作"
+                    onAction={(key) => {
+                      if (key === 'print-pdf') void handlePrintPdf();
+                    }}
+                  >
+                    <Dropdown.Item id="print-pdf" textValue="打印为pdf">
+                      打印为pdf
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown.Popover>
+              </Dropdown>
+            </div>
+          </div>
         }
       />
       <div className={styles.statesBelowHeader}>
@@ -244,6 +296,7 @@ function NoteViewConnected({
                 <div ref={titleAnchorRef}>
                   <NoteTitle
                     key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}`}
+                    ref={titleEditorRef}
                     id={noteId}
                     initialContent={noteInfoDisplay?.noteTitle}
                     focusOnMount={isConnected}
