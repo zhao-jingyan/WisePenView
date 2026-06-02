@@ -1,7 +1,5 @@
 import { filterSuggestionItems } from '@blocknote/core/extensions';
 import { SuggestionMenuController } from '@blocknote/react';
-import { useCallback } from 'react';
-
 import {
   collectPluginSlashMenuItems,
   getFilteredDefaultReactSlashMenuItems,
@@ -24,19 +22,16 @@ const NOTE_EDITOR_HIDDEN_DEFAULT_SLASH_MENU_KEY_SET = new Set<string>(
 );
 
 const NoteSlashMenu = ({ editor, plugins }: NoteSlashMenuProps) => {
-  const getItems = useCallback(
-    async (query: string) => {
-      const items = [
-        ...getFilteredDefaultReactSlashMenuItems(
-          editor,
-          NOTE_EDITOR_HIDDEN_DEFAULT_SLASH_MENU_KEY_SET
-        ),
-        ...collectPluginSlashMenuItems(plugins, editor),
-      ];
-      return filterSuggestionItems(items, query);
-    },
-    [editor, plugins]
-  );
+  const getItems = async (query: string) => {
+    const items = [
+      ...getFilteredDefaultReactSlashMenuItems(
+        editor,
+        NOTE_EDITOR_HIDDEN_DEFAULT_SLASH_MENU_KEY_SET
+      ),
+      ...collectPluginSlashMenuItems(plugins, editor),
+    ];
+    return filterSuggestionItems(items, query);
+  };
 
   return (
     <div className={styles.host}>

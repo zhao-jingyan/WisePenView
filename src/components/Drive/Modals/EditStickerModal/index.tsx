@@ -6,7 +6,7 @@ import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Divider, Modal, Spin, Tag } from 'antd';
 import clsx from 'clsx';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
 import styles from './index.module.less';
 import type { EditStickerModalProps } from './index.type';
@@ -59,15 +59,15 @@ function EditStickerModal({ open, onCancel, onSuccess, file }: EditStickerModalP
     }
   );
 
-  const handleToggle = useCallback((tagId: string) => {
+  const handleToggle = (tagId: string) => {
     setSelectedIds((prev) =>
       prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
     );
-  }, []);
+  };
 
   const [addModalOpen, setAddModalOpen] = useState(false);
 
-  const handleAddSuccess = useCallback(() => {
+  const handleAddSuccess = () => {
     void (async () => {
       try {
         const list = await stickerService.getStickerList();
@@ -76,7 +76,7 @@ function EditStickerModal({ open, onCancel, onSuccess, file }: EditStickerModalP
         toast.danger(parseErrorMessage(err));
       }
     })();
-  }, [stickerService]);
+  };
 
   const { unselected, selected } = useMemo(() => {
     const idSet = new Set(selectedIds);
@@ -86,10 +86,10 @@ function EditStickerModal({ open, onCancel, onSuccess, file }: EditStickerModalP
     };
   }, [stickers, selectedIds]);
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = async () => {
     if (!file?.resourceId) return;
     await runUpdateStickers();
-  }, [file, runUpdateStickers]);
+  };
 
   return (
     <>

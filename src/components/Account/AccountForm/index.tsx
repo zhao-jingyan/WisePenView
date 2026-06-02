@@ -6,7 +6,7 @@ import { parseErrorMessage } from '@/utils/error';
 import type { ProfileFieldKey } from '@/views/app/profile/profile.config';
 import { Button, Form, Input, Label, ListBox, Select, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { useCallback, useMemo, useState, type FormEvent, type Key } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { RiCloseLine, RiPencilLine } from 'react-icons/ri';
 import { buildProfileFormValues } from './buildProfileFormValues';
 import type { AccountFormProps } from './index.type';
@@ -35,18 +35,21 @@ function getReadonlyInputValue(values: UpdateUserInfoRequest, key: ProfileFieldK
   return String(value);
 }
 
+const OPTIONS_MAP = {
+  sex: SEX.options,
+  degreeLevel: DEGREE.options,
+} as const;
+
 function AccountForm({
   show,
   user,
   fieldConfig,
   visibleFields,
   readonlyFieldSet,
-  editMode,
-  onEditModeChange,
   onUserInfoUpdated,
-  onCancel,
 }: AccountFormProps) {
   const userService = useUserService();
+  const [editMode, setEditMode] = useState(false);
   const [formDraft, setFormDraft] = useState<FormDraft | null>(null);
   const userFormValues = useMemo<UpdateUserInfoRequest>(
     () => (user ? buildProfileFormValues(user) : {}),
@@ -105,8 +108,8 @@ function AccountForm({
       manual: true,
       onSuccess: (data) => {
         setFormDraft(null);
+        setEditMode(false);
         onUserInfoUpdated(data);
-        onEditModeChange(false);
         toast.success('保存成功');
       },
       onError: (err) => {
@@ -116,49 +119,27 @@ function AccountForm({
     }
   );
 
-  const optionsMap = useMemo(
-    () =>
-      ({
-        sex: SEX.options,
-        degreeLevel: DEGREE.options,
-      }) as const,
-    []
-  );
+  const updateFormValue = (key: ProfileFieldKey, value: string | number | undefined) => {
+    setFormDraft((prev) => ({
+      user,
+      values: { ...(prev?.user === user ? prev.values : userFormValues), [key]: value },
+    }));
+  };
 
-  const updateFormValue = useCallback(
-    (key: ProfileFieldKey, value: string | number | undefined) => {
-      setFormDraft((prev) => ({
-        user,
-        values: { ...(prev?.user === user ? prev.values : userFormValues), [key]: value },
-      }));
-    },
-    [user, userFormValues]
-  );
-
-  const handleSelectChange = useCallback(
-    (key: ProfileFieldKey, value: Key | Key[] | null) => {
-      updateFormValue(key, value == null || Array.isArray(value) ? undefined : Number(value));
-    },
-    [updateFormValue]
-  );
-
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     setFormDraft(null);
-    onCancel();
-  }, [onCancel]);
+    setEditMode(false);
+  };
 
-  const handleStartEdit = useCallback(() => {
+  const handleStartEdit = () => {
     setFormDraft({ user, values: userFormValues });
-    onEditModeChange(true);
-  }, [onEditModeChange, user, userFormValues]);
+    setEditMode(true);
+  };
 
-  const handleSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      void runSave();
-    },
-    [runSave]
-  );
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void runSave();
+  };
 
   if (!show) return null;
 
@@ -209,7 +190,12 @@ function AccountForm({
                       aria-label={field.label}
                       placeholder={field.placeholder}
                       value={getFieldInputValue(formValues, field.key) || null}
-                      onChange={(value) => handleSelectChange(field.key, value)}
+                      onChange={(value) =>
+                        updateFormValue(
+                          field.key,
+                          value == null || Array.isArray(value) ? undefined : Number(value)
+                        )
+                      }
                       className={styles.editableInput}
                     >
                       <Label>{field.label}</Label>
@@ -233,7 +219,7 @@ function AccountForm({
                       </Select.Trigger>
                       <Select.Popover>
                         <ListBox>
-                          {(field.optionsKey ? optionsMap[field.optionsKey] : []).map(
+                          {(field.optionsKey ? OPTIONS_MAP[field.optionsKey] : []).map(
                             ({ value, label }) => (
                               <ListBox.Item
                                 key={String(value)}

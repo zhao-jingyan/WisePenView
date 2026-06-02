@@ -3,7 +3,7 @@ import type { JoinGroupRequest } from '@/domains/Group';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, Form, InputOTP, Modal, REGEXP_ONLY_DIGITS_AND_CHARS, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import React, { useCallback, useState, type FormEvent } from 'react';
+import React, { useState, type FormEvent } from 'react';
 import type { JoinGroupModalProps } from './index.type';
 
 import styles from './index.module.less';
@@ -25,14 +25,14 @@ function JoinGroupModal({ isOpen, onOpenChange, onSuccess }: JoinGroupModalProps
   const groupService = useGroupService();
   const [inviteCode, setInviteCode] = useState('');
   const isConfirmDisabled = normalizeInviteCode(inviteCode).length !== INVITE_CODE_LENGTH;
-  const resetForm = useCallback(() => {
+  const resetForm = () => {
     setInviteCode('');
-  }, []);
+  };
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     resetForm();
     onOpenChange(false);
-  }, [onOpenChange, resetForm]);
+  };
 
   const { loading, run: runJoinGroup } = useRequest(
     async (params: JoinGroupRequest) => groupService.joinGroup(params),

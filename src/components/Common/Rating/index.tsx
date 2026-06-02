@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useCallback, useMemo, useState, type KeyboardEvent } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 
 import type { RatingProps } from './index.type';
 import styles from './style.module.less';
@@ -14,42 +14,33 @@ function Rating({
 }: RatingProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null);
   const [pressedValue, setPressedValue] = useState<number | null>(null);
-  const values = useMemo(
-    () => Array.from({ length: Math.max(maxValue, 0) }, (_, index) => index + 1),
-    [maxValue]
-  );
+  const values = Array.from({ length: Math.max(maxValue, 0) }, (_, index) => index + 1);
   const displayValue = hoverValue ?? value;
 
-  const updateValue = useCallback(
-    (nextValue: number) => {
-      if (isDisabled) return;
-      setPressedValue(nextValue);
-      onValueChange?.(nextValue);
-    },
-    [isDisabled, onValueChange]
-  );
+  const updateValue = (nextValue: number) => {
+    if (isDisabled) return;
+    setPressedValue(nextValue);
+    onValueChange?.(nextValue);
+  };
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (isDisabled) return;
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (isDisabled) return;
 
-      const currentValue = value || 0;
-      const keyMap: Partial<Record<string, number>> = {
-        ArrowRight: Math.min(currentValue + 1, maxValue),
-        ArrowUp: Math.min(currentValue + 1, maxValue),
-        ArrowLeft: Math.max(currentValue - 1, 1),
-        ArrowDown: Math.max(currentValue - 1, 1),
-        Home: 1,
-        End: maxValue,
-      };
-      const nextValue = keyMap[event.key];
+    const currentValue = value || 0;
+    const keyMap: Partial<Record<string, number>> = {
+      ArrowRight: Math.min(currentValue + 1, maxValue),
+      ArrowUp: Math.min(currentValue + 1, maxValue),
+      ArrowLeft: Math.max(currentValue - 1, 1),
+      ArrowDown: Math.max(currentValue - 1, 1),
+      Home: 1,
+      End: maxValue,
+    };
+    const nextValue = keyMap[event.key];
 
-      if (nextValue == null) return;
-      event.preventDefault();
-      updateValue(nextValue);
-    },
-    [isDisabled, maxValue, updateValue, value]
-  );
+    if (nextValue == null) return;
+    event.preventDefault();
+    updateValue(nextValue);
+  };
 
   return (
     <div

@@ -11,7 +11,7 @@ import { usePagination } from 'ahooks';
 import type { MenuProps } from 'antd';
 import { Dropdown, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LuEllipsisVertical, LuPencil, LuTag, LuTrash2 } from 'react-icons/lu';
 import type { FileListProps } from './index.type';
 import styles from './style.module.less';
@@ -207,35 +207,20 @@ function FileList({ groupId, filter }: FileListProps) {
     }
   );
 
-  const handleRenameFile = useCallback((file: ResourceItem) => {
-    setRenameFileTarget(file);
-    setRenameFileModalOpen(true);
-  }, []);
-
-  const handleRenameFileModalClose = useCallback(() => {
+  const handleRenameFileModalClose = () => {
     setRenameFileModalOpen(false);
     setRenameFileTarget(null);
-  }, []);
+  };
 
-  const handleEditSticker = useCallback((file: ResourceItem) => {
-    setEditStickerTarget(file);
-    setEditStickerModalOpen(true);
-  }, []);
-
-  const handleEditStickerModalClose = useCallback(() => {
+  const handleEditStickerModalClose = () => {
     setEditStickerModalOpen(false);
     setEditStickerTarget(null);
-  }, []);
+  };
 
-  const handleDeleteFile = useCallback((file: ResourceItem) => {
-    setDeleteFileTarget(file);
-    setDeleteFileModalOpen(true);
-  }, []);
-
-  const handleDeleteFileModalClose = useCallback(() => {
+  const handleDeleteFileModalClose = () => {
     setDeleteFileModalOpen(false);
     setDeleteFileTarget(null);
-  }, []);
+  };
 
   const dataSource = useMemo(
     () =>
@@ -249,25 +234,31 @@ function FileList({ groupId, filter }: FileListProps) {
   const columns = useMemo(
     () =>
       buildColumns({
-        onDelete: handleDeleteFile,
-        onRename: handleRenameFile,
-        onEditSticker: handleEditSticker,
+        onDelete: (file) => {
+          setDeleteFileTarget(file);
+          setDeleteFileModalOpen(true);
+        },
+        onRename: (file) => {
+          setRenameFileTarget(file);
+          setRenameFileModalOpen(true);
+        },
+        onEditSticker: (file) => {
+          setEditStickerTarget(file);
+          setEditStickerModalOpen(true);
+        },
         onCloseDropdown: () => setOpenDropdownKey(null),
         openDropdownKey,
         setOpenDropdownKey,
       }),
-    [handleDeleteFile, handleRenameFile, handleEditSticker, openDropdownKey]
+    [openDropdownKey]
   );
 
-  const handleRowClick = useCallback(
-    (record: ResourceItem) => ({
-      onClick: () => {
-        if (!record.resourceId) return;
-        navigateResource(record.resourceId, record.resourceType);
-      },
-    }),
-    [navigateResource]
-  );
+  const handleRowClick = (record: ResourceItem) => ({
+    onClick: () => {
+      if (!record.resourceId) return;
+      navigateResource(record.resourceId, record.resourceType);
+    },
+  });
 
   return (
     <>

@@ -6,7 +6,7 @@ import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Input, Modal, Popconfirm, Tag } from 'antd';
 import clsx from 'clsx';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
 import type { StickerManageModalProps } from './index.type';
 import styles from './style.module.less';
@@ -82,20 +82,17 @@ function StickerManageModal({ open, onCancel, onSuccess }: StickerManageModalPro
     }
   );
 
-  const handleOpenChange = useCallback(
-    (visible: boolean) => {
-      if (visible) {
-        void runFetchStickers();
-        return;
-      }
-      setSelectedSticker(null);
-      setEditName('');
-      setAddName('');
-    },
-    [runFetchStickers]
-  );
+  const handleOpenChange = (visible: boolean) => {
+    if (visible) {
+      void runFetchStickers();
+      return;
+    }
+    setSelectedSticker(null);
+    setEditName('');
+    setAddName('');
+  };
 
-  const handleSelect = useCallback((sticker: Sticker) => {
+  const handleSelect = (sticker: Sticker) => {
     setSelectedSticker((prev) => {
       if (prev?.tagId === sticker.tagId) {
         setEditName('');
@@ -104,9 +101,9 @@ function StickerManageModal({ open, onCancel, onSuccess }: StickerManageModalPro
       setEditName(sticker.tagName);
       return sticker;
     });
-  }, []);
+  };
 
-  const handleUpdate = useCallback(async () => {
+  const handleUpdate = async () => {
     if (!selectedSticker) return;
     const trimmed = editName.trim();
     if (!trimmed) {
@@ -118,14 +115,14 @@ function StickerManageModal({ open, onCancel, onSuccess }: StickerManageModalPro
       return;
     }
     await runUpdateSticker(trimmed);
-  }, [selectedSticker, editName, runUpdateSticker]);
+  };
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = async () => {
     if (!selectedSticker) return;
     await runDeleteSticker();
-  }, [selectedSticker, runDeleteSticker]);
+  };
 
-  const handleAdd = useCallback(async () => {
+  const handleAdd = async () => {
     const trimmed = addName.trim();
     if (!trimmed) {
       toast.warning('请输入标签名称');
@@ -136,7 +133,7 @@ function StickerManageModal({ open, onCancel, onSuccess }: StickerManageModalPro
       return;
     }
     await runAddSticker(trimmed);
-  }, [addName, runAddSticker]);
+  };
 
   return (
     <Modal

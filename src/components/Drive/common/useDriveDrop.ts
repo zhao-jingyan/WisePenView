@@ -2,7 +2,6 @@ import { useDriveService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
-import { useCallback } from 'react';
 
 /** drop dataTransfer 单一 mime：序列化整个 DriveNode；source 节点的 type 由接收端读 node.type 判断 */
 export const DRAG_TYPE_DRIVE_NODE = 'application/x-wisepen-drivenode';
@@ -68,27 +67,24 @@ const buildSuccessMessage = (source: DriveNode, target: DriveNode): string => {
  */
 export function useDriveDrop({ refresh, groupId }: UseDriveDropParams): UseDriveDropReturn {
   const driveService = useDriveService();
-  const onDrop = useCallback<OnDriveNodeDrop>(
-    async (source, target) => {
-      if (!isDraggableDriveNode(source)) return;
-      if (!isDropTargetDriveNode(target)) return;
-      if (source.id === target.id) return;
-      if (source.parentId === target.id) return;
+  const onDrop: OnDriveNodeDrop = async (source, target) => {
+    if (!isDraggableDriveNode(source)) return;
+    if (!isDropTargetDriveNode(target)) return;
+    if (source.id === target.id) return;
+    if (source.parentId === target.id) return;
 
-      try {
-        await driveService.moveNode({
-          nodeId: source.id,
-          newParentId: target.id,
-          groupId,
-        });
-        toast.success(buildSuccessMessage(source, target));
-        refresh();
-      } catch (err) {
-        toast.danger(parseErrorMessage(err));
-      }
-    },
-    [driveService, groupId, refresh]
-  );
+    try {
+      await driveService.moveNode({
+        nodeId: source.id,
+        newParentId: target.id,
+        groupId,
+      });
+      toast.success(buildSuccessMessage(source, target));
+      refresh();
+    } catch (err) {
+      toast.danger(parseErrorMessage(err));
+    }
+  };
 
   return { onDrop };
 }

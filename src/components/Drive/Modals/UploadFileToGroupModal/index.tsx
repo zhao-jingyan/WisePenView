@@ -4,7 +4,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Modal, Steps } from 'antd';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import type { DriveSelectionItem } from '../../common/driveComponentModel';
 import styles from './index.module.less';
 import type { UploadFileToGroupModalProps } from './index.type';
@@ -21,27 +21,27 @@ function UploadFileToGroupModal({
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [selectedTargetTagId, setSelectedTargetTagId] = useState<string>();
 
-  const handleOpenChange = useCallback((visible: boolean) => {
+  const handleOpenChange = (visible: boolean) => {
     setStep(0);
     setSelectedFileIds([]);
     setSelectedTargetTagId(undefined);
     if (visible) {
       setNavRefreshKey((k) => k + 1);
     }
-  }, []);
+  };
 
-  const handleFilesChange = useCallback((nodes: DriveSelectionItem[]) => {
+  const handleFilesChange = (nodes: DriveSelectionItem[]) => {
     const ids = nodes
       .filter((node) => node.kind === 'resource' || node.kind === 'link')
       .map((node) => node.resourceId)
       .filter((id): id is string => Boolean(id?.trim()));
     setSelectedFileIds(ids);
-  }, []);
+  };
 
-  const handleTagsChange = useCallback((nodes: DriveSelectionItem[]) => {
+  const handleTagsChange = (nodes: DriveSelectionItem[]) => {
     const target = nodes.find((node) => node.kind === 'folder' && Boolean(node.tagId?.trim()));
     setSelectedTargetTagId(target?.tagId);
-  }, []);
+  };
 
   const { loading: submitting, run: runUploadToGroup } = useRequest(
     async ({ resourceIds, tagIds }: { resourceIds: string[]; tagIds: string[] }) => {

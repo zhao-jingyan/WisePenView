@@ -4,7 +4,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Alert, Form, InputNumber, Modal } from 'antd';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import type { AssignQuotaModalProps } from './index.type';
 import styles from './style.module.less';
 import { useMemberEditGuard } from './useMemberEditGuard';
@@ -36,17 +36,14 @@ function AssignQuotaModal({
     { checkOwner: false, forQuota: true }
   );
 
-  const handleOpenChange = useCallback(
-    (visible: boolean) => {
-      if (!visible) return;
-      form.resetFields();
-      quotaService
-        .fetchGroupQuota(groupId)
-        .then(setGroupQuotaState)
-        .catch(() => setGroupQuotaState({ used: 0, limit: 0 }));
-    },
-    [form, groupId, quotaService]
-  );
+  const handleOpenChange = (visible: boolean) => {
+    if (!visible) return;
+    form.resetFields();
+    quotaService
+      .fetchGroupQuota(groupId)
+      .then(setGroupQuotaState)
+      .catch(() => setGroupQuotaState({ used: 0, limit: 0 }));
+  };
 
   const { loading, run: runSetQuota } = useRequest(
     async (value: number) =>

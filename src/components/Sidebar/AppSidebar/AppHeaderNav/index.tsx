@@ -4,7 +4,6 @@ import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/u
 import { ListBox, ListBoxItem, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
-import { useCallback } from 'react';
 import { RiAddCircleFill, RiFileTextLine, RiGroupFill, RiPenNibFill } from 'react-icons/ri';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { AppHeaderNavProps } from './index.type';
@@ -35,7 +34,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
     }
   );
 
-  const handleCreateSession = useCallback(() => {
+  const handleCreateSession = () => {
     if (createSessionLoading) return;
     const { newChatSessionId, newChatSessionTitle } = useNewChatSessionStore.getState();
     if (newChatSessionId != null && newChatSessionId !== '') {
@@ -43,7 +42,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
       return;
     }
     runCreateSession();
-  }, [createSessionLoading, onSessionCreated, runCreateSession]);
+  };
 
   const { loading: creatingNote, run: runCreateNote } = useRequest(
     async () => {
@@ -65,7 +64,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
     }
   );
 
-  const handleCreateNote = useCallback(() => {
+  const handleCreateNote = () => {
     if (creatingNote) return;
     const pendingNewNoteId = useNewNoteStore.getState().newNoteResourceId;
     if (pendingNewNoteId != null && pendingNewNoteId !== '') {
@@ -73,7 +72,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
       return;
     }
     runCreateNote();
-  }, [creatingNote, navigate, runCreateNote]);
+  };
 
   return (
     <ListBox

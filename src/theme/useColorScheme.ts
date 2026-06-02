@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 import { COLOR_SCHEME, DEFAULT_COLOR_SCHEME, type ColorScheme } from './constants';
 
@@ -34,11 +34,11 @@ export function useColorScheme(defaultScheme: ColorScheme = DEFAULT_COLOR_SCHEME
     appliedRef.current = colorScheme;
   }, [colorScheme]);
 
-  const setColorScheme = useCallback((scheme: ColorScheme) => {
+  const setColorScheme = (scheme: ColorScheme) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem(COLOR_SCHEME_STORAGE_KEY, scheme);
     setColorSchemeState(scheme);
-  }, []);
+  };
 
   return { colorScheme, setColorScheme };
 }

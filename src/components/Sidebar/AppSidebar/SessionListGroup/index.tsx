@@ -5,7 +5,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { Button, Header, ListBox, ListBoxItem, ListBoxSection, toast } from '@heroui/react';
 import { useMount, useRequest } from 'ahooks';
 import clsx from 'clsx';
-import { useCallback, useImperativeHandle, useState, type Ref } from 'react';
+import { useImperativeHandle, useState, type Ref } from 'react';
 import styles from '../AppSessionMenu/style.module.less';
 import SessionMenuItem from '../SessionMenuItem';
 import type {
@@ -38,45 +38,42 @@ const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionListGroupP
     }
   );
 
-  const loadSessionPage = useCallback(
-    async (page: number, append: boolean) => {
+  const loadSessionPage = async (page: number, append: boolean) => {
+    if (append) {
+      setLoadingMoreSessions(true);
+    }
+    try {
+      const payload = await runListSessions(page);
+      setSessionPage(payload.page);
+      setSessionTotalPage(payload.total_page || 1);
+      // 始终以 store 最新 sessionId 为准，避免闭包里读到旧值后回写错误会话。
+      const latestSessionId = useCurrentChatSessionStore.getState().currentSessionId;
+      if (latestSessionId) {
+        const currentSession = payload.list.find((item) => item.id === latestSessionId);
+        if (currentSession) {
+          setCurrentSession({ id: currentSession.id, title: currentSession.title });
+        }
+      }
+      setSessionItems((prev) => {
+        if (!append) {
+          return payload.list;
+        }
+        const existingIds = new Set(prev.map((item) => item.id));
+        const extra = payload.list.filter((item) => !existingIds.has(item.id));
+        return [...prev, ...extra];
+      });
+    } catch (err) {
+      toast.danger(parseErrorMessage(err));
+    } finally {
       if (append) {
-        setLoadingMoreSessions(true);
+        setLoadingMoreSessions(false);
       }
-      try {
-        const payload = await runListSessions(page);
-        setSessionPage(payload.page);
-        setSessionTotalPage(payload.total_page || 1);
-        // 始终以 store 最新 sessionId 为准，避免闭包里读到旧值后回写错误会话。
-        const latestSessionId = useCurrentChatSessionStore.getState().currentSessionId;
-        if (latestSessionId) {
-          const currentSession = payload.list.find((item) => item.id === latestSessionId);
-          if (currentSession) {
-            setCurrentSession({ id: currentSession.id, title: currentSession.title });
-          }
-        }
-        setSessionItems((prev) => {
-          if (!append) {
-            return payload.list;
-          }
-          const existingIds = new Set(prev.map((item) => item.id));
-          const extra = payload.list.filter((item) => !existingIds.has(item.id));
-          return [...prev, ...extra];
-        });
-      } catch (err) {
-        toast.danger(parseErrorMessage(err));
-      } finally {
-        if (append) {
-          setLoadingMoreSessions(false);
-        }
-      }
-    },
-    [runListSessions, setCurrentSession]
-  );
+    }
+  };
 
-  const refresh = useCallback(async () => {
+  const refresh = async () => {
     await loadSessionPage(1, false);
-  }, [loadSessionPage]);
+  };
 
   useMount(() => {
     void refresh();
@@ -86,28 +83,22 @@ const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionListGroupP
   const normalSessions = sessionItems.filter((item) => !item.is_pinned);
   const hasMoreSessions = sessionPage < sessionTotalPage;
 
-  const handleDeleted = useCallback(
-    (sessionId: string) => {
-      if (currentSessionId === sessionId) {
-        clearCurrentSession();
-      }
-      onActiveSessionMenuKeyChange?.(undefined);
-    },
-    [clearCurrentSession, currentSessionId, onActiveSessionMenuKeyChange]
-  );
+  const handleDeleted = (sessionId: string) => {
+    if (currentSessionId === sessionId) {
+      clearCurrentSession();
+    }
+    onActiveSessionMenuKeyChange?.(undefined);
+  };
 
-  const selectSession = useCallback(
-    (session: ChatSession) => {
-      setCurrentSession({ id: session.id, title: session.title });
-      setChatPanelCollapsed(false);
-    },
-    [setChatPanelCollapsed, setCurrentSession]
-  );
+  const selectSession = (session: ChatSession) => {
+    setCurrentSession({ id: session.id, title: session.title });
+    setChatPanelCollapsed(false);
+  };
 
-  const loadMoreSessions = useCallback(() => {
+  const loadMoreSessions = () => {
     if (loadingMoreSessions || !hasMoreSessions) return;
     void loadSessionPage(sessionPage + 1, true);
-  }, [hasMoreSessions, loadSessionPage, loadingMoreSessions, sessionPage]);
+  };
 
   return {
     hasMoreSessions,

@@ -3,7 +3,7 @@ import type { DriveNode, LoadMoreNode } from '@/domains/Drive';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDriveTreeChildren } from '../common/useDriveTreeChildren';
 import type { DriveRow } from './index.type';
 
@@ -74,40 +74,34 @@ export function useTableDrive({ rootId, groupId }: UseTableDriveParams): UseTabl
     }
   );
 
-  const enterFolder = useCallback((nodeId: string) => {
+  const enterFolder = (nodeId: string) => {
     setCurrentNodeId(nodeId);
-  }, []);
+  };
 
-  const handleLoadMore = useCallback(
-    async (node: LoadMoreNode) => {
-      // 加载期间忽略重复点击
-      if (loadingMoreParentId === node.parentId) return;
-      setLoadingMoreParentId(node.parentId);
-      try {
-        const next = await loadMore(node);
-        if (node.parentId === currentNodeId) {
-          setRows(next as DriveRow[]);
-        }
-      } finally {
-        setLoadingMoreParentId(null);
+  const handleLoadMore = async (node: LoadMoreNode) => {
+    // 加载期间忽略重复点击
+    if (loadingMoreParentId === node.parentId) return;
+    setLoadingMoreParentId(node.parentId);
+    try {
+      const next = await loadMore(node);
+      if (node.parentId === currentNodeId) {
+        setRows(next as DriveRow[]);
       }
-    },
-    [loadMore, currentNodeId, loadingMoreParentId]
-  );
+    } finally {
+      setLoadingMoreParentId(null);
+    }
+  };
 
-  const handleExpand = useCallback(
-    async (expanded: boolean, record: DriveRow) => {
-      if (!expanded || record.type !== 'folder') {
-        setExpandedRowKeys((keys) => keys.filter((k) => k !== record.id));
-        return;
-      }
-      if (!childrenMap.has(record.id)) {
-        await loadChildren(record.id);
-      }
-      setExpandedRowKeys((keys) => (keys.includes(record.id) ? keys : [...keys, record.id]));
-    },
-    [childrenMap, loadChildren]
-  );
+  const handleExpand = async (expanded: boolean, record: DriveRow) => {
+    if (!expanded || record.type !== 'folder') {
+      setExpandedRowKeys((keys) => keys.filter((k) => k !== record.id));
+      return;
+    }
+    if (!childrenMap.has(record.id)) {
+      await loadChildren(record.id);
+    }
+    setExpandedRowKeys((keys) => (keys.includes(record.id) ? keys : [...keys, record.id]));
+  };
 
   // 浅 map：folder 命中 expandedChildrenMap 时挂 children，否则原样返回
   const dataSource = useMemo<DriveRow[]>(() => {

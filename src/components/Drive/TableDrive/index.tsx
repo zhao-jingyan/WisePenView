@@ -2,7 +2,7 @@ import IconText from '@/components/Common/IconText';
 import type { DriveNode } from '@/domains/Drive';
 import { Button } from '@heroui/react';
 import { Table } from 'antd';
-import React, { useCallback, useMemo, useRef, type HTMLAttributes } from 'react';
+import React, { useMemo, useRef, type HTMLAttributes } from 'react';
 import { AiOutlineCloudUpload } from 'react-icons/ai';
 import { LuChevronDown, LuChevronRight } from 'react-icons/lu';
 import { resolveDriveScope } from '../common/driveComponentModel';
@@ -66,58 +66,55 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
   // 仅在 drag 期间打开；drop / dragEnd 都会复位。useRef 避免触发 re-render，也避免 onClick 闭包旧值
   const isDraggingRef = useRef(false);
 
-  const getRowProps = useCallback(
-    (record: DriveRow): HTMLAttributes<HTMLTableRowElement> => {
-      const base: HTMLAttributes<HTMLTableRowElement> = {
-        onClick: () => {
-          if (isDraggingRef.current) return;
-          handleClickNode(record);
-        },
-        style: { cursor: 'pointer' },
+  const getRowProps = (record: DriveRow): HTMLAttributes<HTMLTableRowElement> => {
+    const base: HTMLAttributes<HTMLTableRowElement> = {
+      onClick: () => {
+        if (isDraggingRef.current) return;
+        handleClickNode(record);
+      },
+      style: { cursor: 'pointer' },
+    };
+
+    // loadMore 行不参与 drag/drop
+    if (record.type === 'loadMore') return base;
+
+    if (isDraggableDriveNode(record)) {
+      base.draggable = true;
+      base.onDragStart = (e) => {
+        isDraggingRef.current = true;
+        e.dataTransfer.setData(DRAG_TYPE_DRIVE_NODE, JSON.stringify(record));
+        e.dataTransfer.effectAllowed = 'move';
       };
+      base.onDragEnd = () => {
+        isDraggingRef.current = false;
+      };
+    }
 
-      // loadMore 行不参与 drag/drop
-      if (record.type === 'loadMore') return base;
+    if (isDropTargetDriveNode(record)) {
+      base.onDragOver = (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        e.currentTarget.classList.add(styles.droppableOver);
+      };
+      base.onDragLeave = (e) => {
+        e.currentTarget.classList.remove(styles.droppableOver);
+      };
+      base.onDrop = (e) => {
+        e.preventDefault();
+        e.currentTarget.classList.remove(styles.droppableOver);
+        const raw = e.dataTransfer.getData(DRAG_TYPE_DRIVE_NODE);
+        if (!raw) return;
+        try {
+          const source = JSON.parse(raw) as DriveNode;
+          void onDrop(source, record);
+        } catch {
+          // 非本系统拖拽数据，忽略
+        }
+      };
+    }
 
-      if (isDraggableDriveNode(record)) {
-        base.draggable = true;
-        base.onDragStart = (e) => {
-          isDraggingRef.current = true;
-          e.dataTransfer.setData(DRAG_TYPE_DRIVE_NODE, JSON.stringify(record));
-          e.dataTransfer.effectAllowed = 'move';
-        };
-        base.onDragEnd = () => {
-          isDraggingRef.current = false;
-        };
-      }
-
-      if (isDropTargetDriveNode(record)) {
-        base.onDragOver = (e) => {
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          e.currentTarget.classList.add(styles.droppableOver);
-        };
-        base.onDragLeave = (e) => {
-          e.currentTarget.classList.remove(styles.droppableOver);
-        };
-        base.onDrop = (e) => {
-          e.preventDefault();
-          e.currentTarget.classList.remove(styles.droppableOver);
-          const raw = e.dataTransfer.getData(DRAG_TYPE_DRIVE_NODE);
-          if (!raw) return;
-          try {
-            const source = JSON.parse(raw) as DriveNode;
-            void onDrop(source, record);
-          } catch {
-            // 非本系统拖拽数据，忽略
-          }
-        };
-      }
-
-      return base;
-    },
-    [handleClickNode, onDrop]
-  );
+    return base;
+  };
 
   const columns = useMemo(
     () =>
@@ -136,34 +133,31 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
     [actions, loadingMoreParentId, onRowAction, openDropdownKey, setOpenDropdownKey]
   );
 
-  const expandIcon = useCallback(
-    ({
-      expanded,
-      onExpand,
-      record,
-    }: {
-      expanded: boolean;
-      onExpand: (record: DriveRow, e: React.MouseEvent<HTMLElement>) => void;
-      record: DriveRow;
-    }) => {
-      if (record.type !== 'folder') {
-        return record.type === 'loadMore' ? null : <span className={styles.expandPlaceholder} />;
-      }
-      return (
-        <button
-          type="button"
-          className={styles.expandBtn}
-          onClick={(e) => {
-            e.stopPropagation();
-            onExpand(record, e);
-          }}
-        >
-          {expanded ? <LuChevronDown size={14} /> : <LuChevronRight size={14} />}
-        </button>
-      );
-    },
-    []
-  );
+  const expandIcon = ({
+    expanded,
+    onExpand,
+    record,
+  }: {
+    expanded: boolean;
+    onExpand: (record: DriveRow, e: React.MouseEvent<HTMLElement>) => void;
+    record: DriveRow;
+  }) => {
+    if (record.type !== 'folder') {
+      return record.type === 'loadMore' ? null : <span className={styles.expandPlaceholder} />;
+    }
+    return (
+      <button
+        type="button"
+        className={styles.expandBtn}
+        onClick={(e) => {
+          e.stopPropagation();
+          onExpand(record, e);
+        }}
+      >
+        {expanded ? <LuChevronDown size={14} /> : <LuChevronRight size={14} />}
+      </button>
+    );
+  };
 
   return (
     <main className={styles.listArea}>

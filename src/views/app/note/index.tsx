@@ -1,6 +1,6 @@
 import { useRequest, useUnmount } from 'ahooks';
 import { Alert, Result, Segmented, Spin } from 'antd';
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { RiArrowLeftDoubleLine, RiMenuLine } from 'react-icons/ri';
 import { Link, useParams } from 'react-router-dom';
 
@@ -81,10 +81,6 @@ function NoteViewConnected({
     }
   );
 
-  const handleToggleLike = useCallback(() => {
-    runToggleLike();
-  }, [runToggleLike]);
-
   const { run: runRate, loading: rateLoading } = useRequest(
     (score: number) => resourceService.interactRate({ resourceId, score }),
     {
@@ -99,9 +95,9 @@ function NoteViewConnected({
     }
   );
 
-  const focusBody = useCallback(() => {
+  const focusBody = () => {
     bodyEditorRef.current?.focus();
-  }, []);
+  };
 
   useUnmount(() => {
     if (reconnectTimerRef.current !== null) {
@@ -110,7 +106,7 @@ function NoteViewConnected({
     }
   });
 
-  const handleReconnect = useCallback(() => {
+  const handleReconnect = () => {
     reconnect();
 
     if (reconnectTimerRef.current !== null) {
@@ -122,7 +118,7 @@ function NoteViewConnected({
       setIsReconnectLoading(false);
       reconnectTimerRef.current = null;
     }, 2000);
-  }, [reconnect]);
+  };
 
   const noteTitleText = noteInfoDisplay?.noteTitle?.trim() || '未命名笔记';
   const outlineItemsWithTitle: NoteOutlineItem[] = [
@@ -276,7 +272,7 @@ function NoteViewConnected({
                   userScore={
                     displayUserScore !== undefined ? displayUserScore : noteInfoDisplay?.userScore
                   }
-                  onToggleLike={handleToggleLike}
+                  onToggleLike={runToggleLike}
                   onRate={runRate}
                   likeLoading={likeLoading}
                   rateLoading={rateLoading}

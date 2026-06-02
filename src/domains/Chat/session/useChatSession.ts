@@ -2,7 +2,6 @@ import { getApiBaseURL } from '@/apis/apiServerAddr';
 import { useNoteSelectionStore } from '@/store';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useCallback } from 'react';
 import type { ChatRequestBody, ChatState, UseChatSessionOptions } from './index.type';
 
 // 调用时求值：apiServerAddr 会在生产环境随网络变化运行时切换，固化会失效
@@ -72,24 +71,21 @@ export const useChatSession = ({
     }),
   });
 
-  const sendSessionMessage = useCallback(
-    async (
-      query: string,
-      options?: { model?: string; enableSelected?: boolean; sessionId?: string }
-    ) => {
-      const targetSessionId = options?.sessionId ?? sessionId;
-      const selected = useNoteSelectionStore.getState().selectedTextByResourceId[targetSessionId];
-      const requestBody = buildRequestBody({
-        sessionId: targetSessionId,
-        query,
-        model: options?.model ?? model,
-        selected,
-        enableSelected: options?.enableSelected ?? enableSelected,
-      });
-      await chat.sendMessage({ text: query }, { body: requestBody });
-    },
-    [chat, enableSelected, model, sessionId]
-  );
+  const sendSessionMessage = async (
+    query: string,
+    options?: { model?: string; enableSelected?: boolean; sessionId?: string }
+  ) => {
+    const targetSessionId = options?.sessionId ?? sessionId;
+    const selected = useNoteSelectionStore.getState().selectedTextByResourceId[targetSessionId];
+    const requestBody = buildRequestBody({
+      sessionId: targetSessionId,
+      query,
+      model: options?.model ?? model,
+      selected,
+      enableSelected: options?.enableSelected ?? enableSelected,
+    });
+    await chat.sendMessage({ text: query }, { body: requestBody });
+  };
 
   return {
     ...chat,

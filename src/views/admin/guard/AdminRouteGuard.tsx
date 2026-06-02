@@ -2,7 +2,7 @@ import { useUserService } from '@/domains';
 import { IDENTITY } from '@/domains/User';
 import { useMount, useUpdateEffect } from 'ahooks';
 import { Spin } from 'antd';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import styles from './AdminRouteGuard.module.less';
 
@@ -13,7 +13,7 @@ function AdminRouteGuard() {
   const location = useLocation();
   const [status, setStatus] = useState<GuardStatus>('checking');
 
-  const checkAdminPermission = useCallback(async () => {
+  const checkAdminPermission = async () => {
     setStatus('checking');
     try {
       const user = await userService.getUserInfo();
@@ -22,15 +22,15 @@ function AdminRouteGuard() {
       // 未登录等认证异常交给全局 axios 401 拦截处理，其他异常按非管理员处理。
       setStatus('denied');
     }
-  }, [userService]);
+  };
 
   useMount(() => {
-    checkAdminPermission();
+    void checkAdminPermission();
   });
 
   useUpdateEffect(() => {
-    checkAdminPermission();
-  }, [location.pathname, checkAdminPermission]);
+    void checkAdminPermission();
+  }, [location.pathname]);
 
   if (status === 'checking') {
     return (

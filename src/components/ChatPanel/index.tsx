@@ -11,7 +11,7 @@ import {
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { RiIndentIncrease } from 'react-icons/ri';
 import ChatInput from './ChatInput';
 import {
@@ -128,35 +128,32 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
   const chatInputModelId = currentModel?.id ?? '';
   const hasSelectedContext = enableSelectedText && Boolean(selectedContextText.trim());
 
-  const loadHistoryMessages = useCallback(
-    async (sessionId: string) => {
-      try {
-        const payload = await runLoadSessionHistory(sessionId, 1);
-        setHistoryMessages(
-          payload.list.map((m) => mapHistoryMessage(m, { modelMetaMap, currentModel }))
-        );
-        setHistoryPage(payload.page ?? 1);
-        setHistoryTotalPage(payload.total_page ?? 1);
-      } catch (error) {
-        const errorMessage = parseErrorMessage(error);
-        if (isSessionInvalidMessage(errorMessage)) {
-          clearCurrentSession();
-          setHistoryMessages([]);
-          setHistoryPage(1);
-          setHistoryTotalPage(1);
-          setLiveMessages([]);
-          return;
-        }
-        toast.danger(errorMessage);
+  const loadHistoryMessages = async (sessionId: string) => {
+    try {
+      const payload = await runLoadSessionHistory(sessionId, 1);
+      setHistoryMessages(
+        payload.list.map((m) => mapHistoryMessage(m, { modelMetaMap, currentModel }))
+      );
+      setHistoryPage(payload.page ?? 1);
+      setHistoryTotalPage(payload.total_page ?? 1);
+    } catch (error) {
+      const errorMessage = parseErrorMessage(error);
+      if (isSessionInvalidMessage(errorMessage)) {
+        clearCurrentSession();
         setHistoryMessages([]);
         setHistoryPage(1);
         setHistoryTotalPage(1);
+        setLiveMessages([]);
+        return;
       }
-    },
-    [clearCurrentSession, currentModel, modelMetaMap, runLoadSessionHistory, setLiveMessages]
-  );
+      toast.danger(errorMessage);
+      setHistoryMessages([]);
+      setHistoryPage(1);
+      setHistoryTotalPage(1);
+    }
+  };
 
-  const loadMoreHistoryMessages = useCallback(async () => {
+  const loadMoreHistoryMessages = async () => {
     if (!currentSessionId) return;
     if (loadingMoreHistory) return;
     if (historyPage >= historyTotalPage) return;
@@ -177,65 +174,46 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
     } finally {
       setLoadingMoreHistory(false);
     }
-  }, [
-    currentModel,
-    currentSessionId,
-    historyPage,
-    historyTotalPage,
-    loadingMoreHistory,
-    modelMetaMap,
-    runLoadSessionHistory,
-  ]);
+  };
 
-  const handleSend = useCallback(
-    async (text: string) => {
-      if (!currentModel) return;
-      let targetSessionId = currentSessionId;
+  const handleSend = async (text: string) => {
+    if (!currentModel) return;
+    let targetSessionId = currentSessionId;
 
-      if (!targetSessionId) {
-        try {
-          const createdSession = await runCreateSession();
-          targetSessionId = createdSession.id;
-          useNewChatSessionStore.getState().setNewChatSession({
-            id: createdSession.id,
-            title: createdSession.title,
-          });
-          setCurrentSession({ id: createdSession.id, title: createdSession.title });
-        } catch (error) {
-          toast.danger(parseErrorMessage(error));
-          return;
-        }
+    if (!targetSessionId) {
+      try {
+        const createdSession = await runCreateSession();
+        targetSessionId = createdSession.id;
+        useNewChatSessionStore.getState().setNewChatSession({
+          id: createdSession.id,
+          title: createdSession.title,
+        });
+        setCurrentSession({ id: createdSession.id, title: createdSession.title });
+      } catch (error) {
+        toast.danger(parseErrorMessage(error));
+        return;
       }
+    }
 
-      const sendPromise = sendSessionMessage(text, {
-        model: currentModel.id,
-        enableSelected: hasSelectedContext,
-        sessionId: targetSessionId,
-      });
-      if (hasSelectedContext) {
-        clearSelectedText(targetSessionId);
-      }
-      await sendPromise;
-    },
-    [
-      clearSelectedText,
-      currentModel,
-      currentSessionId,
-      hasSelectedContext,
-      runCreateSession,
-      sendSessionMessage,
-      setCurrentSession,
-    ]
-  );
+    const sendPromise = sendSessionMessage(text, {
+      model: currentModel.id,
+      enableSelected: hasSelectedContext,
+      sessionId: targetSessionId,
+    });
+    if (hasSelectedContext) {
+      clearSelectedText(targetSessionId);
+    }
+    await sendPromise;
+  };
 
-  const handleClearSelectedContext = useCallback(() => {
+  const handleClearSelectedContext = () => {
     if (!currentSessionId) return;
     clearSelectedText(currentSessionId);
-  }, [clearSelectedText, currentSessionId]);
+  };
 
-  const handleCollapsePanel = useCallback(() => {
+  const handleCollapsePanel = () => {
     setChatPanelCollapsed(true);
-  }, [setChatPanelCollapsed]);
+  };
 
   useMount(() => {
     if (!currentSessionId) return;
@@ -259,7 +237,7 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
     setHistoryTotalPage(1);
     setLiveMessages([]);
     void loadHistoryMessages(currentSessionId);
-  }, [currentSessionId, loadHistoryMessages, setLiveMessages]);
+  }, [currentSessionId]);
 
   return (
     <div className={styles.panel}>

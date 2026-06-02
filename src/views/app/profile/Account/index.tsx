@@ -14,7 +14,6 @@ import layout from '../style.module.less';
 function Account() {
   const userService = useUserService();
   const [user, setUser] = useState<GetUserInfoResponse | null>(null);
-  const [editMode, setEditMode] = useState(false);
 
   const handleUserInfoUpdated = (data: GetUserInfoResponse) => {
     setUser(data);
@@ -37,10 +36,6 @@ function Account() {
     () => new Set((user?.readonlyFields ?? []) as ProfileFieldKey[]),
     [user?.readonlyFields]
   );
-
-  const handleCancelEdit = () => {
-    setEditMode(false);
-  };
 
   return (
     <div className={layout.pageContainer}>
@@ -73,10 +68,7 @@ function Account() {
             fieldConfig={fieldConfig}
             visibleFields={visibleFields}
             readonlyFieldSet={readonlyFieldSet}
-            editMode={editMode}
-            onEditModeChange={setEditMode}
             onUserInfoUpdated={handleUserInfoUpdated}
-            onCancel={handleCancelEdit}
           />
         </div>
       </Spin>

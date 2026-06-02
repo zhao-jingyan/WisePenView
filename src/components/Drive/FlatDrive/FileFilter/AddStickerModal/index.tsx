@@ -3,20 +3,20 @@ import { parseErrorMessage } from '@/utils/error';
 import { validateReservedName } from '@/utils/tag/validateReservedName';
 import { Button, Input, Modal, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import type { AddStickerModalProps } from './index.type';
 
 function AddStickerModal({ isOpen, onOpenChange, onSuccess }: AddStickerModalProps) {
   const stickerService = useStickerService();
   const [name, setName] = useState('');
-  const reset = useCallback(() => {
+  const reset = () => {
     setName('');
-  }, []);
+  };
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     reset();
     onOpenChange(false);
-  }, [reset, onOpenChange]);
+  };
 
   const { loading, run: runAddSticker } = useRequest(
     async (trimmed: string) => stickerService.addSticker({ stickerName: trimmed }),
@@ -33,7 +33,7 @@ function AddStickerModal({ isOpen, onOpenChange, onSuccess }: AddStickerModalPro
     }
   );
 
-  const handleOk = useCallback(async () => {
+  const handleOk = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
     const validation = validateReservedName(trimmed);
@@ -42,7 +42,7 @@ function AddStickerModal({ isOpen, onOpenChange, onSuccess }: AddStickerModalPro
       return;
     }
     runAddSticker(trimmed);
-  }, [name, runAddSticker]);
+  };
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange}>

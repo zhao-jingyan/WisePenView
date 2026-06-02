@@ -7,7 +7,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { InputNumber, Skeleton } from 'antd';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import type { OwnerGroupTokenTransferProps } from './index.type';
 import styles from './style.module.less';
 
@@ -45,10 +45,10 @@ function OwnerGroupTokenTransfer({ groupId, onTransferSuccess }: OwnerGroupToken
     }
   );
 
-  const refreshAfterTransfer = useCallback(async () => {
+  const refreshAfterTransfer = async () => {
     await loadBalances();
     onTransferSuccess?.();
-  }, [loadBalances, onTransferSuccess]);
+  };
 
   const { loading: submittingToGroup, runAsync: runTransferToGroup } = useRequest(
     async (amount: number) =>

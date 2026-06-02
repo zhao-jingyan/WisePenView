@@ -1,6 +1,5 @@
 import { RESOURCE_TYPE } from '@/domains/Resource';
 import { useActiveDriveScopeStore, usePdfPreviewProgressStore } from '@/store';
-import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export interface NavigateResourceFn {
@@ -16,25 +15,22 @@ export interface NavigateResourceFn {
 export const useNavigateResource = (groupId?: string): NavigateResourceFn => {
   const navigate = useNavigate();
 
-  return useCallback(
-    (resourceId, resourceType) => {
-      if (!resourceId) return;
-      useActiveDriveScopeStore.getState().setGroupId(groupId);
+  return (resourceId, resourceType) => {
+    if (!resourceId) return;
+    useActiveDriveScopeStore.getState().setGroupId(groupId);
 
-      if (resourceType === RESOURCE_TYPE.NOTE) {
-        navigate(`/app/note/${encodeURIComponent(resourceId)}`);
-        return;
-      }
+    if (resourceType === RESOURCE_TYPE.NOTE) {
+      navigate(`/app/note/${encodeURIComponent(resourceId)}`);
+      return;
+    }
 
-      const progress = usePdfPreviewProgressStore.getState().progressByResourceId[resourceId];
-      const qs = new URLSearchParams();
-      if (progress != null) {
-        qs.set('page', String(progress.page));
-        qs.set('zoom', progress.zoom);
-      }
-      const basePath = `/app/pdf/${encodeURIComponent(resourceId)}`;
-      navigate(qs.size > 0 ? `${basePath}?${qs.toString()}` : basePath);
-    },
-    [navigate, groupId]
-  );
+    const progress = usePdfPreviewProgressStore.getState().progressByResourceId[resourceId];
+    const qs = new URLSearchParams();
+    if (progress != null) {
+      qs.set('page', String(progress.page));
+      qs.set('zoom', progress.zoom);
+    }
+    const basePath = `/app/pdf/${encodeURIComponent(resourceId)}`;
+    navigate(qs.size > 0 ? `${basePath}?${qs.toString()}` : basePath);
+  };
 };

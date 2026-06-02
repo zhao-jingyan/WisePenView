@@ -11,7 +11,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Result, Spin } from 'antd';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styles from './style.module.less';
 
@@ -76,32 +76,17 @@ function PdfPreview() {
     }
   );
 
-  const handleToggleLike = useCallback(() => {
-    if (!resourceId) return;
-    runToggleLike();
-  }, [resourceId, runToggleLike]);
-
-  const handleRate = useCallback(
-    (score: number) => {
-      if (!resourceId) return;
-      runRate(score);
-    },
-    [resourceId, runRate]
-  );
   const currentResourceId = resourceId ?? '';
   const viewerError = viewerErrorMap[currentResourceId];
-  const handleViewerLoadError = useCallback(
-    (error: unknown) => {
-      if (!currentResourceId) {
-        return;
-      }
-      setViewerErrorMap((prev) => ({
-        ...prev,
-        [currentResourceId]: error,
-      }));
-    },
-    [currentResourceId]
-  );
+  const handleViewerLoadError = (error: unknown) => {
+    if (!currentResourceId) {
+      return;
+    }
+    setViewerErrorMap((prev) => ({
+      ...prev,
+      [currentResourceId]: error,
+    }));
+  };
 
   if (!resourceId) {
     return (
@@ -263,8 +248,8 @@ function PdfPreview() {
           <ResourceInteractFooter
             liked={displayLiked ?? resourceInfo?.liked ?? false}
             userScore={displayUserScore !== undefined ? displayUserScore : resourceInfo?.userScore}
-            onToggleLike={handleToggleLike}
-            onRate={handleRate}
+            onToggleLike={runToggleLike}
+            onRate={runRate}
             likeLoading={likeLoading}
             rateLoading={rateLoading}
           />

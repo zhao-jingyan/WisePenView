@@ -1,6 +1,6 @@
 /** 文档末尾互动区（Note 与 PDF 详情页通用）：大圆形点赞按钮 + 星级评分 */
 import { useUnmount } from 'ahooks';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { RiThumbUpFill, RiThumbUpLine } from 'react-icons/ri';
 
 import Rating from '@/components/Common/Rating';
@@ -39,26 +39,23 @@ function ResourceInteractFooter({
   const burstTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** 仅在「未赞 → 点赞」时触发彩带动效 */
-  const handleLikeClick = useCallback(() => {
+  const handleLikeClick = () => {
     if (!liked && !likeLoading) {
       if (burstTimer.current) clearTimeout(burstTimer.current);
       setBursting(true);
       burstTimer.current = setTimeout(() => setBursting(false), 900);
     }
     onToggleLike?.();
-  }, [liked, likeLoading, onToggleLike]);
+  };
 
   useUnmount(() => {
     if (burstTimer.current) clearTimeout(burstTimer.current);
   });
 
   /** 评分提交回调 */
-  const handleRateChange = useCallback(
-    (score: number) => {
-      onRate?.(score);
-    },
-    [onRate]
-  );
+  const handleRateChange = (score: number) => {
+    onRate?.(score);
+  };
 
   const rateHintText = userScore != null ? `已评 ${userScore} 分` : '为本资源评分';
 

@@ -8,7 +8,7 @@ import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Radio, Select, Spin, Tag } from 'antd';
 import clsx from 'clsx';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { LuPlus, LuTags, LuX } from 'react-icons/lu';
 import AddStickerModal from './AddStickerModal';
 import type { FileFilterProps, FileFilterValue } from './index.type';
@@ -40,36 +40,27 @@ function FileFilter({ value, onChange }: FileFilterProps) {
     },
   });
 
-  const updateValue = useCallback(
-    (patch: Partial<FileFilterValue>) => {
-      const next = { ...current, ...patch };
-      if (!isControlled) setInnerValue(next);
-      onChange?.(next);
-    },
-    [current, isControlled, onChange]
-  );
+  const updateValue = (patch: Partial<FileFilterValue>) => {
+    const next = { ...current, ...patch };
+    if (!isControlled) setInnerValue(next);
+    onChange?.(next);
+  };
 
-  const handlePickTag = useCallback(
-    (tagId: string, tagName: string) => {
-      if (current.tagIds.includes(tagId)) return;
-      updateValue({
-        tagIds: [...current.tagIds, tagId],
-        tagNames: [...current.tagNames, tagName],
-      });
-    },
-    [current, updateValue]
-  );
+  const handlePickTag = (tagId: string, tagName: string) => {
+    if (current.tagIds.includes(tagId)) return;
+    updateValue({
+      tagIds: [...current.tagIds, tagId],
+      tagNames: [...current.tagNames, tagName],
+    });
+  };
 
-  const handleRemoveTag = useCallback(
-    (tagId: string) => {
-      const idx = current.tagIds.indexOf(tagId);
-      updateValue({
-        tagIds: current.tagIds.filter((id) => id !== tagId),
-        tagNames: current.tagNames.filter((_, i) => i !== idx),
-      });
-    },
-    [current, updateValue]
-  );
+  const handleRemoveTag = (tagId: string) => {
+    const idx = current.tagIds.indexOf(tagId);
+    updateValue({
+      tagIds: current.tagIds.filter((id) => id !== tagId),
+      tagNames: current.tagNames.filter((_, i) => i !== idx),
+    });
+  };
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [stickerManageModalOpen, setStickerManageModalOpen] = useState(false);

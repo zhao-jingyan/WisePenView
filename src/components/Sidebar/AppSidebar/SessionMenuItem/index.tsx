@@ -3,7 +3,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { Button, Input, Modal, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { RiDeleteBinLine, RiEditLine } from 'react-icons/ri';
 import type { SessionMenuItemProps } from './index.type';
 import styles from './style.module.less';
@@ -51,19 +51,19 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
     }
   );
 
-  const submitRename = useCallback(async () => {
+  const submitRename = async () => {
     const trimmedTitle = editingTitle.trim();
     if (!trimmedTitle) {
       toast.warning('请输入会话名称');
       return;
     }
     await runRenameSession(trimmedTitle);
-  }, [editingTitle, runRenameSession]);
+  };
 
-  const confirmDeleteSession = useCallback(async () => {
+  const confirmDeleteSession = async () => {
     await runDeleteSession();
     setDeleteConfirmOpen(false);
-  }, [runDeleteSession]);
+  };
 
   return (
     <div className={styles.sessionMenuLabel}>
@@ -137,12 +137,7 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
                 >
                   取消
                 </Button>
-                <Button
-                  variant="primary"
-                  onPress={() => {
-                    void submitRename();
-                  }}
-                >
+                <Button variant="primary" onPress={() => void submitRename()}>
                   保存
                 </Button>
               </Modal.Footer>
@@ -165,9 +160,7 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
                 <Button
                   variant="danger"
                   isDisabled={deleting}
-                  onPress={() => {
-                    void confirmDeleteSession();
-                  }}
+                  onPress={() => void confirmDeleteSession()}
                 >
                   删除
                 </Button>

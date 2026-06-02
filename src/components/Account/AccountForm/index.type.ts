@@ -18,8 +18,5 @@ export interface AccountFormProps {
   fieldConfig: ProfileFieldConfig;
   visibleFields: readonly ProfileFieldItem[];
   readonlyFieldSet: ReadonlySet<ProfileFieldKey>;
-  editMode: boolean;
-  onEditModeChange: (edit: boolean) => void;
   onUserInfoUpdated: (data: GetUserInfoResponse) => void;
-  onCancel: () => void;
 }

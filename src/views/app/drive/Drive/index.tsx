@@ -7,7 +7,7 @@ import UploadQueueTab from '@/components/Drive/UploadQueueTab';
 import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
 import { Button } from '@heroui/react';
 import { Tabs } from 'antd';
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { AiOutlineCloudUpload } from 'react-icons/ai';
 import { LuTags } from 'react-icons/lu';
 
@@ -27,9 +27,9 @@ function Drive() {
   const [stickerManageOpen, setStickerManageOpen] = useState(false);
   const uploadQueueRef = useRef<UploadQueueTabRef>(null);
 
-  const handleUploadSuccess = useCallback(() => {
+  const handleUploadSuccess = () => {
     uploadQueueRef.current?.refresh();
-  }, []);
+  };
   const activeViewMode: DriveViewMode = VIEW_TABS.some((tab) => tab.key === viewMode)
     ? viewMode
     : 'tableDrive';

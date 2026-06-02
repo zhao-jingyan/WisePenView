@@ -4,7 +4,7 @@ import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
 import { useCreateBlockNote } from '@blocknote/react';
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import { useNoteService } from '@/domains';
 import { useNewNoteStore } from '@/store';
@@ -99,7 +99,7 @@ function NoteTitle({ id, initialContent, onEnterKey, focusOnMount }: NoteTitlePr
   });
 
   /** 标题稳定后调用 NoteService.syncTitle（与 Pipeline 防抖一致） */
-  const triggerTitleDebounceTimer = useCallback(() => {
+  const triggerTitleDebounceTimer = () => {
     const currentId = latestIdRef.current;
     if (!currentId) return;
     if (titleDebounceTimerRef.current) {
@@ -116,7 +116,7 @@ function NoteTitle({ id, initialContent, onEnterKey, focusOnMount }: NoteTitlePr
         toast.danger(parseErrorMessage(error));
       });
     }, TITLE_DEBOUNCE_MS);
-  }, [editor, noteService]);
+  };
 
   useMount(() => {
     onChangeCleanupRef.current = editor.onChange(() => {

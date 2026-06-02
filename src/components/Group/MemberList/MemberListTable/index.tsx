@@ -1,7 +1,7 @@
 import type { GroupMember } from '@/domains/Group';
 import type { TablePaginationConfig, TableProps } from 'antd';
 import { Table } from 'antd';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import type { MemberListPaginationConfig, MemberListTableProps } from './index.type';
 import styles from './style.module.less';
 import { getColumns } from './TableConfig';
@@ -38,21 +38,18 @@ function MemberListTable({
     [members]
   );
 
-  const emitSelectedMembersChange = useCallback(
-    (keys: Array<string | number>) => {
+  const columns = useMemo(() => getColumns(groupDisplayConfig, styles), [groupDisplayConfig]);
+
+  const rowSelection: TableRowSelection<GroupMember & { key: React.Key }> = useMemo(() => {
+    if (!isEditMode) return undefined;
+
+    const emitSelectedMembersChange = (keys: Array<string | number>) => {
       if (!onSelectedMembersChange) return;
       const selectedMembers = keys
         .map((key) => selectedMembersMapRef.current.get(String(key)))
         .filter((member): member is GroupMember => member !== undefined);
       onSelectedMembersChange(selectedMembers);
-    },
-    [onSelectedMembersChange]
-  );
-
-  const columns = useMemo(() => getColumns(groupDisplayConfig, styles), [groupDisplayConfig]);
-
-  const rowSelection: TableRowSelection<GroupMember & { key: React.Key }> = useMemo(() => {
-    if (!isEditMode) return undefined;
+    };
 
     const currentPageKeysSet = new Set(dataSource.map((item) => String(item.key)));
 
@@ -92,7 +89,7 @@ function MemberListTable({
     dataSource,
     members,
     onSelectedRowKeysChange,
-    emitSelectedMembersChange,
+    onSelectedMembersChange,
   ]);
 
   const handleTableChange = (

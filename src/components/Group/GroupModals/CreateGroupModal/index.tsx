@@ -41,7 +41,7 @@ import {
   Tooltip,
 } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { useCallback, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import type { CreateGroupModalProps } from './index.type';
 
 import styles from './index.module.less';
@@ -89,14 +89,14 @@ function CreateGroupModal({ isOpen, onOpenChange, onSuccess }: CreateGroupModalP
     allowedGroupTypes.includes(opt.value)
   );
 
-  const resetForm = useCallback(() => {
+  const resetForm = () => {
     setFormValues(DEFAULT_FORM_VALUES);
-  }, []);
+  };
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     resetForm();
     onOpenChange(false);
-  }, [onOpenChange, resetForm]);
+  };
 
   const updateFormValue = <K extends keyof CreateGroupFormValues>(
     key: K,

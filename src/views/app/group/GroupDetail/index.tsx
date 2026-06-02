@@ -21,7 +21,7 @@ import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import type { TabsProps } from 'antd';
 import { Spin, Tabs } from 'antd';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { AiOutlineDelete, AiOutlineEdit, AiOutlineLogout } from 'react-icons/ai';
 import { useParams } from 'react-router-dom';
 import layout from '../style.module.less';
@@ -82,9 +82,6 @@ function GroupDetail() {
   const [dissolveGroupModalOpen, setDissolveGroupModalOpen] = useState(false);
   const [exitGroupModalOpen, setExitGroupModalOpen] = useState(false);
   const walletRef = useRef<ComputeWalletRef | null>(null);
-  const handleTransferSuccess = useCallback(() => {
-    void walletRef.current?.refresh();
-  }, []);
 
   /** Tabs 受控，避免 items 更新时重置当前选中的 Tab */
   const [detailTabKey, setDetailTabKey] = useState<string>('files');
@@ -165,7 +162,12 @@ function GroupDetail() {
         label: 'token 划拨',
         children: (
           <div className={layout.tabPane}>
-            <OwnerGroupTokenTransfer groupId={gid} onTransferSuccess={handleTransferSuccess} />
+            <OwnerGroupTokenTransfer
+              groupId={gid}
+              onTransferSuccess={() => {
+                void walletRef.current?.refresh();
+              }}
+            />
           </div>
         ),
       });
@@ -182,7 +184,7 @@ function GroupDetail() {
     });
 
     return items;
-  }, [group, id, groupDisplayConfig, resConfig, handleTransferSuccess]);
+  }, [group, id, groupDisplayConfig, resConfig]);
 
   const detailTabKeys = useMemo(() => tabItems.map((item) => String(item.key)), [tabItems]);
 

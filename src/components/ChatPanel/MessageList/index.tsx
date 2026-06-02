@@ -1,6 +1,6 @@
 import type { Message } from '@/components/ChatPanel/index.type'; // 假设你有这个类型定义
 import { useMount, useUpdateEffect } from 'ahooks';
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
 import MessageItem from './MessageItem';
 import Welcome from './Welcome';
 import styles from './style.module.less';
@@ -21,23 +21,20 @@ function MessageList({
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastMessage = messages[messages.length - 1];
 
-  const scrollToBottom = useCallback(() => {
+  const scrollToBottom = () => {
     const element = scrollRef.current;
     if (!element) return;
     element.scrollTop = element.scrollHeight;
-  }, []);
+  };
 
-  const restoreScrollPositionWithoutSmooth = useCallback(
-    (element: HTMLDivElement, nextScrollTop: number) => {
-      const previousScrollBehavior = element.style.scrollBehavior;
-      element.style.scrollBehavior = 'auto';
-      element.scrollTop = nextScrollTop;
-      requestAnimationFrame(() => {
-        element.style.scrollBehavior = previousScrollBehavior;
-      });
-    },
-    []
-  );
+  const restoreScrollPositionWithoutSmooth = (element: HTMLDivElement, nextScrollTop: number) => {
+    const previousScrollBehavior = element.style.scrollBehavior;
+    element.style.scrollBehavior = 'auto';
+    element.scrollTop = nextScrollTop;
+    requestAnimationFrame(() => {
+      element.style.scrollBehavior = previousScrollBehavior;
+    });
+  };
 
   useMount(() => {
     requestAnimationFrame(() => {
@@ -47,9 +44,9 @@ function MessageList({
 
   useUpdateEffect(() => {
     scrollToBottom();
-  }, [lastMessage?.id, lastMessage?.content, scrollToBottom]);
+  }, [lastMessage?.id, lastMessage?.content]);
 
-  const handleLoadMore = useCallback(async () => {
+  const handleLoadMore = async () => {
     if (loadingMoreHistory) return;
     const element = scrollRef.current;
     if (!element) {
@@ -67,7 +64,7 @@ function MessageList({
       const scrollHeightDelta = currentElement.scrollHeight - previousScrollHeight;
       restoreScrollPositionWithoutSmooth(currentElement, previousScrollTop + scrollHeightDelta);
     });
-  }, [loadingMoreHistory, onLoadMoreHistory, restoreScrollPositionWithoutSmooth]);
+  };
 
   return (
     <div className={styles.container} ref={scrollRef}>

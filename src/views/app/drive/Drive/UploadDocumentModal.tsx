@@ -1,6 +1,6 @@
 import UploadZone from '@/components/Common/UploadZone';
 import { useRequest } from 'ahooks';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 import { useDocumentService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
@@ -21,11 +21,11 @@ export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadD
   const [phase, setPhase] = useState<'idle' | 'hash' | 'upload'>('idle');
   const [percent, setPercent] = useState(0);
 
-  const resetState = useCallback(() => {
+  const resetState = () => {
     setSelectedFile(null);
     setPhase('idle');
     setPercent(0);
-  }, []);
+  };
 
   const { loading: uploading, run: submitUpload } = useRequest(
     (file: File) =>

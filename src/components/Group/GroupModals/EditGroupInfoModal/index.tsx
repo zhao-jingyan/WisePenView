@@ -32,7 +32,7 @@ import {
   Tooltip,
 } from '@heroui/react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import type { EditGroupInfoModalProps } from './index.type';
 
 import styles from './index.module.less';
@@ -201,17 +201,17 @@ function EditGroupInfoModal({
     }
   };
 
-  const resetForm = useCallback(() => {
+  const resetForm = () => {
     setFormValues(buildInitialFormValues({ groupName, description, config: groupResConfig }));
     setHoveredAction(null);
-  }, [description, groupName, groupResConfig]);
+  };
 
-  const initForm = useCallback(() => {
+  const initForm = () => {
     setFormValues(buildInitialFormValues({ groupName, description, config: undefined }));
     if (groupId) {
       runFetchGroupResConfig(groupId);
     }
-  }, [description, groupName, groupId, runFetchGroupResConfig]);
+  };
 
   const handleConfirm = () => {
     if (!groupId) {
@@ -243,7 +243,7 @@ function EditGroupInfoModal({
       return;
     }
     setHoveredAction(null);
-  }, [open, initForm]);
+  }, [open]);
 
   const selectedActions = normalizeResourceActions(
     formValues.defaultMemberActions ?? DEFAULT_MEMBER_ACTIONS

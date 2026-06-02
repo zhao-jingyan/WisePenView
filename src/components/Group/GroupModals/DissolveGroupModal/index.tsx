@@ -4,7 +4,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Alert, Input, Modal } from 'antd';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { DissolveGroupModalProps } from './index.type';
 
@@ -21,11 +21,11 @@ function DissolveGroupModal({
   const [confirmName, setConfirmName] = useState('');
   const navigate = useNavigate();
 
-  const handleOpenChange = useCallback((visible: boolean) => {
+  const handleOpenChange = (visible: boolean) => {
     if (visible) {
       setConfirmName('');
     }
-  }, []);
+  };
 
   const { loading, run: runDissolveGroup } = useRequest(
     async () => {

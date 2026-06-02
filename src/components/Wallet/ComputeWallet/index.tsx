@@ -12,7 +12,7 @@ import type { EnumValue } from '@/utils/enum';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { usePagination, useRequest, useUnmount } from 'ahooks';
-import { useCallback, useImperativeHandle, useRef, useState, type Ref } from 'react';
+import { useImperativeHandle, useRef, useState, type Ref } from 'react';
 import type { ComputeWalletProps, ComputeWalletRef } from './index.type';
 import styles from './style.module.less';
 import WalletBalanceHeader from './WalletBalanceHeader';
@@ -46,12 +46,12 @@ function ComputeWallet({
   const displayBalanceRef = useRef(0);
 
   /** 与展示余额同步更新 ref，供充值成功动画起点读取（禁止在 render 中写 ref） */
-  const commitDisplayBalance = useCallback((value: number) => {
+  const commitDisplayBalance = (value: number) => {
     displayBalanceRef.current = value;
     setDisplayBalance(value);
-  }, []);
+  };
 
-  const runBalanceAnimation = useCallback((from: number, to: number) => {
+  const runBalanceAnimation = (from: number, to: number) => {
     if (rafRef.current != null) {
       cancelAnimationFrame(rafRef.current);
     }
@@ -70,7 +70,7 @@ function ComputeWallet({
       }
     };
     rafRef.current = requestAnimationFrame(step);
-  }, []);
+  };
 
   const { runAsync: loadBalance } = useRequest(
     async (options?: { animateFrom?: number; silent?: boolean }) => {
@@ -169,18 +169,14 @@ function ComputeWallet({
     }
   );
 
-  const refreshWalletData = useCallback(async () => {
-    await Promise.all([loadBalance({ silent: true }), Promise.resolve(refreshTransactions())]);
-  }, [loadBalance, refreshTransactions]);
-
   useImperativeHandle(
     ref,
     () => ({
       refresh: async () => {
-        await refreshWalletData();
+        await Promise.all([loadBalance({ silent: true }), Promise.resolve(refreshTransactions())]);
       },
     }),
-    [refreshWalletData]
+    [loadBalance, refreshTransactions]
   );
 
   useUnmount(() => {
