@@ -8,12 +8,14 @@ import type {
   ChangeTokenLimitApiRequest,
   FetchGroupMembersApiResponse,
   GetAllMyGroupTokenInfoApiRequest,
+  GetAllMyGroupTokenInfoApiResponse,
   GetGroupBaseInfoApiResponse,
   GetGroupConfigApiRequest,
   GetGroupConfigApiResponse,
   GetGroupInfoApiRequest,
   GetGroupInfoApiResponse,
   GetGroupTokenApiRequest,
+  GetGroupTokenApiResponse,
   GroupRoleApiResponse,
   JoinGroupApiRequest,
   KickMemberApiRequest,
@@ -100,9 +102,7 @@ function kick(req: KickMemberApiRequest): Promise<void> {
   return apiPost('/group/member/kick', req);
 }
 
-function getGroupToken(
-  req: GetGroupTokenApiRequest
-): Promise<{ TokenUsed?: number; TokenLimit?: number }> {
+function getGroupToken(req: GetGroupTokenApiRequest): Promise<GetGroupTokenApiResponse> {
   return apiGet('/group/member/getGroupToken', { params: req });
 }
 
@@ -112,7 +112,7 @@ function changeTokenLimit(req: ChangeTokenLimitApiRequest): Promise<void> {
 
 function getAllMyGroupTokenInfo(
   req: GetAllMyGroupTokenInfoApiRequest
-): Promise<Record<string, unknown>> {
+): Promise<GetAllMyGroupTokenInfoApiResponse> {
   return apiGet('/group/member/getAllMyGroupTokenInfo', { params: req });
 }
 

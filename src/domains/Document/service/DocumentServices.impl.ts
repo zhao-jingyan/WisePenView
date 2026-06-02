@@ -1,10 +1,10 @@
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
-import { normalizeResourceItem } from '@/utils/normalize/normalizeResourceItem';
 import { computeFileMd5 } from '@/utils/oss/computeFileMd5';
 import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
 import { parseExtension } from '@/utils/parser/extensionParser';
 import { DocumentApi } from '../apis/DocumentApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
+import { DocumentServicesMap } from '../mapper/DocumentServices.map';
 import type {
   DocDisplayInfoResponse,
   DocumentAllowedExtension,
@@ -98,7 +98,8 @@ const deleteDocument = async (documentId: string): Promise<void> => {
 };
 
 const listPendingDocs = async (): Promise<PendingDocItem[]> => {
-  return (await DocumentApi.listPendingDocs()) ?? [];
+  const data = await DocumentApi.listPendingDocs();
+  return DocumentServicesMap.mapListPendingDocsFromApi(data);
 };
 
 const syncPendingDocStatus = async (documentId: string): Promise<void> => {
@@ -114,12 +115,8 @@ const cancelPendingDoc = async (documentId: string): Promise<void> => {
 };
 
 const getDocInfo = async (resourceId: string): Promise<DocDisplayInfoResponse> => {
-  const data = (await DocumentApi.getDocInfo({ resourceId })) as DocDisplayInfoResponse;
-  // 后端 Long 字段（readCount/likeCount）以字符串返回，统一在 domain 边界归一化为 number。
-  return {
-    ...data,
-    resourceInfo: normalizeResourceItem(data.resourceInfo),
-  };
+  const data = await DocumentApi.getDocInfo({ resourceId });
+  return DocumentServicesMap.mapGetDocInfoFromApi(data);
 };
 export const createDocumentServices = (): IDocumentService => ({
   uploadDocument,

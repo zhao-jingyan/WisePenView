@@ -1,6 +1,6 @@
 import type { IResourceService } from '@/domains/Resource';
-import type { TagTreeResponse } from '@/domains/Tag';
 import { ResourceTagApi } from '../apis/ResourceApi';
+import { StickerServicesMap } from '../mapper/StickerServices.map';
 import type {
   AddStickerRequest,
   DeleteStickerRequest,
@@ -18,34 +18,23 @@ export const createStickerServices = (deps: StickerServicesDeps): IStickerServic
   const { resourceService } = deps;
 
   const getStickerList = async (): Promise<Sticker[]> => {
-    const data = (await ResourceTagApi.getTagTree()) as TagTreeResponse[];
-    // 过滤掉路径型（`/` 开头）与系统保留前缀（`.` 开头，例如 `.Trash`）
-    const stickers = (data ?? [])
-      .filter((node) => {
-        const name = node.tagName ?? '';
-        return name !== '' && !name.startsWith('/') && !name.startsWith('.');
-      })
-      .map((node) => ({ tagId: node.tagId, tagName: node.tagName }));
-    return stickers;
+    const data = await ResourceTagApi.getTagTree();
+    return StickerServicesMap.mapStickerListFromApi(data);
   };
 
   const addSticker = async (params: AddStickerRequest): Promise<void> => {
-    await ResourceTagApi.addTag({
-      tagName: params.stickerName,
-    });
+    const payload = StickerServicesMap.mapAddStickerRequest(params);
+    await ResourceTagApi.addTag(payload);
   };
 
   const updateSticker = async (params: UpdateStickerRequest): Promise<void> => {
-    await ResourceTagApi.changeTag({
-      targetTagId: params.stickerId,
-      tagName: params.stickerName,
-    });
+    const payload = StickerServicesMap.mapUpdateStickerRequest(params);
+    await ResourceTagApi.changeTag(payload);
   };
 
   const deleteSticker = async (params: DeleteStickerRequest): Promise<void> => {
-    await ResourceTagApi.removeTag({
-      targetTagId: params.stickerId,
-    });
+    const payload = StickerServicesMap.mapDeleteStickerRequest(params);
+    await ResourceTagApi.removeTag(payload);
   };
 
   const updateResourceStickers = async (params: UpdateResourceStickersRequest): Promise<void> => {

@@ -1,9 +1,5 @@
 import { AdminUserApi } from '../apis/AdminUserApi';
-import {
-  mapAdminUserApiModelToEntity,
-  mapFetchAdminUserListRequestToApi,
-  mapFetchAdminUserListResponse,
-} from '../mapper/AdminUserServices.map';
+import { AdminUserServicesMap } from '../mapper/AdminUserServices.map';
 import type {
   ChangeAdminUserInfoRequest,
   ChangeAdminUserProfileRequest,
@@ -18,17 +14,14 @@ import type {
 const fetchUserList = async (
   params: FetchAdminUserListRequest
 ): Promise<FetchAdminUserListResponse> => {
-  const data = await AdminUserApi.getUserList(mapFetchAdminUserListRequestToApi(params));
-  return mapFetchAdminUserListResponse(data);
+  const query = AdminUserServicesMap.mapFetchAdminUserListRequest(params);
+  const data = await AdminUserApi.getUserList(query);
+  return AdminUserServicesMap.mapFetchAdminUserListFromApi(data);
 };
 
 const getUserInfo = async (params: GetAdminUserInfoRequest): Promise<GetAdminUserInfoResponse> => {
   const data = await AdminUserApi.getUserInfo(params);
-  return {
-    user: mapAdminUserApiModelToEntity(data.userInfo),
-    userProfile: data.userProfile ?? null,
-    readonlyFields: data.readonlyFields ?? null,
-  };
+  return AdminUserServicesMap.mapGetAdminUserInfoFromApi(data);
 };
 
 const changeUserInfo = async (params: ChangeAdminUserInfoRequest): Promise<void> => {

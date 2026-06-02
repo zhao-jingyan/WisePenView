@@ -110,6 +110,13 @@ export interface GetGroupTokenApiRequest {
   groupId: string | number;
 }
 
+export interface GetGroupTokenApiResponse {
+  TokenUsed?: number;
+  TokenLimit?: number;
+  tokenUsed?: number;
+  tokenLimit?: number;
+}
+
 export interface ChangeTokenLimitApiRequest {
   groupId: string;
   targetUserIds: string[];
@@ -119,4 +126,28 @@ export interface ChangeTokenLimitApiRequest {
 export interface GetAllMyGroupTokenInfoApiRequest {
   page: number;
   size: number;
+}
+
+export interface GroupTokenInfoApiResponseItem {
+  groupDisplayBase?: {
+    groupId?: string | number;
+    GroupId?: string | number;
+    groupName?: string;
+    GroupName?: string;
+  };
+  groupId?: string | number;
+  GroupId?: string | number;
+  groupName?: string;
+  GroupName?: string;
+  tokenLimit?: number | string;
+  TokenLimit?: number | string;
+  tokenUsed?: number | string;
+  TokenUsed?: number | string;
+}
+
+export interface GetAllMyGroupTokenInfoApiResponse {
+  list?: GroupTokenInfoApiResponseItem[];
+  records?: GroupTokenInfoApiResponseItem[];
+  total?: number | string;
+  Total?: number | string;
 }

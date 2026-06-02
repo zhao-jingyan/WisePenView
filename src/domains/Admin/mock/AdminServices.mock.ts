@@ -1,5 +1,5 @@
 import type { AdminUserApiModel } from '../apis/AdminUserApi.type';
-import { mapAdminUserApiModelToEntity } from '../mapper/AdminUserServices.map';
+import { AdminUserServicesMap } from '../mapper/AdminUserServices.map';
 import type {
   ChangeAdminUserInfoRequest,
   ChangeAdminUserProfileRequest,
@@ -20,7 +20,7 @@ const fetchUserList = async (
   params: FetchAdminUserListRequest
 ): Promise<FetchAdminUserListResponse> => {
   await delay(200);
-  const users = rawUsers.map(mapAdminUserApiModelToEntity);
+  const users = AdminUserServicesMap.mapAdminUserListFromApi(rawUsers);
   const start = (params.page - 1) * params.size;
   const list = users.slice(start, start + params.size);
   return {
@@ -34,9 +34,10 @@ const fetchUserList = async (
 
 const getUserInfo = async (params: GetAdminUserInfoRequest): Promise<GetAdminUserInfoResponse> => {
   await delay(200);
+  const users = AdminUserServicesMap.mapAdminUserListFromApi(rawUsers);
   const user =
-    rawUsers.map(mapAdminUserApiModelToEntity).find((item) => item.id === params.userId) ??
-    mapAdminUserApiModelToEntity(rawUsers[0]);
+    users.find((item) => item.id === params.userId) ??
+    AdminUserServicesMap.mapAdminUserListFromApi([rawUsers[0]])[0];
   return {
     user,
     userProfile: null,

@@ -135,7 +135,7 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
         payload.list.map((m) => mapHistoryMessage(m, { modelMetaMap, currentModel }))
       );
       setHistoryPage(payload.page ?? 1);
-      setHistoryTotalPage(payload.total_page ?? 1);
+      setHistoryTotalPage(payload.totalPage);
     } catch (error) {
       const errorMessage = parseErrorMessage(error);
       if (isSessionInvalidMessage(errorMessage)) {
@@ -168,7 +168,7 @@ function ChatPanel({ collapsed }: ChatPanelProps) {
       );
       setHistoryMessages((previousMessages) => [...olderMessages, ...previousMessages]);
       setHistoryPage(payload.page ?? nextPage);
-      setHistoryTotalPage(payload.total_page ?? historyTotalPage);
+      setHistoryTotalPage(payload.totalPage);
     } catch (error) {
       toast.danger(parseErrorMessage(error));
     } finally {

@@ -45,7 +45,7 @@ const useSessionListGroup = ({ onActiveSessionMenuKeyChange }: SessionListGroupP
     try {
       const payload = await runListSessions(page);
       setSessionPage(payload.page);
-      setSessionTotalPage(payload.total_page || 1);
+      setSessionTotalPage(payload.totalPage);
       // 始终以 store 最新 sessionId 为准，避免闭包里读到旧值后回写错误会话。
       const latestSessionId = useCurrentChatSessionStore.getState().currentSessionId;
       if (latestSessionId) {

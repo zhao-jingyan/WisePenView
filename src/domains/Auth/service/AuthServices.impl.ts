@@ -12,7 +12,7 @@ import type {
 import type { IAuthService } from './index.type';
 
 const login = async (params: LoginRequest) => {
-  const apiParams = AuthServicesMap.toLoginApiRequest(params);
+  const apiParams = AuthServicesMap.mapLoginRequest(params);
   await AuthApi.login(apiParams);
   clearAllServiceCaches();
   clearAllZustandStores();
@@ -27,17 +27,17 @@ const logout = async () => {
 };
 
 const register = async (params: RegisterRequest) => {
-  const apiParams = AuthServicesMap.toRegisterApiRequest(params);
+  const apiParams = AuthServicesMap.mapRegisterRequest(params);
   await AuthApi.register(apiParams);
 };
 
 const resetPassword = async (params: ResetPasswordRequest) => {
-  const apiParams = AuthServicesMap.toResetPasswordApiRequest(params);
+  const apiParams = AuthServicesMap.mapResetPasswordRequest(params);
   await AuthApi.forgotPasswordEmail(apiParams);
 };
 
 const newPassword = async (params: NewPasswordRequest) => {
-  const apiParams = AuthServicesMap.toNewPasswordApiRequest(params);
+  const apiParams = AuthServicesMap.mapNewPasswordRequest(params);
   await AuthApi.forgotPasswordReset(apiParams);
 };
 

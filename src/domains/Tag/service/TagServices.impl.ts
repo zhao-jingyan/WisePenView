@@ -1,10 +1,11 @@
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import type { IResourceService } from '@/domains/Resource';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
-import { resourceActionsToApiKeys, type TagListByTagResponse } from '@/domains/Tag';
+import type { TagListByTagResponse } from '@/domains/Tag';
 import { useTrashTagStore } from '@/store';
 import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
 import { ResourceTagApi } from '../apis/ResourceApi';
+import { TagServicesMap } from '../mapper/TagServices.map';
 import type {
   GetResByTagRequest,
   ITagService,
@@ -101,10 +102,10 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
     if (cached) {
       return cached;
     }
-    const params = normalizedGroupId ? { groupId: normalizedGroupId } : undefined;
-    const data = (await ResourceTagApi.getTagTree(params)) as TagTreeResponse[];
-    syncTrashTagIdToStore(normalizedGroupId, data ?? []);
-    const roots: TagTreeNode[] = data ?? [];
+    const params = TagServicesMap.mapGetTagTreeRequest(normalizedGroupId);
+    const data = await ResourceTagApi.getTagTree(params);
+    syncTrashTagIdToStore(normalizedGroupId, data);
+    const roots = TagServicesMap.mapTagTreeFromApi(data);
     rawTagTreeCache.set(cacheKey, roots);
     rawTagFlatCache.set(cacheKey, buildFlatMap(roots));
     return roots;
@@ -140,20 +141,16 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
   };
 
   const updateTag = async (params: TagUpdateRequest): Promise<void> => {
-    await ResourceTagApi.changeTag({
-      ...params,
-      grantedActions: resourceActionsToApiKeys(params.grantedActions),
-    });
+    const payload = TagServicesMap.mapUpdateTagRequest(params);
+    await ResourceTagApi.changeTag(payload);
     clearTagTreeCache(params.groupId);
   };
 
   const addTag = async (params: TagCreateRequest): Promise<string> => {
-    const data = await ResourceTagApi.addTag({
-      ...params,
-      grantedActions: resourceActionsToApiKeys(params.grantedActions),
-    });
+    const payload = TagServicesMap.mapAddTagRequest(params);
+    const data = await ResourceTagApi.addTag(payload);
     clearTagTreeCache(params.groupId);
-    return data ?? '';
+    return TagServicesMap.mapAddTagFromApi(data);
   };
 
   const deleteTag = async (params: TagDeleteRequest): Promise<void> => {

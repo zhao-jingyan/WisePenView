@@ -1,10 +1,8 @@
-import type { NoteInfoResponse } from '@/domains/Note';
 import { useNewNoteStore, useNoteSelectionStore, usePdfPreviewProgressStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
-import { formatTimestampToDateTime } from '@/utils/format/formatTime';
-import { normalizeResourceItem } from '@/utils/normalize/normalizeResourceItem';
 import { NoteApi } from '../apis/NoteApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
+import { NoteServicesMap } from '../mapper/NoteServices.map';
 import type {
   CreateNoteRequest,
   CreateNoteResponse,
@@ -17,18 +15,13 @@ import type {
 
 // syncTitle是一个resource的工作，但是语义上属于note服务
 const syncTitle = async (params: SyncTitleRequest): Promise<void> => {
-  const { resourceId, newName } = params;
-  await ResourceItemApi.renameResource({
-    resourceId,
-    newName,
-  });
+  const payload = NoteServicesMap.mapSyncTitleRequest(params);
+  await ResourceItemApi.renameResource(payload);
 };
 
 const createNote = async (params: CreateNoteRequest): Promise<CreateNoteResponse> => {
   const resourceId = await NoteApi.addNote(params);
-  return {
-    resourceId: resourceId || undefined,
-  };
+  return NoteServicesMap.mapCreateNoteFromApi(resourceId);
 };
 
 const deleteNote = async (params: DeleteNoteRequest): Promise<void> => {
@@ -42,29 +35,11 @@ const deleteNote = async (params: DeleteNoteRequest): Promise<void> => {
 };
 
 const getNoteInfoDisplay = async (params: GetNoteInfoRequest): Promise<NoteInfoDisplayData> => {
-  const noteInfoData = (await NoteApi.getNoteInfo(params)) as NoteInfoResponse;
+  const noteInfoData = await NoteApi.getNoteInfo(params);
   if (!noteInfoData?.resourceInfo || !noteInfoData?.noteInfo) {
     throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_NOT_FOUND);
   }
-  // readCount/likeCount 后端以字符串返回（Java Long），归一化为 number
-  const resourceInfo = normalizeResourceItem(noteInfoData.resourceInfo);
-  const authorIds = noteInfoData.noteInfo.authors ?? [];
-  return {
-    noteTitle: resourceInfo.resourceName,
-    authors: authorIds.map((authorId) => {
-      const author = noteInfoData.authorsDisplay?.[authorId];
-      return {
-        name: author?.nickname || author?.realName || '未知用户',
-        avatar: author?.avatar,
-      };
-    }),
-    lastEditedAtText: formatTimestampToDateTime(noteInfoData.noteInfo.lastUpdatedAt) || '暂无',
-    readCount: resourceInfo.readCount ?? null,
-    likeCount: resourceInfo.likeCount ?? null,
-    scoreAvg: resourceInfo.scoreAvg ?? null,
-    liked: resourceInfo.liked ?? false,
-    userScore: resourceInfo.userScore ?? null,
-  };
+  return NoteServicesMap.mapNoteInfoDisplayFromApi(noteInfoData);
 };
 
 export const createNoteServices = (): INoteService => ({

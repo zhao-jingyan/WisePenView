@@ -11,28 +11,28 @@ import type {
   ResetPasswordRequest,
 } from '../service/AuthService.type';
 
-const toLoginApiRequest = (params: LoginRequest): LoginApiRequest => ({
+const mapLoginRequest = (params: LoginRequest): LoginApiRequest => ({
   account: params.account,
   password: params.password,
 });
 
-const toRegisterApiRequest = (params: RegisterRequest): RegisterApiRequest => ({
+const mapRegisterRequest = (params: RegisterRequest): RegisterApiRequest => ({
   username: params.username,
   password: params.password,
 });
 
-const toResetPasswordApiRequest = (params: ResetPasswordRequest): ResetPasswordApiRequest => ({
+const mapResetPasswordRequest = (params: ResetPasswordRequest): ResetPasswordApiRequest => ({
   campusNum: params.campusNum,
 });
 
-const toNewPasswordApiRequest = (params: NewPasswordRequest): NewPasswordApiRequest => ({
+const mapNewPasswordRequest = (params: NewPasswordRequest): NewPasswordApiRequest => ({
   newPassword: params.newPassword,
   token: params.token,
 });
 
 export const AuthServicesMap = {
-  toLoginApiRequest,
-  toRegisterApiRequest,
-  toResetPasswordApiRequest,
-  toNewPasswordApiRequest,
+  mapLoginRequest,
+  mapRegisterRequest,
+  mapResetPasswordRequest,
+  mapNewPasswordRequest,
 };

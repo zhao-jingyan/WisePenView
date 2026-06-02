@@ -5,11 +5,17 @@ import type {
   FetchAdminUserListApiRequest,
   FetchAdminUserListApiResponse,
 } from '../apis/AdminUserApi.type';
-import type { FetchAdminUserListRequest, FetchAdminUserListResponse } from '../service/index.type';
+import type {
+  FetchAdminUserListRequest,
+  FetchAdminUserListResponse,
+  GetAdminUserInfoResponse,
+} from '../service/index.type';
 
-export const mapAdminUserApiModelToEntity = (raw: AdminUserApiModel): AdminUser => {
+const mapAdminUserApiModelToEntity = (raw: AdminUserApiModel): AdminUser => {
   return {
+    // fallback：兼容旧接口 userId 字段
     id: normalizeId(raw.id ?? raw.userId),
+    // fallback：管理端列表的兼容空值，避免表格渲染 undefined
     username: raw.username ?? '',
     nickname: raw.nickname ?? undefined,
     realName: raw.realName ?? undefined,
@@ -25,7 +31,7 @@ export const mapAdminUserApiModelToEntity = (raw: AdminUserApiModel): AdminUser 
   };
 };
 
-export const mapFetchAdminUserListRequestToApi = (
+const mapFetchAdminUserListRequest = (
   params: FetchAdminUserListRequest
 ): FetchAdminUserListApiRequest => ({
   page: params.page,
@@ -35,7 +41,7 @@ export const mapFetchAdminUserListRequestToApi = (
   identityType: params.identityType,
 });
 
-export const mapFetchAdminUserListResponse = (
+const mapFetchAdminUserListFromApi = (
   data: FetchAdminUserListApiResponse
 ): FetchAdminUserListResponse => ({
   users: data.list.map(mapAdminUserApiModelToEntity),
@@ -44,3 +50,25 @@ export const mapFetchAdminUserListResponse = (
   size: data.size,
   totalPage: data.totalPage,
 });
+
+const mapAdminUserListFromApi = (data: AdminUserApiModel[]): AdminUser[] =>
+  data.map(mapAdminUserApiModelToEntity);
+
+const mapGetAdminUserInfoFromApi = (data: {
+  userInfo: AdminUserApiModel;
+  userProfile?: Record<string, unknown> | null;
+  readonlyFields?: string[] | null;
+}): GetAdminUserInfoResponse => ({
+  user: mapAdminUserApiModelToEntity(data.userInfo),
+  // fallback：旧接口可能省略 userProfile
+  userProfile: data.userProfile ?? null,
+  // fallback：旧接口可能省略 readonlyFields
+  readonlyFields: data.readonlyFields ?? null,
+});
+
+export const AdminUserServicesMap = {
+  mapFetchAdminUserListRequest,
+  mapFetchAdminUserListFromApi,
+  mapAdminUserListFromApi,
+  mapGetAdminUserInfoFromApi,
+};

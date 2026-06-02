@@ -34,6 +34,9 @@ export interface PageResult<T> {
   total: number;
   page: number;
   size: number;
+  // OpenAPI 约定字段
+  totalPage?: number;
+  // fallback：兼容旧接口返回 total_page（历史实现中该字段必定存在）
   total_page: number;
 }
 

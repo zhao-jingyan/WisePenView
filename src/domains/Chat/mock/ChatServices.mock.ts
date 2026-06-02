@@ -211,7 +211,7 @@ const listSessions: IChatService['listSessions'] = async (params?: ListSessionsR
     total,
     page,
     size,
-    total_page: Math.ceil(total / size),
+    totalPage: Math.ceil(total / size),
   };
   return result;
 };
@@ -235,7 +235,7 @@ const listHistoryMessages: IChatService['listHistoryMessages'] = async (
     total,
     page,
     size,
-    total_page: totalPage,
+    totalPage,
   };
 };
 

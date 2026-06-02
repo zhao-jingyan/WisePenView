@@ -1,6 +1,7 @@
 import { useCurrentChatSessionStore, useNewChatSessionStore, useNoteSelectionStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { ChatApi, ChatSessionApi } from '../apis/ChatApi';
+import { ChatServicesMap } from '../mapper/ChatServices.map';
 import type {
   ChatSession,
   CreateSessionRequest,
@@ -16,41 +17,25 @@ import type {
 
 const getModels = async (): Promise<ModelListResponse> => {
   const data = await ChatApi.listModels();
-
-  return {
-    standard_models: data?.standard_models ?? [],
-    advanced_models: data?.advanced_models ?? [],
-    other_models: data?.other_models ?? [],
-  };
+  return ChatServicesMap.mapGetModelsFromApi(data);
 };
 
 const createSession = async (params?: CreateSessionRequest): Promise<ChatSession> => {
-  const payload: { title?: string } = {};
-  if (params?.title !== undefined) {
-    payload.title = params.title;
-  }
-
+  const payload = ChatServicesMap.mapCreateSessionRequest(params);
   const data = await ChatSessionApi.createSession(payload);
   if (!data) {
     throw createClientError(FRONTEND_CLIENT_ERROR.CHAT_CREATE_SESSION_FAILED);
   }
-  return data;
+  return ChatServicesMap.mapCreateSessionFromApi(data);
 };
 
 const renameSession = async (params: RenameSessionRequest): Promise<ChatSession> => {
-  const payload: { new_title?: string } = {};
-  if (params.newTitle !== undefined) {
-    payload.new_title = params.newTitle;
-  }
-
-  const data = await ChatSessionApi.renameSession({
-    sessionId: params.sessionId,
-    newTitle: payload.new_title,
-  });
+  const payload = ChatServicesMap.mapRenameSessionRequest(params);
+  const data = await ChatSessionApi.renameSession(payload);
   if (!data) {
     throw createClientError(FRONTEND_CLIENT_ERROR.CHAT_RENAME_SESSION_FAILED);
   }
-  return data;
+  return ChatServicesMap.mapRenameSessionFromApi(data);
 };
 
 const deleteSession = async (params: DeleteSessionRequest): Promise<void> => {
@@ -61,34 +46,17 @@ const deleteSession = async (params: DeleteSessionRequest): Promise<void> => {
 };
 
 const listSessions = async (params?: ListSessionsRequest): Promise<PageResult<ChatSession>> => {
-  const payload = await ChatSessionApi.listSessions({
-    page: params?.page,
-    size: params?.size,
-  });
-  return {
-    list: payload?.list ?? [],
-    total: payload?.total ?? 0,
-    page: payload?.page ?? params?.page ?? 1,
-    size: payload?.size ?? params?.size ?? 20,
-    total_page: payload?.total_page ?? 0,
-  };
+  const query = ChatServicesMap.mapListSessionsRequest(params);
+  const payload = await ChatSessionApi.listSessions(query);
+  return ChatServicesMap.mapListSessionsFromApi(payload);
 };
 
 const listHistoryMessages = async (
   params: ListHistoryMessagesRequest
 ): Promise<PageResult<MessageResponse>> => {
-  const payload = await ChatSessionApi.listHistoryMessages({
-    sessionId: params.sessionId,
-    page: params.page,
-    size: params.size,
-  });
-  return {
-    list: payload?.list ?? [],
-    total: payload?.total ?? 0,
-    page: payload?.page ?? params.page ?? 1,
-    size: payload?.size ?? params.size ?? 20,
-    total_page: payload?.total_page ?? 0,
-  };
+  const query = ChatServicesMap.mapListHistoryMessagesRequest(params);
+  const payload = await ChatSessionApi.listHistoryMessages(query);
+  return ChatServicesMap.mapListHistoryMessagesFromApi(payload);
 };
 
 export const createChatServices = (): IChatService => ({
