@@ -20,6 +20,7 @@ import { useNoteService, useResourceService } from '@/domains';
 import type { AiDiffDisplayMode, NoteInfoDisplayData } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, AI_DIFF_DISPLAY_MODE_LABELS, useNoteSession } from '@/domains/Note';
 import { RESOURCE_TYPE } from '@/domains/Resource';
+import { useNotePageDisplayTitles } from '@/hooks/useNotePageDisplayTitles';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useAiDiffDisplayStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
@@ -124,16 +125,15 @@ function NoteViewConnected({
     }, 2000);
   };
 
-  const noteTitleText = noteInfoDisplay?.noteTitle?.trim() || '未命名笔记';
+  const { outlineTitle, toolbarTitle } = useNotePageDisplayTitles(
+    resourceId,
+    noteInfoDisplay?.noteTitle
+  );
   const outlineItemsWithTitle: NoteOutlineItem[] = [
-    { id: '__note_title__', level: 0, text: noteTitleText },
+    { id: '__note_title__', level: 0, text: outlineTitle },
     ...outlineItems,
   ];
 
-  const toolbarNoteTitle =
-    noteInfoDisplay.noteTitle?.trim() && noteInfoDisplay.noteTitle.trim() !== '未命名笔记'
-      ? noteInfoDisplay.noteTitle.trim()
-      : '未命名笔记';
   const aiDiffDisplayOptions: Array<{ value: AiDiffDisplayMode; label: string }> = [
     {
       value: AI_DIFF_DISPLAY_MODE.OLD_ONLY,
@@ -156,7 +156,7 @@ function NoteViewConnected({
       return;
     }
     const titleApi = titleEditorRef.current;
-    const title = titleApi?.getPlainTitle() ?? noteTitleText;
+    const title = titleApi?.getPlainTitle() ?? toolbarTitle;
     const titleRoot = titleApi?.getProseMirrorRoot() ?? null;
     try {
       setPdfExportLoading(true);
@@ -176,7 +176,7 @@ function NoteViewConnected({
     }
     try {
       setIsDownloadingMarkdown(true);
-      await bodyApi.downloadMarkdown(toolbarNoteTitle);
+      await bodyApi.downloadMarkdown(toolbarTitle);
       toast.success('Markdown 下载已开始');
     } catch (err) {
       toast.danger(parseErrorMessage(err));
@@ -198,7 +198,7 @@ function NoteViewConnected({
             gap="var(--ant-margin-sm)"
             ellipsis
           >
-            {toolbarNoteTitle}
+            {toolbarTitle}
           </IconText>
         }
         extra={
@@ -321,7 +321,7 @@ function NoteViewConnected({
                   <NoteTitle
                     key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}`}
                     ref={titleEditorRef}
-                    id={noteId}
+                    id={resourceId}
                     initialContent={noteInfoDisplay?.noteTitle}
                     focusOnMount={isConnected}
                     onEnterKey={focusBody}

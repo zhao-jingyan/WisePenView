@@ -7,9 +7,11 @@ import type {
   NoteInfoDisplayData,
   SyncTitleRequest,
 } from '@/domains/Note';
+import { useResourceDisplayNameStore } from '@/store';
 
-/** Mock 占位：与实现层一致，无模拟数据逻辑 */
-const syncTitle = async (_params: SyncTitleRequest): Promise<void> => {
+/** Mock 占位：与实现层一致，同步更新展示名 store */
+const syncTitle = async (params: SyncTitleRequest): Promise<void> => {
+  useResourceDisplayNameStore.getState().setDisplayName(params.resourceId, params.newName);
   return Promise.resolve();
 };
 

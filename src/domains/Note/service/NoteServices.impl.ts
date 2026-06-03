@@ -1,4 +1,9 @@
-import { useNewNoteStore, useNoteSelectionStore, usePdfPreviewProgressStore } from '@/store';
+import {
+  useNewNoteStore,
+  useNoteSelectionStore,
+  usePdfPreviewProgressStore,
+  useResourceDisplayNameStore,
+} from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { NoteApi } from '../apis/NoteApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
@@ -17,6 +22,7 @@ import type {
 const syncTitle = async (params: SyncTitleRequest): Promise<void> => {
   const payload = NoteServicesMap.mapSyncTitleRequest(params);
   await ResourceItemApi.renameResource(payload);
+  useResourceDisplayNameStore.getState().setDisplayName(params.resourceId, params.newName);
 };
 
 const createNote = async (params: CreateNoteRequest): Promise<CreateNoteResponse> => {

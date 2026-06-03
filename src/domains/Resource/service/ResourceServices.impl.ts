@@ -1,3 +1,4 @@
+import { useResourceDisplayNameStore } from '@/store';
 import { ResourceInteractApi } from '../apis/InteractApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
@@ -34,6 +35,7 @@ const getGroupResources = async (params: GetGroupResourceRequest): Promise<Resou
 
 const renameResource = async (params: RenameResourceRequest): Promise<void> => {
   await ResourceItemApi.renameResource(params);
+  useResourceDisplayNameStore.getState().setDisplayName(params.resourceId, params.newName);
 };
 
 const updateResourceTags = async (params: UpdateResourceTagsRequest): Promise<void> => {

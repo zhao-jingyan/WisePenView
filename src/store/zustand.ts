@@ -3,12 +3,12 @@
  */
 
 export { clearAllZustandStores } from './clearAllStores';
+export { clearActiveDriveScopeStore, useActiveDriveScopeStore } from './useActiveDriveScopeStore';
 export {
   clearAiDiffDisplayStore,
   getAiDiffDisplayModeSnapshot,
   useAiDiffDisplayStore,
 } from './useAiDiffDisplayStore';
-export { clearActiveDriveScopeStore, useActiveDriveScopeStore } from './useActiveDriveScopeStore';
 export { clearChatPanelStore, useChatPanelStore } from './useChatPanelStore';
 export {
   clearCurrentChatSessionStore,
@@ -27,4 +27,8 @@ export {
   usePdfPreviewProgressStore,
   type PdfPreviewProgress,
 } from './usePdfPreviewProgressStore';
+export {
+  clearResourceDisplayNameStore,
+  useResourceDisplayNameStore,
+} from './useResourceDisplayNameStore';
 export { clearTrashTagStore, useTrashTagStore } from './useTrashTagStore';
