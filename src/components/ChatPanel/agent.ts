@@ -1,3 +1,4 @@
+import type { ResourceItem } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
 import type { Group } from '@/types/group';
 
@@ -10,6 +11,20 @@ export const buildDefaultPersonalAgent = (): ChatAgentOption => ({
   label: DEFAULT_PERSONAL_AGENT_LABEL,
   isDefault: true,
 });
+
+export const buildAgentFromResourceItem = (
+  item: ResourceItem,
+  group?: { groupId: string; groupName: string }
+): ChatAgentOption => {
+  const raw = item as ResourceItem & { defaultSkillIds?: string[] };
+  return {
+    agentId: `agent-${item.resourceId}`,
+    agentType: group ? 'GROUP' : 'PERSONAL',
+    label: item.resourceName,
+    ...(group ? { groupId: group.groupId, groupName: group.groupName } : {}),
+    defaultSkillIds: raw.defaultSkillIds,
+  };
+};
 
 export const buildGroupAgent = (group: Group): ChatAgentOption => ({
   agentId: `agent-group-${group.groupId}`,

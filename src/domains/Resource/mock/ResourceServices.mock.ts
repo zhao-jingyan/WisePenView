@@ -76,6 +76,27 @@ const fullMockPersonalResourceList: ResourceItem[] = [
 ];
 
 /** 完整资源列表（含所有 Skill），供 getGroupResources 使用 */
+const personalAgentResources: ResourceItem[] = (
+  (mockdata as Record<string, unknown>).agentResources as Record<string, unknown>
+)?.personal
+  ? (
+      ((mockdata as Record<string, unknown>).agentResources as Record<string, unknown>)
+        .personal as Array<Record<string, unknown>>
+    ).map((item) => toResourceItem(item as Parameters<typeof toResourceItem>[0]))
+  : [];
+
+const groupAgentResourcesMap: Record<string, ResourceItem[]> = {};
+const agentGroupsData = (
+  (mockdata as Record<string, unknown>).agentResources as Record<string, unknown>
+)?.groups as Record<string, Array<Record<string, unknown>>> | undefined;
+if (agentGroupsData) {
+  Object.entries(agentGroupsData).forEach(([groupId, items]) => {
+    groupAgentResourcesMap[groupId] = items.map((item) =>
+      toResourceItem(item as Parameters<typeof toResourceItem>[0])
+    );
+  });
+}
+
 const fullMockGroupResourceList: ResourceItem[] = [
   ...baseMockResourceList,
   ...personalSkillResources,
@@ -104,6 +125,10 @@ const getUserResources = async (params: GetUserResourcesRequest): Promise<Resour
     rows = personalSkillResources;
     return paginateList(rows, params.page, params.size);
   }
+  if (params.resourceType === 'AGENT') {
+    rows = personalAgentResources;
+    return paginateList(rows, params.page, params.size);
+  }
   return paginateList(filterByType(rows, params.resourceType), params.page, params.size);
 };
 
@@ -115,6 +140,14 @@ const getGroupResources = async (params: GetGroupResourceRequest): Promise<Resou
     const totalPage = Math.max(1, Math.ceil(total / params.size));
     const start = (params.page - 1) * params.size;
     const list = groupSkills.slice(start, start + params.size);
+    return { list, total, page: params.page, size: params.size, totalPage };
+  }
+  if (params.resourceType === 'AGENT') {
+    const groupAgents = groupAgentResourcesMap[params.groupId] ?? [];
+    const total = groupAgents.length;
+    const totalPage = Math.max(1, Math.ceil(total / params.size));
+    const start = (params.page - 1) * params.size;
+    const list = groupAgents.slice(start, start + params.size);
     return { list, total, page: params.page, size: params.size, totalPage };
   }
   return paginateList(

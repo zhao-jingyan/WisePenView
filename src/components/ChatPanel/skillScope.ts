@@ -30,6 +30,10 @@ const isSkillInAgentScope = (
   skill: SkillSummary,
   agent: ChatAgentOption | null | undefined
 ): boolean => {
+  // Agent 有明确 Skill 列表时，按 skillId 精确匹配
+  if (agent?.defaultSkillIds && agent.defaultSkillIds.length > 0) {
+    return agent.defaultSkillIds.includes(skill.skillId);
+  }
   if (!agent || agent.agentType === 'PERSONAL') {
     return skill.scopeType !== 'GROUP';
   }

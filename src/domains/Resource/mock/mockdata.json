@@ -115,5 +115,40 @@
         }
       ]
     }
+  },
+  "agentResources": {
+    "personal": [
+      {
+        "resourceId": "agent-custom-translation",
+        "resourceName": "翻译助手Agent",
+        "resourceType": "AGENT",
+        "ownerId": "1",
+        "path": "/",
+        "currentTags": {},
+        "defaultSkillIds": ["skill-personal-translation", "skill-personal-codereview"]
+      },
+      {
+        "resourceId": "agent-custom-writing",
+        "resourceName": "写作Agent",
+        "resourceType": "AGENT",
+        "ownerId": "1",
+        "path": "/",
+        "currentTags": {},
+        "defaultSkillIds": ["skill-personal-summary"]
+      }
+    ],
+    "groups": {
+      "1": [
+        {
+          "resourceId": "agent-group-1-design",
+          "resourceName": "设计评审Agent",
+          "resourceType": "AGENT",
+          "ownerId": "1",
+          "path": "/",
+          "currentTags": {},
+          "defaultSkillIds": ["skill-group-1-weekly"]
+        }
+      ]
+    }
   }
 }

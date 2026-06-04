@@ -19,19 +19,9 @@ function OtherSkillModal({
 }: OtherSkillModalProps) {
   const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
 
-  const visibleGroups = useMemo(
-    () =>
-      groups.filter((group) =>
-        group.key === 'personal'
-          ? currentAgent?.agentType !== 'PERSONAL'
-          : group.key !== `group-${currentAgent?.groupId ?? ''}`
-      ),
-    [currentAgent, groups]
-  );
-
   const { skillMap, treeData } = useMemo(() => {
     const mapping = new Map<string, { skill: SkillSummary; sourceAgent: ChatAgentOption | null }>();
-    const data: TreeDataNode[] = visibleGroups.map((group) => {
+    const data: TreeDataNode[] = groups.map((group) => {
       const sourceAgent = buildAgentFromSkillTreeGroup(group, currentAgent);
       return {
         key: group.key,
@@ -53,7 +43,7 @@ function OtherSkillModal({
     });
 
     return { skillMap: mapping, treeData: data };
-  }, [currentAgent, visibleGroups]);
+  }, [currentAgent, groups]);
 
   const handleOpenChange = useCallback(
     (visible: boolean) => {

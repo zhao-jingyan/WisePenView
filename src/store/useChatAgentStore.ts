@@ -9,6 +9,7 @@ export interface ChatAgentOption {
   groupId?: string;
   groupName?: string;
   isDefault?: boolean;
+  defaultSkillIds?: string[];
 }
 
 interface ChatAgentState {

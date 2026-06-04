@@ -1,8 +1,5 @@
 import styles from '../style.module.less';
-
-interface DropOverlayProps {
-  visible: boolean;
-}
+import type { DropOverlayProps } from './index.type';
 
 function DropOverlay({ visible }: DropOverlayProps) {
   if (!visible) return null;

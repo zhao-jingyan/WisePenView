@@ -21,6 +21,7 @@ import CapabilityPicker from './CapabilityPicker';
 import ContentPicker from './ContentPicker';
 import ContextTags from './ContextTags';
 import DocumentPickerModal from './DocumentPickerModal';
+import DropOverlay from './DropOverlay';
 import OtherSkillModal from './OtherSkillModal';
 import { type CapabilityToolOption } from './capability';
 import type { ChatInputProps, PendingImagePayload } from './index.type';
@@ -102,15 +103,15 @@ function ChatInput({
     [toolOptionsData]
   );
 
-  const otherSkillGroups = useMemo(
-    () =>
-      advancedSkillGroups.filter((group) =>
-        group.key === 'personal'
-          ? selectedAgent?.agentType !== 'PERSONAL'
-          : group.key !== `group-${selectedAgent?.groupId ?? ''}`
-      ),
-    [advancedSkillGroups, selectedAgent]
-  );
+  const otherSkillGroups = useMemo(() => {
+    const primaryIds = new Set(primarySkills.map((s) => s.skillId));
+    return advancedSkillGroups
+      .map((group) => ({
+        ...group,
+        skills: group.skills.filter((s) => !primaryIds.has(s.skillId)),
+      }))
+      .filter((group) => group.skills.length > 0);
+  }, [advancedSkillGroups, primarySkills]);
 
   const togglePrimarySkill = useCallback(
     (skill: SkillSummary) => {
@@ -398,11 +399,7 @@ function ChatInput({
       onDrop={handleDrop}
     >
       <div className={styles.inputCard} ref={inputCardRef}>
-        {isDragOver && (
-          <div className={styles.dropOverlay}>
-            <span>释放以添加文件</span>
-          </div>
-        )}
+        <DropOverlay visible={isDragOver} />
 
         {hasSelectedContext ? (
           <div className={styles.selectedHint}>

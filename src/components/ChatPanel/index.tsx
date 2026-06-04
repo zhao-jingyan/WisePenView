@@ -21,7 +21,7 @@ import { IndentIncrease } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdvancedModeToggle from './AdvancedModeToggle';
-import { buildDefaultPersonalAgent, buildGroupAgent } from './agent';
+import { buildAgentFromResourceItem, buildDefaultPersonalAgent } from './agent';
 import AgentSelector from './AgentSelector';
 import ChatInput from './ChatInput';
 import type { SendOptions } from './ChatInput/index.type';
@@ -132,13 +132,57 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
     { refreshDeps: [joinedGroupData] }
   );
 
-  const groupOptions = useMemo(
-    () => (joinedGroupData?.groups ?? []).map((group) => buildGroupAgent(group)),
-    [joinedGroupData?.groups]
+  const { data: personalAgentData } = useRequest(
+    () =>
+      resourceService.getUserResources({
+        page: 1,
+        size: 200,
+        sortBy: 'NAME',
+        sortDir: 'ASC',
+        resourceType: 'AGENT',
+      }),
+    { refreshDeps: [] }
   );
+  const personalAgentOptions = useMemo(
+    () => (personalAgentData?.list ?? []).map((item) => buildAgentFromResourceItem(item)),
+    [personalAgentData?.list]
+  );
+  const { data: groupAgentData } = useRequest(
+    async () => {
+      const groups = joinedGroupData?.groups ?? [];
+      if (groups.length === 0) return [];
+      const results = await Promise.all(
+        groups.map((group) =>
+          resourceService
+            .getGroupResources({
+              groupId: group.groupId,
+              page: 1,
+              size: 200,
+              sortBy: 'NAME',
+              sortDir: 'ASC',
+              resourceType: 'AGENT',
+            })
+            .then((res) => ({
+              list: res.list,
+              group,
+            }))
+        )
+      );
+      return results.flatMap(({ list, group }) =>
+        list.map((item) =>
+          buildAgentFromResourceItem(item, {
+            groupId: group.groupId,
+            groupName: group.groupName,
+          })
+        )
+      );
+    },
+    { refreshDeps: [joinedGroupData?.groups] }
+  );
+  const groupAgentOptions = useMemo(() => groupAgentData ?? [], [groupAgentData]);
   const agentOptions = useMemo(
-    () => [defaultPersonalAgent, ...groupOptions],
-    [defaultPersonalAgent, groupOptions]
+    () => [defaultPersonalAgent, ...personalAgentOptions, ...groupAgentOptions],
+    [defaultPersonalAgent, personalAgentOptions, groupAgentOptions]
   );
   const selectedAgent = useMemo(() => {
     if (currentSessionId) {
@@ -258,7 +302,7 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
         payload.list.map((m) => mapHistoryMessage(m, { modelMetaMap, currentModel }))
       );
       setHistoryPage(payload.page ?? 1);
-      setHistoryTotalPage(payload.total_page ?? 1);
+      setHistoryTotalPage(payload.totalPage ?? 1);
     } catch (error) {
       const errorMessage = parseErrorMessage(error);
       if (isSessionInvalidMessage(errorMessage)) {
@@ -291,7 +335,7 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
       );
       setHistoryMessages((previousMessages) => [...olderMessages, ...previousMessages]);
       setHistoryPage(payload.page ?? nextPage);
-      setHistoryTotalPage(payload.total_page ?? historyTotalPage);
+      setHistoryTotalPage(payload.totalPage ?? historyTotalPage);
     } catch (error) {
       toast.danger(parseErrorMessage(error));
     } finally {

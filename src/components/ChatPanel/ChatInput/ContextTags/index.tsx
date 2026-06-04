@@ -1,4 +1,4 @@
-import { useChatPageStore } from '@/store/zustand';
+import { useChatPageStore } from '@/store';
 import styles from './style.module.less';
 
 function ContextTags() {
