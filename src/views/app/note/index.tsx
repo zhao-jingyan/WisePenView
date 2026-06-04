@@ -17,9 +17,10 @@ import {
   NOTE_OUTLINE_TITLE_ID,
   type NoteOutlineItem,
 } from '@/components/Note/NoteOutline/index.type';
+import NotePermissionModal from '@/components/Note/NotePermissionModal';
 import NoteTitle from '@/components/Note/NoteTitle';
 import type { NoteTitleHandle } from '@/components/Note/NoteTitle/index.type';
-import { useNoteService, useResourceService } from '@/domains';
+import { useNoteService, useResourceService, useUserService } from '@/domains';
 import type { AiDiffDisplayMode, NoteInfoDisplayData } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, AI_DIFF_DISPLAY_MODE_LABELS, useNoteSession } from '@/domains/Note';
 import { RESOURCE_TYPE } from '@/domains/Resource';
@@ -73,6 +74,7 @@ function NoteViewConnected({
   const reconnectTimerRef = useRef<number | null>(null);
   const [isReconnectLoading, setIsReconnectLoading] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(true);
+  const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
   const [outlineItems, setOutlineItems] = useState<NoteOutlineItem[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | undefined>(undefined);
   const [pdfExportLoading, setPdfExportLoading] = useState(false);
@@ -88,10 +90,17 @@ function NoteViewConnected({
 
   const isConnected = status === 'connected';
   const isDisconnected = useSmoothFlag(status === 'disconnected', 2000, 2000);
-  const isEditorReadOnly = status === 'connecting';
+  const isEditorReadOnly = status === 'connecting' || !noteInfoDisplay.canCollaborativeEdit;
+  const isTitleReadOnly = !noteInfoDisplay.canCollaborativeEdit;
+  const blockLocalDocWrites = isConnected && !noteInfoDisplay.canCollaborativeEdit;
   const showFullPageSpin = status === 'connecting';
 
   const resourceService = useResourceService();
+  const userService = useUserService();
+  const { data: currentUser } = useRequest(() => userService.getUserInfo(), {
+    ready: Boolean(noteInfoDisplay.ownerId),
+    refreshDeps: [noteInfoDisplay.ownerId],
+  });
   const [displayLiked, setDisplayLiked] = useState<boolean | undefined>(undefined);
   const [displayLikeCount, setDisplayLikeCount] = useState<number | null | undefined>(undefined);
   const [displayUserScore, setDisplayUserScore] = useState<number | null | undefined>(undefined);
@@ -219,6 +228,22 @@ function NoteViewConnected({
   };
 
   const headerMorePending = pdfExportLoading || isDownloadingMarkdown;
+  const canManageNotePermission =
+    Boolean(noteInfoDisplay.ownerId) && currentUser?.id === noteInfoDisplay.ownerId;
+
+  const handleMoreAction = (key: React.Key) => {
+    if (key === 'permission') {
+      setIsPermissionModalOpen(true);
+      return;
+    }
+    if (key === 'print-pdf') {
+      void handlePrintPdf();
+      return;
+    }
+    if (key === 'download-md') {
+      void handleDownloadMarkdown();
+    }
+  };
 
   return (
     <div className={styles.pageWrap}>
@@ -251,13 +276,12 @@ function NoteViewConnected({
                   </Button>
                 </Dropdown.Trigger>
                 <Dropdown.Popover placement="bottom end">
-                  <Dropdown.Menu
-                    aria-label="笔记更多操作"
-                    onAction={(key) => {
-                      if (key === 'print-pdf') void handlePrintPdf();
-                      if (key === 'download-md') void handleDownloadMarkdown();
-                    }}
-                  >
+                  <Dropdown.Menu aria-label="笔记更多操作" onAction={handleMoreAction}>
+                    {canManageNotePermission ? (
+                      <Dropdown.Item id="permission" textValue="权限配置">
+                        权限配置
+                      </Dropdown.Item>
+                    ) : null}
                     <Dropdown.Item id="print-pdf" textValue="打印为pdf">
                       打印为pdf
                     </Dropdown.Item>
@@ -348,11 +372,12 @@ function NoteViewConnected({
                 ) : null}
                 <div ref={titleAnchorRef}>
                   <NoteTitle
-                    key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}`}
+                    key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}-${noteInfoDisplay.canCollaborativeEdit}`}
                     ref={titleEditorRef}
                     id={resourceId}
                     initialContent={noteInfoDisplay?.noteTitle}
-                    focusOnMount={isConnected}
+                    readOnly={isTitleReadOnly}
+                    focusOnMount={isConnected && !isTitleReadOnly}
                     onEnterKey={focusBody}
                   />
                 </div>
@@ -362,13 +387,14 @@ function NoteViewConnected({
                 />
                 <div className={styles.body}>
                   <CustomBlockNote
-                    key={resourceId}
+                    key={`${resourceId}-${noteInfoDisplay.canCollaborativeEdit}`}
                     ref={bodyEditorRef}
                     resourceId={resourceId}
                     doc={doc}
                     provider={provider}
                     aiDiffDisplayMode={aiDiffDisplayMode}
                     readOnly={isEditorReadOnly}
+                    blockLocalDocWrites={blockLocalDocWrites}
                     onOutlineChange={setOutlineItems}
                     onActiveHeadingChange={setActiveHeadingId}
                     onAiDiffPresenceChange={handleAiDiffPresenceChange}
@@ -398,6 +424,12 @@ function NoteViewConnected({
           </div>
         ) : null}
       </div>
+      <NotePermissionModal
+        isOpen={isPermissionModalOpen}
+        resourceId={resourceId}
+        onOpenChange={setIsPermissionModalOpen}
+        onSuccess={onRefreshNoteInfo}
+      />
     </div>
   );
 }

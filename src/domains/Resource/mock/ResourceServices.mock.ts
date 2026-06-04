@@ -109,12 +109,17 @@ const interactRate = async (params: InteractRateRequest): Promise<InteractRateRe
   return { userScore: params.score };
 };
 
+const updateResourceActionPermission = async (): Promise<void> => {
+  await delay(100);
+};
+
 export const ResourceServicesMock: IResourceService = {
   getUserResources,
   getGroupResources,
   renameResource,
   removeResources,
   updateResourceTags,
+  updateResourceActionPermission,
   interactToggleLike,
   interactRate,
 };
