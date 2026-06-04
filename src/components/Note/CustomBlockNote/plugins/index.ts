@@ -22,5 +22,6 @@ export {
   collectNoteEditorProps,
   composeNoteBlocksToMarkdownLossy,
   createNoteBlockNoteSchema,
+  createNoteReadOnlyFilterExtension,
 } from './registry';
 export type { NoteEditorPlugin } from './types';

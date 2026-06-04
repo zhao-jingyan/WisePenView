@@ -16,6 +16,7 @@ import type { ChangeEvent, KeyboardEvent, ReactNode, Ref, RefObject } from 'reac
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
+import { useNoteEditorReadOnlyContext } from '../../editorReadOnly';
 import { useAiDiffDisplayModeContext } from './displayModeContext';
 import {
   applyAiDiffActionForKey,
@@ -590,6 +591,10 @@ function StrategyHiddenShell({ setRefs }: { setRefs: (node: HTMLSpanElement | nu
 
 // 渲染操作按钮（Keep/Undo），并把用户点击映射成业务动作 accept/discard 回调给上层
 function AiDiffActionButtons({ onApply }: AiDiffActionButtonsProps) {
+  const readOnly = useNoteEditorReadOnlyContext();
+  if (readOnly) {
+    return null;
+  }
   return (
     <span className={styles.aiActionsAnchor} contentEditable={false} aria-hidden="true">
       {' '}

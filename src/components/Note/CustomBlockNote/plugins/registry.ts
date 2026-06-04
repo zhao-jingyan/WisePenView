@@ -6,7 +6,8 @@ import type {
   InlineContentSchema,
   StyleSchema,
 } from '@blocknote/core';
-import { BlockNoteSchema } from '@blocknote/core';
+import { BlockNoteSchema, createExtension } from '@blocknote/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorProps } from '@tiptap/pm/view';
 
 import type { NoteEditorPlugin, NoteInlineContentSpecs, PluginEditor } from './types';
@@ -43,6 +44,35 @@ export function collectNoteEditorExtensions(
   plugins: readonly NoteEditorPlugin[]
 ): ExtensionFactoryInstance[] {
   return plugins.flatMap((plugin) => plugin.extensions?.() ?? []);
+}
+
+/** 无协同编辑权时拦截本地 ProseMirror 文档写入（Yjs 同步事务仍放行）。 */
+export function createNoteReadOnlyFilterExtension(
+  isBlockLocalDocWrites: () => boolean
+): ExtensionFactoryInstance {
+  return createExtension({
+    key: 'noteReadOnlyFilter',
+    prosemirrorPlugins: [
+      new Plugin({
+        key: new PluginKey('noteReadOnlyFilter'),
+        filterTransaction(tr) {
+          if (!isBlockLocalDocWrites()) {
+            return true;
+          }
+          if (!tr.docChanged) {
+            return true;
+          }
+          if (tr.getMeta('y-sync$') !== undefined) {
+            return true;
+          }
+          if (tr.getMeta('addToHistory') === false) {
+            return true;
+          }
+          return false;
+        },
+      }),
+    ],
+  });
 }
 
 /**

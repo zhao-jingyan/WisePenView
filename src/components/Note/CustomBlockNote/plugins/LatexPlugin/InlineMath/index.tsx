@@ -10,6 +10,7 @@ import { useCallback, useRef, useState } from 'react';
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note/enum';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import 'katex/dist/katex.min.css';
+import { useNoteEditorReadOnlyContext } from '../../../editorReadOnly';
 import { useAiDiffDisplayModeContext } from '../../AIDiffPlugin/displayModeContext';
 import aiDiffStyles from '../../AIDiffPlugin/style.module.less';
 import { renderKatexInto } from '../katexRender';
@@ -293,6 +294,7 @@ function InlineMathView(
 ) {
   const aiDiffDisplayMode = useAiDiffDisplayModeContext();
   const { contentRef, updateInlineContent, inlineContent, editor } = props;
+  const readOnly = useNoteEditorReadOnlyContext();
   const expression = inlineContent.props.expression as string;
   const autoOpenEdit = inlineContent.props.autoOpenEdit as boolean;
   const aiDiffType = String(inlineContent.props.aiDiffType ?? '');
@@ -340,7 +342,7 @@ function InlineMathView(
     replace: aiDiffReplace,
   });
   const hasPendingAiDiff = viewState.hasDiff;
-  const canEnterEdit = !hasPendingAiDiff && !isEditing;
+  const canEnterEdit = !readOnly && !hasPendingAiDiff && !isEditing;
 
   // TODO: 重构，不使用useEffect，使用更合适的语义以增加可读性，但是latexSupport有完全重构的可能，因此暂时保留
   useEffectForce(() => {
@@ -351,6 +353,7 @@ function InlineMathView(
   const displayLatex = isEditing ? value : expression;
 
   useEffectForce(() => {
+    if (readOnly) return;
     if (!autoOpenEdit) return;
     const openExpr = inlineContent.props.expression as string;
     updateInlineContent({
@@ -408,6 +411,7 @@ function InlineMathView(
   };
 
   const enterEdit = () => {
+    if (readOnly) return;
     setValue(expression);
     setIsEditing(true);
   };
@@ -515,6 +519,7 @@ function InlineMathView(
           }
           role={canEnterEdit ? 'button' : undefined}
           tabIndex={canEnterEdit ? 0 : -1}
+          aria-readonly={readOnly || undefined}
           aria-label={canEnterEdit ? '编辑行内公式' : undefined}
           onClick={() => {
             if (canEnterEdit) enterEdit();

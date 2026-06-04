@@ -7,8 +7,10 @@ import type {
   CreateNoteResponse,
   DeleteNoteRequest,
   GetNoteInfoRequest,
+  GetNotePermissionConfigRequest,
   INoteService,
   NoteInfoDisplayData,
+  NotePermissionConfig,
   SyncTitleRequest,
 } from './index.type';
 
@@ -29,6 +31,16 @@ const getNoteInfoDisplay = async (params: GetNoteInfoRequest): Promise<NoteInfoD
   return NoteServicesMap.mapNoteInfoDisplayFromApi(noteInfoData);
 };
 
+const getNotePermissionConfig = async (
+  params: GetNotePermissionConfigRequest
+): Promise<NotePermissionConfig> => {
+  const noteInfoData = await NoteApi.getNoteInfo(params);
+  if (!noteInfoData?.resourceInfo) {
+    throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_NOT_FOUND);
+  }
+  return NoteServicesMap.mapNotePermissionConfigFromApi(noteInfoData, params.resourceId);
+};
+
 export const createNoteServices = (deps: NoteServicesDeps): INoteService => {
   const { resourceService } = deps;
 
@@ -47,5 +59,6 @@ export const createNoteServices = (deps: NoteServicesDeps): INoteService => {
     createNote,
     deleteNote,
     getNoteInfoDisplay,
+    getNotePermissionConfig,
   };
 };

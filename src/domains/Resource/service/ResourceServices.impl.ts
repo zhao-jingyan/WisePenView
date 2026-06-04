@@ -19,6 +19,7 @@ import type {
   RemoveResourcesRequest,
   RenameResourceRequest,
   ResourceListPage,
+  UpdateResourceActionPermissionRequest,
   UpdateResourceTagsRequest,
 } from './index.type';
 
@@ -58,6 +59,13 @@ const updateResourceTags = async (params: UpdateResourceTagsRequest): Promise<vo
   await ResourceItemApi.changeResourceTags(params);
 };
 
+const updateResourceActionPermission = async (
+  params: UpdateResourceActionPermissionRequest
+): Promise<void> => {
+  const request = ResourceServicesMap.mapChangeResourceActionPermissionRequest(params);
+  await ResourceItemApi.changeResourceActionPermission(request);
+};
+
 /** 点赞 / 取消点赞，返回操作后最新状态 */
 const interactToggleLike = async (
   params: InteractToggleLikeRequest
@@ -81,6 +89,7 @@ export const createResourceServices = (): IResourceService => ({
   renameResource,
   removeResources,
   updateResourceTags,
+  updateResourceActionPermission,
   interactToggleLike,
   interactRate,
 });
