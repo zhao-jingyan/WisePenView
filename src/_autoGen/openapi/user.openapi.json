@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.22:19903",
+      "url": "http://172.28.0.23:19903",
       "description": "Generated server url"
     }
   ],
@@ -908,7 +908,15 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["1", "2", "3", "4", "5", "6", "7"]
+              "enum": [
+                "REFILL",
+                "SPEND",
+                "TRANSFER_IN",
+                "TRANSFER_OUT",
+                "INCOME",
+                "EXCHANGE",
+                "REVERSE"
+              ]
             }
           },
           {
@@ -1849,7 +1857,15 @@
           },
           "walletTransactionType": {
             "type": "string",
-            "enum": ["1", "2", "3", "4", "5", "6", "7"]
+            "enum": [
+              "REFILL",
+              "SPEND",
+              "TRANSFER_IN",
+              "TRANSFER_OUT",
+              "INCOME",
+              "EXCHANGE",
+              "REVERSE"
+            ]
           },
           "meta": {
             "type": "string"
@@ -2027,7 +2043,15 @@
           },
           "walletTransactionType": {
             "type": "string",
-            "enum": ["1", "2", "3", "4", "5", "6", "7"]
+            "enum": [
+              "REFILL",
+              "SPEND",
+              "TRANSFER_IN",
+              "TRANSFER_OUT",
+              "INCOME",
+              "EXCHANGE",
+              "REVERSE"
+            ]
           },
           "walletBusinessType": {
             "type": "string",
