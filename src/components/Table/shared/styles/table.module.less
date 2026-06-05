@@ -1,0 +1,284 @@
+/* WisePen Table 共享 token
+ * 链路：wisepen.css (--table-*) → 本文件 @table-* → 各 variant / cell less
+ */
+
+/* 行高 / 帧宽 */
+@table-row-height: var(--table-row-height, 60px);
+@table-header-row-height: var(--table-header-row-height, 42px);
+@table-frame-width: var(--table-frame-width, 900px);
+
+@row-content-height: @table-row-height;
+@row-height-editable: @table-row-height;
+@toolbar-height: var(--table-toolbar-height, 57px);
+@header-row-height: @table-header-row-height;
+@action-column-width: var(--table-action-column-width, 88px);
+@checkbox-column-width: var(--table-checkbox-column-width, 44px);
+@action-icon-size: var(--table-action-icon-size, 32px);
+@row-cell-padding-block: var(--table-cell-padding-block, 0);
+@row-cell-padding-inline: var(--table-cell-padding-inline, var(--space-sm));
+@header-cell-padding-inline: @row-cell-padding-inline;
+@table-gap: var(--table-gap, var(--space-sm));
+@table-gap-compact: var(--table-gap-compact, var(--space-xs));
+@table-gap-tight: var(--table-gap-tight, 4px);
+@table-gap-inline: var(--table-gap-inline, 6px);
+@table-control-min-height: var(--table-control-min-height, 32px);
+@table-header-bar-min-height: var(--table-header-bar-min-height, 44px);
+@table-shell-padding-block: var(--table-shell-padding-block, var(--space-sm));
+@table-shell-padding-inline: var(--table-shell-padding-inline, 14px);
+@table-toolbar-padding-block: var(--table-toolbar-padding-block, 10px);
+
+/* 排版 token */
+@table-font-family: var(--app-font-family);
+
+@table-font-size-ui: var(--ant-font-size);
+@table-font-size-body: var(--font-size-base, var(--ant-font-size));
+@table-font-size-header: @table-font-size-body;
+@table-font-size-meta: var(--font-size-sm);
+@table-font-size-sm: var(--font-size-sm);
+@table-font-size-xs: var(--font-size-xs);
+@table-font-size-2xs: var(--font-size-2xs);
+@table-font-weight-regular: var(--font-weight-regular);
+@table-font-weight-medium: var(--font-weight-medium);
+@table-line-height-ui: var(--ant-line-height);
+@table-line-height-body: var(--line-height-base, var(--ant-line-height));
+@table-line-height-header: @table-line-height-body;
+@table-line-height-meta: var(--line-height-md);
+@table-line-height-md: var(--line-height-md);
+@table-line-height-xs: var(--line-height-xs);
+@table-line-height-2xs: var(--line-height-2xs);
+
+@table-header-bar-font-size: @table-font-size-ui;
+@table-header-bar-line-height: @table-line-height-ui;
+
+.tableHeaderBarText() {
+  font-family: @table-font-family;
+  font-size: @table-header-bar-font-size;
+  line-height: @table-header-bar-line-height;
+}
+
+.tableColFixedWidth(@cssVarName) {
+  @width: ~'var(@{cssVarName})';
+  width: @width;
+  min-width: @width;
+  max-width: @width;
+}
+
+.tableShellTypography() {
+  font-family: @table-font-family;
+  font-size: @table-font-size-ui;
+  line-height: @table-line-height-ui;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  :global(.table-root),
+  :global(.table__content),
+  :global(.table__column),
+  :global(.table__cell),
+  :global(.table__footer),
+  :global(.table__load-more),
+  :global(.pagination),
+  :global(.pagination__link),
+  :global(.pagination__ellipsis),
+  :global(.select__trigger),
+  :global(.select__value),
+  :global(.listbox),
+  :global(.listbox-item),
+  :global(.chip),
+  :global([data-slot='label']),
+  :global(.button),
+  :global(button) {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+  }
+}
+
+/* 列宽 */
+.colFill {
+  width: 48%;
+  min-width: var(--table-col-fill-min-width, 180px);
+}
+
+.colSm {
+  .tableColFixedWidth(--table-col-sm);
+}
+
+.colMd {
+  .tableColFixedWidth(--table-col-md);
+}
+
+.colEnum {
+  .tableColFixedWidth(--table-col-enum);
+}
+
+.colLg {
+  .tableColFixedWidth(--table-col-lg);
+}
+
+.colEq {
+  width: calc(100% / var(--table-eq-column-count, 1));
+  min-width: 0;
+}
+
+.colFolderSize {
+  .tableColFixedWidth(--table-col-folder-size);
+}
+
+.colFolderType {
+  .tableColFixedWidth(--table-col-folder-type);
+}
+
+.colFolderAction {
+  .tableColFixedWidth(--table-col-folder-action);
+}
+
+.colAction {
+  .tableColFixedWidth(--table-action-column-width);
+}
+
+.colCheckbox {
+  .tableColFixedWidth(--table-checkbox-column-width);
+}
+
+.defineTableSelectTrigger() {
+  min-height: @table-control-min-height;
+  font-family: @table-font-family;
+  font-size: @table-font-size-ui;
+  line-height: @table-line-height-ui;
+  white-space: nowrap;
+}
+
+.defineTableSelectValue() {
+  font-family: @table-font-family;
+  font-size: @table-font-size-ui;
+  line-height: @table-line-height-ui;
+  white-space: nowrap;
+}
+
+.toolbarSelect {
+  flex-shrink: 0;
+  min-width: var(--table-select-min-width, 120px);
+  width: auto;
+
+  :global(.select__trigger) {
+    .defineTableSelectTrigger();
+  }
+
+  :global(.select__value) {
+    .defineTableSelectValue();
+  }
+}
+
+.toolbarSelectHost() {
+  > :global(.select) {
+    flex-shrink: 0;
+    min-width: var(--table-select-min-width, 120px);
+    width: auto;
+
+    :global(.select__trigger) {
+      .defineTableSelectTrigger();
+    }
+
+    :global(.select__value) {
+      .defineTableSelectValue();
+    }
+  }
+}
+
+.inlineEditSelect {
+  max-width: 100%;
+  min-width: 0;
+
+  :global(.select__trigger) {
+    .defineTableSelectTrigger();
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
+    flex-wrap: nowrap;
+  }
+
+  :global(.select__value) {
+    .defineTableSelectValue();
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+}
+
+.inlineEditSelectHost() {
+  :global(.select) {
+    max-width: 100%;
+    min-width: 0;
+
+    :global(.select__trigger) {
+      .defineTableSelectTrigger();
+      box-sizing: border-box;
+      max-width: 100%;
+      overflow: hidden;
+      flex-wrap: nowrap;
+    }
+
+    :global(.select__value) {
+      .defineTableSelectValue();
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+  }
+}
+
+.inlineEditSelectCompact {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  :global(.select__trigger) {
+    .defineTableSelectTrigger();
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: nowrap;
+    gap: @table-gap-compact;
+  }
+
+  :global(.select__value) {
+    .defineTableSelectValue();
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  :global(.select__indicator) {
+    flex-shrink: 0;
+  }
+}
+
+.pageSizeSelect {
+  composes: toolbarSelect;
+  min-width: var(--table-page-size-select-width, 110px);
+  width: var(--table-page-size-select-width, 110px);
+}
+
+.selectPopover:global(.select__popover) {
+  border-radius: var(--radius-field, var(--field-radius, calc(var(--radius) * 1.5))) !important;
+  overflow: clip;
+}
+
+.dropdownPopover:global(.dropdown__popover) {
+  border-radius: var(--radius-field, var(--field-radius, calc(var(--radius) * 1.5))) !important;
+  overflow: clip;
+}
+
+.tableSkeletonRowMixin() {
+  pointer-events: none;
+}
+
+.tableSkeletonCellMixin() {
+  height: @table-row-height;
+  min-height: @table-row-height;
+  max-height: @table-row-height;
+  vertical-align: middle;
+}

@@ -1,0 +1,250 @@
+import TableCellAlign from '../shared/cells/CellAlign';
+import {
+  joinClassNames,
+  resolveColumnAlign,
+  shouldStretchTableCellContent,
+} from '../shared/TableBase/cellAlign';
+import {
+  getDataEqColumnCount,
+  isDataEqualColumnLayout,
+  resolveDataColumnWidthClass,
+} from '../shared/TableBase/columnWidth';
+import TableBodyState from '../shared/TableBodyState';
+import { TableLoadMoreRow, TableRefreshIndicator } from '../shared/TableStatusRows';
+import TableSummaryFooter from '../shared/TableSummaryFooter';
+import type { DataTableProps, DataTableRowContext } from './index.type';
+import styles from './style.module.less';
+
+import { Table } from '@heroui/react';
+import { ArrowUpDown } from 'lucide-react';
+import { useCallback, useMemo, useRef, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
+import DataTableLoadingSkeleton from './parts/LoadingSkeleton';
+
+const LOAD_MORE_THRESHOLD_PX = 48;
+
+function getRowTextValue<T extends object>(row: T, rowKey: keyof T & string): string {
+  const value = row[rowKey];
+  return value == null ? '' : String(value);
+}
+
+function resolveMaxBodyHeight(value: number | string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  return typeof value === 'number' ? `${value}px` : value;
+}
+
+function DataTable<T extends object>({
+  ariaLabel,
+  items,
+  rowKey,
+  columns,
+  loading = false,
+  refreshing = false,
+  emptyText,
+  emptyDescription,
+  emptyIcon,
+  skeletonRowCount = 4,
+  className,
+  maxBodyHeight,
+  title,
+  tabs,
+  toolbar,
+  loadMore,
+  totalCount,
+  summary,
+  getRowClassName,
+}: DataTableProps<T>) {
+  const { t } = useTranslation('table');
+  const resolvedEmptyText = emptyText ?? t('empty.noData');
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const loadMoreLockRef = useRef(false);
+
+  const showHeaderBar = Boolean(title || toolbar);
+  const showSkeletonBody = refreshing || (loading && items.length === 0);
+  const showEmptyState = !loading && !refreshing && items.length === 0;
+
+  const defaultSummary = useMemo(() => {
+    if (summary !== undefined) {
+      return summary;
+    }
+    const count = totalCount ?? items.length;
+    return count > 0 ? t('summary.totalRecords', { count }) : t('summary.totalRecordsZero');
+  }, [summary, totalCount, items.length, t]);
+
+  const showFooter = !showSkeletonBody && Boolean(defaultSummary);
+
+  const handleScroll = useCallback(() => {
+    if (!loadMore) {
+      return;
+    }
+
+    if (!loadMore.loading) {
+      loadMoreLockRef.current = false;
+    }
+
+    if (loadMore.loading || !loadMore.hasMore || loadMoreLockRef.current) {
+      return;
+    }
+
+    const container = scrollRef.current;
+    if (!container) {
+      return;
+    }
+
+    const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanceToBottom > LOAD_MORE_THRESHOLD_PX) {
+      return;
+    }
+
+    loadMoreLockRef.current = true;
+    loadMore.onLoadMore();
+  }, [loadMore]);
+
+  const scrollContainerProps = useMemo(() => {
+    if (!maxBodyHeight) {
+      return {};
+    }
+    const resolved = resolveMaxBodyHeight(maxBodyHeight);
+    return {
+      style: { maxHeight: resolved } as CSSProperties,
+    };
+  }, [maxBodyHeight]);
+
+  const equalColumnLayout = isDataEqualColumnLayout(columns);
+  const eqColumnCount = getDataEqColumnCount(columns);
+
+  return (
+    <div className={joinClassNames(styles.shell, className)}>
+      {showHeaderBar ? (
+        <div className={styles.headerBar}>
+          {title ? <div className={styles.title}>{title}</div> : null}
+          {toolbar ? (
+            <div
+              className={joinClassNames(
+                styles.toolbar,
+                refreshing || loading ? styles.toolbarDisabled : undefined
+              )}
+            >
+              {toolbar}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {tabs ? <div className={styles.tabsBar}>{tabs}</div> : null}
+
+      {refreshing ? <TableRefreshIndicator /> : null}
+
+      <Table variant="secondary" className={styles.tableRoot}>
+        <Table.ScrollContainer
+          ref={scrollRef}
+          className={styles.scrollContainer}
+          onScroll={handleScroll}
+          {...scrollContainerProps}
+        >
+          <Table.Content
+            aria-label={ariaLabel}
+            className={styles.tableContent}
+            data-eq-count={eqColumnCount}
+          >
+            <Table.Header>
+              {columns.map((column) => {
+                const columnAlign = resolveColumnAlign(column.align);
+
+                return (
+                  <Table.Column
+                    key={column.id}
+                    id={column.id}
+                    isRowHeader={column.isRowHeader}
+                    className={joinClassNames(
+                      resolveDataColumnWidthClass(column.width, equalColumnLayout),
+                      column.className
+                    )}
+                  >
+                    <TableCellAlign align={columnAlign}>{column.label}</TableCellAlign>
+                  </Table.Column>
+                );
+              })}
+            </Table.Header>
+
+            <Table.Body
+              renderEmptyState={() =>
+                showEmptyState ? (
+                  <TableBodyState
+                    title={resolvedEmptyText}
+                    description={emptyDescription}
+                    icon={emptyIcon ?? <ArrowUpDown size={20} aria-hidden />}
+                  />
+                ) : null
+              }
+            >
+              {showSkeletonBody ? (
+                <DataTableLoadingSkeleton
+                  rowCount={skeletonRowCount}
+                  columns={columns}
+                  equalLayout={equalColumnLayout}
+                />
+              ) : (
+                <>
+                  {items.map((row) => {
+                    const rowId = String(row[rowKey]);
+                    const ctx: DataTableRowContext<T> = { row, rowId };
+
+                    return (
+                      <Table.Row
+                        key={rowId}
+                        id={rowId}
+                        textValue={getRowTextValue(row, rowKey)}
+                        className={joinClassNames(styles.bodyRow, getRowClassName?.(row, ctx))}
+                      >
+                        {columns.map((column) => (
+                          <Table.Cell
+                            key={column.id}
+                            className={joinClassNames(
+                              styles.bodyCell,
+                              resolveDataColumnWidthClass(column.width, equalColumnLayout),
+                              column.className
+                            )}
+                          >
+                            <TableCellAlign
+                              align={resolveColumnAlign(column.align)}
+                              stretch={shouldStretchTableCellContent(column)}
+                            >
+                              {column.renderCell(row, ctx)}
+                            </TableCellAlign>
+                          </Table.Cell>
+                        ))}
+                      </Table.Row>
+                    );
+                  })}
+                  {loadMore?.loading ? (
+                    <Table.Row
+                      id="__load_more"
+                      textValue={t('loadMoreRow')}
+                      className={styles.loadMoreTableRow}
+                    >
+                      <Table.Cell
+                        colSpan={columns.length}
+                        className={joinClassNames(styles.loadMoreCell, styles.bodyCell)}
+                      >
+                        <TableLoadMoreRow />
+                      </Table.Cell>
+                    </Table.Row>
+                  ) : null}
+                </>
+              )}
+            </Table.Body>
+          </Table.Content>
+        </Table.ScrollContainer>
+
+        {showFooter ? (
+          <TableSummaryFooter summary={defaultSummary} className={styles.tableFooter} />
+        ) : null}
+      </Table>
+    </div>
+  );
+}
+
+export default DataTable;

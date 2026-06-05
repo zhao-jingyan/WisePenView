@@ -1,0 +1,58 @@
+@import '../../../shared/styles/table.module.less';
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.separator {
+  color: var(--muted);
+  font-family: @table-font-family;
+  font-size: @table-font-size-meta;
+  line-height: @table-line-height-meta;
+}
+
+.item,
+.current {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font-family: @table-font-family;
+  font-size: @table-font-size-meta;
+  line-height: @table-line-height-meta;
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background: var(--surface-tertiary);
+      color: var(--foreground);
+    }
+  }
+}
+
+.current {
+  color: var(--foreground);
+  font-weight: @table-font-weight-medium;
+  cursor: default;
+
+  @media (hover: hover) {
+    &:hover {
+      background: transparent;
+      color: var(--foreground);
+    }
+  }
+}

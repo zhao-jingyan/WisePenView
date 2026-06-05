@@ -1,0 +1,211 @@
+@import '../shared/styles/table.module.less';
+
+.shell {
+  .tableShellTypography();
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-xl, calc(var(--radius) * 1.5));
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+
+.headerBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: @table-gap;
+  padding: @table-shell-padding-block @table-shell-padding-inline 0;
+}
+
+.title {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-height: @table-line-height-body;
+  color: var(--foreground);
+  font-family: @table-font-family;
+  font-size: @table-font-size-body;
+  font-weight: @table-font-weight-medium;
+  line-height: @table-line-height-body;
+}
+
+.toolbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: @table-gap-tight;
+  min-width: 0;
+
+  :global(button) {
+    min-height: @table-control-min-height;
+    padding-inline: @table-gap-compact;
+    color: var(--muted);
+    font-family: @table-font-family;
+    font-size: @table-font-size-body;
+    font-weight: @table-font-weight-medium;
+    line-height: @table-line-height-body;
+  }
+}
+
+.toolbarDisabled {
+  pointer-events: none;
+  opacity: 0.35;
+
+  :global(button) {
+    color: var(--text-disabled);
+  }
+}
+
+.tabsBar {
+  padding-top: 8px;
+}
+
+.tableRoot {
+  width: 100%;
+  background: var(--surface);
+
+  :global(.table__scroll-container) {
+    width: 100%;
+  }
+
+  :global(.table__content) {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  :global(.table-root--secondary .table__column:first-child),
+  :global(.table-root--secondary .table__column:last-child),
+  :global(.table-root--secondary .table__body tr:first-child td:first-child),
+  :global(.table-root--secondary .table__body tr:first-child td:last-child),
+  :global(.table-root--secondary .table__body tr:last-child td:first-child),
+  :global(.table-root--secondary .table__body tr:last-child td:last-child),
+  :global(.table-root--secondary .table__body:not(tbody)) {
+    border-radius: 0;
+  }
+
+  :global(.table__column::after) {
+    content: none !important;
+  }
+
+  :global(.table__row:focus-visible > .table__cell),
+  :global(.table__row[data-focus-visible='true'] > .table__cell) {
+    box-shadow: none !important;
+    outline: none;
+  }
+
+  :global(.table__header) {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    border-bottom: 0;
+    background: transparent;
+  }
+
+  :global(.table__column) {
+    box-sizing: border-box;
+    height: @table-header-row-height;
+    min-height: @table-header-row-height;
+    max-height: @table-header-row-height;
+    padding-block: 0;
+    padding-inline: @header-cell-padding-inline;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--surface-secondary);
+    color: var(--surface-secondary-foreground);
+    font-family: @table-font-family;
+    font-size: @table-font-size-header;
+    font-weight: @table-font-weight-medium;
+    letter-spacing: normal;
+    line-height: @table-line-height-header;
+    text-transform: none;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  :global(.table__cell) {
+    box-sizing: border-box;
+    height: @table-row-height;
+    min-height: @table-row-height;
+    max-height: @table-row-height;
+    padding: @row-cell-padding-block @row-cell-padding-inline;
+    overflow: hidden;
+    border-bottom: 1px solid var(--separator);
+    border-inline: 0;
+    background: var(--surface);
+    color: var(--foreground);
+    font-family: @table-font-family;
+    font-size: @table-font-size-body;
+    font-weight: @table-font-weight-regular;
+    line-height: @table-line-height-body;
+    vertical-align: middle;
+  }
+
+  :global(.table-root--secondary .table__row) {
+    border-bottom: 0;
+    cursor: default;
+  }
+
+  :global(.table-root--secondary .table__row .table__cell) {
+    border-bottom-color: var(--separator);
+    background: var(--surface);
+  }
+
+  @media (hover: hover) {
+    :global(.table-root--secondary .table__row:hover .table__cell),
+    :global(.table-root--secondary .table__row[data-hovered='true'] .table__cell) {
+      background: var(--surface);
+    }
+  }
+
+  :global(.table__row:last-child .table__cell) {
+    border-bottom: 1px solid var(--separator);
+  }
+}
+
+.scrollContainer {
+  width: 100%;
+  overflow: auto;
+}
+
+.generateReadonlyEqColumnCounts(@max, @i: 1) when (@i =< @max) {
+  &[data-eq-count='@{i}'] {
+    --table-eq-column-count: @i;
+  }
+  .generateReadonlyEqColumnCounts(@max, (@i + 1));
+}
+
+.tableContent {
+  width: 100%;
+  --table-eq-column-count: 1;
+  .generateReadonlyEqColumnCounts(16);
+}
+
+.bodyRow {
+  cursor: default;
+}
+
+.bodyCell {
+  overflow: hidden;
+}
+
+.cellAlignCenter {
+  text-align: center;
+}
+
+.cellAlignEnd {
+  text-align: right;
+}
+
+.tableFooter {
+  border-top: 0;
+}
+
+.loadMoreTableRow {
+  pointer-events: none;
+}
+
+.loadMoreCell:global(.table__cell) {
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+}

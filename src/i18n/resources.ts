@@ -1,9 +1,11 @@
 import enUSAuth from './locales/en-US/auth';
 import enUSCommon from './locales/en-US/common';
 import enUSErrors from './locales/en-US/errors';
+import enUSTable from './locales/en-US/table';
 import zhCNAuth from './locales/zh-CN/auth';
 import zhCNCommon from './locales/zh-CN/common';
 import zhCNErrors from './locales/zh-CN/errors';
+import zhCNTable from './locales/zh-CN/table';
 
 export const DEFAULT_LANGUAGE = 'zh-CN' as const;
 
@@ -14,6 +16,7 @@ export const I18N_NAMESPACES = {
   COMMON: 'common',
   AUTH: 'auth',
   ERRORS: 'errors',
+  TABLE: 'table',
 } as const;
 
 export const resources = {
@@ -21,10 +24,12 @@ export const resources = {
     [I18N_NAMESPACES.COMMON]: zhCNCommon,
     [I18N_NAMESPACES.AUTH]: zhCNAuth,
     [I18N_NAMESPACES.ERRORS]: zhCNErrors,
+    [I18N_NAMESPACES.TABLE]: zhCNTable,
   },
   'en-US': {
     [I18N_NAMESPACES.COMMON]: enUSCommon,
     [I18N_NAMESPACES.AUTH]: enUSAuth,
     [I18N_NAMESPACES.ERRORS]: enUSErrors,
+    [I18N_NAMESPACES.TABLE]: enUSTable,
   },
 } as const;

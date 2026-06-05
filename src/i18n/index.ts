@@ -7,7 +7,7 @@ if (!i18n.isInitialized) {
     resources,
     lng: DEFAULT_LANGUAGE,
     fallbackLng: DEFAULT_LANGUAGE,
-    ns: [I18N_NAMESPACES.COMMON, I18N_NAMESPACES.ERRORS],
+    ns: [I18N_NAMESPACES.COMMON, I18N_NAMESPACES.ERRORS, I18N_NAMESPACES.TABLE],
     defaultNS: I18N_NAMESPACES.COMMON,
     interpolation: {
       escapeValue: false,

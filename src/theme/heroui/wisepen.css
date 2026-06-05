@@ -561,6 +561,68 @@
     --preview-primary: #60a5fa;
     --preview-accent: #a78bfa;
   }
+
+  /* WisePen 排版 / 间距 / Table 行高；Table 正文对齐侧边栏 --ant-font-size（16px） */
+  :root,
+  .light,
+  .default,
+  .dark,
+  [data-theme='light'],
+  [data-theme='default'],
+  [data-theme='dark'] {
+    --font-size-base: 14px;
+    --font-size-sm: 14px;
+    --font-size-xs: 12px;
+    --font-size-2xs: 11px;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --line-height-base: 22px;
+    --line-height-md: 22px;
+    --line-height-xs: 18px;
+    --line-height-2xs: 16px;
+    --font-sans: var(--app-font-family);
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --table-row-height: 60px;
+    --row-height-comfortable: var(--table-row-height);
+    --row-height-compact: var(--table-row-height);
+    --radius-xl: 12px;
+
+    /* Table 布局 / 列宽（Less @table-* 经 table.module.less 引用） */
+    --table-header-row-height: 42px;
+    --table-frame-width: 900px;
+    --table-toolbar-height: 57px;
+    --table-cell-padding-inline: var(--space-sm);
+    --table-cell-padding-block: 0;
+    --table-shell-padding-block: var(--space-sm);
+    --table-shell-padding-inline: 14px;
+    --table-toolbar-padding-block: 10px;
+    --table-gap: var(--space-sm);
+    --table-gap-compact: var(--space-xs);
+    --table-gap-tight: 4px;
+    --table-gap-inline: 6px;
+    --table-control-min-height: 32px;
+    --table-header-bar-min-height: 44px;
+    --table-action-column-width: 88px;
+    --table-checkbox-column-width: 44px;
+    --table-action-icon-size: 32px;
+    --table-col-fill-min-width: 180px;
+    --table-col-sm: 90px;
+    --table-col-md: 110px;
+    --table-col-lg: 180px;
+    --table-col-enum: 128px;
+    --table-col-folder-size: 100px;
+    --table-col-folder-type: 120px;
+    --table-col-folder-action: 48px;
+    --table-select-min-width: 120px;
+    --table-page-size-select-width: 110px;
+    --table-chip-min-width: 56px;
+    --table-chip-min-height: 28px;
+    --table-chip-padding-block: 4px;
+    --table-chip-padding-inline: 14px;
+  }
 }
 
 /* Ant Design 迁移*/

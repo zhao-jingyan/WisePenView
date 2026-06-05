@@ -1,0 +1,409 @@
+import TableCellAlign from '../shared/cells/CellAlign';
+import TableTextCell from '../shared/cells/TextCell';
+import {
+  joinClassNames,
+  resolveColumnAlign,
+  shouldStretchTableCellContent,
+} from '../shared/TableBase/cellAlign';
+import {
+  countFolderEqColumns,
+  isFolderEqLayout,
+  resolveFolderColumnWidthClassForColumn,
+} from '../shared/TableBase/columnWidth';
+import TableBodyState from '../shared/TableBodyState';
+import TableRowActions from '../shared/TableRowActions';
+import type { TableRowActionItem } from '../shared/TableRowActions/index.type';
+import { TableLoadMoreRow } from '../shared/TableStatusRows';
+import TableSummaryFooter from '../shared/TableSummaryFooter';
+import { createDefaultFolderColumns } from './defaultColumns';
+import type {
+  FolderTableColumn,
+  FolderTableProps,
+  FolderTableRow,
+  FolderTableRowAction,
+  FolderTableRowContext,
+  FolderTableVisibleRow,
+} from './index.type';
+import FolderTableNameCell from './parts/FolderNameCell';
+import FolderTableLoadingSkeleton from './parts/LoadingSkeleton';
+import styles from './style.module.less';
+
+import { Table } from '@heroui/react';
+import { Folder } from 'lucide-react';
+import { useCallback, useMemo, useRef, type CSSProperties, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+
+const LOAD_MORE_THRESHOLD_PX = 48;
+
+function flattenFolderRows<T extends FolderTableRow>(
+  rows: T[],
+  expandedKeys: Set<string>,
+  depth = 0
+): Array<FolderTableVisibleRow & T> {
+  const result: Array<FolderTableVisibleRow & T> = [];
+
+  for (const row of rows) {
+    result.push({ ...row, depth });
+    const hasChildren = Boolean(row.children?.length);
+    if (row.entryType === 'folder' && hasChildren && expandedKeys.has(row.id)) {
+      result.push(...flattenFolderRows(row.children as T[], expandedKeys, depth + 1));
+    }
+  }
+
+  return result;
+}
+
+function folderRowHasChildren(row: FolderTableRow): boolean {
+  return row.entryType === 'folder' && Boolean(row.children?.length);
+}
+
+function resolveMaxBodyHeight(value: number | string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  return typeof value === 'number' ? `${value}px` : value;
+}
+
+function evaluateRowPredicate<T>(
+  predicate: boolean | ((row: T) => boolean) | undefined,
+  row: T,
+  defaultValue = true
+): boolean {
+  if (predicate === undefined) {
+    return defaultValue;
+  }
+  return typeof predicate === 'function' ? predicate(row) : predicate;
+}
+
+function resolveRowActions<T extends FolderTableRow>(
+  row: T,
+  rowActions: FolderTableProps<T>['rowActions']
+): FolderTableRowAction<T>[] {
+  if (!rowActions) {
+    return [];
+  }
+  return typeof rowActions === 'function' ? rowActions(row) : rowActions;
+}
+
+function toMenuActions<T extends FolderTableRow>(
+  actions: FolderTableRowAction<T>[],
+  row: T
+): TableRowActionItem[] {
+  return actions
+    .filter((action) => evaluateRowPredicate(action.visible, row))
+    .map((action) => ({
+      key: action.key,
+      label: action.label,
+      variant: action.variant,
+      disabled: evaluateRowPredicate(action.disabled, row, false),
+    }));
+}
+
+function isPlainTextContent(content: ReactNode): content is string | number {
+  return typeof content === 'string' || typeof content === 'number';
+}
+
+function FolderTable<T extends FolderTableRow>({
+  ariaLabel,
+  items,
+  columns: columnsProp,
+  loading = false,
+  breadcrumb,
+  toolbar,
+  expandedRowKeys = [],
+  onExpandedChange,
+  onRowActivate,
+  rowActions,
+  loadMore,
+  totalCount,
+  summary,
+  maxBodyHeight,
+  emptyText,
+  emptyDescription,
+  emptyIcon,
+  skeletonRowCount = 4,
+  className,
+}: FolderTableProps<T>) {
+  const { t } = useTranslation('table');
+  const resolvedEmptyText = emptyText ?? t('empty.folderEmpty');
+  const resolvedEmptyDescription = emptyDescription ?? t('empty.folderDescription');
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const loadMoreLockRef = useRef(false);
+
+  const columns = useMemo(
+    () => columnsProp ?? (createDefaultFolderColumns<T>(t) as FolderTableColumn<T>[]),
+    [columnsProp, t]
+  );
+  const eqLayout = isFolderEqLayout(columns);
+  const eqColumnCount = countFolderEqColumns(columns);
+
+  const expandedKeySet = useMemo(() => new Set(expandedRowKeys), [expandedRowKeys]);
+
+  const visibleRows = useMemo(
+    () => flattenFolderRows(items, expandedKeySet),
+    [items, expandedKeySet]
+  );
+
+  const showSkeletonBody = loading && items.length === 0;
+  const showEmptyState = !loading && visibleRows.length === 0;
+
+  const defaultSummary = useMemo(() => {
+    if (summary !== undefined) {
+      return summary;
+    }
+    const count = totalCount ?? items.length;
+    return count > 0 ? t('summary.totalItems', { count }) : t('summary.totalItemsZero');
+  }, [summary, totalCount, items.length, t]);
+
+  const showFooter = !showSkeletonBody && Boolean(defaultSummary);
+
+  const handleScroll = useCallback(() => {
+    if (!loadMore) {
+      return;
+    }
+
+    if (!loadMore.loading) {
+      loadMoreLockRef.current = false;
+    }
+
+    if (loadMore.loading || !loadMore.hasMore || loadMoreLockRef.current) {
+      return;
+    }
+
+    const container = scrollRef.current;
+    if (!container) {
+      return;
+    }
+
+    const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanceToBottom > LOAD_MORE_THRESHOLD_PX) {
+      return;
+    }
+
+    loadMoreLockRef.current = true;
+    loadMore.onLoadMore();
+  }, [loadMore]);
+
+  const scrollContainerProps = useMemo(() => {
+    if (!maxBodyHeight) {
+      return {};
+    }
+    const resolved = resolveMaxBodyHeight(maxBodyHeight);
+    return {
+      style: { maxHeight: resolved } as CSSProperties,
+    };
+  }, [maxBodyHeight]);
+
+  const handleToggleExpand = useCallback(
+    (rowId: string) => {
+      if (!onExpandedChange) {
+        return;
+      }
+      const next = expandedRowKeys.includes(rowId)
+        ? expandedRowKeys.filter((key) => key !== rowId)
+        : [...expandedRowKeys, rowId];
+      onExpandedChange(next);
+    },
+    [expandedRowKeys, onExpandedChange]
+  );
+
+  const handleRowAction = useCallback(
+    (row: T, actionKey: string) => {
+      const matched = resolveRowActions(row, rowActions).find((action) => action.key === actionKey);
+      matched?.onPress(row);
+    },
+    [rowActions]
+  );
+
+  const renderCellContent = useCallback(
+    (column: FolderTableColumn<T>, row: FolderTableVisibleRow, ctx: FolderTableRowContext<T>) => {
+      if (column.isNameColumn) {
+        const expandable = folderRowHasChildren(row);
+        const expanded = expandedKeySet.has(row.id);
+        return (
+          <FolderTableNameCell
+            row={row}
+            depth={row.depth}
+            expanded={expanded}
+            expandable={expandable}
+            onToggleExpand={
+              expandable && onExpandedChange ? () => handleToggleExpand(row.id) : undefined
+            }
+          />
+        );
+      }
+
+      if (column.isActionColumn) {
+        const menuActions = toMenuActions(resolveRowActions(ctx.row, rowActions), ctx.row);
+        if (menuActions.length === 0) {
+          return null;
+        }
+        return (
+          <TableRowActions
+            actions={menuActions}
+            onAction={(key) => handleRowAction(ctx.row, key)}
+          />
+        );
+      }
+
+      if (column.renderCell) {
+        return column.renderCell(ctx.row, ctx);
+      }
+
+      return null;
+    },
+    [expandedKeySet, handleRowAction, handleToggleExpand, onExpandedChange, rowActions]
+  );
+
+  const resolveColumnHeaderClass = useCallback(
+    (column: FolderTableColumn<T>) =>
+      joinClassNames(
+        resolveFolderColumnWidthClassForColumn(column, eqLayout),
+        column.isNameColumn ? styles.nameColumnHeader : undefined,
+        column.isActionColumn ? styles.actionColumnHeader : undefined,
+        column.className
+      ),
+    [eqLayout]
+  );
+
+  const resolveHeaderAlign = useCallback(
+    (column: FolderTableColumn<T>) =>
+      column.isActionColumn ? 'center' : resolveColumnAlign(column.align),
+    []
+  );
+
+  const resolveBodyCellClass = useCallback(
+    (column: FolderTableColumn<T>) =>
+      joinClassNames(
+        resolveFolderColumnWidthClassForColumn(column, eqLayout),
+        column.isActionColumn ? styles.actionCell : styles.bodyCell,
+        !column.isNameColumn && !column.isActionColumn ? styles.mutedCell : undefined,
+        column.className
+      ),
+    [eqLayout]
+  );
+
+  return (
+    <div className={joinClassNames(styles.shell, className)}>
+      {breadcrumb || toolbar ? (
+        <div className={styles.headerBar}>
+          {breadcrumb ? <div className={styles.breadcrumb}>{breadcrumb}</div> : <div />}
+          {toolbar ? <div className={styles.toolbar}>{toolbar}</div> : null}
+        </div>
+      ) : null}
+
+      <Table variant="secondary" className={styles.tableRoot}>
+        <Table.ScrollContainer
+          ref={scrollRef}
+          className={styles.scrollContainer}
+          onScroll={handleScroll}
+          {...scrollContainerProps}
+        >
+          <Table.Content
+            aria-label={ariaLabel}
+            className={styles.tableContent}
+            data-eq-count={eqColumnCount}
+          >
+            <Table.Header>
+              {columns.map((column) => (
+                <Table.Column
+                  key={column.id}
+                  id={column.id}
+                  isRowHeader={column.isRowHeader ?? column.isNameColumn}
+                  className={resolveColumnHeaderClass(column)}
+                >
+                  <TableCellAlign align={resolveHeaderAlign(column)}>{column.label}</TableCellAlign>
+                </Table.Column>
+              ))}
+            </Table.Header>
+
+            <Table.Body
+              renderEmptyState={() =>
+                showEmptyState ? (
+                  <TableBodyState
+                    title={resolvedEmptyText}
+                    description={resolvedEmptyDescription}
+                    icon={emptyIcon ?? <Folder size={20} aria-hidden />}
+                  />
+                ) : null
+              }
+            >
+              {showSkeletonBody ? (
+                <FolderTableLoadingSkeleton
+                  rowCount={skeletonRowCount}
+                  columns={columns}
+                  eqLayout={eqLayout}
+                />
+              ) : (
+                <>
+                  {visibleRows.map((row) => {
+                    const rowId = row.id;
+                    const ctx: FolderTableRowContext<T> = {
+                      row: row as T,
+                      rowId,
+                      depth: row.depth,
+                    };
+
+                    return (
+                      <Table.Row
+                        key={rowId}
+                        id={rowId}
+                        textValue={row.name}
+                        className={styles.bodyRow}
+                        onAction={() => onRowActivate?.(row as T)}
+                      >
+                        {columns.map((column) => {
+                          const cellContent = renderCellContent(column, row, ctx);
+                          return (
+                            <Table.Cell key={column.id} className={resolveBodyCellClass(column)}>
+                              <TableCellAlign
+                                align={
+                                  column.isActionColumn
+                                    ? 'center'
+                                    : resolveColumnAlign(column.align)
+                                }
+                                stretch={shouldStretchTableCellContent(column)}
+                              >
+                                {column.isNameColumn || column.isActionColumn ? (
+                                  cellContent
+                                ) : isPlainTextContent(cellContent) ? (
+                                  <TableTextCell muted>{cellContent}</TableTextCell>
+                                ) : (
+                                  cellContent
+                                )}
+                              </TableCellAlign>
+                            </Table.Cell>
+                          );
+                        })}
+                      </Table.Row>
+                    );
+                  })}
+                  {loadMore?.loading ? (
+                    <Table.Row
+                      id="__load_more"
+                      textValue={t('loadMoreRow')}
+                      className={styles.loadMoreTableRow}
+                    >
+                      <Table.Cell
+                        colSpan={columns.length}
+                        className={joinClassNames(styles.loadMoreCell, styles.bodyCell)}
+                      >
+                        <TableLoadMoreRow />
+                      </Table.Cell>
+                    </Table.Row>
+                  ) : null}
+                </>
+              )}
+            </Table.Body>
+          </Table.Content>
+        </Table.ScrollContainer>
+
+        {showFooter ? (
+          <TableSummaryFooter summary={defaultSummary} className={styles.tableFooter} />
+        ) : null}
+      </Table>
+    </div>
+  );
+}
+
+export default FolderTable;

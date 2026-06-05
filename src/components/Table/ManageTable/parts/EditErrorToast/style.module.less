@@ -1,0 +1,29 @@
+@import '../../../shared/styles/table.module.less';
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 37px;
+  padding: var(--space-xs) @table-shell-padding-inline;
+  border-bottom: 1px solid color-mix(in srgb, var(--error) 16%, var(--border-light));
+  background: color-mix(in srgb, var(--error) 6%, var(--surface));
+}
+
+.message {
+  flex: 1;
+  min-width: 0;
+  color: var(--error);
+  font-family: @table-font-family;
+  font-size: @table-font-size-xs;
+  line-height: @table-line-height-xs;
+}
+
+.dismissButton {
+  flex-shrink: 0;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0;
+  color: var(--muted);
+}

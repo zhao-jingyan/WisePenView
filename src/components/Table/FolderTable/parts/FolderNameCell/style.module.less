@@ -1,0 +1,60 @@
+@import '../../../shared/styles/table.module.less';
+
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+
+  &[data-depth='1'] {
+    padding-left: 24px;
+  }
+
+  &[data-depth='2'] {
+    padding-left: 48px;
+  }
+
+  &[data-depth='3'] {
+    padding-left: 72px;
+  }
+}
+
+.expandBtn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+
+  @media (hover: hover) {
+    &:hover {
+      background: var(--surface-tertiary);
+      color: var(--foreground);
+    }
+  }
+}
+
+.expandPlaceholder {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.nameText {
+  overflow: hidden;
+  color: var(--foreground);
+  font-family: @table-font-family;
+  font-size: @table-font-size-body;
+  font-weight: @table-font-weight-medium;
+  line-height: @table-line-height-body;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

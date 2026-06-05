@@ -1,0 +1,48 @@
+@import '../../styles/table.module.less';
+
+.memberCell {
+  display: flex;
+  align-items: center;
+  gap: @table-gap;
+  height: @row-content-height;
+  max-height: @row-content-height;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: @action-icon-size;
+  height: @action-icon-size;
+  min-height: @action-icon-size;
+  max-height: @action-icon-size;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-xs) / 2);
+  justify-content: center;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  color: var(--surface-foreground);
+  font-family: @table-font-family;
+  font-size: @table-font-size-body;
+  font-weight: @table-font-weight-medium;
+  line-height: @table-line-height-body;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subline {
+  overflow: hidden;
+  color: var(--muted);
+  font-family: @table-font-family;
+  font-size: @table-font-size-xs;
+  line-height: @table-line-height-xs;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

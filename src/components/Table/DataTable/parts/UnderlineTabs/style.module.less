@@ -1,0 +1,40 @@
+@import '../../../shared/styles/table.module.less';
+
+.tabList {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--space-xs) @table-shell-padding-inline 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.tabItem,
+.tabActive {
+  position: relative;
+  box-sizing: border-box;
+  width: 54px;
+  padding: var(--space-xs) 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: @table-font-family;
+  font-size: @table-font-size-body;
+  font-weight: @table-font-weight-regular;
+  line-height: @table-line-height-body;
+  text-align: center;
+  cursor: pointer;
+}
+
+.tabActive {
+  color: var(--accent);
+  font-weight: @table-font-weight-medium;
+
+  &::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--accent);
+    content: '';
+  }
+}
