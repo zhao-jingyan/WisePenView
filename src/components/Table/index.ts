@@ -23,6 +23,7 @@ export const ManageTable = Object.assign(ManageTableComponent, {
 
 export const DataTable = Object.assign(DataTableComponent, {
   Tabs: DataTableTabs,
+  MemberCell: TableMemberCell,
   TextCell: TableTextCell,
   cellStyles: tableCellStyles,
 });

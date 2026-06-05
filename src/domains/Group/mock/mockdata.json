@@ -13,7 +13,7 @@
         "avatar": "",
         "identityType": 1
       },
-      "memberCount": 5,
+      "memberCount": 18,
       "createTime": "2024-01-01T00:00:00.000Z",
       "inviteCode": "ABC123",
       "tokenUsed": 100,
@@ -52,7 +52,7 @@
       "avatar": "",
       "identityType": 1
     },
-    "memberCount": 5,
+    "memberCount": 18,
     "createTime": "2024-01-01T00:00:00.000Z",
     "inviteCode": "ABC123",
     "tokenUsed": 100,
@@ -68,6 +68,176 @@
       "avatar": "",
       "limit": 1000,
       "used": 100
+    },
+    {
+      "userId": "2",
+      "realname": "李若水",
+      "nickname": "若水",
+      "role": "ADMIN",
+      "joinTime": "2024-01-03T09:12:00.000Z",
+      "avatar": "",
+      "limit": 5000,
+      "used": 3200
+    },
+    {
+      "userId": "3",
+      "realname": "王明轩",
+      "nickname": "Ming",
+      "role": "ADMIN",
+      "joinTime": "2024-01-05T14:30:00.000Z",
+      "avatar": "",
+      "limit": 3000,
+      "used": 280
+    },
+    {
+      "userId": "4",
+      "realname": "赵清遥",
+      "nickname": "清遥",
+      "role": "MEMBER",
+      "joinTime": "2024-01-08T08:00:00.000Z",
+      "avatar": "",
+      "limit": 1200,
+      "used": 450
+    },
+    {
+      "userId": "5",
+      "realname": "陈一诺",
+      "nickname": "Nora",
+      "role": "MEMBER",
+      "joinTime": "2024-01-10T16:45:00.000Z",
+      "avatar": "",
+      "limit": 800,
+      "used": 790
+    },
+    {
+      "userId": "6",
+      "realname": "周启航",
+      "nickname": "启航",
+      "role": "MEMBER",
+      "joinTime": "2024-01-13T11:20:00.000Z",
+      "avatar": "",
+      "limit": 1600,
+      "used": 0
+    },
+    {
+      "userId": "7",
+      "realname": "孙知微",
+      "nickname": "知微",
+      "role": "MEMBER",
+      "joinTime": "2024-01-17T10:05:00.000Z",
+      "avatar": "",
+      "limit": 2500,
+      "used": 1250
+    },
+    {
+      "userId": "8",
+      "realname": "吴星野",
+      "nickname": "Star",
+      "role": "MEMBER",
+      "joinTime": "2024-01-19T18:12:00.000Z",
+      "avatar": "",
+      "limit": 100000000,
+      "used": 56000
+    },
+    {
+      "userId": "9",
+      "realname": "郑云起",
+      "nickname": "云起",
+      "role": "MEMBER",
+      "joinTime": "2024-01-22T07:48:00.000Z",
+      "avatar": "",
+      "limit": 900,
+      "used": 901
+    },
+    {
+      "userId": "10",
+      "realname": "冯千里",
+      "nickname": "千里",
+      "role": "MEMBER",
+      "joinTime": "2024-01-24T13:35:00.000Z",
+      "avatar": "",
+      "limit": 2200,
+      "used": 1800
+    },
+    {
+      "userId": "11",
+      "realname": "蒋秋白",
+      "nickname": "秋白",
+      "role": "MEMBER",
+      "joinTime": "2024-01-28T15:00:00.000Z",
+      "avatar": "",
+      "limit": 1500,
+      "used": 300
+    },
+    {
+      "userId": "12",
+      "realname": "沈南枝",
+      "nickname": "南枝",
+      "role": "MEMBER",
+      "joinTime": "2024-02-01T09:40:00.000Z",
+      "avatar": "",
+      "limit": 1800,
+      "used": 720
+    },
+    {
+      "userId": "13",
+      "realname": "韩书言",
+      "nickname": "书言",
+      "role": "MEMBER",
+      "joinTime": "2024-02-04T12:18:00.000Z",
+      "avatar": "",
+      "limit": 2000,
+      "used": 1999
+    },
+    {
+      "userId": "14",
+      "realname": "唐予安",
+      "nickname": "予安",
+      "role": "MEMBER",
+      "joinTime": "2024-02-08T17:26:00.000Z",
+      "avatar": "",
+      "limit": 600,
+      "used": 60
+    },
+    {
+      "userId": "15",
+      "realname": "何照临",
+      "nickname": "照临",
+      "role": "MEMBER",
+      "joinTime": "2024-02-11T20:10:00.000Z",
+      "avatar": "",
+      "limit": 3600,
+      "used": 2400
+    },
+    {
+      "userId": "16",
+      "realname": "梁初夏",
+      "nickname": "初夏",
+      "role": "MEMBER",
+      "joinTime": "2024-02-15T10:50:00.000Z",
+      "avatar": "",
+      "limit": 1100,
+      "used": 1080
+    },
+    {
+      "userId": "17",
+      "realname": "林见山",
+      "nickname": "见山",
+      "role": "MEMBER",
+      "joinTime": "2024-02-18T08:33:00.000Z",
+      "avatar": "",
+      "limit": 2700,
+      "used": 135
+    },
+    {
+      "userId": "18",
+      "realname": "许微澜",
+      "nickname": "微澜",
+      "role": "MEMBER",
+      "joinTime": "2024-02-21T14:14:00.000Z",
+      "avatar": "",
+      "limit": 4200,
+      "used": 3100
     }
   ],
   "myRole": "OWNER"

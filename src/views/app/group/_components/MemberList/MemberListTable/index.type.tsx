@@ -1,5 +1,14 @@
 import type { GroupMember } from '@/domains/Group';
 import type { GroupDisplayConfig } from '../../GroupDisplayConfig';
+import type { Selection } from '@heroui/react';
+import type { ReactNode } from 'react';
+
+export type MemberListInlineEditKind = 'role' | 'quota';
+
+export interface MemberListInlineDraft {
+  role?: GroupMember['role'];
+  quota?: string;
+}
 
 export interface MemberListPaginationConfig {
   defaultPageSize?: number;
@@ -15,9 +24,22 @@ export interface MemberListTableProps {
   total: number;
   currentPage: number;
   pageSize: number;
-  isEditMode: boolean;
-  selectedRowKeys: (string | number)[];
+  selectedKeys: Selection;
+  disabledSelectionKeys?: Iterable<string>;
+  editingRowId: string | null;
+  editingKind: MemberListInlineEditKind | null;
+  savingRowId?: string | null;
+  errorRowId?: string | null;
+  errorMessage?: string | null;
+  inlineDraft: MemberListInlineDraft;
   onPageChange: (page: number, size: number) => void;
-  onSelectedRowKeysChange: (keys: (string | number)[]) => void;
-  onSelectedMembersChange?: (members: GroupMember[]) => void;
+  onSelectionChange: (keys: Selection, currentPageMembers: GroupMember[]) => void;
+  onStartInlineEdit: (member: GroupMember, kind: MemberListInlineEditKind) => void;
+  onInlineDraftChange: (draft: MemberListInlineDraft) => void;
+  onInlineSave: (member: GroupMember) => void | Promise<void>;
+  onInlineCancel: () => void;
+  onDismissInlineError?: () => void;
+  onDeleteMember: (member: GroupMember) => void;
+  toolbar?: ReactNode;
+  batchFooter?: ReactNode;
 }

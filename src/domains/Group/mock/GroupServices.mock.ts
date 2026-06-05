@@ -64,11 +64,13 @@ const deleteGroup = async (): Promise<void> => {
 
 const fetchGroupMembers = async (
   _groupId: string | number,
-  _page: number,
-  _size: number
+  page: number,
+  size: number
 ): Promise<GroupMemberList> => {
   await delay(200);
-  return { members, total: members.length };
+  const start = Math.max(0, (page - 1) * size);
+  const end = start + size;
+  return { members: members.slice(start, end), total: members.length };
 };
 
 const fetchMyRoleInGroup = async (_groupId: string): Promise<'OWNER' | 'ADMIN' | 'MEMBER'> => {
