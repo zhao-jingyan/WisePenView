@@ -259,40 +259,6 @@
           }
         ]
       }
-    },
-    "/internal/note/getNoteLatestVersion": {
-      "get": {
-        "tags": ["内部笔记服务"],
-        "summary": "内部获取最新笔记快照",
-        "operationId": "getNoteLatestVersion",
-        "parameters": [
-          {
-            "name": "resourceId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RNoteSnapshotResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
-      }
     }
   },
   "components": {
@@ -652,45 +618,6 @@
             "enum": ["1", "2", "3"]
           }
         }
-      },
-      "NoteSnapshotResponse": {
-        "type": "object",
-        "properties": {
-          "resourceId": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "fullSnapshot": {
-            "type": "string"
-          },
-          "deltas": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "RNoteSnapshotResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "key": {
-            "type": "string"
-          },
-          "msg": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/NoteSnapshotResponse"
-          }
-        }
       }
     },
     "securitySchemes": {
@@ -716,12 +643,6 @@
         "type": "apiKey",
         "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
         "name": "X-Group-Role-Map",
-        "in": "header"
-      },
-      "Developer": {
-        "type": "apiKey",
-        "description": "灰度隔离开发者标识。通常由 dev.properties 设置；直连测试时可手工透传。",
-        "name": "X-Developer",
         "in": "header"
       }
     }

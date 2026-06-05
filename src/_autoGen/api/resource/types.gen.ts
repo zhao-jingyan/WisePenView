@@ -98,21 +98,6 @@ export type GroupResConfigUpdateRequest = {
   defaultMemberActions?: Array<ItemsEnum>;
 };
 
-export type ResourceInfoGetReqDto = {
-  resourceId: string;
-  userId: number;
-  groupRoles: {
-    [key: string]: AdditionalPropertiesEnum;
-  };
-};
-
-export type RResourceItemResponse = {
-  code?: number;
-  key?: string;
-  msg?: string;
-  data?: ResourceItemResponse;
-};
-
 export type ResourceInteractionInfoBase = {
   readCount?: number;
   likeCount?: number;
@@ -144,45 +129,6 @@ export type UserDisplayBase = {
   realName?: string;
   avatar?: string;
   identityType?: IdentityTypeEnum;
-};
-
-export type ResourceCheckPermissionReqDto = {
-  resourceId: string;
-  userId: number;
-  groupRoles: {
-    [key: string]: AdditionalPropertiesEnum;
-  };
-};
-
-export type RResourceCheckPermissionResDto = {
-  code?: number;
-  key?: string;
-  msg?: string;
-  data?: ResourceCheckPermissionResDto;
-};
-
-export type ResourceCheckPermissionResDto = {
-  resourceAccessRole?: ResourceAccessRoleEnum;
-  permissionSources?: Array<string>;
-  allowedActions?: Array<ItemsEnum>;
-};
-
-export type ResourceUpdateReqDto = {
-  resourceName?: string;
-  resourceType?: ResourceTypeEnum;
-  ownerId?: string;
-  preview?: string;
-  size?: number;
-  resourceId: string;
-};
-
-export type ResourceCreateReqDto = {
-  resourceName: string;
-  resourceType: ResourceTypeEnum;
-  ownerId: string;
-  pathTagId?: string;
-  preview?: string;
-  size?: number;
 };
 
 export type RListTagTreeResponse = {
@@ -324,16 +270,6 @@ export const FileOrgLogicEnum = { FOLDER: 'FOLDER', TAG: 'TAG' } as const;
 
 export type FileOrgLogicEnum = (typeof FileOrgLogicEnum)[keyof typeof FileOrgLogicEnum];
 
-export const AdditionalPropertiesEnum = {
-  0: '0',
-  1: '1',
-  2: '2',
-  '-1': '-1',
-} as const;
-
-export type AdditionalPropertiesEnum =
-  (typeof AdditionalPropertiesEnum)[keyof typeof AdditionalPropertiesEnum];
-
 export const ResourceTypeEnum = {
   NOTE: 'NOTE',
   PDF: 'PDF',
@@ -357,17 +293,6 @@ export const IdentityTypeEnum = {
 } as const;
 
 export type IdentityTypeEnum = (typeof IdentityTypeEnum)[keyof typeof IdentityTypeEnum];
-
-export const ResourceAccessRoleEnum = {
-  OWNER: 'OWNER',
-  OWNER_SPECIFIED: 'OWNER_SPECIFIED',
-  GROUP_ADMIN: 'GROUP_ADMIN',
-  GROUP_MEMBER: 'GROUP_MEMBER',
-  NONE: 'NONE',
-} as const;
-
-export type ResourceAccessRoleEnum =
-  (typeof ResourceAccessRoleEnum)[keyof typeof ResourceAccessRoleEnum];
 
 export type DeleteTagData = {
   body: TagDeleteRequest;
@@ -567,89 +492,6 @@ export type UpsertConfigResponses = {
 };
 
 export type UpsertConfigResponse = UpsertConfigResponses[keyof UpsertConfigResponses];
-
-export type GetResourceInfoData = {
-  body: ResourceInfoGetReqDto;
-  path?: never;
-  query?: never;
-  url: '/internal/resource/getResourceInfo';
-};
-
-export type GetResourceInfoResponses = {
-  /**
-   * OK
-   */
-  200: RResourceItemResponse;
-};
-
-export type GetResourceInfoResponse = GetResourceInfoResponses[keyof GetResourceInfoResponses];
-
-export type DissolveGroupData = {
-  body?: never;
-  path?: never;
-  query: {
-    groupId: number;
-  };
-  url: '/internal/resource/dissolveGroup';
-};
-
-export type DissolveGroupResponses = {
-  /**
-   * OK
-   */
-  200: RVoid;
-};
-
-export type DissolveGroupResponse = DissolveGroupResponses[keyof DissolveGroupResponses];
-
-export type CheckResPermissionData = {
-  body: ResourceCheckPermissionReqDto;
-  path?: never;
-  query?: never;
-  url: '/internal/resource/checkResPermission';
-};
-
-export type CheckResPermissionResponses = {
-  /**
-   * OK
-   */
-  200: RResourceCheckPermissionResDto;
-};
-
-export type CheckResPermissionResponse =
-  CheckResPermissionResponses[keyof CheckResPermissionResponses];
-
-export type UpdateAttributesData = {
-  body: ResourceUpdateReqDto;
-  path?: never;
-  query?: never;
-  url: '/internal/resource/changeResAttr';
-};
-
-export type UpdateAttributesResponses = {
-  /**
-   * OK
-   */
-  200: RVoid;
-};
-
-export type UpdateAttributesResponse = UpdateAttributesResponses[keyof UpdateAttributesResponses];
-
-export type CreateResourceData = {
-  body: ResourceCreateReqDto;
-  path?: never;
-  query?: never;
-  url: '/internal/resource/addRes';
-};
-
-export type CreateResourceResponses = {
-  /**
-   * OK
-   */
-  200: RString;
-};
-
-export type CreateResourceResponse = CreateResourceResponses[keyof CreateResourceResponses];
 
 export type GetTagTreeData = {
   body?: never;

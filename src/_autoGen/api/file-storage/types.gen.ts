@@ -19,62 +19,6 @@ export type StorageRecordDto = {
   domain?: string;
 };
 
-export type UploadInitReqDto = {
-  md5?: string;
-  extension?: string;
-  scene?: SchemaEnum;
-  bizTag?: string;
-  configId?: number;
-  expectedSize?: number;
-};
-
-export type RUploadInitRespDto = {
-  code?: number;
-  key?: string;
-  msg?: string;
-  data?: UploadInitRespDto;
-};
-
-export type UploadInitRespDto = {
-  putUrl?: string;
-  callbackHeader?: string;
-  flashUploaded?: boolean;
-  domain?: string;
-  objectKey?: string;
-};
-
-export type RStsTokenDto = {
-  code?: number;
-  key?: string;
-  msg?: string;
-  data?: StsTokenDto;
-};
-
-export type StsTokenDto = {
-  accessKeyId?: string;
-  accessKeySecret?: string;
-  securityToken?: string;
-  bucket?: string;
-  region?: string;
-  expiration?: string;
-};
-
-export type RString = {
-  code?: number;
-  key?: string;
-  msg?: string;
-  data?: string;
-};
-
-export type RVoid = {
-  code?: number;
-  key?: string;
-  msg?: string;
-  data?: {
-    [key: string]: unknown;
-  };
-};
-
 export const SchemaEnum = {
   PUBLIC_IMAGE_FOR_USER: 'PUBLIC_IMAGE_FOR_USER',
   PUBLIC_IMAGE_FOR_GROUP: 'PUBLIC_IMAGE_FOR_GROUP',
@@ -106,22 +50,6 @@ export type UploadImageProxyResponses = {
 
 export type UploadImageProxyResponse = UploadImageProxyResponses[keyof UploadImageProxyResponses];
 
-export type InitUploadData = {
-  body: UploadInitReqDto;
-  path?: never;
-  query?: never;
-  url: '/internal/storage/initUpload';
-};
-
-export type InitUploadResponses = {
-  /**
-   * OK
-   */
-  200: RUploadInitRespDto;
-};
-
-export type InitUploadResponse = InitUploadResponses[keyof InitUploadResponses];
-
 export type HandleUploadCallbackData = {
   body?: string;
   path?: never;
@@ -138,77 +66,3 @@ export type HandleUploadCallbackResponses = {
 
 export type HandleUploadCallbackResponse =
   HandleUploadCallbackResponses[keyof HandleUploadCallbackResponses];
-
-export type GetStsTokenData = {
-  body?: never;
-  path?: never;
-  query: {
-    scene: SchemaEnum;
-    bizTag?: string;
-    configId?: number;
-    durationSeconds?: number;
-  };
-  url: '/internal/storage/getStsToken';
-};
-
-export type GetStsTokenResponses = {
-  /**
-   * OK
-   */
-  200: RStsTokenDto;
-};
-
-export type GetStsTokenResponse = GetStsTokenResponses[keyof GetStsTokenResponses];
-
-export type GetFileRecordData = {
-  body?: never;
-  path?: never;
-  query: {
-    objectKey: string;
-  };
-  url: '/internal/storage/getFileRecord';
-};
-
-export type GetFileRecordResponses = {
-  /**
-   * OK
-   */
-  200: RStorageRecordDto;
-};
-
-export type GetFileRecordResponse = GetFileRecordResponses[keyof GetFileRecordResponses];
-
-export type GetDownloadUrlData = {
-  body?: never;
-  path?: never;
-  query: {
-    objectKey: string;
-    duration?: number;
-  };
-  url: '/internal/storage/getDownloadUrl';
-};
-
-export type GetDownloadUrlResponses = {
-  /**
-   * OK
-   */
-  200: RString;
-};
-
-export type GetDownloadUrlResponse = GetDownloadUrlResponses[keyof GetDownloadUrlResponses];
-
-export type DeleteFilesData = {
-  body: Array<string>;
-  path?: never;
-  query?: never;
-  url: '/internal/storage/deleteFiles';
-};
-
-export type DeleteFilesResponses = {
-  /**
-   * OK
-   */
-  200: RVoid;
-};
-
-export type DeleteFilesResponse = DeleteFilesResponses[keyof DeleteFilesResponses];

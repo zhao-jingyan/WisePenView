@@ -280,12 +280,6 @@
         "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
         "name": "X-Group-Role-Map",
         "in": "header"
-      },
-      "Developer": {
-        "type": "apiKey",
-        "description": "灰度隔离开发者标识。通常由 dev.properties 设置；直连测试时可手工透传。",
-        "name": "X-Developer",
-        "in": "header"
       }
     }
   }

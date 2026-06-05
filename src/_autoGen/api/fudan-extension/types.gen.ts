@@ -3,37 +3,3 @@
 export type ClientOptions = {
   baseUrl: 'http://172.28.0.16:20001' | (string & {});
 };
-
-export type FudanUisTaskResultDto = {
-  state?: number;
-  message?: string;
-  qrBase64?: string;
-  profile?: {
-    [key: string]: string;
-  };
-};
-
-export type RFudanUisTaskResultDto = {
-  code?: number;
-  key?: string;
-  msg?: string;
-  data?: FudanUisTaskResultDto;
-};
-
-export type GetTaskStatusData = {
-  body?: never;
-  path?: never;
-  query: {
-    userId: number;
-  };
-  url: '/internal/extenion/fudan/uis/getUISVerificationStatus';
-};
-
-export type GetTaskStatusResponses = {
-  /**
-   * OK
-   */
-  200: RFudanUisTaskResultDto;
-};
-
-export type GetTaskStatusResponse = GetTaskStatusResponses[keyof GetTaskStatusResponses];

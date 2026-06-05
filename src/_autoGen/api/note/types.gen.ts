@@ -128,20 +128,6 @@ export type UserDisplayBase = {
   identityType?: IdentityTypeEnum;
 };
 
-export type NoteSnapshotResponse = {
-  resourceId?: string;
-  version?: number;
-  fullSnapshot?: string;
-  deltas?: Array<string>;
-};
-
-export type RNoteSnapshotResponse = {
-  code?: number;
-  key?: string;
-  msg?: string;
-  data?: NoteSnapshotResponse;
-};
-
 export const TypeEnum = { FULL: 'FULL', DELTA: 'DELTA' } as const;
 
 export type TypeEnum = (typeof TypeEnum)[keyof typeof TypeEnum];
@@ -274,22 +260,3 @@ export type GetNoteInfoResponses = {
 };
 
 export type GetNoteInfoResponse = GetNoteInfoResponses[keyof GetNoteInfoResponses];
-
-export type GetNoteLatestVersionData = {
-  body?: never;
-  path?: never;
-  query: {
-    resourceId: string;
-  };
-  url: '/internal/note/getNoteLatestVersion';
-};
-
-export type GetNoteLatestVersionResponses = {
-  /**
-   * OK
-   */
-  200: RNoteSnapshotResponse;
-};
-
-export type GetNoteLatestVersionResponse =
-  GetNoteLatestVersionResponses[keyof GetNoteLatestVersionResponses];

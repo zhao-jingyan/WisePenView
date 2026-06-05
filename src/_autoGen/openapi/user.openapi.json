@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://10.230.35.250:19903",
+      "url": "http://172.28.0.22:19903",
       "description": "Generated server url"
     }
   ],
@@ -276,40 +276,6 @@
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
-          }
-        ]
-      }
-    },
-    "/internal/user/wallet/settleTrade": {
-      "post": {
-        "tags": ["内部钱包服务", "内部用户服务"],
-        "summary": "内部结算信息点交易",
-        "operationId": "settleCoinTrade",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WalletSettleCoinTradeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RVoid"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "FromSource": []
           }
         ]
       }
@@ -1114,82 +1080,6 @@
         ]
       }
     },
-    "/internal/user/getUserDisplayInfo": {
-      "get": {
-        "tags": ["内部钱包服务", "内部用户服务"],
-        "summary": "内部获取用户展示信息",
-        "operationId": "getUserDisplayInfo",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RMapLongUserDisplayBase"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
-      }
-    },
-    "/internal/group/getGroupDisplayInfo": {
-      "get": {
-        "tags": ["内部钱包服务", "内部用户服务"],
-        "summary": "内部获取小组展示信息",
-        "operationId": "getGroupDisplayInfo",
-        "parameters": [
-          {
-            "name": "groupId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RMapLongGroupDisplayBase"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
-      }
-    },
     "/group/member/list": {
       "get": {
         "tags": ["小组成员管理"],
@@ -1715,30 +1605,6 @@
         "type": "object",
         "properties": {
           "voucherCode": {
-            "type": "string"
-          }
-        }
-      },
-      "WalletSettleCoinTradeRequest": {
-        "required": ["buyerId", "price", "sellerId", "traceId"],
-        "type": "object",
-        "properties": {
-          "traceId": {
-            "type": "string"
-          },
-          "buyerId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sellerId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "price": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "meta": {
             "type": "string"
           }
         }
@@ -2358,27 +2224,6 @@
           }
         }
       },
-      "RMapLongUserDisplayBase": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "key": {
-            "type": "string"
-          },
-          "msg": {
-            "type": "string"
-          },
-          "data": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/UserDisplayBase"
-            }
-          }
-        }
-      },
       "GroupDisplayBase": {
         "type": "object",
         "properties": {
@@ -2394,27 +2239,6 @@
           "groupType": {
             "type": "string",
             "enum": ["1", "2", "3"]
-          }
-        }
-      },
-      "RMapLongGroupDisplayBase": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "key": {
-            "type": "string"
-          },
-          "msg": {
-            "type": "string"
-          },
-          "data": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/GroupDisplayBase"
-            }
           }
         }
       },
@@ -2947,12 +2771,6 @@
         "type": "apiKey",
         "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
         "name": "X-Group-Role-Map",
-        "in": "header"
-      },
-      "Developer": {
-        "type": "apiKey",
-        "description": "灰度隔离开发者标识。通常由 dev.properties 设置；直连测试时可手工透传。",
-        "name": "X-Developer",
         "in": "header"
       }
     }

@@ -10,6 +10,7 @@ const API_DIR = path.join(AUTO_GEN_DIR, 'api');
 const ENUM_DIR = path.join(AUTO_GEN_DIR, 'enum');
 const OPENAPI_DIR = path.join(AUTO_GEN_DIR, 'openapi');
 const CONFIG_PATH = path.join(OPENAPI_DIR, 'openapi-ts.config.mjs');
+const EXCLUDED_PATH_PREFIXES = ['/internal'];
 
 const toNamespace = (slug) => slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
 
@@ -83,6 +84,98 @@ const printOperationDiagnostics = (diagnostics) => {
       console.warn(`  - ${item.operationId}: ${item.locations.join(' / ')}`);
     });
   }
+};
+
+const shouldExcludePath = (apiPath) =>
+  EXCLUDED_PATH_PREFIXES.some((prefix) => apiPath === prefix || apiPath.startsWith(`${prefix}/`));
+
+const collectRefs = (value, refs = new Set()) => {
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectRefs(item, refs));
+    return refs;
+  }
+  if (!value || typeof value !== 'object') {
+    return refs;
+  }
+  for (const [key, item] of Object.entries(value)) {
+    if (key === '$ref' && typeof item === 'string') {
+      const match = item.match(/^#\/components\/schemas\/(.+)$/);
+      if (match) refs.add(match[1]);
+      continue;
+    }
+    collectRefs(item, refs);
+  }
+  return refs;
+};
+
+const collectSecuritySchemeNames = (paths) => {
+  const names = new Set();
+  for (const pathItem of Object.values(paths)) {
+    for (const operation of Object.values(pathItem ?? {})) {
+      for (const securityItem of operation?.security ?? []) {
+        Object.keys(securityItem).forEach((name) => names.add(name));
+      }
+    }
+  }
+  return names;
+};
+
+const collectReachableSchemas = (paths, schemas) => {
+  const reachable = collectRefs(paths);
+  const queue = [...reachable];
+
+  while (queue.length > 0) {
+    const schemaName = queue.shift();
+    const schema = schemas?.[schemaName];
+    if (!schema) continue;
+    const refs = collectRefs(schema);
+    for (const ref of refs) {
+      if (!reachable.has(ref)) {
+        reachable.add(ref);
+        queue.push(ref);
+      }
+    }
+  }
+
+  return reachable;
+};
+
+const sanitizeSpec = (spec) => {
+  const paths = {};
+  let excludedPathCount = 0;
+
+  for (const [apiPath, pathItem] of Object.entries(spec.paths ?? {})) {
+    if (shouldExcludePath(apiPath)) {
+      excludedPathCount += 1;
+      continue;
+    }
+    paths[apiPath] = pathItem;
+  }
+
+  const schemas = spec.components?.schemas ?? {};
+  const reachableSchemas = collectReachableSchemas(paths, schemas);
+  const nextSchemas = Object.fromEntries(
+    Object.entries(schemas).filter(([schemaName]) => reachableSchemas.has(schemaName))
+  );
+
+  const securitySchemes = spec.components?.securitySchemes ?? {};
+  const usedSecuritySchemes = collectSecuritySchemeNames(paths);
+  const nextSecuritySchemes = Object.fromEntries(
+    Object.entries(securitySchemes).filter(([name]) => usedSecuritySchemes.has(name))
+  );
+
+  return {
+    excludedPathCount,
+    spec: {
+      ...spec,
+      paths,
+      components: {
+        ...(spec.components ?? {}),
+        schemas: nextSchemas,
+        securitySchemes: nextSecuritySchemes,
+      },
+    },
+  };
 };
 
 const buildGeneratorConfig = (sources) =>
@@ -186,10 +279,17 @@ const writeIndexFiles = async (sources) => {
 const main = async () => {
   const scalarSources = await readScalarSources();
   const sources = await Promise.all(
-    scalarSources.map(async (source) => ({
-      ...source,
-      spec: await fetchJson(source.url),
-    }))
+    scalarSources.map(async (source) => {
+      const rawSpec = await fetchJson(source.url);
+      const sanitized = sanitizeSpec(rawSpec);
+      if (sanitized.excludedPathCount > 0) {
+        console.warn(`${source.slug}: 已过滤 internal 接口 ${sanitized.excludedPathCount} 个`);
+      }
+      return {
+        ...source,
+        spec: sanitized.spec,
+      };
+    })
   );
 
   printOperationDiagnostics(collectOperationDiagnostics(sources));
