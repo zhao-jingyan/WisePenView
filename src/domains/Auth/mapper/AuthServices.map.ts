@@ -22,7 +22,7 @@ const mapRegisterRequest = (params: RegisterRequest): RegisterApiRequest => ({
 });
 
 const mapResetPasswordRequest = (params: ResetPasswordRequest): ResetPasswordApiRequest => ({
-  campusNum: params.campusNum,
+  username: params.campusNum,
 });
 
 const mapNewPasswordRequest = (params: NewPasswordRequest): NewPasswordApiRequest => ({
