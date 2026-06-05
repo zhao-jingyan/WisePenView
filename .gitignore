@@ -32,6 +32,8 @@ dist-ssr
 *.sln
 *.sw?
 
-docs/
+docs/*
+!docs/agent/
+!docs/agent/*.md
 
 .env.development
