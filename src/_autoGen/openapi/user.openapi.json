@@ -1,0 +1,2778 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "用户服务 API",
+    "description": "WisePen 用户、认证、小组与钱包接口",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://172.28.0.22:19903",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "小组成员管理",
+      "description": "小组成员退出、移除、角色、配额与列表查询"
+    },
+    {
+      "name": "小组管理",
+      "description": "小组加入、创建、编辑、解散与查询"
+    },
+    {
+      "name": "用户资料",
+      "description": "用户资料查询、更新与身份验证"
+    },
+    {
+      "name": "内部用户服务",
+      "description": "供其他微服务调用的用户、小组与钱包接口"
+    },
+    {
+      "name": "管理员钱包管理",
+      "description": "管理员调整用户钱包余额"
+    },
+    {
+      "name": "用户钱包",
+      "description": "用户钱包信息点、兑换码、转账与流水查询"
+    },
+    {
+      "name": "用户认证",
+      "description": "用户登录、登出、注册与密码重置"
+    },
+    {
+      "name": "管理员用户管理",
+      "description": "管理员查询和维护用户资料、状态与密码"
+    },
+    {
+      "name": "内部钱包服务",
+      "description": "提供给其他微服务的钱包接口"
+    }
+  ],
+  "paths": {
+    "/user/changeUserProfile": {
+      "put": {
+        "tags": ["用户资料"],
+        "summary": "更新用户资料",
+        "operationId": "updateUserProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProfileUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/user/changeUserInfo": {
+      "put": {
+        "tags": ["用户资料"],
+        "summary": "更新用户信息",
+        "operationId": "updateUserInfo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInfoUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/user/wallet/transferTokenBetweenGroupAndUser": {
+      "post": {
+        "tags": ["用户钱包"],
+        "summary": "转移用户与小组信息点",
+        "operationId": "transferTokenBetweenGroupAndUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletTransferTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/user/wallet/redeemVoucher": {
+      "post": {
+        "tags": ["用户钱包"],
+        "summary": "兑换信息点券",
+        "operationId": "redeemVoucher",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletRedeemVoucherRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/user/verify/initiateFudanUISVerify": {
+      "post": {
+        "tags": ["用户资料"],
+        "summary": "发起复旦 UIS 认证",
+        "operationId": "initiateFudanUISVerify",
+        "parameters": [
+          {
+            "name": "uisAccount",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uisPassword",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/user/verify/initiateEmailVerify": {
+      "post": {
+        "tags": ["用户资料"],
+        "summary": "发起邮箱验证",
+        "operationId": "initiateEmailVerify",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/removeGroup": {
+      "post": {
+        "tags": ["小组管理"],
+        "summary": "解散小组",
+        "operationId": "deleteGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/member/quit": {
+      "post": {
+        "tags": ["小组成员管理"],
+        "summary": "退出小组",
+        "operationId": "quitGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupMemberQuitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/member/kick": {
+      "post": {
+        "tags": ["小组成员管理"],
+        "summary": "移除小组成员",
+        "operationId": "kickGroupMembers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupMemberKickRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/member/changeTokenLimit": {
+      "post": {
+        "tags": ["小组成员管理"],
+        "summary": "修改成员信息点额度",
+        "operationId": "changeTokenLimit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupMemberTokenLimitUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/member/changeRole": {
+      "post": {
+        "tags": ["小组成员管理"],
+        "summary": "修改成员角色",
+        "operationId": "changeRole",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupMemberRoleUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/joinGroup": {
+      "post": {
+        "tags": ["小组管理"],
+        "summary": "加入小组",
+        "operationId": "joinGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupMemberJoinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/changeGroup": {
+      "post": {
+        "tags": ["小组管理"],
+        "summary": "修改小组信息",
+        "operationId": "updateGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/addGroup": {
+      "post": {
+        "tags": ["小组管理"],
+        "summary": "创建小组",
+        "operationId": "createGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RLong"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/auth/sendResetMail": {
+      "post": {
+        "tags": ["用户认证"],
+        "summary": "发送密码重置邮件",
+        "operationId": "sendResetMail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthPwdResetVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": []
+          }
+        ]
+      }
+    },
+    "/auth/resetPassword": {
+      "post": {
+        "tags": ["用户认证"],
+        "summary": "重置用户密码",
+        "operationId": "resetPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthPwdResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": []
+          }
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["用户认证"],
+        "summary": "用户注册",
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": []
+          }
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["用户认证"],
+        "summary": "用户登出",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["用户认证"],
+        "summary": "用户登录",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": []
+          }
+        ]
+      }
+    },
+    "/admin/user/wallet/changeBalance": {
+      "post": {
+        "tags": ["管理员钱包管理"],
+        "summary": "管理员调整用户信息点",
+        "operationId": "changeBalance",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletChangeCoinBalanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/admin/user/resetPassword": {
+      "post": {
+        "tags": ["管理员用户管理"],
+        "summary": "管理员重置用户密码",
+        "operationId": "resetPassword_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthPwdAdminResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/admin/user/changeUserProfile": {
+      "post": {
+        "tags": ["管理员用户管理"],
+        "summary": "管理员更新用户资料",
+        "operationId": "updateUserProfile_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProfileAdminUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/admin/user/changeUserInfo": {
+      "post": {
+        "tags": ["管理员用户管理"],
+        "summary": "管理员更新用户信息",
+        "operationId": "updateUserInfo_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInfoAdminUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/user/wallet/listTransactions": {
+      "get": {
+        "tags": ["用户钱包"],
+        "summary": "分页查询钱包流水",
+        "operationId": "listTransactions",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "walletTransactionType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["1", "2", "3", "4", "5", "6", "7"]
+            }
+          },
+          {
+            "name": "walletBusinessType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["TOKEN", "COIN"]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRWalletTransactionRecordResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/user/wallet/getUserWalletInfo": {
+      "get": {
+        "tags": ["用户钱包"],
+        "summary": "获取用户钱包信息",
+        "operationId": "getUserWalletInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RWalletDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/user/verify/checkFudanUISVerify": {
+      "get": {
+        "tags": ["用户资料"],
+        "summary": "检查复旦 UIS 认证状态",
+        "operationId": "checkFudanUISVerify",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVerificationResultDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/user/verify/checkEmailVerify": {
+      "get": {
+        "tags": ["用户资料"],
+        "summary": "回调检查邮箱验证",
+        "operationId": "checkEmailVerify",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": []
+          }
+        ]
+      }
+    },
+    "/user/getUserInfo": {
+      "get": {
+        "tags": ["用户资料"],
+        "summary": "获取当前用户信息",
+        "operationId": "getUserInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RUserDetailInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/member/list": {
+      "get": {
+        "tags": ["小组成员管理"],
+        "summary": "分页查询小组成员",
+        "operationId": "listGroupMembers",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRGroupMemberDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/member/getMyRole": {
+      "get": {
+        "tags": ["小组成员管理"],
+        "summary": "获取我的小组角色",
+        "operationId": "getMyRole",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RGroupRoleType"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/member/getMyGroupMemberInfo": {
+      "get": {
+        "tags": ["小组成员管理"],
+        "summary": "获取我的小组成员信息",
+        "operationId": "getMyGroupMemberInfo",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RGroupMemberDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/member/getAllMyGroupTokenInfo": {
+      "get": {
+        "tags": ["小组成员管理"],
+        "summary": "查询我的小组信息点额度",
+        "operationId": "getAllMyGroupTokenInfo",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRGroupMemberTokenDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/list": {
+      "get": {
+        "tags": ["小组管理"],
+        "summary": "分页查询小组列表",
+        "operationId": "listGroups",
+        "parameters": [
+          {
+            "name": "groupRoleFilter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["JOINED", "MANAGED"]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRGroupItemInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/getGroupDetailInfo": {
+      "get": {
+        "tags": ["小组管理"],
+        "summary": "获取小组详细信息",
+        "operationId": "getGroupDetailInfo",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RGroupDetailInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/group/getGroupBaseInfo": {
+      "get": {
+        "tags": ["小组管理"],
+        "summary": "获取小组基础信息",
+        "operationId": "getGroupBaseInfo",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RGroupItemInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/admin/user/getUserList": {
+      "get": {
+        "tags": ["管理员用户管理"],
+        "summary": "管理员查询用户列表",
+        "operationId": "getUserList",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["NORMAL", "UNIDENTIFIED", "BANNED"]
+            }
+          },
+          {
+            "name": "identityType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["1", "2", "3"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRUserEntity"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/admin/user/getUserInfo": {
+      "get": {
+        "tags": ["管理员用户管理"],
+        "summary": "管理员获取用户详情",
+        "operationId": "getUserInfo_1",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RUserProfileEntity"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserProfileUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "sex": {
+            "type": "string",
+            "enum": ["MALE", "FEMALE", "UNKNOWN"]
+          },
+          "university": {
+            "type": "string"
+          },
+          "college": {
+            "type": "string"
+          },
+          "major": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "enrollmentYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "degreeLevel": {
+            "type": "string",
+            "enum": ["UNKNOWN", "UNDERGRADUATE", "MASTER", "DOCTOR"]
+          },
+          "academicTitle": {
+            "type": "string"
+          }
+        }
+      },
+      "RVoid": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "UserInfoUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string"
+          }
+        }
+      },
+      "WalletTransferTokenRequest": {
+        "required": ["groupId", "tokenCount"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tokenCount": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "tokenTransferType": {
+            "type": "string",
+            "enum": ["GROUP_INFLOW", "USER_INFLOW"]
+          }
+        }
+      },
+      "WalletRedeemVoucherRequest": {
+        "required": ["voucherCode"],
+        "type": "object",
+        "properties": {
+          "voucherCode": {
+            "type": "string"
+          }
+        }
+      },
+      "GroupDeleteRequest": {
+        "required": ["groupId"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "GroupMemberQuitRequest": {
+        "required": ["groupId"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "GroupMemberKickRequest": {
+        "required": ["groupId", "targetUserIds"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "targetUserIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        }
+      },
+      "GroupMemberTokenLimitUpdateRequest": {
+        "required": ["groupId", "newTokenLimit", "targetUserIds"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "targetUserIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "newTokenLimit": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GroupMemberRoleUpdateRequest": {
+        "required": ["groupId", "role", "targetUserIds"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "targetUserIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "role": {
+            "type": "string",
+            "enum": ["0", "1", "2", "-1"]
+          }
+        }
+      },
+      "GroupMemberJoinRequest": {
+        "required": ["inviteCode"],
+        "type": "object",
+        "properties": {
+          "inviteCode": {
+            "type": "string"
+          }
+        }
+      },
+      "GroupUpdateRequest": {
+        "required": ["groupId"],
+        "type": "object",
+        "properties": {
+          "groupName": {
+            "type": "string"
+          },
+          "groupDesc": {
+            "type": "string"
+          },
+          "groupCoverUrl": {
+            "type": "string"
+          },
+          "groupType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          },
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "GroupCreateRequest": {
+        "required": ["groupDesc", "groupName", "groupType"],
+        "type": "object",
+        "properties": {
+          "groupName": {
+            "type": "string"
+          },
+          "groupType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          },
+          "groupDesc": {
+            "type": "string"
+          },
+          "groupCoverUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "RLong": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AuthPwdResetVerifyRequest": {
+        "required": ["username"],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthPwdResetRequest": {
+        "required": ["newPassword", "token"],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "newPassword": {
+            "pattern": "^(?=.*[a-zA-Z])(?=.*\\d).{8,}$",
+            "type": "string"
+          }
+        }
+      },
+      "AuthRegisterRequest": {
+        "required": ["password", "username"],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "pattern": "^(?=.*[a-zA-Z])(?=.*\\d).{8,}$",
+            "type": "string"
+          }
+        }
+      },
+      "RString": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthLoginRequest": {
+        "required": ["account", "password"],
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          }
+        }
+      },
+      "WalletChangeCoinBalanceRequest": {
+        "required": ["changedCoin", "userId", "walletTransactionType"],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "changedCoin": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "walletTransactionType": {
+            "type": "string",
+            "enum": ["1", "2", "3", "4", "5", "6", "7"]
+          },
+          "meta": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthPwdAdminResetRequest": {
+        "required": ["userId"],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "newPassword": {
+            "pattern": "^(?=.*[a-zA-Z])(?=.*\\d).{8,}$",
+            "type": "string"
+          }
+        }
+      },
+      "UserProfileAdminUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "sex": {
+            "type": "string",
+            "enum": ["MALE", "FEMALE", "UNKNOWN"]
+          },
+          "university": {
+            "type": "string"
+          },
+          "college": {
+            "type": "string"
+          },
+          "major": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "enrollmentYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "degreeLevel": {
+            "type": "string",
+            "enum": ["UNKNOWN", "UNDERGRADUATE", "MASTER", "DOCTOR"]
+          },
+          "academicTitle": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "UserInfoAdminUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          },
+          "username": {
+            "type": "string"
+          },
+          "campusNo": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string"
+          },
+          "verificationMode": {
+            "type": "string",
+            "enum": ["EDU_EMAIL", "FDU_UIS_SYS"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["NORMAL", "UNIDENTIFIED", "BANNED"]
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "PageRWalletTransactionRecordResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WalletTransactionRecordResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRWalletTransactionRecordResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRWalletTransactionRecordResponse"
+          }
+        }
+      },
+      "UserDisplayBase": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          }
+        }
+      },
+      "WalletTransactionRecordResponse": {
+        "type": "object",
+        "properties": {
+          "traceId": {
+            "type": "string"
+          },
+          "operatorId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "walletTransactionType": {
+            "type": "string",
+            "enum": ["1", "2", "3", "4", "5", "6", "7"]
+          },
+          "walletBusinessType": {
+            "type": "string",
+            "enum": ["TOKEN", "COIN"]
+          },
+          "meta": {
+            "type": "string"
+          },
+          "operatorDisplay": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RWalletDetailResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/WalletDetailResponse"
+          }
+        }
+      },
+      "WalletDetailResponse": {
+        "type": "object",
+        "properties": {
+          "tokenUsed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tokenBalance": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coinBalance": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RVerificationResultDTO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/VerificationResultDTO"
+          }
+        }
+      },
+      "VerificationResultDTO": {
+        "type": "object",
+        "properties": {
+          "completed": {
+            "type": "boolean"
+          },
+          "requireAction": {
+            "type": "boolean"
+          },
+          "actionPayload": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "RUserDetailInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserDetailInfoResponse"
+          }
+        }
+      },
+      "UserDetailInfoResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userInfo": {
+            "$ref": "#/components/schemas/UserInfoBase"
+          },
+          "userProfile": {
+            "$ref": "#/components/schemas/UserProfileBase"
+          },
+          "readonlyFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UserInfoBase": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          },
+          "username": {
+            "type": "string"
+          },
+          "campusNo": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string"
+          },
+          "verificationMode": {
+            "type": "string",
+            "enum": ["EDU_EMAIL", "FDU_UIS_SYS"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["NORMAL", "UNIDENTIFIED", "BANNED"]
+          }
+        }
+      },
+      "UserProfileBase": {
+        "type": "object",
+        "properties": {
+          "sex": {
+            "type": "string",
+            "enum": ["MALE", "FEMALE", "UNKNOWN"]
+          },
+          "university": {
+            "type": "string"
+          },
+          "college": {
+            "type": "string"
+          },
+          "major": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "enrollmentYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "degreeLevel": {
+            "type": "string",
+            "enum": ["UNKNOWN", "UNDERGRADUATE", "MASTER", "DOCTOR"]
+          },
+          "academicTitle": {
+            "type": "string"
+          }
+        }
+      },
+      "GroupDisplayBase": {
+        "type": "object",
+        "properties": {
+          "groupName": {
+            "type": "string"
+          },
+          "groupDesc": {
+            "type": "string"
+          },
+          "groupCoverUrl": {
+            "type": "string"
+          },
+          "groupType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          }
+        }
+      },
+      "GroupMemberDetailResponse": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["0", "1", "2", "-1"]
+          },
+          "joinTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tokenLimit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tokenUsed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "memberId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "memberInfo": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          }
+        }
+      },
+      "PageRGroupMemberDetailResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupMemberDetailResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRGroupMemberDetailResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRGroupMemberDetailResponse"
+          }
+        }
+      },
+      "RGroupRoleType": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string",
+            "enum": ["0", "1", "2", "-1"]
+          }
+        }
+      },
+      "RGroupMemberDetailResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/GroupMemberDetailResponse"
+          }
+        }
+      },
+      "GroupMemberTokenDetailResponse": {
+        "type": "object",
+        "properties": {
+          "groupDisplayBase": {
+            "$ref": "#/components/schemas/GroupDisplayBase"
+          },
+          "tokenUsed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tokenLimit": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PageRGroupMemberTokenDetailResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupMemberTokenDetailResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRGroupMemberTokenDetailResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRGroupMemberTokenDetailResponse"
+          }
+        }
+      },
+      "GroupItemInfoResponse": {
+        "type": "object",
+        "properties": {
+          "groupName": {
+            "type": "string"
+          },
+          "groupDesc": {
+            "type": "string"
+          },
+          "groupCoverUrl": {
+            "type": "string"
+          },
+          "groupType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          },
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ownerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ownerInfo": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PageRGroupItemInfoResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupItemInfoResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRGroupItemInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRGroupItemInfoResponse"
+          }
+        }
+      },
+      "GroupDetailInfoResponse": {
+        "type": "object",
+        "properties": {
+          "groupName": {
+            "type": "string"
+          },
+          "groupDesc": {
+            "type": "string"
+          },
+          "groupCoverUrl": {
+            "type": "string"
+          },
+          "groupType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          },
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ownerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ownerInfo": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "inviteCode": {
+            "type": "string"
+          },
+          "tokenUsed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tokenBalance": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RGroupDetailInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/GroupDetailInfoResponse"
+          }
+        }
+      },
+      "RGroupItemInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/GroupItemInfoResponse"
+          }
+        }
+      },
+      "PageRUserEntity": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserEntity"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRUserEntity": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRUserEntity"
+          }
+        }
+      },
+      "UserEntity": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          },
+          "username": {
+            "type": "string"
+          },
+          "campusNo": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string"
+          },
+          "verificationMode": {
+            "type": "string",
+            "enum": ["EDU_EMAIL", "FDU_UIS_SYS"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["NORMAL", "UNIDENTIFIED", "BANNED"]
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "password": {
+            "type": "string"
+          },
+          "delFlag": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RUserProfileEntity": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserProfileEntity"
+          }
+        }
+      },
+      "UserProfileEntity": {
+        "type": "object",
+        "properties": {
+          "sex": {
+            "type": "string",
+            "enum": ["MALE", "FEMALE", "UNKNOWN"]
+          },
+          "university": {
+            "type": "string"
+          },
+          "college": {
+            "type": "string"
+          },
+          "major": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "enrollmentYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "degreeLevel": {
+            "type": "string",
+            "enum": ["UNKNOWN", "UNDERGRADUATE", "MASTER", "DOCTOR"]
+          },
+          "academicTitle": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "FromSource": {
+        "type": "apiKey",
+        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
+        "name": "X-From-Source",
+        "in": "header"
+      },
+      "UserID": {
+        "type": "apiKey",
+        "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",
+        "name": "X-User-Id",
+        "in": "header"
+      },
+      "IdentityType": {
+        "type": "apiKey",
+        "description": "当前用户身份类型：1=学生，2=教师，3=管理员。",
+        "name": "X-Identity-Type",
+        "in": "header"
+      },
+      "GroupRoleMap": {
+        "type": "apiKey",
+        "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
+        "name": "X-Group-Role-Map",
+        "in": "header"
+      }
+    }
+  }
+}

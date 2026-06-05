@@ -1,0 +1,622 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "文档服务 API",
+    "description": "WisePen 文档上传、解析、转换与详情接口",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://172.28.0.12:19906",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "文档处理",
+      "description": "文档上传、处理状态、预览与信息查询"
+    }
+  ],
+  "paths": {
+    "/document/uploadDoc": {
+      "post": {
+        "tags": ["文档处理"],
+        "summary": "上传文档（初始化）",
+        "description": "用户提供文档信息以换取对象文件存储的PUT URL并使用此上传文件",
+        "operationId": "uploadDoc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentUploadInitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RDocumentUploadInitResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/syncDocStatus": {
+      "post": {
+        "tags": ["文档处理"],
+        "summary": "刷新文档状态",
+        "description": "用户刷新文档当前的处理状态",
+        "operationId": "syncDocStatus",
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RDocumentStatus"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/retryDocProcess": {
+      "post": {
+        "tags": ["文档处理"],
+        "summary": "重试文档处理",
+        "description": "用户重试转换失败后的文档，仅在文档处于 FAILED/REGISTERING_RES_TIMEOUT 状态时可调用",
+        "operationId": "retryDocProcess",
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/cancelDocProcess": {
+      "post": {
+        "tags": ["文档处理"],
+        "summary": "终止文档处理",
+        "description": "用户终止/取消未就绪的文档处理，在文档处理的任意阶段均可调用：上传中（取消上传）、转换中（异步退出）",
+        "operationId": "cancelDocProcess",
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/listPendingDocs": {
+      "get": {
+        "tags": ["文档处理"],
+        "summary": "获取未就绪文档列表",
+        "description": "用户获取当前未就绪（处理中/失败）的文档列表",
+        "operationId": "listPendingDocs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RListDocumentInfoBase"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/getDocPreview": {
+      "get": {
+        "tags": ["文档处理"],
+        "summary": "获取文档预览",
+        "operationId": "previewDocument",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/getDocInfo": {
+      "get": {
+        "tags": ["文档处理"],
+        "summary": "获取文档信息",
+        "operationId": "getNoteInfo",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RDocumentInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DocumentUploadInitRequest": {
+        "required": ["expectedSize", "extension", "filename", "md5"],
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "extension": {
+            "type": "string"
+          },
+          "md5": {
+            "type": "string"
+          },
+          "expectedSize": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "DocumentUploadInitResponse": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string"
+          },
+          "putUrl": {
+            "type": "string"
+          },
+          "callbackHeader": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string"
+          },
+          "flashUploaded": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RDocumentUploadInitResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DocumentUploadInitResponse"
+          }
+        }
+      },
+      "DocumentStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "UPLOADING",
+              "UPLOADED",
+              "CONVERTING_AND_PARSING",
+              "REGISTERING_RES",
+              "READY",
+              "TRANSFER_TIMEOUT",
+              "REGISTERING_RES_TIMEOUT",
+              "FAILED"
+            ]
+          },
+          "errorMessage": {
+            "type": "string"
+          }
+        }
+      },
+      "RDocumentStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DocumentStatus"
+          }
+        }
+      },
+      "RVoid": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "DocumentInfoBase": {
+        "type": "object",
+        "properties": {
+          "uploadMeta": {
+            "$ref": "#/components/schemas/DocumentUploadMeta"
+          },
+          "documentStatus": {
+            "$ref": "#/components/schemas/DocumentStatus"
+          },
+          "maxPreviewPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "DocumentUploadMeta": {
+        "type": "object",
+        "properties": {
+          "documentName": {
+            "type": "string"
+          },
+          "uploaderId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "NOTE",
+              "PDF",
+              "DOC",
+              "DOCX",
+              "PPT",
+              "PPTX",
+              "XLS",
+              "XLSX",
+              "SKILL",
+              "AGENT",
+              "UNKNOWN"
+            ]
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "RListDocumentInfoBase": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentInfoBase"
+            }
+          }
+        }
+      },
+      "DocumentInfoResponse": {
+        "type": "object",
+        "properties": {
+          "resourceInfo": {
+            "$ref": "#/components/schemas/ResourceItemResponse"
+          },
+          "documentInfo": {
+            "$ref": "#/components/schemas/DocumentInfoBase"
+          }
+        }
+      },
+      "RDocumentInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DocumentInfoResponse"
+          }
+        }
+      },
+      "ResourceInteractionInfoBase": {
+        "type": "object",
+        "properties": {
+          "readCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "likeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scoreCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scoreTotal": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ResourceItemResponse": {
+        "type": "object",
+        "properties": {
+          "resourceName": {
+            "type": "string"
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "NOTE",
+              "PDF",
+              "DOC",
+              "DOCX",
+              "PPT",
+              "PPTX",
+              "XLS",
+              "XLSX",
+              "SKILL",
+              "AGENT",
+              "UNKNOWN"
+            ]
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "resourceId": {
+            "type": "string"
+          },
+          "ownerInfo": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          },
+          "resourceInteractionInfo": {
+            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
+          },
+          "currentTags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "currentActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "overrideGrantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "specifiedUsersGrantedActions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              }
+            }
+          }
+        }
+      },
+      "UserDisplayBase": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "FromSource": {
+        "type": "apiKey",
+        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
+        "name": "X-From-Source",
+        "in": "header"
+      },
+      "UserID": {
+        "type": "apiKey",
+        "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",
+        "name": "X-User-Id",
+        "in": "header"
+      },
+      "IdentityType": {
+        "type": "apiKey",
+        "description": "当前用户身份类型：1=学生，2=教师，3=管理员。",
+        "name": "X-Identity-Type",
+        "in": "header"
+      },
+      "GroupRoleMap": {
+        "type": "apiKey",
+        "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
+        "name": "X-Group-Role-Map",
+        "in": "header"
+      }
+    }
+  }
+}

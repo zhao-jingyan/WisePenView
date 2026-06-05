@@ -1,0 +1,650 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "笔记服务 API",
+    "description": "WisePen 笔记内容、操作日志与详情接口",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://172.28.0.32:19908",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "笔记日志服务",
+      "description": "查看笔记的细粒度操作日志"
+    },
+    {
+      "name": "内部笔记服务",
+      "description": "供 Node.js 协同服务和其他微服务调用的内部接口"
+    },
+    {
+      "name": "笔记服务",
+      "description": "笔记的创建、删除、版本管理与操作日志"
+    }
+  ],
+  "paths": {
+    "/note/revertNote": {
+      "post": {
+        "tags": ["笔记服务"],
+        "summary": "回退到指定版本",
+        "operationId": "revertToVersion",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/note/addNote": {
+      "post": {
+        "tags": ["笔记服务"],
+        "summary": "创建笔记",
+        "operationId": "createNote",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/note/log/getNoteOpLogs": {
+      "get": {
+        "tags": ["笔记日志服务"],
+        "summary": "查询操作日志",
+        "operationId": "listNoteOperationLogs",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRNoteOperationLogResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/note/listNoteHistoryVersions": {
+      "get": {
+        "tags": ["笔记服务"],
+        "summary": "查询版本历史列表",
+        "operationId": "listNoteHistoryVersions",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRNoteVersionListResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/note/getNoteInfo": {
+      "get": {
+        "tags": ["笔记服务"],
+        "summary": "获取笔记信息",
+        "operationId": "getNoteInfo",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RNoteInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RVoid": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "NoteCreateRequest": {
+        "required": ["title"],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "RString": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          }
+        }
+      },
+      "NoteOperationLogResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "operationType": {
+            "type": "string"
+          },
+          "contentSummary": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mergedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "details": {
+            "type": "object"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "PageRNoteOperationLogResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoteOperationLogResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRNoteOperationLogResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRNoteOperationLogResponse"
+          }
+        }
+      },
+      "NoteVersionListResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["FULL", "DELTA"]
+          },
+          "label": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "PageRNoteVersionListResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoteVersionListResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRNoteVersionListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRNoteVersionListResponse"
+          }
+        }
+      },
+      "NoteInfoBase": {
+        "type": "object",
+        "properties": {
+          "lastUpdatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        }
+      },
+      "NoteInfoResponse": {
+        "type": "object",
+        "properties": {
+          "resourceInfo": {
+            "$ref": "#/components/schemas/ResourceItemResponse"
+          },
+          "noteInfo": {
+            "$ref": "#/components/schemas/NoteInfoBase"
+          },
+          "authorsDisplay": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UserDisplayBase"
+            }
+          }
+        }
+      },
+      "RNoteInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/NoteInfoResponse"
+          }
+        }
+      },
+      "ResourceInteractionInfoBase": {
+        "type": "object",
+        "properties": {
+          "readCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "likeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scoreCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scoreTotal": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ResourceItemResponse": {
+        "type": "object",
+        "properties": {
+          "resourceName": {
+            "type": "string"
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "NOTE",
+              "PDF",
+              "DOC",
+              "DOCX",
+              "PPT",
+              "PPTX",
+              "XLS",
+              "XLSX",
+              "SKILL",
+              "AGENT",
+              "UNKNOWN"
+            ]
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "resourceId": {
+            "type": "string"
+          },
+          "ownerInfo": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          },
+          "resourceInteractionInfo": {
+            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
+          },
+          "currentTags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "currentActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "overrideGrantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "specifiedUsersGrantedActions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              }
+            }
+          }
+        }
+      },
+      "UserDisplayBase": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "FromSource": {
+        "type": "apiKey",
+        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
+        "name": "X-From-Source",
+        "in": "header"
+      },
+      "UserID": {
+        "type": "apiKey",
+        "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",
+        "name": "X-User-Id",
+        "in": "header"
+      },
+      "IdentityType": {
+        "type": "apiKey",
+        "description": "当前用户身份类型：1=学生，2=教师，3=管理员。",
+        "name": "X-Identity-Type",
+        "in": "header"
+      },
+      "GroupRoleMap": {
+        "type": "apiKey",
+        "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
+        "name": "X-Group-Role-Map",
+        "in": "header"
+      }
+    }
+  }
+}

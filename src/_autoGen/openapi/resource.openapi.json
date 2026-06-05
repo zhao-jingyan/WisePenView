@@ -1,0 +1,1490 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "资源服务 API",
+    "description": "WisePen 资源、标签、搜索与交互接口",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://172.28.0.28:19905",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "小组资源配置",
+      "description": "小组文件组织模式（Folder / Tag）的查询与设置"
+    },
+    {
+      "name": "全文搜索",
+      "description": "跨资源类型的全文搜索（带 ACL 可见性过滤 + 高亮）"
+    },
+    {
+      "name": "资源标签管理",
+      "description": "个人标签与小组资源标签的增删改查及拖拽"
+    },
+    {
+      "name": "资源互动",
+      "description": "资源点赞与评分"
+    },
+    {
+      "name": "资源管理",
+      "description": "资源重命名、更新资源标签与列出资源"
+    },
+    {
+      "name": "内部资源服务",
+      "description": "提供给其他微服务的权限与资源 Feign 接口"
+    }
+  ],
+  "paths": {
+    "/resource/tag/removeTag": {
+      "post": {
+        "tags": ["资源标签管理"],
+        "summary": "级联删除标签",
+        "description": "删除个人或小组指定标签及其所有的子孙节点",
+        "operationId": "deleteTag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/tag/moveTag": {
+      "post": {
+        "tags": ["资源标签管理"],
+        "summary": "拖拽/移动标签",
+        "description": "修改个人或小组标签的树形层级结构（小组需管理权限）",
+        "operationId": "moveTag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagMoveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/tag/changeTag": {
+      "post": {
+        "tags": ["资源标签管理"],
+        "summary": "更新标签",
+        "description": "修改个人或小组标签的元信息（小组需管理权限，个人不可设置可见性规则）",
+        "operationId": "updateTag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/tag/addTag": {
+      "post": {
+        "tags": ["资源标签管理"],
+        "summary": "创建标签",
+        "description": "在个人或小组指定的父节点下创建新标签（小组需管理权限）",
+        "operationId": "createTag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/item/renameResource": {
+      "post": {
+        "tags": ["资源管理"],
+        "summary": "重命名资源",
+        "description": "用户修改资源名称",
+        "operationId": "renameResource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceRenameRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/item/removeResources": {
+      "post": {
+        "tags": ["资源管理"],
+        "summary": "删除资源",
+        "description": "用户删除资源",
+        "operationId": "deleteResource",
+        "parameters": [
+          {
+            "name": "resourceIds",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/item/changeResourceTags": {
+      "post": {
+        "tags": ["资源管理"],
+        "summary": "更新资源标签",
+        "description": "用户修改资源的标签列表",
+        "operationId": "updateResourceTags",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceUpdateTagsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/item/changeResourceActionPermission": {
+      "post": {
+        "tags": ["资源管理"],
+        "summary": "修改资源独立权限",
+        "description": "修改资源级别的覆盖动作权限，以及为特定用户单独授予的特权动作",
+        "operationId": "updateResourceActionPermission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceUpdateActionPermissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/interaction/toggleLike": {
+      "post": {
+        "tags": ["资源互动"],
+        "summary": "切换资源点赞状态",
+        "description": "对资源进行点赞或取消点赞",
+        "operationId": "changeResourceLikeStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceLikeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/interaction/read": {
+      "post": {
+        "tags": ["资源互动"],
+        "summary": "记录资源阅读",
+        "operationId": "changeResourceReadStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceReadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/interaction/rate": {
+      "post": {
+        "tags": ["资源互动"],
+        "summary": "评价资源",
+        "operationId": "changeResourceScore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceRateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/groupConfig/changeConfig": {
+      "post": {
+        "tags": ["小组资源配置"],
+        "summary": "设置小组资源配置",
+        "description": "仅小组 OWNER 或 ADMIN 可操作，首次调用时创建记录",
+        "operationId": "upsertConfig",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupResConfigUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/tag/getTagTree": {
+      "get": {
+        "tags": ["资源标签管理"],
+        "summary": "获取完整标签树",
+        "description": "获取个人或小组的标签树",
+        "operationId": "getTagTree",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RListTagTreeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/search/globalSearchResources": {
+      "get": {
+        "tags": ["全文搜索"],
+        "summary": "全局全文搜索",
+        "operationId": "searchResources",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["ALL", "DOCUMENT", "NOTE"]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRSearchHitItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/item/listResources": {
+      "get": {
+        "tags": ["资源管理"],
+        "summary": "分页列出资源",
+        "description": "多条件组合的高级分页查询，支持按字段升降序，多标签与/或筛选。<br><br>**核心查询场景说明：**<br>1. **个人所有资源** (`不传 groupId` 且 `不传 tagIds`)：查询当前用户作为 owner 的所有资源。<br>2. **小组所有资源** (`传 groupId` 且 `不传 tagIds`)：查询挂载在该小组下，且当前用户有权限看到的资源。<br>3. **个人指定标签** (`不传 groupId` 且 `传 tagIds`)：查询当前用户拥有，且带有指定标签的资源。<br>4. **小组指定标签** (`传 groupId` 且 `传 tagIds`)：查询挂载在该小组下、具有指定标签，且当前用户有权限看到的资源。",
+        "operationId": "listResources",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "description": "小组ID。查个人资源时必须留空",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tagIds",
+            "in": "query",
+            "description": "标签ID列表，为空时列出全部资源。配合 groupId 决定查个人的标签还是小组的标签。",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "tagQueryLogicMode",
+            "in": "query",
+            "description": "多标签组合查询时的逻辑关系(AND/OR)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "OR",
+              "enum": ["AND", "OR"]
+            }
+          },
+          {
+            "name": "resourceType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "排序字段枚举",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "UPDATE_TIME",
+              "enum": ["UPDATE_TIME", "CREATE_TIME", "NAME", "SIZE"]
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "DESC",
+              "enum": ["ASC", "DESC"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRResourceItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/interaction/getResourceUserInteractionRecord": {
+      "get": {
+        "tags": ["资源互动"],
+        "summary": "获取资源交互状态",
+        "operationId": "getResourceUserInteractionRecord",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RResourceUserInteractionRecordResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/groupConfig/getConfig": {
+      "get": {
+        "tags": ["小组资源配置"],
+        "summary": "获取小组资源配置",
+        "description": "小组成员可查询，查不到时默认返回 FOLDER 模式",
+        "operationId": "getConfig",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RGroupResConfigResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TagDeleteRequest": {
+        "required": ["targetTagId"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "targetTagId": {
+            "type": "string"
+          }
+        }
+      },
+      "RVoid": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "TagMoveRequest": {
+        "required": ["targetTagId"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "targetTagId": {
+            "type": "string"
+          },
+          "newParentId": {
+            "type": "string"
+          }
+        }
+      },
+      "TagUpdateRequest": {
+        "required": ["targetTagId"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "tagName": {
+            "type": "string"
+          },
+          "tagDesc": {
+            "type": "string"
+          },
+          "tagIcon": {
+            "type": "string"
+          },
+          "tagColor": {
+            "type": "string"
+          },
+          "tagCreator": {
+            "type": "string"
+          },
+          "isPath": {
+            "type": "boolean"
+          },
+          "taggedResourceAclGrantScope": {
+            "type": "string",
+            "enum": ["ALL", "ONLY_ADMIN", "WHITELIST", "BLACKLIST"]
+          },
+          "taggedResourceAclGrantSpecifiedUsers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "taggedResourceGrantedActionsMask": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tagMountPermissionScope": {
+            "type": "string",
+            "enum": ["ALL", "ONLY_ADMIN", "WHITELIST", "BLACKLIST"]
+          },
+          "tagMountSpecifiedUsers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "targetTagId": {
+            "type": "string"
+          },
+          "grantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          }
+        }
+      },
+      "TagCreateRequest": {
+        "required": ["tagName"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "tagName": {
+            "type": "string"
+          },
+          "tagDesc": {
+            "type": "string"
+          },
+          "taggedResourceAclGrantScope": {
+            "type": "string",
+            "enum": ["ALL", "ONLY_ADMIN", "WHITELIST", "BLACKLIST"]
+          },
+          "taggedResourceAclGrantSpecifiedUsers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "grantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "tagMountPermissionScope": {
+            "type": "string",
+            "enum": ["ALL", "ONLY_ADMIN", "WHITELIST", "BLACKLIST"]
+          },
+          "tagMountSpecifiedUsers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RString": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          }
+        }
+      },
+      "ResourceRenameRequest": {
+        "required": ["newName", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "newName": {
+            "type": "string"
+          }
+        }
+      },
+      "ResourceUpdateTagsRequest": {
+        "required": ["resourceId", "tagIds"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "tagIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ResourceUpdateActionPermissionRequest": {
+        "required": ["resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "overrideGrantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "specifiedUsersGrantedActions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              }
+            }
+          }
+        }
+      },
+      "ResourceLikeRequest": {
+        "required": ["resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          }
+        }
+      },
+      "ResourceReadRequest": {
+        "required": ["resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          }
+        }
+      },
+      "ResourceRateRequest": {
+        "required": ["resourceId", "score"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "score": {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GroupResConfigUpdateRequest": {
+        "required": ["fileOrgLogic", "groupId"],
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "fileOrgLogic": {
+            "type": "string",
+            "enum": ["FOLDER", "TAG"]
+          },
+          "defaultMemberActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          }
+        }
+      },
+      "ResourceInteractionInfoBase": {
+        "type": "object",
+        "properties": {
+          "readCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "likeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scoreCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scoreTotal": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ResourceItemResponse": {
+        "type": "object",
+        "properties": {
+          "resourceName": {
+            "type": "string"
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "NOTE",
+              "PDF",
+              "DOC",
+              "DOCX",
+              "PPT",
+              "PPTX",
+              "XLS",
+              "XLSX",
+              "SKILL",
+              "AGENT",
+              "UNKNOWN"
+            ]
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "resourceId": {
+            "type": "string"
+          },
+          "ownerInfo": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          },
+          "resourceInteractionInfo": {
+            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
+          },
+          "currentTags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "currentActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "overrideGrantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "specifiedUsersGrantedActions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              }
+            }
+          }
+        }
+      },
+      "UserDisplayBase": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          }
+        }
+      },
+      "RListTagTreeResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TagTreeResponse"
+            }
+          }
+        }
+      },
+      "TagTreeResponse": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "tagName": {
+            "type": "string"
+          },
+          "tagDesc": {
+            "type": "string"
+          },
+          "tagIcon": {
+            "type": "string"
+          },
+          "tagColor": {
+            "type": "string"
+          },
+          "tagCreator": {
+            "type": "string"
+          },
+          "isPath": {
+            "type": "boolean"
+          },
+          "taggedResourceAclGrantScope": {
+            "type": "string",
+            "enum": ["ALL", "ONLY_ADMIN", "WHITELIST", "BLACKLIST"]
+          },
+          "taggedResourceAclGrantSpecifiedUsers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "taggedResourceGrantedActionsMask": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tagMountPermissionScope": {
+            "type": "string",
+            "enum": ["ALL", "ONLY_ADMIN", "WHITELIST", "BLACKLIST"]
+          },
+          "tagMountSpecifiedUsers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tagId": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "grantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          }
+        }
+      },
+      "PageRSearchHitItemResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchHitItemResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRSearchHitItemResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRSearchHitItemResponse"
+          }
+        }
+      },
+      "SearchHitItemResponse": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "NOTE",
+              "PDF",
+              "DOC",
+              "DOCX",
+              "PPT",
+              "PPTX",
+              "XLS",
+              "XLSX",
+              "SKILL",
+              "AGENT",
+              "UNKNOWN"
+            ]
+          },
+          "resourceName": {
+            "type": "string"
+          },
+          "highlightContent": {
+            "type": "string"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PageRResourceItemResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceItemResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRResourceItemResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRResourceItemResponse"
+          }
+        }
+      },
+      "RResourceUserInteractionRecordResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResourceUserInteractionRecordResponse"
+          }
+        }
+      },
+      "ResourceUserInteractionRecordResponse": {
+        "type": "object",
+        "properties": {
+          "read": {
+            "type": "boolean"
+          },
+          "liked": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "resourceId": {
+            "type": "string"
+          }
+        }
+      },
+      "GroupResConfigResponse": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "fileOrgLogic": {
+            "type": "string",
+            "enum": ["FOLDER", "TAG"]
+          },
+          "defaultMemberActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          }
+        }
+      },
+      "RGroupResConfigResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/GroupResConfigResponse"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "FromSource": {
+        "type": "apiKey",
+        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
+        "name": "X-From-Source",
+        "in": "header"
+      },
+      "UserID": {
+        "type": "apiKey",
+        "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",
+        "name": "X-User-Id",
+        "in": "header"
+      },
+      "IdentityType": {
+        "type": "apiKey",
+        "description": "当前用户身份类型：1=学生，2=教师，3=管理员。",
+        "name": "X-Identity-Type",
+        "in": "header"
+      },
+      "GroupRoleMap": {
+        "type": "apiKey",
+        "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
+        "name": "X-Group-Role-Map",
+        "in": "header"
+      }
+    }
+  }
+}

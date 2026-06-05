@@ -24,11 +24,11 @@ function register(req: RegisterApiRequest): Promise<RegisterApiResponse> {
 }
 
 function forgotPasswordEmail(req: ResetPasswordApiRequest): Promise<ResetPasswordApiResponse> {
-  return apiPost('/auth/forgot-password/email', req);
+  return apiPost('/auth/sendResetMail', req);
 }
 
 function forgotPasswordReset(req: NewPasswordApiRequest): Promise<NewPasswordApiResponse> {
-  return apiPost('/auth/forgot-password/reset', req);
+  return apiPost('/auth/resetPassword', req);
 }
 
 export const AuthApi = {

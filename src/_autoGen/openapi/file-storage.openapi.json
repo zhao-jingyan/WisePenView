@@ -1,0 +1,202 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "文件存储服务 API",
+    "description": "WisePen 文件上传、下载、删除与回调接口",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://172.28.0.9:19907",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "文件存储",
+      "description": "用户文件与图片上传代理接口"
+    },
+    {
+      "name": "内部文件存储",
+      "description": "供其他微服务初始化上传、获取下载地址与管理物理文件"
+    },
+    {
+      "name": "外部文件存储",
+      "description": "处理云存储服务回调"
+    }
+  ],
+  "paths": {
+    "/storage/imageUpload": {
+      "post": {
+        "tags": ["文件存储"],
+        "summary": "上传图床图片",
+        "operationId": "uploadImageProxy",
+        "parameters": [
+          {
+            "name": "scene",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "true",
+              "enum": [
+                "PUBLIC_IMAGE_FOR_USER",
+                "PUBLIC_IMAGE_FOR_GROUP",
+                "PRIVATE_IMAGE_FOR_NOTE",
+                "PRIVATE_DOC",
+                "PRIVATE_SKILL_ASSET"
+              ]
+            }
+          },
+          {
+            "name": "bizTag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["file"],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RStorageRecordDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/external/storage/callback/upload": {
+      "post": {
+        "tags": ["外部文件存储"],
+        "summary": "接收上传完成回调",
+        "operationId": "handleUploadCallback",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RStorageRecordDTO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/StorageRecordDTO"
+          }
+        }
+      },
+      "StorageRecordDTO": {
+        "type": "object",
+        "properties": {
+          "objectKey": {
+            "type": "string"
+          },
+          "md5": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "fileId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "domain": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "FromSource": {
+        "type": "apiKey",
+        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
+        "name": "X-From-Source",
+        "in": "header"
+      },
+      "UserID": {
+        "type": "apiKey",
+        "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",
+        "name": "X-User-Id",
+        "in": "header"
+      },
+      "IdentityType": {
+        "type": "apiKey",
+        "description": "当前用户身份类型：1=学生，2=教师，3=管理员。",
+        "name": "X-Identity-Type",
+        "in": "header"
+      },
+      "GroupRoleMap": {
+        "type": "apiKey",
+        "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
+        "name": "X-Group-Role-Map",
+        "in": "header"
+      }
+    }
+  }
+}

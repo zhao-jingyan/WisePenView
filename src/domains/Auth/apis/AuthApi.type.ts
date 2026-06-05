@@ -1,24 +1,17 @@
-export interface LoginApiRequest {
-  account: string;
-  password: string;
-}
+import type {
+  AuthLoginRequest,
+  AuthPwdResetRequest,
+  AuthPwdResetVerifyRequest,
+  AuthRegisterRequest,
+} from '@/_autoGen/api/user/types.gen';
 
-export interface RegisterApiRequest {
-  username: string;
-  password: string;
-}
+export type LoginApiRequest = AuthLoginRequest;
+export type RegisterApiRequest = AuthRegisterRequest;
+export type ResetPasswordApiRequest = AuthPwdResetVerifyRequest;
+export type NewPasswordApiRequest = AuthPwdResetRequest;
 
-export interface ResetPasswordApiRequest {
-  campusNum: string;
-}
-
-export interface NewPasswordApiRequest {
-  newPassword: string;
-  token: string;
-}
-
-export type LoginApiResponse = void;
+export type LoginApiResponse = string | undefined;
 export type LogoutApiResponse = void;
-export type RegisterApiResponse = void;
+export type RegisterApiResponse = string | undefined;
 export type ResetPasswordApiResponse = void;
 export type NewPasswordApiResponse = void;

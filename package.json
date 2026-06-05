@@ -9,6 +9,8 @@
     "build": "tsc -b && vite build",
     "build:dev": "tsc -b && vite build --mode development",
     "lint": "eslint .",
+    "openapi:sync": "node scripts/sync-openapi.mjs",
+    "openapi:gen": "openapi-ts",
     "preview": "vite preview",
     "prepare": "husky install"
   },
@@ -46,6 +48,7 @@
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
+    "@hey-api/openapi-ts": "0.98.1",
     "@eslint/js": "^9.39.1",
     "@types/katex": "^0.16.8",
     "@types/node": "^24.10.1",
