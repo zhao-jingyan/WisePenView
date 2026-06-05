@@ -1,0 +1,292 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "系统服务 API",
+    "description": "WisePen 系统邮件、日志与用户反馈接口",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://172.28.0.31:19902",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "用户反馈",
+      "description": "用户提交问题报错、功能建议与使用咨询"
+    },
+    {
+      "name": "内部日志服务",
+      "description": "供其他微服务写入系统操作日志"
+    },
+    {
+      "name": "邮件服务",
+      "description": "系统邮件发送接口"
+    }
+  ],
+  "paths": {
+    "/system/mail/send": {
+      "post": {
+        "tags": ["邮件服务"],
+        "summary": "内部发送系统邮件",
+        "operationId": "sendMail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailSendDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": []
+          }
+        ]
+      }
+    },
+    "/system/log/save": {
+      "post": {
+        "tags": ["内部日志服务"],
+        "summary": "内部保存操作日志",
+        "operationId": "save",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SysOperLogDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": []
+          }
+        ]
+      }
+    },
+    "/system/feedback/addFeedback": {
+      "post": {
+        "tags": ["用户反馈"],
+        "summary": "提交用户反馈",
+        "description": "提交问题报错、功能建议、使用咨询等反馈信息",
+        "operationId": "createFeedback",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MailSendDTO": {
+        "required": ["content", "subject", "toEmail"],
+        "type": "object",
+        "properties": {
+          "toEmail": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      },
+      "RVoid": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "SysOperLogDTO": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "businessType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "method": {
+            "type": "string"
+          },
+          "reqMethod": {
+            "type": "string"
+          },
+          "operUserId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "operUrl": {
+            "type": "string"
+          },
+          "operIp": {
+            "type": "string"
+          },
+          "operParam": {
+            "type": "string"
+          },
+          "jsonResult": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorMsg": {
+            "type": "string"
+          },
+          "operTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "costTime": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "RBoolean": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FeedbackRequest": {
+        "required": ["content", "type"],
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "contact": {
+            "type": "string"
+          },
+          "browser": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["BUG_REPORT", "SUGGESTION", "CONSULTATION", "COMPLAINT", "OTHER"]
+          }
+        },
+        "description": "用户反馈传输对象"
+      }
+    },
+    "securitySchemes": {
+      "FromSource": {
+        "type": "apiKey",
+        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
+        "name": "X-From-Source",
+        "in": "header"
+      },
+      "UserID": {
+        "type": "apiKey",
+        "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",
+        "name": "X-User-Id",
+        "in": "header"
+      },
+      "IdentityType": {
+        "type": "apiKey",
+        "description": "当前用户身份类型：1=学生，2=教师，3=管理员。",
+        "name": "X-Identity-Type",
+        "in": "header"
+      },
+      "GroupRoleMap": {
+        "type": "apiKey",
+        "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
+        "name": "X-Group-Role-Map",
+        "in": "header"
+      },
+      "Developer": {
+        "type": "apiKey",
+        "description": "灰度隔离开发者标识。通常由 dev.properties 设置；直连测试时可手工透传。",
+        "name": "X-Developer",
+        "in": "header"
+      }
+    }
+  }
+}

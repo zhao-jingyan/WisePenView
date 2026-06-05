@@ -1,0 +1,767 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "AI 资产服务 API",
+    "description": "WisePen 技能资产创建、编辑、发布与查询接口",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://172.28.0.6:19910",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "技能资产管理",
+      "description": "技能资产的创建、更新、查询、发布与文件管理"
+    }
+  ],
+  "paths": {
+    "/skill/publishSkillVersion": {
+      "post": {
+        "tags": ["技能资产管理"],
+        "summary": "发布技能资产版本",
+        "description": "确认当前草稿版本并推进主档版本号",
+        "operationId": "publishSkillVersion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillVersionPublishRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/skill/initUploadSkillAssets": {
+      "post": {
+        "tags": ["技能资产管理"],
+        "summary": "上传技能资产文件",
+        "description": "为草稿版本技能资产添加或替换文件",
+        "operationId": "initUploadSkillAssets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillAssetUploadInitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RSkillAssetUploadInitResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/skill/getSkillVersionInfo": {
+      "post": {
+        "tags": ["技能资产管理"],
+        "summary": "获取技能资产版本信息",
+        "description": "查询指定版本或当前确认版本的文件快照",
+        "operationId": "getSkillVersionInfo",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RSkillVersionInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/skill/getSkillInfo": {
+      "post": {
+        "tags": ["技能资产管理"],
+        "summary": "获取技能资产信息",
+        "operationId": "getSkillInfo",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RSkillInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/skill/deleteSkillAssets": {
+      "post": {
+        "tags": ["技能资产管理"],
+        "summary": "删除技能资产草稿文件",
+        "description": "删除草稿版本技能资产中的文件",
+        "operationId": "deleteSkillAssets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillAssetDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/skill/createSkill": {
+      "post": {
+        "tags": ["技能资产管理"],
+        "summary": "创建技能资产",
+        "operationId": "createSkill",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/skill/changeSkillInfo": {
+      "post": {
+        "tags": ["技能资产管理"],
+        "summary": "更新技能资产信息",
+        "operationId": "updateSkillInfo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SkillVersionPublishRequest": {
+        "required": ["draftVersion", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "draftVersion": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RVoid": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "SkillAssetUploadInitRequest": {
+        "required": ["assets", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "draftVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillAssetUploadRequest"
+            }
+          }
+        }
+      },
+      "SkillAssetUploadRequest": {
+        "required": ["name", "path", "skillAssetResourceType"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "skillAssetResourceType": {
+            "type": "string",
+            "enum": ["MD", "PYTHON_SCRIPT", "TEXT", "JSON", "YAML", "TOML"]
+          },
+          "md5": {
+            "type": "string"
+          },
+          "expectedSize": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AssetUploadTicket": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string"
+          },
+          "putUrl": {
+            "type": "string"
+          },
+          "callbackHeader": {
+            "type": "string"
+          },
+          "flashUploaded": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RSkillAssetUploadInitResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SkillAssetUploadInitResponse"
+          }
+        }
+      },
+      "SkillAssetUploadInitResponse": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assetUploadTickets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetUploadTicket"
+            }
+          }
+        }
+      },
+      "RSkillVersionInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SkillVersionInfoResponse"
+          }
+        }
+      },
+      "SkillAssetInfoBase": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string"
+          },
+          "skillAssetResourceType": {
+            "type": "string",
+            "enum": ["MD", "PYTHON_SCRIPT", "TEXT", "JSON", "YAML", "TOML"]
+          },
+          "uploadStatus": {
+            "type": "string",
+            "enum": ["UPLOADING", "AVAILABLE"]
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SkillVersionInfoResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mainSkillMD": {
+            "$ref": "#/components/schemas/SkillAssetInfoBase"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["DRAFT", "PUBLISHED"]
+          },
+          "skillAssets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillAssetInfoBase"
+            }
+          },
+          "resourceId": {
+            "type": "string"
+          }
+        }
+      },
+      "RSkillInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SkillInfoResponse"
+          }
+        }
+      },
+      "ResourceInteractionInfoBase": {
+        "type": "object",
+        "properties": {
+          "readCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "likeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scoreCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scoreTotal": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ResourceItemResponse": {
+        "type": "object",
+        "properties": {
+          "resourceName": {
+            "type": "string"
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "NOTE",
+              "PDF",
+              "DOC",
+              "DOCX",
+              "PPT",
+              "PPTX",
+              "XLS",
+              "XLSX",
+              "SKILL",
+              "AGENT",
+              "UNKNOWN"
+            ]
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "resourceId": {
+            "type": "string"
+          },
+          "ownerInfo": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          },
+          "resourceInteractionInfo": {
+            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
+          },
+          "currentTags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "currentActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "overrideGrantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            }
+          },
+          "specifiedUsersGrantedActions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              }
+            }
+          }
+        }
+      },
+      "SkillInfoBase": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": ["BY_AGENT", "MANUAL"]
+          }
+        }
+      },
+      "SkillInfoResponse": {
+        "type": "object",
+        "properties": {
+          "resourceInfo": {
+            "$ref": "#/components/schemas/ResourceItemResponse"
+          },
+          "skillInfo": {
+            "$ref": "#/components/schemas/SkillInfoBase"
+          }
+        }
+      },
+      "UserDisplayBase": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["1", "2", "3"]
+          }
+        }
+      },
+      "SkillAssetDeleteRequest": {
+        "required": ["assetIds", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "draftVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assetIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SkillCreateRequest": {
+        "required": ["title"],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": ["BY_AGENT", "MANUAL"]
+          }
+        }
+      },
+      "RString": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          }
+        }
+      },
+      "SkillUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "FromSource": {
+        "type": "apiKey",
+        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
+        "name": "X-From-Source",
+        "in": "header"
+      },
+      "UserID": {
+        "type": "apiKey",
+        "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",
+        "name": "X-User-Id",
+        "in": "header"
+      },
+      "IdentityType": {
+        "type": "apiKey",
+        "description": "当前用户身份类型：1=学生，2=教师，3=管理员。",
+        "name": "X-Identity-Type",
+        "in": "header"
+      },
+      "GroupRoleMap": {
+        "type": "apiKey",
+        "description": "当前用户小组角色 JSON，例如 {\"10001\":0}，角色值：0=OWNER，1=ADMIN，2=MEMBER。",
+        "name": "X-Group-Role-Map",
+        "in": "header"
+      },
+      "Developer": {
+        "type": "apiKey",
+        "description": "灰度隔离开发者标识。通常由 dev.properties 设置；直连测试时可手工透传。",
+        "name": "X-Developer",
+        "in": "header"
+      }
+    }
+  }
+}
