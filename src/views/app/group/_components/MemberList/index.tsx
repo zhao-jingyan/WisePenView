@@ -16,6 +16,7 @@ import {
   EditPermissionModal,
   InviteUserModal,
 } from './Modals';
+import styles from './style.module.less';
 
 const GROUP_MEMBER_TOKEN_LIMIT_MAX = 100_000_000;
 const EMPTY_MEMBERS: GroupMember[] = [];
@@ -223,6 +224,54 @@ function MemberList({ groupDisplayConfig, pagination, groupId, inviteCode }: Mem
     return new Set(selectedRowKeys.filter((key) => currentPageKeys.has(String(key))).map(String));
   }, [members, selectedRowKeys]);
 
+  const showBatchActions = groupDisplayConfig.canEnterEditMode;
+  const toolbar = useMemo(() => {
+    const hasBatchActions =
+      showBatchActions &&
+      (groupDisplayConfig.canModifyPermission ||
+        groupDisplayConfig.canAssignQuota ||
+        groupDisplayConfig.canRemoveMember);
+
+    if (!hasBatchActions && !groupDisplayConfig.canInviteMember) {
+      return null;
+    }
+
+    return (
+      <div className={styles.toolbarActions}>
+        {showBatchActions && groupDisplayConfig.canModifyPermission ? (
+          <Button
+            onPress={() => handleEdit('editPermission')}
+            isDisabled={selectedRowKeys.length === 0}
+          >
+            修改权限
+          </Button>
+        ) : null}
+        {showBatchActions && groupDisplayConfig.canAssignQuota ? (
+          <Button
+            onPress={() => handleEdit('assignQuota')}
+            isDisabled={selectedRowKeys.length === 0}
+          >
+            分配配额
+          </Button>
+        ) : null}
+        {showBatchActions && groupDisplayConfig.canRemoveMember ? (
+          <Button
+            variant="danger"
+            onPress={() => handleEdit('deleteMember')}
+            isDisabled={selectedRowKeys.length === 0}
+          >
+            删除成员
+          </Button>
+        ) : null}
+        {groupDisplayConfig.canInviteMember ? (
+          <Button variant="primary" onPress={() => setActiveModal('invite')}>
+            邀请用户
+          </Button>
+        ) : null}
+      </div>
+    );
+  }, [groupDisplayConfig, selectedRowKeys.length, showBatchActions]);
+
   return (
     <div>
       <MemberListTable
@@ -251,42 +300,7 @@ function MemberList({ groupDisplayConfig, pagination, groupId, inviteCode }: Mem
           setInlineErrorMessage(null);
         }}
         onDeleteMember={handleDeleteSingleMember}
-        toolbar={
-          groupDisplayConfig.canInviteMember ? (
-            <Button variant="primary" onPress={() => setActiveModal('invite')}>
-              邀请用户
-            </Button>
-          ) : null
-        }
-        batchFooter={
-          <>
-            {groupDisplayConfig.canModifyPermission ? (
-              <Button
-                onPress={() => handleEdit('editPermission')}
-                isDisabled={selectedRowKeys.length === 0}
-              >
-                修改权限
-              </Button>
-            ) : null}
-            {groupDisplayConfig.canAssignQuota ? (
-              <Button
-                onPress={() => handleEdit('assignQuota')}
-                isDisabled={selectedRowKeys.length === 0}
-              >
-                分配配额
-              </Button>
-            ) : null}
-            {groupDisplayConfig.canRemoveMember ? (
-              <Button
-                variant="danger"
-                onPress={() => handleEdit('deleteMember')}
-                isDisabled={selectedRowKeys.length === 0}
-              >
-                删除成员
-              </Button>
-            ) : null}
-          </>
-        }
+        toolbar={toolbar}
       />
 
       <InviteUserModal

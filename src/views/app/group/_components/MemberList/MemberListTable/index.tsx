@@ -1,9 +1,5 @@
 import QuotaBar from '@/components/Common/QuotaBar';
 import {
-  canEditSelectedMembers,
-  canEditSelectedMembersForQuota,
-} from '@/components/Group/GroupDisplayConfig';
-import {
   DataTable,
   ManageTable,
   type DataTableColumn,
@@ -15,6 +11,7 @@ import { formatTimestampToDate } from '@/utils/format/formatTime';
 import { Input, Label, ListBox, Select, TextField } from '@heroui/react';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
+import { canEditSelectedMembers, canEditSelectedMembersForQuota } from '../../GroupDisplayConfig';
 import type {
   MemberListInlineDraft,
   MemberListPaginationConfig,
@@ -325,7 +322,6 @@ function MemberListTable(props: MemberListTableProps) {
     onDismissInlineError,
     onDeleteMember,
     toolbar,
-    batchFooter,
   } = props;
 
   const paginationConfig: Required<MemberListPaginationConfig> = {
@@ -386,7 +382,6 @@ function MemberListTable(props: MemberListTableProps) {
         disabledKeys: disabledSelectionKeys,
         onSelectionChange: (keys) => onSelectionChange(keys, dataSource),
       }}
-      batchFooter={batchFooter}
       inlineEdit={{
         editingRowId,
         savingRowId,

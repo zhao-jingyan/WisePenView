@@ -1,7 +1,7 @@
 import type { GroupMember } from '@/domains/Group';
-import type { GroupDisplayConfig } from '../../GroupDisplayConfig';
 import type { Selection } from '@heroui/react';
 import type { ReactNode } from 'react';
+import type { GroupDisplayConfig } from '../../GroupDisplayConfig';
 
 export type MemberListInlineEditKind = 'role' | 'quota';
 
@@ -41,5 +41,4 @@ export interface MemberListTableProps {
   onDismissInlineError?: () => void;
   onDeleteMember: (member: GroupMember) => void;
   toolbar?: ReactNode;
-  batchFooter?: ReactNode;
 }
