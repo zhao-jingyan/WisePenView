@@ -1,4 +1,4 @@
-import type { User } from '@/domains/User';
+import type { User, UserAccountProfile } from '@/domains/User';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import type {
   ChangeUserInfoApiRequest,
@@ -18,16 +18,43 @@ import type {
 
 type CachedUserSafe = Pick<User, 'id' | 'username' | 'nickname' | 'avatar' | 'identityType'>;
 
-const mapUserSafeFromApi = (data: GetUserInfoApiResponse): CachedUserSafe => {
-  const { userInfo } = data;
+const mapAccountProfileFromApi = (data: GetUserInfoApiResponse): UserAccountProfile => {
+  const { userInfo, userProfile } = data;
   return {
     id: normalizeId(data.userId),
-    username: userInfo.username,
-    nickname: userInfo.nickname ?? undefined,
-    avatar: userInfo.avatar ?? undefined,
-    identityType: userInfo.identityType,
+    userInfo: {
+      nickname: userInfo.nickname ?? undefined,
+      realName: userInfo.realName ?? undefined,
+      avatar: userInfo.avatar ?? undefined,
+      identityType: userInfo.identityType,
+      username: userInfo.username,
+      campusNo: userInfo.campusNo,
+      email: userInfo.email ?? undefined,
+      mobile: userInfo.mobile ?? undefined,
+      verificationMode: userInfo.verificationMode,
+      status: userInfo.status,
+    },
+    userProfile: {
+      sex: userProfile.sex,
+      university: userProfile.university,
+      college: userProfile.college ?? undefined,
+      major: userProfile.major ?? undefined,
+      className: userProfile.className ?? undefined,
+      enrollmentYear: userProfile.enrollmentYear ?? undefined,
+      degreeLevel: userProfile.degreeLevel ?? undefined,
+      academicTitle: userProfile.academicTitle ?? undefined,
+    },
+    readonlyFields: data.readonlyFields ?? [],
   };
 };
+
+const mapUserSafeFromAccountProfile = (data: UserAccountProfile): CachedUserSafe => ({
+  id: data.id,
+  username: data.userInfo.username,
+  nickname: data.userInfo.nickname,
+  avatar: data.userInfo.avatar,
+  identityType: data.userInfo.identityType,
+});
 
 const mapSendEmailVerifyRequest = (
   params: SendEmailVerifyRequest
@@ -99,7 +126,8 @@ const mapUpdateUserInfoRequests = (
 };
 
 export const UserServicesMap = {
-  mapUserSafeFromApi,
+  mapAccountProfileFromApi,
+  mapUserSafeFromAccountProfile,
   mapSendEmailVerifyRequest,
   mapInitiateUISVerifyRequest,
   mapFudanUISVerifyStatusFromApi,

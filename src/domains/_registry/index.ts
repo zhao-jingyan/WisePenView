@@ -17,14 +17,16 @@
  * 假设你要新增一个 OrderService，需要依次完成：
  *
  * 1. 在 src/domains/Order/ 下创建：
- *    - index.type.ts：定义 IOrderService 接口及 *Request 类型
- *    - OrderServices.impl.ts：实现 IOrderService，内部调用真实 API
- * 2. 在 src/mocks/Order/ 下创建：
- *    - OrderServices.mock.ts：实现 IOrderService，返回假数据或 delay 模拟
- * 3. 在 `registry.types.ts` 中新增类型字段（第四步）
- * 4. 在 `registry.impl.ts` 与 `registry.mock.ts` 中分别绑定真实/Mock 实现（第五~六步）
- * 5. 在 `hooks.ts` 中完成第七步：export const useOrderService = ...
- * 6. 通过 `src/domains/index.ts` barrel 重新导出新增的 hook
+ *    - service/index.type.ts：定义 IOrderService 接口及 *Request 类型
+ *    - service/OrderServices.impl.ts：实现 IOrderService，内部调用真实 API
+ *    - mock/OrderServices.mock.ts：实现 IOrderService，返回假数据或 delay 模拟
+ *    - index.ts：导出领域公共类型、实体与枚举
+ * 2. 如需请求后端，补齐 apis/OrderApi.ts 与 apis/OrderApi.type.ts
+ * 3. 如需字段转换，补齐 mapper/OrderServices.map.ts
+ * 4. 在 `registry.types.ts` 中新增类型字段
+ * 5. 在 `registry.impl.ts` 与 `registry.mock.ts` 中分别绑定真实/Mock 实现
+ * 6. 在 `hooks.ts` 中导出 useOrderService
+ * 7. 通过 `src/domains/index.ts` barrel 重新导出新增的 hook
  */
 
 export {

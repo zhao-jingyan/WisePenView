@@ -5,14 +5,6 @@ import { LogOut, Pencil, Trash2 } from 'lucide-react';
 import IconText from '@/components/Common/IconText';
 import UserCapsule from '@/components/Common/UserCapsule';
 import TableDrive from '@/components/Drive/TableDrive';
-import { getGroupDisplayConfig } from '@/components/Group/GroupDisplayConfig';
-import {
-  DissolveGroupModal,
-  EditGroupInfoModal,
-  ExitGroupModal,
-} from '@/components/Group/GroupModals';
-import MemberList from '@/components/Group/MemberList';
-import OwnerGroupTokenTransfer from '@/components/Group/OwnerGroupTokenTransfer';
 import ComputeWallet from '@/components/Wallet/ComputeWallet';
 import type { ComputeWalletRef } from '@/components/Wallet/ComputeWallet/index.type';
 import { useGroupService } from '@/domains';
@@ -24,6 +16,10 @@ import type { TabsProps } from 'antd';
 import { Spin, Tabs } from 'antd';
 import { useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { getGroupDisplayConfig } from '../_components/GroupDisplayConfig';
+import { DissolveGroupModal, EditGroupInfoModal, ExitGroupModal } from '../_components/GroupModals';
+import MemberList from '../_components/MemberList';
+import OwnerGroupTokenTransfer from '../_components/OwnerGroupTokenTransfer';
 import layout from '../style.module.less';
 import page from './style.module.less';
 

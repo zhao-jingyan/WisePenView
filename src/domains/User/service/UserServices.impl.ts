@@ -1,11 +1,10 @@
-import type { User } from '@/domains/User';
+import type { User, UserAccountProfile } from '@/domains/User';
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import { UserApi } from '../apis/UserApi';
 import { UserServicesMap } from '../mapper/UserServices.map';
 import type {
   ConfirmEmailVerifyRequest,
   FudanUISVerifyStatusData,
-  GetUserInfoResponse,
   InitiateUISVerifyRequest,
   IUserService,
   SendEmailVerifyRequest,
@@ -15,8 +14,9 @@ import type {
 type CachedUserSafe = Pick<User, 'id' | 'username' | 'nickname' | 'avatar' | 'identityType'>;
 
 /** 全量拉取，为 Account 等页服务，不缓存 */
-const getFullUserInfo = async (): Promise<GetUserInfoResponse> => {
-  return UserApi.getUserInfo() as Promise<GetUserInfoResponse>;
+const getFullUserInfo = async (): Promise<UserAccountProfile> => {
+  const data = await UserApi.getUserInfo();
+  return UserServicesMap.mapAccountProfileFromApi(data);
 };
 
 const sendEmailVerify = async (params: SendEmailVerifyRequest): Promise<void> => {
@@ -56,7 +56,7 @@ export const createUserServices = (): IUserService => {
       return cachedUserInfo;
     }
     const data = await getFullUserInfo();
-    cachedUserInfo = UserServicesMap.mapUserSafeFromApi(data);
+    cachedUserInfo = UserServicesMap.mapUserSafeFromAccountProfile(data);
     return cachedUserInfo;
   };
 

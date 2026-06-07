@@ -1,5 +1,5 @@
+import { GroupMemberApi } from '@/domains/Group/apis/GroupApi';
 import type { GroupQuotaInfo, UserGroupQuota } from '@/domains/Wallet';
-import { GroupMemberApi } from '../apis/GroupApi';
 import { QuotaServicesMap } from '../mapper/QuotaServices.map';
 import type { IQuotaService, SetGroupQuotaRequest } from './index.type';
 

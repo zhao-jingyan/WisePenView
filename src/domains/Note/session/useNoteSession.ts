@@ -37,6 +37,11 @@ export function useNoteSession(resourceId: string) {
 
   const status = useSyncExternalStore(session.observer.subscribe, session.observer.getSnapshot);
 
+  /**
+   * 执行时机：resourceId 变化生成新的协同 session 后，连接 WebSocket/Yjs provider。
+   * 不可替代原因：provider、IndexedDB 持久化和 Y.Doc 都是外部资源，必须在挂载后建立并在卸载时释放。
+   * cleanup：断开 provider、销毁 IndexedDB persistence、observer 与 Y.Doc，避免同一笔记残留连接。
+   */
   useEffectForce(() => {
     session.provider.connect();
     return () => {

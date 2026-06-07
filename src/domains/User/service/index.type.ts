@@ -1,9 +1,10 @@
-import type { DegreeLevel, User, UserVerificationMode } from '@/domains/User';
+import type { User, UserAccountProfile } from '../entity/user';
+import type { DegreeLevel } from '../enum';
 
 /** UserService 接口：供依赖注入使用 */
 export interface IUserService {
   /** 全量拉取用户信息（为 Account 等页服务），不缓存 */
-  getFullUserInfo(): Promise<GetUserInfoResponse>;
+  getFullUserInfo(): Promise<UserAccountProfile>;
   /** 展示用精简用户信息，带缓存，供侧栏等展示 */
   getUserInfo(options?: { forceRefresh?: boolean }): Promise<User>;
   /** 更新用户信息（内部两次 PUT：userInfo + userProfile）；不拉 GET，需全量时由调用方自行 getFullUserInfo */
@@ -58,38 +59,4 @@ export interface UpdateUserInfoRequest {
   enrollmentYear?: string;
   degreeLevel?: DegreeLevel;
   academicTitle?: string;
-}
-
-/** 获取用户信息接口响应 data 中的 userInfo */
-export interface GetUserInfoResponseUserInfo {
-  nickname: string | null;
-  realName: string | null;
-  avatar: string | null;
-  identityType: number;
-  username: string;
-  campusNo: string;
-  email: string | null;
-  mobile: string | null;
-  verificationMode: UserVerificationMode | null;
-  status: number;
-}
-
-/** 获取用户信息接口响应 data 中的 userProfile */
-export interface GetUserInfoResponseUserProfile {
-  sex: number;
-  university: string | null;
-  college: string | null;
-  major: string | null;
-  className: string | null;
-  enrollmentYear: string | null;
-  degreeLevel: DegreeLevel | null;
-  academicTitle: string | null;
-}
-
-/** 获取用户信息接口的响应 data 类型；userId 归一化后映射为前端 User.id */
-export interface GetUserInfoResponse {
-  userId?: string | number;
-  userInfo: GetUserInfoResponseUserInfo;
-  userProfile: GetUserInfoResponseUserProfile;
-  readonlyFields: string[] | null;
 }

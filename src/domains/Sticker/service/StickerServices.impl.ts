@@ -1,5 +1,5 @@
 import type { IResourceService } from '@/domains/Resource';
-import { ResourceTagApi } from '../apis/ResourceApi';
+import { ResourceTagApi } from '@/domains/Resource/apis/ResourceApi';
 import { StickerServicesMap } from '../mapper/StickerServices.map';
 import type {
   AddStickerRequest,

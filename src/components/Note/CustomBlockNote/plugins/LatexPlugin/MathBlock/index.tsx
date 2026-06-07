@@ -65,6 +65,11 @@ type MathAiDiffResolvedView = {
 function MathFormulaPreview({ expression, className }: { expression: string; className: string }) {
   const mathRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * 执行时机：expression 变化后，把最新 LaTeX 渲染到当前块级预览 DOM。
+   * 不可替代原因：KaTeX 渲染需要命令式写入真实 DOM，不能仅靠 React JSX 表达。
+   * cleanup：renderKatexInto 会覆盖容器内容，无需额外释放订阅或计时器。
+   */
   useEffectForce(() => {
     const el = mathRef.current;
     if (!el) return;
@@ -225,7 +230,13 @@ function MathBlockView(props: MathBlockRenderProps) {
 
   useLatexPopoverAnchorSync(isEditing, shellRef, measurePopoverPosition, clearPopoverPos);
 
-  // TODO: 重构，不使用useEffect，使用更合适的语义以增加可读性，但是latexSupport有完全重构的可能，因此暂时保留
+  /**
+   * 执行时机：块属性 expression 变化且当前不在编辑态时，同步本地输入草稿。
+   * 不可替代原因：编辑态 value 是用户未提交草稿，非编辑态 value 又要跟随 BlockNote 块属性；二者边界由渲染后的 isEditing 决定。
+   * cleanup：只做本地 state 同步，不注册外部资源。
+   *
+   * TODO: latexSupport 后续整体重构时，优先改为更明确的草稿状态模型。
+   */
   useEffectForce(() => {
     if (isEditing) return;
     setValue(props.block.props.expression);
@@ -233,6 +244,11 @@ function MathBlockView(props: MathBlockRenderProps) {
 
   useFocusPopoverTextarea(isEditing, popoverPos, inputRef);
 
+  /**
+   * 执行时机：插件把 autoEdit 置为 true 后，消费该标记并打开块级公式编辑器。
+   * 不可替代原因：autoEdit 来自 BlockNote 插件写入的块属性，不是当前组件内的点击事件。
+   * cleanup：同步清除 autoEdit 标记，不额外持有订阅或计时器。
+   */
   useEffectForce(() => {
     if (readOnly) return;
     if (!props.block.props.autoEdit) return;

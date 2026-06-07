@@ -1,15 +1,15 @@
 import IconText from '@/components/Common/IconText';
-import FlatDrive from '@/components/Drive/FlatDrive';
 import { StickerManageModal } from '@/components/Drive/Modals';
 import TableDrive from '@/components/Drive/TableDrive';
-import type { UploadQueueTabRef } from '@/components/Drive/UploadQueueTab';
-import UploadQueueTab from '@/components/Drive/UploadQueueTab';
 import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
 import { Button } from '@heroui/react';
 import { Tabs } from 'antd';
 import { CloudUpload, Tags } from 'lucide-react';
 import { useRef, useState } from 'react';
 
+import FlatDrive from '../_components/FlatDrive';
+import type { UploadQueueTabRef } from '../_components/UploadQueueTab';
+import UploadQueueTab from '../_components/UploadQueueTab';
 import { UploadDocumentModal } from './UploadDocumentModal';
 import styles from './style.module.less';
 

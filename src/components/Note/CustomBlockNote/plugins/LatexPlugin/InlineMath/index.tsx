@@ -80,6 +80,11 @@ function InlineMathFormulaPreview({
 }) {
   const mathRef = useRef<HTMLSpanElement>(null);
 
+  /**
+   * 执行时机：expression 变化后，把最新 LaTeX 渲染到当前 span DOM。
+   * 不可替代原因：KaTeX 需要命令式写入真实 DOM，无法通过 React 派生状态完成。
+   * cleanup：renderKatexInto 会覆盖容器内容，无需额外释放订阅或计时器。
+   */
   useEffectForce(() => {
     const el = mathRef.current;
     if (!el) return;
@@ -344,7 +349,13 @@ function InlineMathView(
   const hasPendingAiDiff = viewState.hasDiff;
   const canEnterEdit = !readOnly && !hasPendingAiDiff && !isEditing;
 
-  // TODO: 重构，不使用useEffect，使用更合适的语义以增加可读性，但是latexSupport有完全重构的可能，因此暂时保留
+  /**
+   * 执行时机：外部 expression 变化且当前不在编辑态时，同步本地输入草稿。
+   * 不可替代原因：编辑态 value 是用户未提交草稿，非编辑态 value 又要跟随 BlockNote 节点属性；二者边界由渲染后的 isEditing 决定。
+   * cleanup：只做本地 state 同步，不注册外部资源。
+   *
+   * TODO: latexSupport 后续整体重构时，优先改为更明确的草稿状态模型。
+   */
   useEffectForce(() => {
     if (isEditing) return;
     setValue(expression);
@@ -352,6 +363,11 @@ function InlineMathView(
 
   const displayLatex = isEditing ? value : expression;
 
+  /**
+   * 执行时机：插件把 autoOpenEdit 置为 true 后，消费该标记并打开行内公式编辑器。
+   * 不可替代原因：autoOpenEdit 来自 BlockNote 插件写入的节点属性，不是当前组件内的点击事件。
+   * cleanup：同步清除 autoOpenEdit 标记，不额外持有订阅或计时器。
+   */
   useEffectForce(() => {
     if (readOnly) return;
     if (!autoOpenEdit) return;

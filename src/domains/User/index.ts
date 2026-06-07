@@ -1,4 +1,10 @@
-export type { User, UserDisplayBase } from './entity/user';
+export type {
+  User,
+  UserAccountInfo,
+  UserAccountProfile,
+  UserDisplayBase,
+  UserProfileInfo,
+} from './entity/user';
 export {
   DEGREE,
   EMAIL_SUFFIX,
@@ -12,7 +18,6 @@ export type { DegreeLevel, UserVerificationMode } from './enum';
 export type {
   ConfirmEmailVerifyRequest,
   FudanUISVerifyStatusData,
-  GetUserInfoResponse,
   IUserService,
   InitiateUISVerifyRequest,
   SendEmailVerifyRequest,

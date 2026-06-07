@@ -8,15 +8,11 @@ import EntryIcon from '@/components/Common/EntryIcon';
 import IconText from '@/components/Common/IconText';
 import CustomBlockNote from '@/components/Note/CustomBlockNote';
 import type { NoteBodyEditorHandle } from '@/components/Note/CustomBlockNote/index.type';
-import NoteInfoBar from '@/components/Note/NoteInfoBar';
 import NoteOutline from '@/components/Note/NoteOutline';
 import {
   NOTE_OUTLINE_TITLE_ID,
   type NoteOutlineItem,
 } from '@/components/Note/NoteOutline/index.type';
-import NotePermissionModal from '@/components/Note/NotePermissionModal';
-import NoteTitle from '@/components/Note/NoteTitle';
-import type { NoteTitleHandle } from '@/components/Note/NoteTitle/index.type';
 import ResourceInteractFooter from '@/components/Resource/ResourceInteractFooter';
 import ResourceViewerHeader from '@/components/Resource/ResourceViewerHeader';
 import rvhStyles from '@/components/Resource/ResourceViewerHeader/style.module.less';
@@ -29,6 +25,10 @@ import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useAiDiffDisplayStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, Dropdown, toast } from '@heroui/react';
+import NoteInfoBar from './_components/NoteInfoBar';
+import NotePermissionModal from './_components/NotePermissionModal';
+import NoteTitle from './_components/NoteTitle';
+import type { NoteTitleHandle } from './_components/NoteTitle/index.type';
 import styles from './style.module.less';
 
 interface NoteViewConnectedProps {

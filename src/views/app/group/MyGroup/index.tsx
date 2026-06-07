@@ -1,6 +1,4 @@
 import IconText from '@/components/Common/IconText';
-import GroupCard from '@/components/Group/GroupCard';
-import { CreateGroupModal, JoinGroupModal } from '@/components/Group/GroupModals';
 import { useGroupService } from '@/domains';
 import type { FetchGroupListRequest, Group } from '@/domains/Group';
 import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group';
@@ -10,6 +8,8 @@ import { Col, Empty, Row, Spin, Tabs } from 'antd';
 import { Plus, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import GroupCard from '../_components/GroupCard';
+import { CreateGroupModal, JoinGroupModal } from '../_components/GroupModals';
 import layout from '../style.module.less';
 import page from './style.module.less';
 

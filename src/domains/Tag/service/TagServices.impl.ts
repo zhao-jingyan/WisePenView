@@ -1,10 +1,10 @@
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import type { IResourceService } from '@/domains/Resource';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
+import { ResourceTagApi } from '@/domains/Resource/apis/ResourceApi';
 import type { TagListByTagResponse } from '@/domains/Tag';
 import { useTrashTagStore } from '@/store';
 import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
-import { ResourceTagApi } from '../apis/ResourceApi';
 import { TagServicesMap } from '../mapper/TagServices.map';
 import type {
   GetResByTagRequest,

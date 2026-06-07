@@ -1,14 +1,16 @@
 import type {
   FudanUISVerifyStatusData,
-  GetUserInfoResponse,
   IUserService,
   User,
+  UserAccountProfile,
 } from '@/domains/User';
+import type { GetUserInfoApiResponse } from '../apis/UserApi.type';
+import { UserServicesMap } from '../mapper/UserServices.map';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const fullUserInfo = mockdata as GetUserInfoResponse;
+const fullUserInfo = mockdata as GetUserInfoApiResponse;
 
 const getUserInfo = async (_options?: { forceRefresh?: boolean }): Promise<User> => {
   await delay(200);
@@ -22,9 +24,9 @@ const getUserInfo = async (_options?: { forceRefresh?: boolean }): Promise<User>
   };
 };
 
-const getFullUserInfo = async (): Promise<GetUserInfoResponse> => {
+const getFullUserInfo = async (): Promise<UserAccountProfile> => {
   await delay(200);
-  return fullUserInfo;
+  return UserServicesMap.mapAccountProfileFromApi(fullUserInfo);
 };
 
 const sendEmailVerify = async (): Promise<void> => {

@@ -2,9 +2,9 @@
  * 个人中心「余额与使用量」（左下角入口）：个人钱包 + 各小组配额放在同一 formSection，
  * 钱包使用 ComputeWallet surface="plain"，避免外层盒子与组件内 card 叠成双层页签感。
  */
-import QuotaByGroup from '@/components/Profile/QuotaByGroup';
 import ComputeWallet from '@/components/Wallet/ComputeWallet';
 import { WALLET_TARGET_TYPE } from '@/domains/Wallet';
+import QuotaByGroup from '../_components/QuotaByGroup';
 import layout from '../style.module.less';
 
 function Usage() {

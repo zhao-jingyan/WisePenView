@@ -1,25 +1,21 @@
-import { AccountForm, AccountHeader, AccountVerification } from '@/components/Account';
 import { useUserService } from '@/domains';
-import type { GetUserInfoResponse } from '@/domains/User';
+import type { UserAccountProfile } from '@/domains/User';
 import { IDENTITY } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Descriptions, Divider, Spin } from 'antd';
 import { useMemo, useState } from 'react';
+import { AccountForm, AccountHeader, AccountVerification } from '../_components/Account';
 import type { ProfileFieldKey } from '../profile.config';
 import { getProfileFieldConfig, PROFILE_FIELDS } from '../profile.config';
 import layout from '../style.module.less';
 
 function Account() {
   const userService = useUserService();
-  const [user, setUser] = useState<GetUserInfoResponse | null>(null);
+  const [user, setUser] = useState<UserAccountProfile | null>(null);
 
-  const handleUserInfoUpdated = (data: GetUserInfoResponse) => {
-    setUser(data);
-  };
-
-  const { loading } = useRequest(() => userService.getFullUserInfo(), {
+  const { loading, runAsync: reloadUserInfo } = useRequest(() => userService.getFullUserInfo(), {
     onSuccess: (data) => {
       setUser(data);
     },
@@ -43,10 +39,10 @@ function Account() {
         <h1 className={layout.pageTitle}>账号管理</h1>
         <span className={layout.pageSubtitle}>管理您的账号信息</span>
       </div>
-      <AccountVerification user={user} onUserInfoUpdated={handleUserInfoUpdated} />
+      <AccountVerification user={user} onUserInfoReload={reloadUserInfo} />
       <Spin spinning={loading}>
         <div className={layout.formSection}>
-          <AccountHeader user={user} onUserInfoUpdated={handleUserInfoUpdated} />
+          <AccountHeader user={user} onUserInfoReload={reloadUserInfo} />
 
           <Divider className={layout.sectionDivider} />
 
@@ -68,7 +64,7 @@ function Account() {
             fieldConfig={fieldConfig}
             visibleFields={visibleFields}
             readonlyFieldSet={readonlyFieldSet}
-            onUserInfoUpdated={handleUserInfoUpdated}
+            onUserInfoReload={reloadUserInfo}
           />
         </div>
       </Spin>
