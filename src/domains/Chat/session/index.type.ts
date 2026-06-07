@@ -22,6 +22,7 @@ interface ChatAttachmentRef {
 
 interface ChatResourceRef {
   resource_id: string;
+  resource_type?: string;
   enabled: boolean;
   context_mode?: string;
 }

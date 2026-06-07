@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export interface ActiveDocRef {
   resourceId: string;
   resourceName: string;
+  resourceType: string;
   enabled: boolean;
 }
 

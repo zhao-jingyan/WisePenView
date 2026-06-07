@@ -33,7 +33,12 @@ const buildRequestBody = ({
   model?: string;
   selected?: string;
   enableSelected?: boolean;
-  activeDocRefs?: { resourceId: string; resourceName: string; enabled: boolean }[];
+  activeDocRefs?: {
+    resourceId: string;
+    resourceName: string;
+    resourceType: string;
+    enabled: boolean;
+  }[];
   activeAttachments?: { attachmentId: string; filename: string; enabled: boolean }[];
   agentContext?: ChatAgentContext;
   allowedSkillIds?: string[];
@@ -55,6 +60,7 @@ const buildRequestBody = ({
     .filter((r) => r.enabled)
     .map((r) => ({
       resource_id: r.resourceId,
+      resource_type: r.resourceType,
       enabled: r.enabled,
     }));
 

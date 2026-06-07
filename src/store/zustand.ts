@@ -4,11 +4,7 @@
 
 export { clearAllZustandStores } from './clearAllStores';
 export { clearActiveDriveScopeStore, useActiveDriveScopeStore } from './useActiveDriveScopeStore';
-export {
-  clearAiDiffDisplayStore,
-  getAiDiffDisplayModeSnapshot,
-  useAiDiffDisplayStore,
-} from './useAiDiffDisplayStore';
+export { clearAiDiffDisplayStore, useAiDiffDisplayStore } from './useAiDiffDisplayStore';
 export { clearChatPanelStore, useChatPanelStore } from './useChatPanelStore';
 export {
   clearCurrentChatSessionStore,

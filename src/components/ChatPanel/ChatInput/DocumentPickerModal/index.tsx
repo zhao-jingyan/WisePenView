@@ -273,6 +273,7 @@ function DocumentPickerModal({ open, onClose }: DocumentPickerModalProps) {
       addDocRef({
         resourceId: driveNode.resourceId,
         resourceName: driveNode.title || driveNode.resourceId,
+        resourceType: driveNode.resourceType,
         enabled: true,
       });
     }
