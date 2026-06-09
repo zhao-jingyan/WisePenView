@@ -1,8 +1,26 @@
-import type { Model as BackendModel } from '@/domains/Chat';
-
 export interface ToolOption {
   toolId: string;
   label: string;
+}
+
+export interface ChatModelTag {
+  text: string;
+  type: string;
+}
+
+export interface ChatModel {
+  id: string;
+  name: string;
+  vendor: string;
+  provider: string;
+  ratio: number;
+  supportThinking: boolean;
+  tags: ChatModelTag[];
+  multiplier: string | null;
+  isDefault: boolean;
+  vision: boolean;
+  usageRank: number;
+  category: 'reasoning' | 'chat' | 'coding' | 'all-round';
 }
 
 export interface UploadAttachmentParams {
@@ -17,7 +35,7 @@ export interface UploadAttachmentResult {
 
 /** ChatService 接口 */
 export interface IChatService {
-  getModels(): Promise<ModelListResponse>;
+  getModels(): Promise<ChatModel[]>;
   createSession(params?: CreateSessionRequest): Promise<ChatSession>;
   renameSession(params: RenameSessionRequest): Promise<ChatSession>;
   deleteSession(params: DeleteSessionRequest): Promise<void>;
@@ -28,11 +46,6 @@ export interface IChatService {
 }
 
 /** `GET /chat/model/listAvailableModels` 的 data 字段结构 */
-export interface ModelListResponse {
-  system_models: BackendModel[];
-  user_models: BackendModel[];
-}
-
 /** 会话重命名请求参数（UI 侧使用 camelCase，Service 内部映射为接口字段） */
 export interface RenameSessionRequest {
   sessionId: string;

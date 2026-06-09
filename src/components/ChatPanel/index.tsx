@@ -5,7 +5,6 @@ import {
   buildAgentFromResourceItem,
   buildDefaultPersonalAgent,
   getPrimarySkillsForAgent,
-  mapApiModelsToFlatModels,
 } from '@/domains/Chat';
 import { useChatSession } from '@/domains/Chat/session/useChatSession';
 import type { SkillSummary } from '@/domains/Resource';
@@ -235,15 +234,14 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
   const { runAsync: runCreateSession } = useRequest(() => chatService.createSession(), {
     manual: true,
   });
-  const { data: modelListData } = useRequest(() => chatService.getModels());
+  const { data: models = [] } = useRequest(() => chatService.getModels());
 
   const modelMetaMap = useMemo<Record<string, ModelMeta>>(() => {
-    const models = mapApiModelsToFlatModels(modelListData);
     return models.reduce<Record<string, ModelMeta>>((acc, model) => {
       acc[model.id] = { provider: model.provider, name: model.name };
       return acc;
     }, {});
-  }, [modelListData]);
+  }, [models]);
 
   useUpdateEffect(() => {
     if (Object.keys(modelMetaMap).length === 0) return;

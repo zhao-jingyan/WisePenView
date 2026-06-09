@@ -51,9 +51,9 @@ const providerToVendor = (provider: string): string => {
 const getModels: IChatService['getModels'] = async () => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({
-        system_models: MOCK_MODELS.slice(0, 3).map((item: MockModelSeed, index: number) => ({
-          id: `mock-system-${index + 1}`,
+      const rawModels = [
+        ...MOCK_MODELS.slice(0, 3).map((item, i) => ({
+          id: `mock-system-${i + 1}`,
           scope: 'system',
           display_name: item.name,
           vendor: providerToVendor(item.provider),
@@ -65,8 +65,8 @@ const getModels: IChatService['getModels'] = async () => {
           support_streaming: true,
           is_active: true,
         })),
-        user_models: MOCK_MODELS.slice(3, 5).map((item: MockModelSeed, index: number) => ({
-          id: `mock-user-${index + 1}`,
+        ...MOCK_MODELS.slice(3, 5).map((item, i) => ({
+          id: `mock-user-${i + 1}`,
           scope: 'user',
           display_name: item.name,
           vendor: providerToVendor(item.provider),
@@ -78,7 +78,35 @@ const getModels: IChatService['getModels'] = async () => {
           support_streaming: true,
           is_active: true,
         })),
-      });
+      ];
+      resolve(
+        rawModels.map((item, index) => ({
+          id: String(item.id),
+          name: item.display_name,
+          vendor: item.vendor,
+          provider: providerToVendor(item.vendor).toLowerCase(),
+          ratio: item.billing_ratio,
+          supportThinking: item.support_thinking,
+          tags: [
+            ...(item.is_active && index === 0
+              ? ([{ text: 'Default', type: 'blue' }] as Array<{ text: string; type: string }>)
+              : []),
+            ...(item.support_thinking
+              ? ([{ text: 'Thinking', type: 'purple' }] as Array<{ text: string; type: string }>)
+              : []),
+          ],
+          multiplier: item.billing_ratio >= 1 ? `${item.billing_ratio}x 消耗` : null,
+          isDefault: item.is_active && index === 0,
+          vision: item.support_vision,
+          usageRank: index + 1,
+          category:
+            item.type === MODEL_TYPE.ADVANCED_MODEL
+              ? 'reasoning'
+              : item.type === MODEL_TYPE.STANDARD_MODEL
+                ? 'all-round'
+                : 'chat',
+        }))
+      );
     }, 200);
   });
 };

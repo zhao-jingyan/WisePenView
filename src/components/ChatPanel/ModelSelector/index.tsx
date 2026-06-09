@@ -9,7 +9,6 @@ import { Claude, DeepSeek, Doubao, Gemini, Grok, Meta, Mistral, OpenAI } from '@
 
 import IconText from '@/components/Common/IconText';
 import { useChatService } from '@/domains';
-import { mapApiModelsToFlatModels } from '@/domains/Chat';
 import { useChatModelPreferenceStore } from '@/store/useChatModelPreferenceStore';
 import type { Model } from '../index.type';
 
@@ -59,8 +58,7 @@ function ModelSelector({ value, onChange }: ModelSelectorProps) {
     (state) => state.setLastSelectedModelId
   );
   const chatService = useChatService();
-  const { data, loading } = useRequest(() => chatService.getModels());
-  const models = useMemo(() => mapApiModelsToFlatModels(data), [data]);
+  const { data: models = [], loading } = useRequest(() => chatService.getModels());
 
   // 初始化优先使用上次选择，不存在则回退默认模型。
   useUpdateEffect(() => {

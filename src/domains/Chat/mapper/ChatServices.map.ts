@@ -9,21 +9,61 @@ import type {
   RenameSessionApiRequest,
   RenameSessionApiResponse,
 } from '../apis/ChatApi.type';
+import { MODEL_TYPE } from '../enum/model';
 import type {
+  ChatModel,
   ChatSession,
   CreateSessionRequest,
   ListHistoryMessagesRequest,
   ListSessionsRequest,
   MessageResponse,
-  ModelListResponse,
   PageResult,
   RenameSessionRequest,
 } from '../service/index.type';
 
-const mapGetModelsFromApi = (data: ListModelsApiResponse): ModelListResponse => ({
-  system_models: data.system_models,
-  user_models: data.user_models,
-});
+const VENDOR_PROVIDER_MAP: Record<string, string> = {
+  openai: 'openai',
+  google: 'google',
+  anthropic: 'anthropic',
+  xai: 'grok',
+  deepseek: 'deepseek',
+  doubao: 'doubao',
+  meta: 'meta',
+  mistral: 'mistral',
+};
+
+const inferProvider = (vendor: string): string => {
+  const normalizedVendor = String(vendor ?? '')
+    .trim()
+    .toLowerCase();
+  return VENDOR_PROVIDER_MAP[normalizedVendor] ?? 'openai';
+};
+
+const mapGetModelsFromApi = (data: ListModelsApiResponse): ChatModel[] => {
+  const groupedModels = [...data.system_models, ...data.user_models];
+  return groupedModels.map((item, index) => ({
+    id: String(item.id),
+    name: item.display_name,
+    vendor: item.vendor,
+    provider: inferProvider(item.vendor),
+    ratio: item.billing_ratio,
+    supportThinking: item.support_thinking,
+    tags: [
+      ...(item.is_active && index === 0 ? [{ text: 'Default', type: 'blue' }] : []),
+      ...(item.support_thinking ? [{ text: 'Thinking', type: 'purple' }] : []),
+    ],
+    multiplier: item.billing_ratio >= 1 ? `${item.billing_ratio}x 消耗` : null,
+    isDefault: item.is_active && index === 0,
+    vision: item.support_vision,
+    usageRank: index + 1,
+    category:
+      item.type === MODEL_TYPE.ADVANCED_MODEL
+        ? 'reasoning'
+        : item.type === MODEL_TYPE.STANDARD_MODEL
+          ? 'all-round'
+          : 'chat',
+  }));
+};
 
 const mapCreateSessionRequest = (params?: CreateSessionRequest): CreateSessionApiRequest => {
   const title = params?.title;

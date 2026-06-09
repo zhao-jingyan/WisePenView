@@ -3,6 +3,7 @@ import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { ChatApi, ChatSessionApi } from '../apis/ChatApi';
 import { ChatServicesMap } from '../mapper/ChatServices.map';
 import type {
+  ChatModel,
   ChatSession,
   CreateSessionRequest,
   DeleteSessionRequest,
@@ -10,7 +11,6 @@ import type {
   ListHistoryMessagesRequest,
   ListSessionsRequest,
   MessageResponse,
-  ModelListResponse,
   PageResult,
   RenameSessionRequest,
   ToolOption,
@@ -18,7 +18,7 @@ import type {
   UploadAttachmentResult,
 } from './index.type';
 
-const getModels = async (): Promise<ModelListResponse> => {
+const getModels = async (): Promise<ChatModel[]> => {
   const data = await ChatApi.listModels();
   return ChatServicesMap.mapGetModelsFromApi(data);
 };

@@ -14,7 +14,6 @@ export type {
   CapabilityPickerSection,
   CapabilityToolOption,
 } from './mapper/capabilityPicker.mapper';
-export { mapApiModelsToFlatModels } from './mapper/model.mapper';
 export { buildAdvancedSkillTreeGroups, getPrimarySkillsForAgent } from './mapper/skillScope.mapper';
 export type { SkillScopeTreeGroup } from './mapper/skillScope.mapper';
 export type {
@@ -25,7 +24,6 @@ export type {
   ListHistoryMessagesRequest,
   ListSessionsRequest,
   MessageResponse,
-  ModelListResponse,
   PageResult,
   RenameSessionRequest,
   ToolOption,
