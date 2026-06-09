@@ -8,6 +8,7 @@ import type {
   ResourceItem,
   ResourceSortBy,
   ResourceSortDir,
+  SearchResourceType,
   SearchScope,
   TagQueryLogicMode,
 } from '@/domains/Resource';
@@ -54,10 +55,10 @@ export interface SearchQueryRequest {
   size: number;
 }
 
-/** 单条搜索命中项；resourceName/highlightContent 含 wp-highlight 包裹；resourceType 已小写化 */
+/** 单条搜索命中项；resourceName/highlightContent 含 wp-highlight 包裹；resourceType 已归一化为枚举值 */
 export interface SearchHitItem {
   resourceId: string;
-  resourceType: string;
+  resourceType: SearchResourceType;
   resourceName: string;
   highlightContent: string | null;
   updateTime: string;

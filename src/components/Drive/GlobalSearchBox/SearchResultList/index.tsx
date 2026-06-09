@@ -1,14 +1,19 @@
 import EntryIcon from '@/components/Common/EntryIcon';
-import type { SearchHitItem } from '@/domains/Resource';
+import { useResourceService } from '@/domains';
+import type { SearchHitItem, SearchResultPage } from '@/domains/Resource';
+import { groupSearchHits } from '@/domains/Resource';
 import { useNavigateResource } from '@/hooks/useNavigateResource';
-import { useKeyPress, useUpdateEffect } from 'ahooks';
+import { parseErrorMessage } from '@/utils/error';
+import { toast } from '@heroui/react';
+import { useInfiniteScroll, useKeyPress, useUpdateEffect } from 'ahooks';
 import { Empty, Spin } from 'antd';
 import clsx from 'clsx';
 import { useMemo, useRef, useState } from 'react';
-import { groupHits } from '../groupHits';
-import { useGlobalSearch } from '../useGlobalSearch';
 import type { SearchResultListProps } from './index.type';
 import styles from './style.module.less';
+
+/** 单页大小：与后端 `@Max(100)` 上限一致，20 是首屏滚动加载的舒适步长 */
+const PAGE_SIZE = 20;
 
 interface SearchHitRowProps {
   item: SearchHitItem;
@@ -46,13 +51,32 @@ function SearchHitRow({ item, active, flatIndex, onActivate, onOpen }: SearchHit
 function SearchResultList({ keyword, scope, onClose }: SearchResultListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const navigateResource = useNavigateResource();
-  const { data, loadingMore, noMore } = useGlobalSearch({
-    keyword,
-    scope,
-    target: listRef,
-  });
+  const resourceService = useResourceService();
+  const trimmed = keyword.trim();
 
-  const groups = useMemo(() => groupHits(data?.list ?? []), [data?.list]);
+  // ahooks useInfiniteScroll 承载分页/滚动监听/竞态拦截；keyword/scope 变化触发 reloadDeps 回 page 1
+  const { data, loadingMore, noMore } = useInfiniteScroll<SearchResultPage>(
+    async (current) => {
+      const nextPage = current ? Math.floor(current.list.length / PAGE_SIZE) + 1 : 1;
+      return resourceService.globalSearch({
+        keyword: trimmed,
+        scope,
+        page: nextPage,
+        size: PAGE_SIZE,
+      });
+    },
+    {
+      target: listRef,
+      isNoMore: (d) => !!d && d.page >= d.totalPage,
+      reloadDeps: [trimmed, scope],
+      manual: trimmed.length === 0,
+      onError: (err) => {
+        toast.danger(parseErrorMessage(err));
+      },
+    }
+  );
+
+  const groups = useMemo(() => groupSearchHits(data?.list ?? []), [data?.list]);
   const flatItems = useMemo(() => groups.flatMap((g) => g.items), [groups]);
   // 每组在扁平列表里的起始下标，键盘导航用；规避 indexOf 的 O(N²)
   const groupStarts = useMemo(() => {

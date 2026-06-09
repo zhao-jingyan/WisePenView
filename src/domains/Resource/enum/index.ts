@@ -34,6 +34,19 @@ export const SEARCH_SCOPE = createEnum([
   { value: 'NOTE', key: 'NOTE', label: '笔记' },
 ] as const);
 
+/** 全文搜索可命中的资源细分类型：仅文档类 + 笔记（Skill/Agent 属 AI 资产，不进搜索）；小写值对齐后端 extension */
+export const SEARCH_RESOURCE_TYPE = createEnum([
+  { value: 'note', key: 'NOTE', label: 'Note' },
+  { value: 'pdf', key: 'PDF', label: 'PDF' },
+  { value: 'doc', key: 'DOC', label: 'DOC' },
+  { value: 'docx', key: 'DOCX', label: 'DOCX' },
+  { value: 'ppt', key: 'PPT', label: 'PPT' },
+  { value: 'pptx', key: 'PPTX', label: 'PPTX' },
+  { value: 'xls', key: 'XLS', label: 'XLS' },
+  { value: 'xlsx', key: 'XLSX', label: 'XLSX' },
+  { value: 'unknown', key: 'UNKNOWN', label: '其他' },
+] as const);
+
 /** 资源访问权限（与后端 ResourceAction 对齐） */
 export const RESOURCE_ACTION = createEnum([
   { value: 1, key: 'DISCOVER', label: '列表可见' },
@@ -45,6 +58,15 @@ export const RESOURCE_ACTION = createEnum([
 
 export type TagQueryLogicMode = EnumValue<typeof TAG_QUERY_LOGIC_MODE>;
 export type SearchScope = EnumValue<typeof SEARCH_SCOPE>;
+export type SearchResourceType = EnumValue<typeof SEARCH_RESOURCE_TYPE>;
+
+/** 后端 resourceType 大小写不敏感，统一归一化为小写枚举值，未知归 'unknown' */
+export const normalizeSearchResourceType = (raw: string): SearchResourceType => {
+  const lower = raw.trim().toLowerCase();
+  return lower in SEARCH_RESOURCE_TYPE.configs
+    ? (lower as SearchResourceType)
+    : SEARCH_RESOURCE_TYPE.UNKNOWN;
+};
 
 export type ResourceSortBy = EnumValue<typeof RESOURCE_SORT_BY>;
 export type ResourceSortDir = EnumValue<typeof RESOURCE_SORT_DIR>;

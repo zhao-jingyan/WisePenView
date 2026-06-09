@@ -6,6 +6,7 @@ export {
   RESOURCE_SORT_BY,
   RESOURCE_SORT_DIR,
   RESOURCE_TYPE,
+  SEARCH_RESOURCE_TYPE,
   SEARCH_SCOPE,
   TAG_QUERY_LOGIC_MODE,
   actionsToPermissionCode,
@@ -16,6 +17,7 @@ export {
   isNoteConfigurableResourceAction,
   maskNoteConfigurableResourceActions,
   normalizeResourceActions,
+  normalizeSearchResourceType,
   permissionCodeToActions,
   resourceActionsInclude,
   resourceActionsToApiKeys,
@@ -25,9 +27,12 @@ export type {
   ResourceActionKey,
   ResourceSortBy,
   ResourceSortDir,
+  SearchResourceType,
   SearchScope,
   TagQueryLogicMode,
 } from './enum';
+export { groupSearchHits } from './service/groupSearchHits';
+export type { SearchHitGroup } from './service/groupSearchHits';
 export type {
   GetGroupResourceRequest,
   GetUserResourcesRequest,

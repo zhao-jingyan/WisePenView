@@ -1,12 +1,17 @@
 /** 全文搜索 mock 语料 + 查询模拟，对齐后端 SearchQueryServiceImpl */
-import type { SearchHitItem, SearchQueryRequest, SearchResultPage } from '@/domains/Resource';
+import type {
+  SearchHitItem,
+  SearchQueryRequest,
+  SearchResourceType,
+  SearchResultPage,
+} from '@/domains/Resource';
 import { SEARCH_SCOPE } from '@/domains/Resource';
 
 /** 一篇可被搜索的 mock 资源；content 仅 mock 内部用，后端不返回 */
 interface SearchCorpusItem {
   resourceId: string;
   /** 小写扩展名，与后端 ResourceType 序列化值一致：pdf/doc/docx/ppt/pptx/xls/xlsx/note */
-  resourceType: string;
+  resourceType: SearchResourceType;
   resourceName: string;
   content: string;
   updateTime: string;

@@ -6,7 +6,12 @@ import type {
   ListResourceItemsApiRequest,
   ResourceListPageApiResponse,
 } from '../apis/ResourceApi.type';
-import { resourceActionsToApiKeys, TAG_QUERY_LOGIC_MODE, type ResourceActionKey } from '../enum';
+import {
+  normalizeSearchResourceType,
+  resourceActionsToApiKeys,
+  TAG_QUERY_LOGIC_MODE,
+  type ResourceActionKey,
+} from '../enum';
 import type {
   GetUserResourcesRequest,
   ResourceListPage,
@@ -165,10 +170,10 @@ const mapInteractStatsFromApi = (resourceInfo: ResourceItem): ResourceInteractSt
   };
 };
 
-// 小写化让 'NOTE' 对齐 RESOURCE_TYPE.NOTE='note'，下游 === 比较生效
+// 枚举归一化大小写，下游 === 比较与分组 label 生效
 const mapSearchHitFromApi = (raw: GlobalSearchApiResponse['list'][number]): SearchHitItem => ({
   ...raw,
-  resourceType: raw.resourceType.toLowerCase(),
+  resourceType: normalizeSearchResourceType(raw.resourceType),
 });
 
 const mapSearchResultPageFromApi = (data: GlobalSearchApiResponse): SearchResultPage => ({
