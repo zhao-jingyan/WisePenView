@@ -17,7 +17,11 @@ export type {
 export { buildAdvancedSkillTreeGroups, getPrimarySkillsForAgent } from './mapper/skillScope.mapper';
 export type { SkillScopeTreeGroup } from './mapper/skillScope.mapper';
 export type {
+  ChatModel,
+  ChatModelTag,
+  ChatServiceDeps,
   ChatSession,
+  ChatWorkspace,
   CreateSessionRequest,
   DeleteSessionRequest,
   IChatService,

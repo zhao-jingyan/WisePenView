@@ -1,3 +1,7 @@
+import type { Group, IGroupService } from '@/domains/Group';
+import type { IResourceService, SkillSummary } from '@/domains/Resource';
+import type { ChatAgentOption } from '@/store';
+
 export interface ToolOption {
   toolId: string;
   label: string;
@@ -33,9 +37,22 @@ export interface UploadAttachmentResult {
   filename?: string;
 }
 
+export interface ChatServiceDeps {
+  groupService: IGroupService;
+  resourceService: IResourceService;
+}
+
+export interface ChatWorkspace {
+  groups: Group[];
+  skills: SkillSummary[];
+  personalAgents: ChatAgentOption[];
+  groupAgents: ChatAgentOption[];
+}
+
 /** ChatService 接口 */
 export interface IChatService {
   getModels(): Promise<ChatModel[]>;
+  getWorkspace(): Promise<ChatWorkspace>;
   createSession(params?: CreateSessionRequest): Promise<ChatSession>;
   renameSession(params: RenameSessionRequest): Promise<ChatSession>;
   deleteSession(params: DeleteSessionRequest): Promise<void>;

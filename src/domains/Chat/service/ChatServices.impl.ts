@@ -1,10 +1,16 @@
+import type { Group } from '@/domains/Group';
+import type { ResourceItem } from '@/domains/Resource';
 import { useCurrentChatSessionStore, useNewChatSessionStore, useNoteSelectionStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { ChatApi, ChatSessionApi } from '../apis/ChatApi';
+import { buildAgentFromResourceItem } from '../mapper/agent.mapper';
 import { ChatServicesMap } from '../mapper/ChatServices.map';
+import { mapResourceItemToSkillSummary } from '../mapper/workspace.mapper';
 import type {
   ChatModel,
+  ChatServiceDeps,
   ChatSession,
+  ChatWorkspace,
   CreateSessionRequest,
   DeleteSessionRequest,
   IChatService,
@@ -18,9 +24,121 @@ import type {
   UploadAttachmentResult,
 } from './index.type';
 
+interface GroupResourceBatch {
+  group: Group;
+  list: ResourceItem[];
+}
+
 const getModels = async (): Promise<ChatModel[]> => {
   const data = await ChatApi.listModels();
   return ChatServicesMap.mapGetModelsFromApi(data);
+};
+
+const fetchAllGroups = async (deps: ChatServiceDeps): Promise<Group[]> => {
+  const [joinedData, managedData] = await Promise.all([
+    deps.groupService.fetchGroupList({ groupRoleFilter: 'JOINED', page: 1, size: 100 }),
+    deps.groupService.fetchGroupList({ groupRoleFilter: 'MANAGED', page: 1, size: 100 }),
+  ]);
+
+  const seenGroupIds = new Set<string>();
+  return [...(joinedData?.groups ?? []), ...(managedData?.groups ?? [])].filter((group) => {
+    if (seenGroupIds.has(group.groupId)) return false;
+    seenGroupIds.add(group.groupId);
+    return true;
+  });
+};
+
+const fetchAllSkills = async (
+  deps: ChatServiceDeps,
+  groups: Group[]
+): Promise<ChatWorkspace['skills']> => {
+  const requests = [
+    deps.resourceService.getUserResources({
+      page: 1,
+      size: 200,
+      sortBy: 'NAME',
+      sortDir: 'ASC',
+      resourceType: 'SKILL',
+    }),
+    ...groups.map((group) =>
+      deps.resourceService.getGroupResources({
+        groupId: group.groupId,
+        page: 1,
+        size: 200,
+        sortBy: 'NAME',
+        sortDir: 'ASC',
+        resourceType: 'SKILL',
+      })
+    ),
+  ];
+
+  const results = await Promise.all(requests);
+  const [personalResult, ...groupResults] = results;
+
+  return [
+    ...(personalResult?.list ?? []).map((item) => mapResourceItemToSkillSummary(item)),
+    ...groups.flatMap((group, i) =>
+      (groupResults[i]?.list ?? []).map((item) =>
+        mapResourceItemToSkillSummary(item, { groupId: group.groupId, groupName: group.groupName })
+      )
+    ),
+  ];
+};
+
+const fetchAllAgents = async (
+  deps: ChatServiceDeps,
+  groups: Group[]
+): Promise<Pick<ChatWorkspace, 'personalAgents' | 'groupAgents'>> => {
+  const requests: Array<Promise<ResourceItem[] | GroupResourceBatch>> = [
+    deps.resourceService
+      .getUserResources({
+        page: 1,
+        size: 200,
+        sortBy: 'NAME',
+        sortDir: 'ASC',
+        resourceType: 'AGENT',
+      })
+      .then((res) => res.list),
+    ...groups.map((group) =>
+      deps.resourceService
+        .getGroupResources({
+          groupId: group.groupId,
+          page: 1,
+          size: 200,
+          sortBy: 'NAME',
+          sortDir: 'ASC',
+          resourceType: 'AGENT',
+        })
+        .then((res): GroupResourceBatch => ({ list: res.list, group }))
+    ),
+  ];
+
+  const results = await Promise.all(requests);
+  const [personalList, ...groupBatches] = results;
+
+  const personalAgents = ((personalList as ResourceItem[]) ?? []).map((item) =>
+    buildAgentFromResourceItem(item)
+  );
+
+  const groupAgents = (groupBatches as GroupResourceBatch[]).flatMap((batch) =>
+    (batch?.list ?? []).map((item) =>
+      buildAgentFromResourceItem(item, {
+        groupId: batch.group.groupId,
+        groupName: batch.group.groupName,
+      })
+    )
+  );
+
+  return { personalAgents, groupAgents };
+};
+
+const getWorkspace = async (deps: ChatServiceDeps): Promise<ChatWorkspace> => {
+  const groups = await fetchAllGroups(deps);
+  const [skills, agentData] = await Promise.all([
+    fetchAllSkills(deps, groups),
+    fetchAllAgents(deps, groups),
+  ]);
+  return { groups, skills, ...agentData };
 };
 
 const createSession = async (params?: CreateSessionRequest): Promise<ChatSession> => {
@@ -80,8 +198,10 @@ const uploadAttachment = async ({
   };
 };
 
-export const createChatServices = (): IChatService => ({
+export const createChatServices = (deps?: ChatServiceDeps): IChatService => ({
   getModels,
+  getWorkspace: () =>
+    deps ? getWorkspace(deps) : Promise.reject(createClientError(FRONTEND_CLIENT_ERROR.VALIDATION)),
   createSession,
   renameSession,
   deleteSession,

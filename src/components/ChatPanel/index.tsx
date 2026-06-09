@@ -1,13 +1,11 @@
 import type { ChatPanelProps, Message, Model } from '@/components/ChatPanel/index.type';
-import { useChatService, useGroupService, useResourceService } from '@/domains';
+import { useChatService } from '@/domains';
 import {
   buildAdvancedSkillTreeGroups,
-  buildAgentFromResourceItem,
   buildDefaultPersonalAgent,
   getPrimarySkillsForAgent,
 } from '@/domains/Chat';
 import { useChatSession } from '@/domains/Chat/session/useChatSession';
-import type { SkillSummary } from '@/domains/Resource';
 import {
   clearChatCapabilityStore,
   clearChatPageStore,
@@ -47,8 +45,6 @@ const DEFAULT_PERSONAL_AGENT = buildDefaultPersonalAgent();
 function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) {
   const navigate = useNavigate();
   const chatService = useChatService();
-  const groupService = useGroupService();
-  const resourceService = useResourceService();
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
   const chatPanelDraftOpen = useChatPanelStore((state) => state.chatPanelDraftOpen);
   const setChatPanelDraftOpen = useChatPanelStore((state) => state.setChatPanelDraftOpen);
@@ -81,120 +77,15 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
   const [historyTotalPage, setHistoryTotalPage] = useState(1);
   const [loadingMoreHistory, setLoadingMoreHistory] = useState(false);
 
-  const { data: chatGroupData, loading: loadingChatGroups } = useRequest(
-    async () => {
-      const [joinedData, managedData] = await Promise.all([
-        groupService.fetchGroupList({ groupRoleFilter: 'JOINED', page: 1, size: 100 }),
-        groupService.fetchGroupList({ groupRoleFilter: 'MANAGED', page: 1, size: 100 }),
-      ]);
-      const seenGroupIds = new Set<string>();
-      const groups = [...(joinedData?.groups ?? []), ...(managedData?.groups ?? [])].filter(
-        (group) => {
-          if (seenGroupIds.has(group.groupId)) return false;
-          seenGroupIds.add(group.groupId);
-          return true;
-        }
-      );
-      return { groups, total: groups.length };
-    },
+  const { data: workspace, loading: loadingWorkspace } = useRequest(
+    () => chatService.getWorkspace(),
     { refreshDeps: [] }
   );
-  const { data: skillListData } = useRequest(
-    async () => {
-      const groups = chatGroupData?.groups ?? [];
-      const requests = [
-        resourceService.getUserResources({
-          page: 1,
-          size: 200,
-          sortBy: 'NAME' as const,
-          sortDir: 'ASC' as const,
-          resourceType: 'SKILL',
-        }),
-        ...groups.map((group) =>
-          resourceService.getGroupResources({
-            groupId: group.groupId,
-            page: 1,
-            size: 200,
-            sortBy: 'NAME' as const,
-            sortDir: 'ASC' as const,
-            resourceType: 'SKILL',
-          })
-        ),
-      ];
-      const results = await Promise.all(requests);
-      const skills: SkillSummary[] = [];
-      const [personalResult, ...groupResults] = results;
-      personalResult.list.forEach((item) => {
-        skills.push({
-          skillId: item.resourceId,
-          displayName: item.resourceName,
-          description: '',
-          scopeType: 'PERSONAL',
-        });
-      });
-      groups.forEach((group, i) => {
-        groupResults[i]?.list.forEach((item) => {
-          skills.push({
-            skillId: item.resourceId,
-            displayName: item.resourceName,
-            description: '',
-            scopeType: 'GROUP',
-            groupId: group.groupId,
-            groupName: group.groupName,
-          });
-        });
-      });
-      return { list: skills, total: skills.length, page: 1, size: skills.length, total_page: 1 };
-    },
-    { refreshDeps: [chatGroupData] }
-  );
-
-  const { data: personalAgentData, loading: loadingPersonalAgents } = useRequest(
-    () =>
-      resourceService.getUserResources({
-        page: 1,
-        size: 200,
-        sortBy: 'NAME',
-        sortDir: 'ASC',
-        resourceType: 'AGENT',
-      }),
-    { refreshDeps: [] }
-  );
-  const personalAgentOptions = (personalAgentData?.list ?? []).map((item) =>
-    buildAgentFromResourceItem(item)
-  );
-  const { data: groupAgentData, loading: loadingGroupAgents } = useRequest(
-    async () => {
-      const groups = chatGroupData?.groups ?? [];
-      if (groups.length === 0) return [];
-      const results = await Promise.all(
-        groups.map((group) =>
-          resourceService
-            .getGroupResources({
-              groupId: group.groupId,
-              page: 1,
-              size: 200,
-              sortBy: 'NAME',
-              sortDir: 'ASC',
-              resourceType: 'AGENT',
-            })
-            .then((res) => ({ list: res.list, group }))
-        )
-      );
-      return results.flatMap(({ list, group }) =>
-        list.map((item) =>
-          buildAgentFromResourceItem(item, {
-            groupId: group.groupId,
-            groupName: group.groupName,
-          })
-        )
-      );
-    },
-    { refreshDeps: [chatGroupData?.groups] }
-  );
-  const groupAgentOptions = groupAgentData ?? [];
+  const groups = workspace?.groups ?? [];
+  const personalAgentOptions = workspace?.personalAgents ?? [];
+  const groupAgentOptions = workspace?.groupAgents ?? [];
   const agentOptions = [DEFAULT_PERSONAL_AGENT, ...personalAgentOptions, ...groupAgentOptions];
-  const agentOptionsLoaded = !loadingChatGroups && !loadingPersonalAgents && !loadingGroupAgents;
+  const agentOptionsLoaded = !loadingWorkspace;
   const selectedAgent = (() => {
     const storedAgent = currentSessionId ? sessionAgentBySessionId[currentSessionId] : draftAgent;
     if (!storedAgent) return DEFAULT_PERSONAL_AGENT;
@@ -206,11 +97,11 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
     return agentOptionsLoaded ? DEFAULT_PERSONAL_AGENT : storedAgent;
   })();
 
-  const allSkills = skillListData?.list ?? [];
+  const allSkills = workspace?.skills ?? [];
   const primarySkills = getPrimarySkillsForAgent(allSkills, selectedAgent);
   const advancedSkillGroups = buildAdvancedSkillTreeGroups(
     allSkills,
-    chatGroupData?.groups ?? [],
+    groups,
     selectedAgent,
     primarySkills
   );

@@ -10,6 +10,7 @@ import type {
   UploadAttachmentResult,
 } from '@/domains/Chat';
 import { MODEL_TYPE } from '@/domains/Chat';
+import type { Group } from '@/domains/Group';
 
 type MockModelSeed = {
   name: string;
@@ -265,6 +266,118 @@ const listHistoryMessages: IChatService['listHistoryMessages'] = async (
   };
 };
 
+const getWorkspace: IChatService['getWorkspace'] = async () => {
+  return {
+    groups: [
+      {
+        groupId: '1',
+        groupName: '示例小组',
+        groupType: 2,
+        groupDesc: '',
+        groupCoverUrl: '',
+        memberCount: 5,
+        ownerId: '1',
+        createTime: '',
+        inviteCode: '',
+        tokenUsed: 0,
+        tokenBalance: 0,
+      },
+      {
+        groupId: '2',
+        groupName: '前端开发组',
+        groupType: 2,
+        groupDesc: '',
+        groupCoverUrl: '',
+        memberCount: 12,
+        ownerId: '1',
+        createTime: '',
+        inviteCode: '',
+        tokenUsed: 0,
+        tokenBalance: 0,
+      },
+    ] as Group[],
+    skills: [
+      {
+        skillId: 'skill-personal-translation',
+        displayName: '翻译助手',
+        description: '',
+        scopeType: 'PERSONAL' as const,
+      },
+      {
+        skillId: 'skill-personal-summary',
+        displayName: '文档总结',
+        description: '',
+        scopeType: 'PERSONAL' as const,
+      },
+      {
+        skillId: 'skill-personal-math',
+        displayName: '数学计算',
+        description: '',
+        scopeType: 'PERSONAL' as const,
+      },
+      {
+        skillId: 'skill-group-1-weekly',
+        displayName: '团队周报生成',
+        description: '',
+        scopeType: 'GROUP' as const,
+        groupId: '1',
+        groupName: '示例小组',
+      },
+      {
+        skillId: 'skill-group-1-tracker',
+        displayName: '项目进度追踪',
+        description: '',
+        scopeType: 'GROUP' as const,
+        groupId: '1',
+        groupName: '示例小组',
+      },
+      {
+        skillId: 'skill-group-2-component',
+        displayName: '组件生成器',
+        description: '',
+        scopeType: 'GROUP' as const,
+        groupId: '2',
+        groupName: '前端开发组',
+      },
+      {
+        skillId: 'skill-group-2-lint',
+        displayName: '样式检查',
+        description: '',
+        scopeType: 'GROUP' as const,
+        groupId: '2',
+        groupName: '前端开发组',
+      },
+    ],
+    personalAgents: [
+      {
+        agentId: 'agent-custom-translation',
+        agentType: 'PERSONAL' as const,
+        label: '翻译助手Agent',
+        isDefault: false,
+        defaultSkillIds: ['skill-personal-translation', 'skill-personal-codereview'],
+      },
+      {
+        agentId: 'agent-custom-writing',
+        agentType: 'PERSONAL' as const,
+        label: '写作Agent',
+        isDefault: false,
+        defaultSkillIds: ['skill-personal-summary'],
+      },
+    ],
+    groupAgents: [
+      {
+        agentId: 'agent-group-1-design',
+        agentType: 'GROUP' as const,
+        label: '设计评审Agent',
+        groupId: '1',
+        groupName: '示例小组',
+        isDefault: false,
+        defaultSkillIds: ['skill-group-1-weekly'],
+      },
+    ],
+  };
+};
+
 const getTools = async (): Promise<ToolOption[]> => {
   return [
     { toolId: 'search_historical_messages', label: 'Search History' },
@@ -285,6 +398,7 @@ const uploadAttachment = async ({
   });
 };
 export const ChatServicesMock: IChatService = {
+  getWorkspace,
   getModels,
   createSession,
   renameSession,
