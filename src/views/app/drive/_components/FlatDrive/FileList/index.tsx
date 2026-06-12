@@ -117,7 +117,7 @@ const buildColumns = (props: ColumnBuildProps): DataTableColumn<ResourceTableRow
     id: 'action',
     label: '',
     width: 'sm',
-    align: 'right',
+    align: 'end',
     renderCell: (record) => {
       return (
         <Dropdown

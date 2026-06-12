@@ -1,7 +1,13 @@
 import { Button, Popover } from '@heroui/react';
+import type { ReactElement } from 'react';
 import { cloneElement, useState } from 'react';
 import type { ConfirmActionProps } from './index.type';
 import styles from './style.module.less';
+
+interface ConfirmActionChildProps {
+  disabled?: boolean;
+  onClick?: (event: unknown) => void;
+}
 
 function ConfirmAction({
   title,
@@ -13,11 +19,12 @@ function ConfirmAction({
   onConfirm,
 }: ConfirmActionProps) {
   const [open, setOpen] = useState(false);
+  const child = children as ReactElement<ConfirmActionChildProps>;
 
-  const trigger = cloneElement(children, {
-    disabled: isDisabled || isLoading || children.props.disabled,
+  const trigger = cloneElement(child, {
+    disabled: isDisabled || isLoading || child.props.disabled,
     onClick: (event: unknown) => {
-      children.props.onClick?.(event);
+      child.props.onClick?.(event);
       if (!isDisabled && !isLoading) {
         setOpen(true);
       }

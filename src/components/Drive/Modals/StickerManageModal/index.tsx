@@ -161,7 +161,7 @@ function StickerManageModal({ isOpen, onOpenChange, onSuccess }: StickerManageMo
                       <Chip
                         key={sticker.tagId}
                         size="sm"
-                        variant="outline"
+                        variant="tertiary"
                         className={clsx(
                           styles.stickerTag,
                           selectedSticker?.tagId === sticker.tagId && styles.stickerTagSelected

@@ -12,7 +12,7 @@ import { useMemberEditGuard } from './useMemberEditGuard';
 const GROUP_MEMBER_TOKEN_LIMIT_MAX = 100_000_000;
 
 interface QuotaInputProps {
-  value?: number;
+  value?: number | null;
   onChange?: (value: number | null) => void;
   min?: number;
   max?: number;

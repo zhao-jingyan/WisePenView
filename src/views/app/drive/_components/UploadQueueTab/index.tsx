@@ -187,7 +187,7 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
         id: 'action',
         label: '',
         width: 'md',
-        align: 'right',
+        align: 'end',
         renderCell: (row) => {
           const status = row.documentStatus.status;
           const hasDocumentId = row.documentId != null && row.documentId !== '';
