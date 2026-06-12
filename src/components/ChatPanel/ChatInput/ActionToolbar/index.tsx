@@ -20,7 +20,7 @@ function ActionToolbar({
   return (
     <div className={styles.actionToolbar}>
       <div className={styles.toolbarLeft}>
-        <Popover isOpen={contentPickOpen} onOpenChange={onContentPickOpenChange} placement="top">
+        <Popover isOpen={contentPickOpen} onOpenChange={onContentPickOpenChange}>
           <Popover.Trigger>
             <Button
               variant="ghost"
@@ -32,12 +32,12 @@ function ActionToolbar({
               <Plus size={18} />
             </Button>
           </Popover.Trigger>
-          <Popover.Content className={styles.toolbarPopover}>
+          <Popover.Content className={styles.toolbarPopover} placement="top">
             <Popover.Dialog>{contentPickDropdownContent}</Popover.Dialog>
           </Popover.Content>
         </Popover>
 
-        <Popover isOpen={capabilityOpen} onOpenChange={onCapabilityOpenChange} placement="top">
+        <Popover isOpen={capabilityOpen} onOpenChange={onCapabilityOpenChange}>
           <Popover.Trigger>
             <div className={styles.capabilityTriggerWrap}>
               {capabilityCount > 0 ? (
@@ -49,7 +49,7 @@ function ActionToolbar({
               </Button>
             </div>
           </Popover.Trigger>
-          <Popover.Content className={styles.toolbarPopover}>
+          <Popover.Content className={styles.toolbarPopover} placement="top">
             <Popover.Dialog>{capabilityDropdownContent}</Popover.Dialog>
           </Popover.Content>
         </Popover>

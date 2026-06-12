@@ -234,7 +234,7 @@ function ModelSelector({ value, onChange }: ModelSelectorProps) {
   );
 
   return (
-    <Popover isOpen={open} onOpenChange={setOpen} placement="bottom">
+    <Popover isOpen={open} onOpenChange={setOpen}>
       <Popover.Trigger>
         <button type="button" className={styles.trigger}>
           {/* 如果正在加载，显示 Loading 图标或占位符 */}
@@ -255,7 +255,7 @@ function ModelSelector({ value, onChange }: ModelSelectorProps) {
           <IconText icon={<ChevronDown />} iconSize={10} aria-hidden />
         </button>
       </Popover.Trigger>
-      <Popover.Content className={styles.popoverBody}>
+      <Popover.Content className={styles.popoverBody} placement="bottom">
         <Popover.Dialog>{content}</Popover.Dialog>
       </Popover.Content>
     </Popover>
