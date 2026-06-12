@@ -65,4 +65,5 @@ export type {
   FolderTableRow,
   FolderTableRowAction,
   FolderTableRowContext,
+  FolderTableRowProps,
 } from './FolderTable/index.type';

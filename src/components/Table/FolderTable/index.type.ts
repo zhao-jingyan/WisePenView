@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from 'react';
+import type { DragEventHandler, ReactNode } from 'react';
 import type { FolderColumnWidth } from '../shared/TableBase/columnWidth';
 import type { TableColumnBase, TableLoadMore } from '../shared/TableBase/index.type';
 import type { TableRowAction } from '../shared/TableRowActions/index.type';
@@ -35,6 +35,17 @@ export interface FolderTableRowContext<T extends FolderTableRow> {
   depth: number;
 }
 
+export interface FolderTableRowProps {
+  className?: string;
+  draggable?: boolean;
+  'aria-busy'?: boolean;
+  onDragStart?: DragEventHandler<HTMLElement>;
+  onDragEnd?: DragEventHandler<HTMLElement>;
+  onDragOver?: DragEventHandler<HTMLElement>;
+  onDragLeave?: DragEventHandler<HTMLElement>;
+  onDrop?: DragEventHandler<HTMLElement>;
+}
+
 export interface FolderTableColumn<T extends FolderTableRow> extends Omit<
   TableColumnBase<T, FolderTableRowContext<T>>,
   'renderCell' | 'width'
@@ -69,8 +80,8 @@ export interface FolderTableProps<T extends FolderTableRow> {
   onExpandedChange?: (keys: string[]) => void;
   /** 单击行（文件夹进入 / 资源打开） */
   onRowActivate?: (row: T) => void;
-  /** 行级属性扩展，供拖放等业务注入 HTML 属性 */
-  getRowProps?: (row: T, ctx: FolderTableRowContext<T>) => HTMLAttributes<HTMLTableRowElement>;
+  /** 行级属性扩展，供拖放等业务注入属性 */
+  getRowProps?: (row: T, ctx: FolderTableRowContext<T>) => FolderTableRowProps;
   rowActions?: FolderTableRowAction<T>[] | ((row: T) => FolderTableRowAction<T>[]);
   /** 滚动加载更多；Folder 型不做分页 */
   loadMore?: FolderTableLoadMore;

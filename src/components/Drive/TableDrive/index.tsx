@@ -1,9 +1,13 @@
 import IconText from '@/components/Common/IconText';
-import { FolderTable, type FolderTableBreadcrumbItem } from '@/components/Table';
+import {
+  FolderTable,
+  type FolderTableBreadcrumbItem,
+  type FolderTableRowProps,
+} from '@/components/Table';
 import type { DriveNode } from '@/domains/Drive';
 import { Button } from '@heroui/react';
 import { CloudUpload } from 'lucide-react';
-import React, { useMemo, useRef, type HTMLAttributes } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { getDriveNodeLabel, resolveDriveScope } from '../common/driveComponentModel';
 import { useClickNode } from '../common/useClickNode';
 import {
@@ -142,9 +146,9 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
     }
   };
 
-  const getRowProps = (row: DriveTableRow): HTMLAttributes<HTMLTableRowElement> => {
+  const getRowProps = (row: DriveTableRow): FolderTableRowProps => {
     const node = row.node;
-    const base: HTMLAttributes<HTMLTableRowElement> = {};
+    const base: FolderTableRowProps = {};
 
     if (node.type === 'loadMore') {
       if (loadingMoreParentId === node.parentId) {

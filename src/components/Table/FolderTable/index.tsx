@@ -248,7 +248,7 @@ function FolderTable<T extends FolderTableRow>({
               onClick={(event) => {
                 event.stopPropagation();
                 if (row.loadMoreLoading) return;
-                onRowActivate?.(row as T);
+                onRowActivate?.(ctx.row);
               }}
             >
               {renderLoadMoreLabel(row)}
@@ -394,7 +394,7 @@ function FolderTable<T extends FolderTableRow>({
                       depth: row.depth,
                     };
                     const rowProps = getRowProps?.(row as T, ctx) ?? {};
-                    const { className: rowClassName, id: _rowPropId, ...restRowProps } = rowProps;
+                    const { className: rowClassName, ...restRowProps } = rowProps;
                     const isLoadMoreRow = row.entryType === 'loadMore';
 
                     return (
