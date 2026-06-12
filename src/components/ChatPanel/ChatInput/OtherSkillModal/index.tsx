@@ -28,7 +28,7 @@ function OtherSkillModal({
         key: group.key,
         title: (
           <span className={styles.nodeTitle}>
-            <Folder size={14} color="var(--ant-color-warning)" />
+            <Folder size={14} color="var(--warning)" />
             <span>{group.label}</span>
           </span>
         ),

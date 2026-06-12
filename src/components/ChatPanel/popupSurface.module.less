@@ -4,16 +4,16 @@
 ﻿// src/components/ChatPanel/popupSurface.module.less
 
 .surface {
-  border-radius: var(--ant-border-radius-lg);
-  box-shadow: var(--ant-box-shadow-secondary);
-  background: var(--ant-color-bg-container);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--card-shadow);
+  background: var(--surface);
   overflow: hidden;
 }
 
 .menu {
-  background: var(--ant-color-bg-container);
-  padding: var(--ant-padding-xs);
-  font-size: var(--ant-font-size-sm);
+  background: var(--surface);
+  padding: var(--space-xs);
+  font-size: var(--font-size-sm);
   font-weight: 400;
 }
 
@@ -22,13 +22,13 @@
   min-height: 32px;
   display: flex;
   align-items: center;
-  gap: var(--ant-margin-xs);
+  gap: var(--space-xs);
   margin: 0 0 2px;
-  padding: var(--ant-padding-xxs) var(--ant-padding-sm);
+  padding: 4px var(--space-sm);
   border: 0;
-  border-radius: var(--ant-border-radius);
+  border-radius: var(--radius);
   background: transparent;
-  color: var(--ant-color-text);
+  color: var(--foreground);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -36,7 +36,7 @@
 
   &:hover,
   &:focus-visible {
-    background: var(--ant-color-fill-tertiary);
+    background: var(--surface-tertiary);
     outline: none;
   }
 }

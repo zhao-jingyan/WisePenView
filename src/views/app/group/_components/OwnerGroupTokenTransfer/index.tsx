@@ -4,9 +4,8 @@
 import { useGroupService, useWalletService } from '@/domains';
 import { WALLET_TOKEN_TRANSFER_TYPE } from '@/domains/Wallet';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, Input, TextField, toast } from '@heroui/react';
+import { Button, Input, Skeleton, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Skeleton } from 'antd';
 import { useState } from 'react';
 import type { OwnerGroupTokenTransferProps } from './index.type';
 import styles from './style.module.less';
@@ -136,7 +135,7 @@ function OwnerGroupTokenTransfer({ groupId, onTransferSuccess }: OwnerGroupToken
         <div className={styles.balanceItem}>
           <p className={styles.balanceLabel}>组长个人计算点</p>
           {balanceLoading ? (
-            <Skeleton.Input active className={styles.balanceSkeleton} size="small" />
+            <Skeleton className={styles.balanceSkeleton} />
           ) : (
             <p className={styles.balanceValue}>
               {personalBal}
@@ -147,7 +146,7 @@ function OwnerGroupTokenTransfer({ groupId, onTransferSuccess }: OwnerGroupToken
         <div className={styles.balanceItem}>
           <p className={styles.balanceLabel}>小组池计算点</p>
           {balanceLoading ? (
-            <Skeleton.Input active className={styles.balanceSkeleton} size="small" />
+            <Skeleton className={styles.balanceSkeleton} />
           ) : (
             <p className={styles.balanceValue}>
               {groupBal}

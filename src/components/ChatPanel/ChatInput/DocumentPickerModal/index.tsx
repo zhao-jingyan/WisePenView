@@ -62,21 +62,15 @@ function prefixTreeKeys(scopeKey: string, nodes: DataNode[]): DataNode[] {
 function buildScopeRootNode(key: string, title: string, scopeType: 'personal' | 'group'): DataNode {
   const icon =
     scopeType === 'personal' ? (
-      <Folder size={14} color="var(--ant-color-warning)" />
+      <Folder size={14} color="var(--warning)" />
     ) : (
-      <Users size={14} color="var(--ant-color-primary)" />
+      <Users size={14} color="var(--accent)" />
     );
 
   return {
     key,
     title: (
-      <IconText
-        className={styles.scopeTitle}
-        icon={icon}
-        iconSize={14}
-        gap="var(--ant-margin-xxs)"
-        ellipsis
-      >
+      <IconText className={styles.scopeTitle} icon={icon} iconSize={14} gap="4px" ellipsis>
         {title}
       </IconText>
     ),

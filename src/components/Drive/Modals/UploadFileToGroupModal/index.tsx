@@ -1,10 +1,10 @@
+import StepDots from '@/components/Common/StepDots';
 import DriveNav from '@/components/Drive/DriveNav';
 import { useResourceService } from '@/domains';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, Modal, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Steps } from 'antd';
 import { useState } from 'react';
 import type { DriveSelectionItem } from '../../common/driveComponentModel';
 import styles from './index.module.less';
@@ -97,9 +97,7 @@ function UploadFileToGroupModal({
             <Modal.Body>
               <div className={styles.wrapper}>
                 <div className={styles.stepsRow}>
-                  <Steps
-                    size="small"
-                    type="dot"
+                  <StepDots
                     current={step}
                     items={[{ title: '选择个人文件' }, { title: '选择目标文件夹' }]}
                   />

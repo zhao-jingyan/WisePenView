@@ -1,13 +1,13 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--ant-margin-xs);
-  padding: var(--ant-padding-sm);
+  gap: var(--space-xs);
+  padding: var(--space-sm);
   min-height: 80px;
 }
 
 .tree {
-  font-size: var(--ant-font-size-md);
+  font-size: var(--font-size-base);
 
   :global(.wisepen-tree__item) {
     padding: 1px 0;
@@ -33,13 +33,13 @@
 .nodeTitle {
   display: inline-flex;
   align-items: center;
-  gap: var(--ant-margin-xxs);
+  gap: var(--space-2xs);
 }
 
 .loadMoreBtn {
-  color: var(--ant-color-primary);
+  color: var(--accent);
   cursor: pointer;
-  font-size: var(--ant-font-size-sm);
+  font-size: var(--font-size-sm);
 
   &:hover {
     opacity: 0.85;

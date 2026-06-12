@@ -68,7 +68,7 @@ function AiMessage({ message }: { message: Message }) {
             textClassName={styles.loadingHintText}
             icon={<Spin size="small" />}
             iconSize={14}
-            gap="var(--ant-margin-xs)"
+            gap="var(--space-xs)"
           >
             <span key={loadingHintIndex}>{LOADING_HINTS[loadingHintIndex]}</span>
           </IconText>

@@ -3,15 +3,12 @@ import { useGroupService } from '@/domains';
 import { ROLE } from '@/domains/Group';
 import type { EnumKey } from '@/utils/enum';
 import { parseErrorMessage } from '@/utils/error';
-import { Alert, Button, Modal, toast } from '@heroui/react';
+import { Alert, Button, ListBox, Modal, Select, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Select } from 'antd';
 import { useState } from 'react';
 import type { EditPermissionModalProps } from './index.type';
 import styles from './style.module.less';
 import { useMemberEditGuard } from './useMemberEditGuard';
-
-const { Option } = Select;
 
 function EditPermissionModal({
   isOpen,
@@ -88,12 +85,32 @@ function EditPermissionModal({
                 <div className={styles.permissionRow}>
                   <label className={styles.permissionLabel}>将以下成员的权限设置为</label>
                   <Select
+                    aria-label="成员权限"
                     value={selectedPermission}
-                    onChange={(value) => setSelectedPermission(value as EnumKey<typeof ROLE>)}
+                    onChange={(value) => {
+                      if (value == null || Array.isArray(value)) return;
+                      setSelectedPermission(value as EnumKey<typeof ROLE>);
+                    }}
                     className={styles.fullWidth}
                   >
-                    {canPromoteToAdmin && <Option value="ADMIN">管理员</Option>}
-                    <Option value="MEMBER">成员</Option>
+                    <Select.Trigger>
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover>
+                      <ListBox>
+                        {canPromoteToAdmin ? (
+                          <ListBox.Item key="ADMIN" id="ADMIN" textValue="管理员">
+                            管理员
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        ) : null}
+                        <ListBox.Item key="MEMBER" id="MEMBER" textValue="成员">
+                          成员
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                      </ListBox>
+                    </Select.Popover>
                   </Select>
                 </div>
               )}

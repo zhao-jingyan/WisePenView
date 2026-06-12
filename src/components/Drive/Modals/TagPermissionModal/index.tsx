@@ -1,4 +1,5 @@
 import { Empty, Spin } from '@/components/Common/Feedback';
+import SegmentedTabs from '@/components/Common/SegmentedTabs';
 import DriveNav from '@/components/Drive/DriveNav';
 import { useDriveService, useGroupService, useTagService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
@@ -19,9 +20,8 @@ import {
 } from '@/domains/Tag';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
-import { Button, Modal, toast } from '@heroui/react';
+import { Button, Checkbox, Modal, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Checkbox, Form, Radio, Select } from 'antd';
 import { useState } from 'react';
 import {
   DEFAULT_DRIVE_ROOT_ID,
@@ -41,6 +41,14 @@ type TagPermissionFormValues = {
 
 const MEMBER_PAGE_SIZE = 200;
 
+const DEFAULT_FORM_VALUES: Required<TagPermissionFormValues> = {
+  taggedResourceAclGrantScope: ACCESS_CONTROL_SCOPE.ALL,
+  taggedResourceAclGrantSpecifiedUsers: [],
+  grantedActions: [],
+  tagMountPermissionScope: ACCESS_CONTROL_SCOPE.ALL,
+  tagMountSpecifiedUsers: [],
+};
+
 const isAclUserListMode = (mode?: AccessControlScope) =>
   mode === ACCESS_CONTROL_SCOPE.WHITELIST || mode === ACCESS_CONTROL_SCOPE.BLACKLIST;
 
@@ -57,7 +65,7 @@ const buildMemberOptions = (members: GroupMember[]) =>
   members.map((member) => {
     const nickname = member.nickname?.trim();
     const realname = member.realname?.trim();
-    const label = nickname && realname ? `${nickname} (${realname})` : nickname || realname;
+    const label = nickname && realname ? `${nickname} (${realname})` : nickname || realname || '-';
     return { label, value: member.userId };
   });
 
@@ -106,6 +114,50 @@ async function findFolderNodeIdByTagId(params: {
   return undefined;
 }
 
+type UserSelectionListProps = {
+  label: string;
+  loading: boolean;
+  options: Array<{ label: string; value: string }>;
+  value: string[];
+  onToggle: (userId: string, isSelected: boolean) => void;
+};
+
+function UserSelectionList({ label, loading, options, value, onToggle }: UserSelectionListProps) {
+  const selectedIdSet = new Set(value);
+
+  return (
+    <div className={styles.userSelectBlock}>
+      <div className={styles.selectHint}>{label}</div>
+      <div className={styles.userSelectList}>
+        {loading ? (
+          <div className={styles.userSelectLoading}>
+            <Spin size="small" />
+          </div>
+        ) : options.length === 0 ? (
+          <div className={styles.userSelectEmpty}>暂无可选用户</div>
+        ) : (
+          options.map((option) => (
+            <Checkbox
+              key={option.value}
+              isSelected={selectedIdSet.has(option.value)}
+              onChange={(isSelected) => onToggle(option.value, isSelected)}
+              variant="secondary"
+              className={styles.userSelectItem}
+            >
+              <Checkbox.Control>
+                <Checkbox.Indicator />
+              </Checkbox.Control>
+              <Checkbox.Content>
+                <span data-slot="label">{option.label}</span>
+              </Checkbox.Content>
+            </Checkbox>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 const TagPermissionModal = ({
   isOpen,
   groupId,
@@ -116,13 +168,13 @@ const TagPermissionModal = ({
   const tagService = useTagService();
   const driveService = useDriveService();
   const groupService = useGroupService();
-  const [form] = Form.useForm<TagPermissionFormValues>();
+  const [permissionForm, setPermissionForm] =
+    useState<Required<TagPermissionFormValues>>(DEFAULT_FORM_VALUES);
   const [selectedTag, setSelectedTag] = useState<DriveSelectionItem | null>(null);
   const [tagRefreshSeed, setTagRefreshSeed] = useState(0);
   const [tagInitialIds, setTagInitialIds] = useState<string[] | undefined>(undefined);
   const [hoveredAction, setHoveredAction] = useState<TagResourceAction | null>(null);
   const [initialTagLoading, setInitialTagLoading] = useState(false);
-  const watchedGrantedActions = Form.useWatch('grantedActions', form);
 
   const { run: runResolveInitialNode } = useRequest(
     async (tagId: string): Promise<string[] | undefined> => {
@@ -171,6 +223,21 @@ const TagPermissionModal = ({
     },
     {
       manual: true,
+      onSuccess: (list) => {
+        const nextSelectableMemberIdSet = buildSelectableMemberIdSet(getSelectableMembers(list));
+        if (nextSelectableMemberIdSet.size === 0) return;
+        setPermissionForm((prev) => ({
+          ...prev,
+          taggedResourceAclGrantSpecifiedUsers: filterSelectableUserIds(
+            prev.taggedResourceAclGrantSpecifiedUsers,
+            nextSelectableMemberIdSet
+          ),
+          tagMountSpecifiedUsers: filterSelectableUserIds(
+            prev.tagMountSpecifiedUsers,
+            nextSelectableMemberIdSet
+          ),
+        }));
+      },
       onError: (err) => {
         toast.danger(parseErrorMessage(err));
       },
@@ -185,8 +252,33 @@ const TagPermissionModal = ({
     : null;
   const showTagTree = !initialTagId;
 
+  const resetPermissionForm = () => {
+    setPermissionForm(DEFAULT_FORM_VALUES);
+  };
+
+  const updatePermissionForm = <K extends keyof Required<TagPermissionFormValues>>(
+    key: K,
+    value: Required<TagPermissionFormValues>[K]
+  ) => {
+    setPermissionForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const toggleUserSelection = (
+    key: 'taggedResourceAclGrantSpecifiedUsers' | 'tagMountSpecifiedUsers',
+    userId: string,
+    isSelected: boolean
+  ) => {
+    setPermissionForm((prev) => {
+      const current = prev[key];
+      return {
+        ...prev,
+        [key]: isSelected ? [...current, userId] : current.filter((id) => id !== userId),
+      };
+    });
+  };
+
   const applyTagToForm = (tag: TagTreeNode) => {
-    form.setFieldsValue({
+    setPermissionForm({
       taggedResourceAclGrantScope: tag.taggedResourceAclGrantScope ?? ACCESS_CONTROL_SCOPE.ALL,
       taggedResourceAclGrantSpecifiedUsers: filterSelectableUserIds(
         tag.taggedResourceAclGrantSpecifiedUsers,
@@ -215,7 +307,7 @@ const TagPermissionModal = ({
 
   const handleModalShow = () => {
     setSelectedTag(null);
-    form.resetFields();
+    resetPermissionForm();
     setTagRefreshSeed((prev) => prev + 1);
     setTagInitialIds(undefined);
     void (async () => {
@@ -261,12 +353,12 @@ const TagPermissionModal = ({
     const nextFolder = nodes.find((node) => node.kind === 'folder');
     if (!nextFolder) {
       setSelectedTag(null);
-      form.resetFields();
+      resetPermissionForm();
       return;
     }
     if (!nextFolder.tagId) {
       setSelectedTag(null);
-      form.resetFields();
+      resetPermissionForm();
       return;
     }
     const selectedTagId = nextFolder.tagId;
@@ -274,7 +366,7 @@ const TagPermissionModal = ({
     const fillFormByTag = async () => {
       const nextTag = await resolveTagById(selectedTagId);
       if (!nextTag) {
-        form.resetFields();
+        resetPermissionForm();
         return;
       }
       applyTagToForm(nextTag);
@@ -323,8 +415,7 @@ const TagPermissionModal = ({
       toast.warning('请先选择标签');
       return;
     }
-    const formValues = await form.validateFields();
-    runSavePermission(formValues);
+    runSavePermission(permissionForm);
   };
 
   // TODO: refactor
@@ -339,25 +430,25 @@ const TagPermissionModal = ({
       setSelectedTag(null);
       setTagInitialIds(undefined);
       setInitialTagLoading(false);
-      form.resetFields();
+      resetPermissionForm();
       onOpenChange(false);
     }
   };
 
-  const selectedActions = normalizeResourceActions(watchedGrantedActions);
+  const selectedActions = normalizeResourceActions(permissionForm.grantedActions);
   const selectedActionSet = new Set(selectedActions);
 
   const handleActionToggle = (action: TagResourceAction, checked: boolean) => {
-    const current = (form.getFieldValue('grantedActions') ?? []) as TagResourceAction[];
+    const current = permissionForm.grantedActions;
     if (checked) {
       const nextCode = actionsToPermissionCode([...current, action]);
-      form.setFieldValue('grantedActions', permissionCodeToActions(nextCode));
+      updatePermissionForm('grantedActions', permissionCodeToActions(nextCode));
       return;
     }
     const next = normalizeResourceActions(
       current.filter((item) => !hasResourceAction(getResourceActionImpliedMask(item), action))
     );
-    form.setFieldValue('grantedActions', next);
+    updatePermissionForm('grantedActions', next);
   };
 
   return (
@@ -387,142 +478,136 @@ const TagPermissionModal = ({
                   ) : null}
 
                   <div className={styles.rightPane}>
-                    <Form form={form} layout="vertical">
-                      {!selectedTag ? (
-                        <div className={styles.emptyState}>
-                          {showTagTree ? (
-                            <Empty description="请选择一个标签" />
-                          ) : (
-                            <Spin size="large" tip="加载标签权限中" />
-                          )}
-                        </div>
-                      ) : (
-                        <>
-                          <div className={styles.sectionCard}>
-                            <div className={styles.sectionTitle}>访问权限下发模式</div>
-                            <Form.Item
-                              name="taggedResourceAclGrantScope"
-                              className={styles.modeRow}
-                            >
-                              <Radio.Group
-                                options={ACCESS_CONTROL_SCOPE.options.map((item) => ({
-                                  label: item.label,
-                                  value: item.value,
-                                }))}
-                                optionType="button"
-                                buttonStyle="solid"
-                              />
-                            </Form.Item>
+                    {!selectedTag ? (
+                      <div className={styles.emptyState}>
+                        {showTagTree ? (
+                          <Empty description="请选择一个标签" />
+                        ) : (
+                          <Spin size="large" tip="加载标签权限中" />
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className={styles.sectionCard}>
+                          <div className={styles.sectionTitle}>访问权限下发模式</div>
+                          <SegmentedTabs
+                            ariaLabel="访问权限下发模式"
+                            className={styles.modeRow}
+                            items={ACCESS_CONTROL_SCOPE.options.map((item) => ({
+                              key: item.value,
+                              label: item.label,
+                            }))}
+                            selectedKey={permissionForm.taggedResourceAclGrantScope}
+                            onSelectionChange={(taggedResourceAclGrantScope) =>
+                              setPermissionForm((prev) => ({
+                                ...prev,
+                                taggedResourceAclGrantScope,
+                                taggedResourceAclGrantSpecifiedUsers: isAclUserListMode(
+                                  taggedResourceAclGrantScope
+                                )
+                                  ? filterSelectableUserIds(
+                                      prev.taggedResourceAclGrantSpecifiedUsers,
+                                      selectableMemberIdSet
+                                    )
+                                  : [],
+                              }))
+                            }
+                          />
 
-                            <Form.Item
-                              noStyle
-                              shouldUpdate={(prev, next) =>
-                                prev.taggedResourceAclGrantScope !==
-                                next.taggedResourceAclGrantScope
+                          {isAclUserListMode(permissionForm.taggedResourceAclGrantScope) ? (
+                            <UserSelectionList
+                              label="选择用户（不含管理员）"
+                              loading={membersLoading}
+                              options={memberOptions}
+                              value={permissionForm.taggedResourceAclGrantSpecifiedUsers}
+                              onToggle={(userId, isSelected) =>
+                                toggleUserSelection(
+                                  'taggedResourceAclGrantSpecifiedUsers',
+                                  userId,
+                                  isSelected
+                                )
                               }
-                            >
-                              {({ getFieldValue }) =>
-                                isAclUserListMode(getFieldValue('taggedResourceAclGrantScope')) ? (
-                                  <Form.Item
-                                    name="taggedResourceAclGrantSpecifiedUsers"
-                                    label={
-                                      <span className={styles.selectHint}>
-                                        选择用户（不含管理员）
-                                      </span>
+                            />
+                          ) : null}
+
+                          <div className={styles.actionGroup}>
+                            <div className={styles.selectHint}>访问权限</div>
+                            <div className={styles.actionList}>
+                              {TAG_RESOURCE_ACTION.options.map((item) => {
+                                const action = item.value as TagResourceAction;
+                                const isHighlighted = actionHighlightSet?.has(action);
+                                return (
+                                  <div
+                                    key={item.key}
+                                    className={
+                                      isHighlighted
+                                        ? `${styles.actionItem} ${styles.actionItemHighlight}`
+                                        : styles.actionItem
                                     }
+                                    onMouseEnter={() => setHoveredAction(action)}
+                                    onMouseLeave={() => setHoveredAction(null)}
                                   >
-                                    <Select
-                                      mode="multiple"
-                                      options={memberOptions}
-                                      loading={membersLoading}
-                                      placeholder="请选择用户"
-                                      optionFilterProp="label"
-                                      maxTagCount="responsive"
-                                    />
-                                  </Form.Item>
-                                ) : null
-                              }
-                            </Form.Item>
-
-                            <Form.Item label="访问权限" className={styles.actionGroup}>
-                              <Form.Item name="grantedActions" hidden>
-                                <Select mode="multiple" options={[]} />
-                              </Form.Item>
-                              <div className={styles.actionList}>
-                                {TAG_RESOURCE_ACTION.options.map((item) => {
-                                  const action = item.value as TagResourceAction;
-                                  const isHighlighted = actionHighlightSet?.has(action);
-                                  return (
-                                    <div
-                                      key={item.key}
-                                      className={
-                                        isHighlighted
-                                          ? `${styles.actionItem} ${styles.actionItemHighlight}`
-                                          : styles.actionItem
+                                    <Checkbox
+                                      isSelected={selectedActionSet.has(action)}
+                                      onChange={(isSelected) =>
+                                        handleActionToggle(action, isSelected)
                                       }
-                                      onMouseEnter={() => setHoveredAction(action)}
-                                      onMouseLeave={() => setHoveredAction(null)}
+                                      variant="secondary"
                                     >
-                                      <Checkbox
-                                        checked={selectedActionSet.has(action)}
-                                        onChange={(event) =>
-                                          handleActionToggle(action, event.target.checked)
-                                        }
-                                      >
-                                        <span className={styles.actionLabel}>{item.label}</span>
-                                      </Checkbox>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </Form.Item>
+                                      <Checkbox.Control>
+                                        <Checkbox.Indicator />
+                                      </Checkbox.Control>
+                                      <Checkbox.Content>
+                                        <span data-slot="label" className={styles.actionLabel}>
+                                          {item.label}
+                                        </span>
+                                      </Checkbox.Content>
+                                    </Checkbox>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
+                        </div>
 
-                          <div className={styles.sectionCard}>
-                            <div className={styles.sectionTitle}>资源挂载权限</div>
-                            <Form.Item name="tagMountPermissionScope" className={styles.modeRow}>
-                              <Radio.Group
-                                options={ACCESS_CONTROL_SCOPE.options.map((item) => ({
-                                  label: item.label,
-                                  value: item.value,
-                                }))}
-                                optionType="button"
-                                buttonStyle="solid"
-                              />
-                            </Form.Item>
+                        <div className={styles.sectionCard}>
+                          <div className={styles.sectionTitle}>资源挂载权限</div>
+                          <SegmentedTabs
+                            ariaLabel="资源挂载权限"
+                            className={styles.modeRow}
+                            items={ACCESS_CONTROL_SCOPE.options.map((item) => ({
+                              key: item.value,
+                              label: item.label,
+                            }))}
+                            selectedKey={permissionForm.tagMountPermissionScope}
+                            onSelectionChange={(tagMountPermissionScope) =>
+                              setPermissionForm((prev) => ({
+                                ...prev,
+                                tagMountPermissionScope,
+                                tagMountSpecifiedUsers: isMountUserListMode(tagMountPermissionScope)
+                                  ? filterSelectableUserIds(
+                                      prev.tagMountSpecifiedUsers,
+                                      selectableMemberIdSet
+                                    )
+                                  : [],
+                              }))
+                            }
+                          />
 
-                            <Form.Item
-                              noStyle
-                              shouldUpdate={(prev, next) =>
-                                prev.tagMountPermissionScope !== next.tagMountPermissionScope
+                          {isMountUserListMode(permissionForm.tagMountPermissionScope) ? (
+                            <UserSelectionList
+                              label="选择用户（不含管理员）"
+                              loading={membersLoading}
+                              options={memberOptions}
+                              value={permissionForm.tagMountSpecifiedUsers}
+                              onToggle={(userId, isSelected) =>
+                                toggleUserSelection('tagMountSpecifiedUsers', userId, isSelected)
                               }
-                            >
-                              {({ getFieldValue }) =>
-                                isMountUserListMode(getFieldValue('tagMountPermissionScope')) ? (
-                                  <Form.Item
-                                    name="tagMountSpecifiedUsers"
-                                    label={
-                                      <span className={styles.selectHint}>
-                                        选择用户（不含管理员）
-                                      </span>
-                                    }
-                                  >
-                                    <Select
-                                      mode="multiple"
-                                      options={memberOptions}
-                                      loading={membersLoading}
-                                      placeholder="请选择用户"
-                                      optionFilterProp="label"
-                                      maxTagCount="responsive"
-                                    />
-                                  </Form.Item>
-                                ) : null
-                              }
-                            </Form.Item>
-                          </div>
-                        </>
-                      )}
-                    </Form>
+                            />
+                          ) : null}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

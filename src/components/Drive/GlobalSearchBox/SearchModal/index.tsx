@@ -1,7 +1,7 @@
+import SegmentedTabs from '@/components/Common/SegmentedTabs';
 import { SEARCH_SCOPE, type SearchScope } from '@/domains/Resource';
 import { InputGroup, Modal, TextField } from '@heroui/react';
 import { useDebounce, useKeyPress } from 'ahooks';
-import { Segmented } from 'antd';
 import { Search, X } from 'lucide-react';
 import { useState } from 'react';
 import SearchResultList from '../SearchResultList';
@@ -79,10 +79,14 @@ function SearchModal({ isOpen, onOpenChange }: SearchModalProps) {
               </div>
 
               <div className={styles.tabs}>
-                <Segmented<SearchScope>
-                  options={SEARCH_SCOPE.options.map((option) => ({ ...option, title: '' }))}
-                  value={scope}
-                  onChange={setScope}
+                <SegmentedTabs<SearchScope>
+                  ariaLabel="搜索范围"
+                  items={SEARCH_SCOPE.options.map((option) => ({
+                    key: option.value,
+                    label: option.label,
+                  }))}
+                  selectedKey={scope}
+                  onSelectionChange={setScope}
                   block
                 />
               </div>

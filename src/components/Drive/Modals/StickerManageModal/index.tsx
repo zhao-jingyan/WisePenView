@@ -1,11 +1,11 @@
+import ConfirmAction from '@/components/Common/ConfirmAction';
 import IconText from '@/components/Common/IconText';
 import { useStickerService } from '@/domains';
 import type { Sticker } from '@/domains/Sticker';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, Input, Modal, TextField, toast } from '@heroui/react';
+import { Button, Chip, Input, Modal, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Popconfirm, Tag } from 'antd';
 import clsx from 'clsx';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -158,17 +158,18 @@ function StickerManageModal({ isOpen, onOpenChange, onSuccess }: StickerManageMo
                   <div className={styles.listPaneTitle}>全部标签</div>
                   <div className={styles.stickerList}>
                     {stickers.map((sticker) => (
-                      <Tag
+                      <Chip
                         key={sticker.tagId}
-                        variant="outlined"
+                        size="sm"
+                        variant="tertiary"
                         className={clsx(
                           styles.stickerTag,
                           selectedSticker?.tagId === sticker.tagId && styles.stickerTagSelected
                         )}
                         onClick={() => handleSelect(sticker)}
                       >
-                        {sticker.tagName}
-                      </Tag>
+                        <Chip.Label>{sticker.tagName}</Chip.Label>
+                      </Chip>
                     ))}
                     {stickers.length === 0 && (
                       <span className={styles.emptyHint}>暂无标签，在右侧创建</span>
@@ -194,11 +195,17 @@ function StickerManageModal({ isOpen, onOpenChange, onSuccess }: StickerManageMo
                         >
                           保存修改
                         </Button>
-                        <Popconfirm title="确定删除该标签？" onConfirm={() => void handleDelete()}>
-                          <Button variant="danger" isDisabled={deleteLoading}>
+                        <ConfirmAction
+                          title="确定删除该标签？"
+                          confirmText="删除"
+                          isDisabled={deleteLoading}
+                          isLoading={deleteLoading}
+                          onConfirm={() => void handleDelete()}
+                        >
+                          <button type="button" className={styles.deleteButton}>
                             删除
-                          </Button>
-                        </Popconfirm>
+                          </button>
+                        </ConfirmAction>
                       </div>
                     </div>
                   ) : (

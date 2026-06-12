@@ -156,7 +156,7 @@ function ModelSelector({ value, onChange }: ModelSelectorProps) {
                     textValue={opt.label}
                     className={styles.sortDropdownItem}
                   >
-                    <IconText icon={<opt.icon />} iconSize={14} gap="var(--ant-margin-xs)">
+                    <IconText icon={<opt.icon />} iconSize={14} gap="var(--space-xs)">
                       {opt.label}
                     </IconText>
                   </Dropdown.Item>
@@ -195,7 +195,7 @@ function ModelSelector({ value, onChange }: ModelSelectorProps) {
                   textClassName={styles.modelName}
                   icon={<LogoFactory provider={model.provider} size={20} />}
                   iconSize={20}
-                  gap="var(--ant-margin-xs)"
+                  gap="var(--space-xs)"
                   ellipsis
                 >
                   {model.name}
@@ -224,7 +224,7 @@ function ModelSelector({ value, onChange }: ModelSelectorProps) {
                     <Chip.Label>{model.multiplier}</Chip.Label>
                   </Chip>
                 )}
-                {model.id === value && <Check style={{ color: 'var(--ant-color-primary)' }} />}
+                {model.id === value && <Check style={{ color: 'var(--accent)' }} />}
               </div>
             </div>
           ))
@@ -247,7 +247,7 @@ function ModelSelector({ value, onChange }: ModelSelectorProps) {
               )
             }
             iconSize={16}
-            gap="var(--ant-margin-xxs)"
+            gap="4px"
             ellipsis
           >
             {loading ? '模型加载中' : (currentModel?.name ?? '请选择模型')}
