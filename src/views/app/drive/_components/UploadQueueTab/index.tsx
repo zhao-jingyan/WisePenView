@@ -1,3 +1,4 @@
+import { Empty } from '@/components/Common/Feedback';
 import { useDocumentService } from '@/domains';
 import type { PendingDocItem } from '@/domains/Document';
 import {
@@ -10,7 +11,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format/formatFileSize';
 import { Button, toast } from '@heroui/react';
 import { useInterval, useMount, useRequest, useUnmount } from 'ahooks';
-import { Empty, Space, Table } from 'antd';
+import { Space, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useImperativeHandle, useMemo, useState, type Ref } from 'react';
 import styles from './style.module.less';

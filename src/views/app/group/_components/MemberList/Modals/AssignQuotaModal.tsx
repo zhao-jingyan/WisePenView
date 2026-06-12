@@ -1,9 +1,10 @@
 import SelectedMemberList from '@/components/Common/SelectedMemberList';
 import { useQuotaService } from '@/domains';
+import { useEffectForce } from '@/hooks/useEffectForce';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, toast } from '@heroui/react';
+import { Alert, Button, Input, Modal, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Alert, Form, InputNumber, Modal } from 'antd';
+import { Form } from 'antd';
 import { useState } from 'react';
 import type { AssignQuotaModalProps } from './index.type';
 import styles from './style.module.less';
@@ -11,9 +12,48 @@ import { useMemberEditGuard } from './useMemberEditGuard';
 
 const GROUP_MEMBER_TOKEN_LIMIT_MAX = 100_000_000;
 
+interface QuotaInputProps {
+  value?: number;
+  onChange?: (value: number | null) => void;
+  min?: number;
+  max?: number;
+  disabled?: boolean;
+  placeholder?: string;
+  className?: string;
+}
+
+function QuotaInput({
+  value,
+  onChange,
+  min,
+  max,
+  disabled,
+  placeholder,
+  className,
+}: QuotaInputProps) {
+  return (
+    <TextField
+      aria-label="配额限额"
+      className={className}
+      value={value != null ? String(value) : ''}
+      onChange={(nextValue) => {
+        if (nextValue === '') {
+          onChange?.(null);
+          return;
+        }
+        const parsed = Number(nextValue);
+        onChange?.(Number.isFinite(parsed) ? parsed : null);
+      }}
+      isDisabled={disabled}
+    >
+      <Input type="number" min={min} max={max} step={1} placeholder={placeholder} />
+    </TextField>
+  );
+}
+
 function AssignQuotaModal({
-  open,
-  onCancel,
+  isOpen,
+  onOpenChange,
   onSuccess,
   groupId,
   memberIds,
@@ -36,15 +76,6 @@ function AssignQuotaModal({
     { checkOwner: false, forQuota: true }
   );
 
-  const handleOpenChange = (visible: boolean) => {
-    if (!visible) return;
-    form.resetFields();
-    quotaService
-      .fetchGroupQuota(groupId)
-      .then(setGroupQuotaState)
-      .catch(() => setGroupQuotaState({ used: 0, limit: 0 }));
-  };
-
   const { loading, run: runSetQuota } = useRequest(
     async (value: number) =>
       quotaService.setGroupQuota({
@@ -58,7 +89,7 @@ function AssignQuotaModal({
         toast.success(`已为 ${memberIds.length} 位成员分配配额`);
         form.resetFields();
         onSuccess?.();
-        onCancel();
+        onOpenChange(false);
       },
       onError: (err) => {
         toast.danger(parseErrorMessage(err));
@@ -85,84 +116,105 @@ function AssignQuotaModal({
     runSetQuota(value);
   };
 
+  useEffectForce(() => {
+    if (!isOpen) return;
+    form.resetFields();
+    quotaService
+      .fetchGroupQuota(groupId)
+      .then(setGroupQuotaState)
+      .catch(() => setGroupQuotaState({ used: 0, limit: 0 }));
+  }, [isOpen, groupId, form, quotaService]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (loading) return;
+      onOpenChange(false);
+    }
+  };
+
   return (
-    <Modal
-      title="分配配额"
-      open={open}
-      onCancel={onCancel}
-      afterOpenChange={handleOpenChange}
-      destroyOnHidden
-      footer={[
-        <Button key="cancel" onPress={onCancel}>
-          取消
-        </Button>,
-        <Button
-          key="confirm"
-          variant="primary"
-          onPress={handleConfirm}
-          isDisabled={loading || confirmDisabled || quotaOverGlobalMax}
-        >
-          确定
-        </Button>,
-      ]}
-      width={500}
-    >
-      <Form form={form} layout="vertical" className={styles.modalFormPadding}>
-        {!canEdit && (
-          <Alert
-            description={'您不能分配组长/管理员的配额。'}
-            type="error"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-        )}
-        {quotaOverGlobalMax && (
-          <Alert
-            description={`成员当前用量已超过允许设置的上限（${GROUP_MEMBER_TOKEN_LIMIT_MAX.toLocaleString()}），无法在此调整配额。`}
-            type="warning"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-        )}
-        <div className={styles.quotaInfo}>
-          小组配额使用：{groupQuota.used.toLocaleString()} / {groupQuota.limit.toLocaleString()}{' '}
-          计算点（单成员限额不超过 {GROUP_MEMBER_TOKEN_LIMIT_MAX.toLocaleString()}）
-        </div>
-        <Form.Item
-          label="配额限额"
-          name="quota"
-          rules={[
-            { required: true, message: '请输入配额限额' },
-            { type: 'number', min: 1, message: '配额必须大于0' },
-            {
-              validator: (_, val) => {
-                if (val == null) return Promise.resolve();
-                if (val > GROUP_MEMBER_TOKEN_LIMIT_MAX) {
-                  return Promise.reject(
-                    new Error(`不能超过 ${GROUP_MEMBER_TOKEN_LIMIT_MAX.toLocaleString()}`)
-                  );
-                }
-                if (val < maxUsed) {
-                  return Promise.reject(
-                    new Error(`不能小于成员当前用量（最大：${maxUsed.toLocaleString()}）`)
-                  );
-                }
-                return Promise.resolve();
-              },
-            },
-          ]}
-        >
-          <InputNumber
-            className={styles.fullWidth}
-            placeholder="请输入整数"
-            min={quotaOverGlobalMax ? 1 : quotaMin}
-            max={GROUP_MEMBER_TOKEN_LIMIT_MAX}
-            precision={0}
-            disabled={quotaOverGlobalMax}
-          />
-        </Form.Item>
-        <SelectedMemberList members={members} />
-      </Form>
+    <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
+      <Modal.Backdrop isDismissable={!loading}>
+        <Modal.Container size="md" placement="center">
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>分配配额</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <Form form={form} layout="vertical" className={styles.modalFormPadding}>
+                {!canEdit && (
+                  <Alert status="danger" className={styles.alertBlock}>
+                    <Alert.Indicator />
+                    <Alert.Content>
+                      <Alert.Description>您不能分配组长/管理员的配额。</Alert.Description>
+                    </Alert.Content>
+                  </Alert>
+                )}
+                {quotaOverGlobalMax && (
+                  <Alert status="warning" className={styles.alertBlock}>
+                    <Alert.Indicator />
+                    <Alert.Content>
+                      <Alert.Description>
+                        {`成员当前用量已超过允许设置的上限（${GROUP_MEMBER_TOKEN_LIMIT_MAX.toLocaleString()}），无法在此调整配额。`}
+                      </Alert.Description>
+                    </Alert.Content>
+                  </Alert>
+                )}
+                <div className={styles.quotaInfo}>
+                  小组配额使用：{groupQuota.used.toLocaleString()} /{' '}
+                  {groupQuota.limit.toLocaleString()} 计算点（单成员限额不超过{' '}
+                  {GROUP_MEMBER_TOKEN_LIMIT_MAX.toLocaleString()}）
+                </div>
+                <Form.Item
+                  label="配额限额"
+                  name="quota"
+                  rules={[
+                    { required: true, message: '请输入配额限额' },
+                    { type: 'number', min: 1, message: '配额必须大于0' },
+                    {
+                      validator: (_, val) => {
+                        if (val == null) return Promise.resolve();
+                        if (val > GROUP_MEMBER_TOKEN_LIMIT_MAX) {
+                          return Promise.reject(
+                            new Error(`不能超过 ${GROUP_MEMBER_TOKEN_LIMIT_MAX.toLocaleString()}`)
+                          );
+                        }
+                        if (val < maxUsed) {
+                          return Promise.reject(
+                            new Error(`不能小于成员当前用量（最大：${maxUsed.toLocaleString()}）`)
+                          );
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
+                >
+                  <QuotaInput
+                    className={styles.fullWidth}
+                    placeholder="请输入整数"
+                    min={quotaOverGlobalMax ? 1 : quotaMin}
+                    max={GROUP_MEMBER_TOKEN_LIMIT_MAX}
+                    disabled={quotaOverGlobalMax}
+                  />
+                </Form.Item>
+                <SelectedMemberList members={members} />
+              </Form>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onPress={() => onOpenChange(false)} isDisabled={loading}>
+                取消
+              </Button>
+              <Button
+                variant="primary"
+                onPress={handleConfirm}
+                isDisabled={loading || confirmDisabled || quotaOverGlobalMax}
+              >
+                确定
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal>
   );
 }

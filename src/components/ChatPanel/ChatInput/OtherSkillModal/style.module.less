@@ -22,11 +22,11 @@
 .tree {
   font-size: var(--ant-font-size-md);
 
-  :global(.ant-tree-treenode) {
+  :global(.wisepen-tree__item) {
     padding: 1px 0;
   }
 
-  :global(.ant-tree-switcher) {
+  :global(.wisepen-tree__switcher) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -34,29 +34,21 @@
     height: 18px;
   }
 
-  :global(.ant-tree-switcher-icon) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-  }
-
-  :global(.ant-tree-checkbox) {
+  :global(.wisepen-tree__checkbox) {
     display: none;
   }
 
-  :global(.ant-tree-node-content-wrapper) {
+  :global(.wisepen-tree__content) {
     min-height: 22px;
     border-radius: var(--ant-border-radius);
     transition: background-color 0.2s;
   }
 
-  :global(.ant-tree-node-selected) {
+  :global(.wisepen-tree__item[aria-selected='true'] .wisepen-tree__content) {
     background-color: var(--ant-color-primary-bg) !important;
   }
 
-  :global(.ant-tree-title) {
+  :global(.wisepen-tree__title) {
     line-height: 22px;
   }
 }

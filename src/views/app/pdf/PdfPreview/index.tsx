@@ -1,4 +1,5 @@
 import EntryIcon from '@/components/Common/EntryIcon';
+import { Spin } from '@/components/Common/Feedback';
 import IconText from '@/components/Common/IconText';
 import PdfViewer from '@/components/Pdf/PdfViewer/index';
 import ResourceInteractBar from '@/components/Resource/ResourceInteractBar';
@@ -10,7 +11,7 @@ import { RESOURCE_TYPE } from '@/domains/Resource';
 import { parseErrorMessage } from '@/utils/error';
 import { Button } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Result, Spin } from 'antd';
+import { Result } from 'antd';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styles from './style.module.less';

@@ -1,6 +1,7 @@
+import { Spin } from '@/components/Common/Feedback';
 import { Toast } from '@heroui/react';
 import { useMount, useUnmount } from 'ahooks';
-import { App as AntdApp, ConfigProvider, Spin } from 'antd';
+import { App as AntdApp, ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { Suspense, useRef } from 'react';
 import { RouterProvider } from 'react-router-dom';

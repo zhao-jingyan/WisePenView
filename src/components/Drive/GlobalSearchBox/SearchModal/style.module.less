@@ -1,15 +1,15 @@
-.modal {
-  // 卡片整体上移到视口 10vh，类 Algolia DocSearch 布局
-  :global(.ant-modal) {
-    top: 10vh;
-    padding-bottom: 0;
-  }
+// 卡片整体上移到视口 10vh，类 Algolia DocSearch 布局
+.container {
+  margin-top: 10vh;
+  width: min(720px, calc(100vw - 32px));
+}
 
-  :global(.ant-modal-content) {
-    padding: 0;
-    overflow: hidden;
-    border-radius: var(--ant-border-radius-lg);
-  }
+.dialog {
+  overflow: hidden;
+}
+
+.body {
+  padding: 0;
 }
 
 .header {
@@ -28,7 +28,34 @@
 
 .input {
   flex: 1;
+  min-width: 0;
   font-size: var(--ant-font-size-lg);
+}
+
+.inputGroup {
+  width: 100%;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.inputControl {
+  font-size: var(--ant-font-size-lg);
+}
+
+.clearButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--ant-color-text-tertiary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ant-color-text-secondary);
+  }
 }
 
 .kbd {

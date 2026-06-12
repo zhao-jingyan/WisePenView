@@ -74,7 +74,7 @@ function Drive() {
         onOpenChange={setUploadModalOpen}
         onSuccess={handleUploadSuccess}
       />
-      <StickerManageModal open={stickerManageOpen} onCancel={() => setStickerManageOpen(false)} />
+      <StickerManageModal isOpen={stickerManageOpen} onOpenChange={setStickerManageOpen} />
     </div>
   );
 }

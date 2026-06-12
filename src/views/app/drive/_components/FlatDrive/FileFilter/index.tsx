@@ -1,3 +1,4 @@
+import { Spin } from '@/components/Common/Feedback';
 import IconText from '@/components/Common/IconText';
 import StickerManageModal from '@/components/Drive/Modals/StickerManageModal';
 import { useStickerService } from '@/domains';
@@ -6,7 +7,7 @@ import type { Sticker } from '@/domains/Sticker';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Radio, Select, Spin, Tag } from 'antd';
+import { Radio, Select, Tag } from 'antd';
 import clsx from 'clsx';
 import { Plus, Tags, X } from 'lucide-react';
 import { useState } from 'react';
@@ -159,8 +160,8 @@ function FileFilter({ value, onChange }: FileFilterProps) {
         }}
       />
       <StickerManageModal
-        open={stickerManageModalOpen}
-        onCancel={() => setStickerManageModalOpen(false)}
+        isOpen={stickerManageModalOpen}
+        onOpenChange={setStickerManageModalOpen}
         onSuccess={() => {
           void reloadStickers();
         }}

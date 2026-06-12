@@ -29,54 +29,48 @@
   padding: var(--ant-padding-sm);
   font-size: var(--ant-font-size-md);
 
-  :global(.ant-tree-treenode) {
+  :global(.wisepen-tree__item) {
     align-items: center;
     min-height: 24px;
     padding: 1px 0;
   }
 
-  :global(.ant-tree-checkbox) {
+  :global(.wisepen-tree__checkbox) {
     align-self: center;
     margin-block-start: 0;
   }
 
-  :global(.ant-tree-indent),
-  :global(.ant-tree-switcher),
-  :global(.ant-tree-checkbox),
-  :global(.ant-tree-node-content-wrapper) {
+  :global(.wisepen-tree__switcher),
+  :global(.wisepen-tree__checkbox),
+  :global(.wisepen-tree__content) {
     display: inline-flex;
     align-items: center;
     height: 22px;
   }
 
-  :global(.ant-tree-switcher),
-  :global(.ant-tree-switcher-icon) {
+  :global(.wisepen-tree__switcher) {
     justify-content: center;
     width: 18px;
     height: 22px;
     line-height: 22px;
   }
 
-  :global(.ant-tree-indent-unit) {
-    height: 22px;
-  }
-
-  :global(.ant-tree-node-content-wrapper) {
+  :global(.wisepen-tree__content) {
     display: inline-flex;
     align-items: center;
     min-height: 22px;
     line-height: 22px;
   }
 
-  :global(.ant-tree-title) {
+  :global(.wisepen-tree__title) {
     display: inline-flex;
     align-items: center;
     min-height: 22px;
     line-height: 22px;
   }
 
-  :global(.ant-tree-title > span),
-  :global(.ant-tree-title [class*='nodeTitle']) {
+  :global(.wisepen-tree__title > span),
+  :global(.wisepen-tree__title [class*='nodeTitle']) {
     display: inline-flex;
     align-items: center;
     min-height: 22px;
@@ -84,7 +78,7 @@
     vertical-align: middle;
   }
 
-  :global(.ant-tree-title [class*='icon']) {
+  :global(.wisepen-tree__title [class*='icon']) {
     display: inline-flex;
     align-items: center;
     justify-content: center;

@@ -2,6 +2,7 @@ import { LogOut, Pencil, Trash2 } from 'lucide-react';
 /**
  * 小组详情：展示/ Tab / 小组盘只读等由 getGroupDisplayConfig（如 showWalletTabs、driveReadOnlyMode）驱动。
  */
+import { Spin } from '@/components/Common/Feedback';
 import IconText from '@/components/Common/IconText';
 import UserCapsule from '@/components/Common/UserCapsule';
 import TableDrive from '@/components/Drive/TableDrive';
@@ -13,7 +14,7 @@ import { WALLET_TARGET_TYPE } from '@/domains/Wallet';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import type { TabsProps } from 'antd';
-import { Spin, Tabs } from 'antd';
+import { Tabs } from 'antd';
 import { useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getGroupDisplayConfig } from '../_components/GroupDisplayConfig';
@@ -268,8 +269,8 @@ function GroupDetail() {
         onSuccess={handleEditSuccess}
       />
       <DissolveGroupModal
-        open={dissolveGroupModalOpen}
-        onCancel={() => setDissolveGroupModalOpen(false)}
+        isOpen={dissolveGroupModalOpen}
+        onOpenChange={setDissolveGroupModalOpen}
         groupName={groupName}
         groupId={groupId}
         onSuccess={handleModalCloseOnly}

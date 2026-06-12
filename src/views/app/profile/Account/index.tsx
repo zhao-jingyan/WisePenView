@@ -1,10 +1,11 @@
+import { Spin } from '@/components/Common/Feedback';
 import { useUserService } from '@/domains';
 import type { UserAccountProfile } from '@/domains/User';
 import { IDENTITY } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
-import { toast } from '@heroui/react';
+import { Separator, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Descriptions, Divider, Spin } from 'antd';
+import { Descriptions } from 'antd';
 import { useMemo, useState } from 'react';
 import { AccountForm, AccountHeader, AccountVerification } from '../_components/Account';
 import type { ProfileFieldKey } from '../profile.config';
@@ -44,7 +45,7 @@ function Account() {
         <div className={layout.formSection}>
           <AccountHeader user={user} onUserInfoReload={reloadUserInfo} />
 
-          <Divider className={layout.sectionDivider} />
+          <Separator className={layout.sectionDivider} />
 
           <h3 className={layout.sectionTitle}>账号</h3>
           <Descriptions column={2} layout="vertical" size="small" className={layout.descriptions}>
@@ -56,7 +57,7 @@ function Account() {
             <Descriptions.Item label="手机号">{user?.userInfo?.mobile ?? '-'}</Descriptions.Item>
           </Descriptions>
 
-          <Divider className={layout.sectionDivider} />
+          <Separator className={layout.sectionDivider} />
 
           <AccountForm
             show={fieldConfig.showProfileSection}

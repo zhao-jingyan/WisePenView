@@ -158,58 +158,6 @@ background-color: var(--ant-color-bg-layout);
   color: var(--ant-color-text-tertiary);
 }
 
-.advancedModeToggle {
-  height: 32px;
-  border: 1px solid var(--ant-color-border);
-  background: var(--ant-color-bg-container);
-  border-radius: 999px;
-  padding: 0 10px 0 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ant-margin-xs);
-  cursor: pointer;
-  box-shadow: var(--ant-box-shadow-secondary);
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    background 0.18s ease,
-    box-shadow 0.18s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    border-color: var(--ant-color-primary);
-    box-shadow: var(--ant-box-shadow);
-  }
-
-  &[aria-pressed='true'] {
-    border-color: var(--ant-color-primary);
-  }
-
-  :global(.ant-switch) {
-    min-width: 34px;
-  }
-
-  :global(.ant-switch-checked) {
-    background: var(--ant-color-primary) !important;
-  }
-
-  :global(.ant-switch:hover:not(.ant-switch-disabled)) {
-    background: var(--ant-color-primary-hover);
-  }
-}
-
-.compactToggle {
-  min-height: 32px;
-  padding: 0 9px 0 12px;
-}
-
-.advancedModeText {
-  font-size: var(--ant-font-size-sm);
-  font-weight: 400;
-  color: var(--ant-color-text);
-  white-space: nowrap;
-}
-
 .content {
   flex: 1;
   min-height: 0;

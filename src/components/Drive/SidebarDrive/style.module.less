@@ -33,17 +33,12 @@
   color: var(--foreground);
   font-size: var(--font-size-md, 14px);
 
-  :global(.ant-tree) {
-    background: transparent;
-    color: var(--foreground);
-  }
-
-  :global(.ant-tree-treenode) {
+  :global(.wisepen-tree__item) {
     padding: 1px 0;
     width: 100%;
   }
 
-  :global(.ant-tree-node-content-wrapper) {
+  :global(.wisepen-tree__content) {
     min-height: 24px;
     flex: 1;
     min-width: 0;
@@ -56,12 +51,12 @@
     }
   }
 
-  :global(.ant-tree-node-selected) {
+  :global(.wisepen-tree__item[aria-selected='true'] .wisepen-tree__content) {
     color: var(--primary);
     background: color-mix(in srgb, var(--primary) 12%, var(--surface)) !important;
   }
 
-  :global(.ant-tree-switcher) {
+  :global(.wisepen-tree__switcher) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -70,15 +65,7 @@
     color: var(--muted);
   }
 
-  :global(.ant-tree-switcher-icon) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-  }
-
-  :global(.ant-tree-title) {
+  :global(.wisepen-tree__title) {
     line-height: 22px;
     width: 100%;
     min-width: 0;

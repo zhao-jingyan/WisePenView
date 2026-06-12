@@ -1,8 +1,8 @@
 import type { Message } from '@/components/ChatPanel/index.type';
+import { Spin } from '@/components/Common/Feedback';
 import IconText from '@/components/Common/IconText';
 import { Button, toast } from '@heroui/react';
 import { useInterval } from 'ahooks';
-import { Spin } from 'antd';
 import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { LogoFactory } from '../../ModelSelector';

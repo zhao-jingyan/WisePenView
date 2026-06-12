@@ -1,10 +1,11 @@
+import { Empty, Spin } from '@/components/Common/Feedback';
 import IconText from '@/components/Common/IconText';
 import { useGroupService } from '@/domains';
 import type { FetchGroupListRequest, Group } from '@/domains/Group';
 import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group';
 import { Button, Pagination, toast } from '@heroui/react';
 import { usePagination } from 'ahooks';
-import { Col, Empty, Row, Spin, Tabs } from 'antd';
+import { Col, Row, Tabs } from 'antd';
 import { Plus, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';

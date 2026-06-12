@@ -1,3 +1,4 @@
+import { Empty, Spin } from '@/components/Common/Feedback';
 import DriveNav from '@/components/Drive/DriveNav';
 import { useDriveService, useGroupService, useTagService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
@@ -16,10 +17,11 @@ import {
   type TagResourceAction,
   type TagTreeNode,
 } from '@/domains/Tag';
+import { useEffectForce } from '@/hooks/useEffectForce';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
-import { Button, toast } from '@heroui/react';
+import { Button, Modal, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Checkbox, Empty, Form, Modal, Radio, Select, Spin } from 'antd';
+import { Checkbox, Form, Radio, Select } from 'antd';
 import { useState } from 'react';
 import {
   DEFAULT_DRIVE_ROOT_ID,
@@ -105,10 +107,10 @@ async function findFolderNodeIdByTagId(params: {
 }
 
 const TagPermissionModal = ({
-  open,
+  isOpen,
   groupId,
   initialTagId,
-  onCancel,
+  onOpenChange,
   onSuccess,
 }: TagPermissionModalProps) => {
   const tagService = useTagService();
@@ -211,14 +213,7 @@ const TagPermissionModal = ({
   const resolveCachedTag = (tagId: string): TagTreeNode | undefined =>
     tagService.getTagById(tagId, groupId);
 
-  const handleOpenChange = (visible: boolean) => {
-    if (!visible) {
-      setSelectedTag(null);
-      setTagInitialIds(undefined);
-      setInitialTagLoading(false);
-      form.resetFields();
-      return;
-    }
+  const handleModalShow = () => {
     setSelectedTag(null);
     form.resetFields();
     setTagRefreshSeed((prev) => prev + 1);
@@ -315,7 +310,7 @@ const TagPermissionModal = ({
       onSuccess: () => {
         toast.success('标签权限已更新');
         onSuccess?.();
-        onCancel();
+        onOpenChange(false);
       },
       onError: (err) => {
         toast.danger(parseErrorMessage(err));
@@ -332,8 +327,21 @@ const TagPermissionModal = ({
     runSavePermission(formValues);
   };
 
-  const handleCancel = () => {
-    onCancel();
+  // TODO: refactor
+  useEffectForce(() => {
+    if (!isOpen) return;
+    handleModalShow();
+  }, [isOpen]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (saving) return;
+      setSelectedTag(null);
+      setTagInitialIds(undefined);
+      setInitialTagLoading(false);
+      form.resetFields();
+      onOpenChange(false);
+    }
   };
 
   const selectedActions = normalizeResourceActions(watchedGrantedActions);
@@ -353,177 +361,187 @@ const TagPermissionModal = ({
   };
 
   return (
-    <Modal
-      title="标签权限管理"
-      open={open}
-      onCancel={handleCancel}
-      afterOpenChange={handleOpenChange}
-      destroyOnHidden
-      wrapClassName={styles.modalWrap}
-      width={860}
-      footer={[
-        <Button key="cancel" onPress={handleCancel}>
-          取消
-        </Button>,
-        <Button
-          key="confirm"
-          variant="primary"
-          onPress={handleSubmit}
-          isDisabled={saving || !selectedTag || !groupId}
-        >
-          保存
-        </Button>,
-      ]}
-    >
-      <div className={styles.modalFormPadding}>
-        <div className={styles.wrapper}>
-          {showTagTree ? (
-            <div className={styles.leftPane}>
-              <div className={styles.leftTitle}>选择标签</div>
-              <DriveNav
-                scope={groupId ? { type: 'group', groupId } : undefined}
-                renderableTypes={['folder']}
-                selectableTypes={['folder']}
-                multiple={false}
-                refreshTrigger={tagRefreshSeed}
-                initialSelectedIds={tagInitialIds}
-                onChange={handleTagChange}
-              />
-            </div>
-          ) : null}
-
-          <div className={styles.rightPane}>
-            <Form form={form} layout="vertical">
-              {!selectedTag ? (
-                <div className={styles.emptyState}>
+    <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
+      <Modal.Backdrop isDismissable={!saving}>
+        <Modal.Container size="lg" placement="center" className={styles.modalContainer}>
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>标签权限管理</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <div className={styles.modalFormPadding}>
+                <div className={styles.wrapper}>
                   {showTagTree ? (
-                    <Empty description="请选择一个标签" />
-                  ) : (
-                    <Spin size="large" tip="加载标签权限中" />
-                  )}
-                </div>
-              ) : (
-                <>
-                  <div className={styles.sectionCard}>
-                    <div className={styles.sectionTitle}>访问权限下发模式</div>
-                    <Form.Item name="taggedResourceAclGrantScope" className={styles.modeRow}>
-                      <Radio.Group
-                        options={ACCESS_CONTROL_SCOPE.options.map((item) => ({
-                          label: item.label,
-                          value: item.value,
-                        }))}
-                        optionType="button"
-                        buttonStyle="solid"
+                    <div className={styles.leftPane}>
+                      <div className={styles.leftTitle}>选择标签</div>
+                      <DriveNav
+                        scope={groupId ? { type: 'group', groupId } : undefined}
+                        renderableTypes={['folder']}
+                        selectableTypes={['folder']}
+                        multiple={false}
+                        refreshTrigger={tagRefreshSeed}
+                        initialSelectedIds={tagInitialIds}
+                        onChange={handleTagChange}
                       />
-                    </Form.Item>
+                    </div>
+                  ) : null}
 
-                    <Form.Item
-                      noStyle
-                      shouldUpdate={(prev, next) =>
-                        prev.taggedResourceAclGrantScope !== next.taggedResourceAclGrantScope
-                      }
-                    >
-                      {({ getFieldValue }) =>
-                        isAclUserListMode(getFieldValue('taggedResourceAclGrantScope')) ? (
-                          <Form.Item
-                            name="taggedResourceAclGrantSpecifiedUsers"
-                            label={
-                              <span className={styles.selectHint}>选择用户（不含管理员）</span>
-                            }
-                          >
-                            <Select
-                              mode="multiple"
-                              options={memberOptions}
-                              loading={membersLoading}
-                              placeholder="请选择用户"
-                              optionFilterProp="label"
-                              maxTagCount="responsive"
-                            />
-                          </Form.Item>
-                        ) : null
-                      }
-                    </Form.Item>
-
-                    <Form.Item label="访问权限" className={styles.actionGroup}>
-                      <Form.Item name="grantedActions" hidden>
-                        <Select mode="multiple" options={[]} />
-                      </Form.Item>
-                      <div className={styles.actionList}>
-                        {TAG_RESOURCE_ACTION.options.map((item) => {
-                          const action = item.value as TagResourceAction;
-                          const isHighlighted = actionHighlightSet?.has(action);
-                          return (
-                            <div
-                              key={item.key}
-                              className={
-                                isHighlighted
-                                  ? `${styles.actionItem} ${styles.actionItemHighlight}`
-                                  : styles.actionItem
-                              }
-                              onMouseEnter={() => setHoveredAction(action)}
-                              onMouseLeave={() => setHoveredAction(null)}
+                  <div className={styles.rightPane}>
+                    <Form form={form} layout="vertical">
+                      {!selectedTag ? (
+                        <div className={styles.emptyState}>
+                          {showTagTree ? (
+                            <Empty description="请选择一个标签" />
+                          ) : (
+                            <Spin size="large" tip="加载标签权限中" />
+                          )}
+                        </div>
+                      ) : (
+                        <>
+                          <div className={styles.sectionCard}>
+                            <div className={styles.sectionTitle}>访问权限下发模式</div>
+                            <Form.Item
+                              name="taggedResourceAclGrantScope"
+                              className={styles.modeRow}
                             >
-                              <Checkbox
-                                checked={selectedActionSet.has(action)}
-                                onChange={(event) =>
-                                  handleActionToggle(action, event.target.checked)
-                                }
-                              >
-                                <span className={styles.actionLabel}>{item.label}</span>
-                              </Checkbox>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </Form.Item>
-                  </div>
+                              <Radio.Group
+                                options={ACCESS_CONTROL_SCOPE.options.map((item) => ({
+                                  label: item.label,
+                                  value: item.value,
+                                }))}
+                                optionType="button"
+                                buttonStyle="solid"
+                              />
+                            </Form.Item>
 
-                  <div className={styles.sectionCard}>
-                    <div className={styles.sectionTitle}>资源挂载权限</div>
-                    <Form.Item name="tagMountPermissionScope" className={styles.modeRow}>
-                      <Radio.Group
-                        options={ACCESS_CONTROL_SCOPE.options.map((item) => ({
-                          label: item.label,
-                          value: item.value,
-                        }))}
-                        optionType="button"
-                        buttonStyle="solid"
-                      />
-                    </Form.Item>
+                            <Form.Item
+                              noStyle
+                              shouldUpdate={(prev, next) =>
+                                prev.taggedResourceAclGrantScope !==
+                                next.taggedResourceAclGrantScope
+                              }
+                            >
+                              {({ getFieldValue }) =>
+                                isAclUserListMode(getFieldValue('taggedResourceAclGrantScope')) ? (
+                                  <Form.Item
+                                    name="taggedResourceAclGrantSpecifiedUsers"
+                                    label={
+                                      <span className={styles.selectHint}>
+                                        选择用户（不含管理员）
+                                      </span>
+                                    }
+                                  >
+                                    <Select
+                                      mode="multiple"
+                                      options={memberOptions}
+                                      loading={membersLoading}
+                                      placeholder="请选择用户"
+                                      optionFilterProp="label"
+                                      maxTagCount="responsive"
+                                    />
+                                  </Form.Item>
+                                ) : null
+                              }
+                            </Form.Item>
 
-                    <Form.Item
-                      noStyle
-                      shouldUpdate={(prev, next) =>
-                        prev.tagMountPermissionScope !== next.tagMountPermissionScope
-                      }
-                    >
-                      {({ getFieldValue }) =>
-                        isMountUserListMode(getFieldValue('tagMountPermissionScope')) ? (
-                          <Form.Item
-                            name="tagMountSpecifiedUsers"
-                            label={
-                              <span className={styles.selectHint}>选择用户（不含管理员）</span>
-                            }
-                          >
-                            <Select
-                              mode="multiple"
-                              options={memberOptions}
-                              loading={membersLoading}
-                              placeholder="请选择用户"
-                              optionFilterProp="label"
-                              maxTagCount="responsive"
-                            />
-                          </Form.Item>
-                        ) : null
-                      }
-                    </Form.Item>
+                            <Form.Item label="访问权限" className={styles.actionGroup}>
+                              <Form.Item name="grantedActions" hidden>
+                                <Select mode="multiple" options={[]} />
+                              </Form.Item>
+                              <div className={styles.actionList}>
+                                {TAG_RESOURCE_ACTION.options.map((item) => {
+                                  const action = item.value as TagResourceAction;
+                                  const isHighlighted = actionHighlightSet?.has(action);
+                                  return (
+                                    <div
+                                      key={item.key}
+                                      className={
+                                        isHighlighted
+                                          ? `${styles.actionItem} ${styles.actionItemHighlight}`
+                                          : styles.actionItem
+                                      }
+                                      onMouseEnter={() => setHoveredAction(action)}
+                                      onMouseLeave={() => setHoveredAction(null)}
+                                    >
+                                      <Checkbox
+                                        checked={selectedActionSet.has(action)}
+                                        onChange={(event) =>
+                                          handleActionToggle(action, event.target.checked)
+                                        }
+                                      >
+                                        <span className={styles.actionLabel}>{item.label}</span>
+                                      </Checkbox>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </Form.Item>
+                          </div>
+
+                          <div className={styles.sectionCard}>
+                            <div className={styles.sectionTitle}>资源挂载权限</div>
+                            <Form.Item name="tagMountPermissionScope" className={styles.modeRow}>
+                              <Radio.Group
+                                options={ACCESS_CONTROL_SCOPE.options.map((item) => ({
+                                  label: item.label,
+                                  value: item.value,
+                                }))}
+                                optionType="button"
+                                buttonStyle="solid"
+                              />
+                            </Form.Item>
+
+                            <Form.Item
+                              noStyle
+                              shouldUpdate={(prev, next) =>
+                                prev.tagMountPermissionScope !== next.tagMountPermissionScope
+                              }
+                            >
+                              {({ getFieldValue }) =>
+                                isMountUserListMode(getFieldValue('tagMountPermissionScope')) ? (
+                                  <Form.Item
+                                    name="tagMountSpecifiedUsers"
+                                    label={
+                                      <span className={styles.selectHint}>
+                                        选择用户（不含管理员）
+                                      </span>
+                                    }
+                                  >
+                                    <Select
+                                      mode="multiple"
+                                      options={memberOptions}
+                                      loading={membersLoading}
+                                      placeholder="请选择用户"
+                                      optionFilterProp="label"
+                                      maxTagCount="responsive"
+                                    />
+                                  </Form.Item>
+                                ) : null
+                              }
+                            </Form.Item>
+                          </div>
+                        </>
+                      )}
+                    </Form>
                   </div>
-                </>
-              )}
-            </Form>
-          </div>
-        </div>
-      </div>
+                </div>
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onPress={() => onOpenChange(false)} isDisabled={saving}>
+                取消
+              </Button>
+              <Button
+                variant="primary"
+                onPress={handleSubmit}
+                isDisabled={saving || !selectedTag || !groupId}
+              >
+                保存
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal>
   );
 };

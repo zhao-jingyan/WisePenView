@@ -1,5 +1,6 @@
+import { Spin } from '@/components/Common/Feedback';
 import { useRequest, useUnmount } from 'ahooks';
-import { Alert, Result, Segmented, Spin } from 'antd';
+import { Alert, Result, Segmented } from 'antd';
 import { ChevronsLeft, Menu } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';

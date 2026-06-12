@@ -305,9 +305,9 @@ function FileList({ groupId, filter }: FileListProps) {
         onSuccess={fetchList}
       />
       <EditStickerModal
-        open={editStickerModalOpen}
+        isOpen={editStickerModalOpen}
         file={editStickerTarget}
-        onCancel={handleEditStickerModalClose}
+        onOpenChange={(open) => !open && handleEditStickerModalClose()}
         onSuccess={fetchList}
       />
     </>
