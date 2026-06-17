@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.12:19907",
+      "url": "http://172.28.0.13:19907",
       "description": "Generated server url"
     }
   ],
@@ -17,12 +17,12 @@
       "description": "用户文件与图片上传代理接口"
     },
     {
-      "name": "内部文件存储",
-      "description": "供其他微服务初始化上传、获取下载地址与管理物理文件"
+      "name": "外部 - 文件存储",
+      "description": "处理云存储服务回调"
     },
     {
-      "name": "外部文件存储",
-      "description": "处理云存储服务回调"
+      "name": "内部 - 文件存储",
+      "description": "供业务微服务初始化上传、获取下载地址与管理物理文件"
     }
   ],
   "paths": {
@@ -30,6 +30,7 @@
       "post": {
         "tags": ["文件存储"],
         "summary": "上传图床图片",
+        "description": "- 用途：代理当前用户上传小尺寸图片并生成可访问的存储记录。\n- 请求：file 为图片文件；scene 指定图片存储场景；bizTag 为业务隔离目录标识，可为空。\n- 约束：当前用户必须已登录；文件扩展名只能是 jpg、jpeg、png、gif 或 webp；scene 只能属于用户公开图片、小组公开图片或笔记私有图片场景；文件大小不能超过小文件代理上传上限。\n- 处理：校验文件类型和场景后直接上传到主存储配置，创建 AVAILABLE 状态的存储记录；不走预签名直传和上传完成回调流程。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；文件类型不支持 -> FileStorageError.CANNOT_SUPPORT_FILE_TYPE；场景不支持 -> FileStorageError.CANNOT_SUPPORT_FILE_STORAGE_SCENE；文件过大 -> FileStorageError.FILE_SIZE_ABOVE_UPPER_BOUND；存储上传失败 -> FileStorageError.STORAGE_PROVIDER_UPLOAD_FILE_FAILED。\n- 响应：返回存储记录、objectKey 和访问域名信息。\n",
         "operationId": "uploadImageProxy",
         "parameters": [
           {
@@ -97,8 +98,9 @@
     },
     "/external/storage/callback/upload": {
       "post": {
-        "tags": ["外部文件存储"],
+        "tags": ["外部 - 文件存储"],
         "summary": "接收上传完成回调",
+        "description": "- 用途：接收对象存储服务在直传文件完成后的服务端回调。\n- 请求：rawBody 携带 objectKey、md5 和 size 等回调参数；请求头携带云厂商签名信息。\n- 约束：回调必须通过存储提供方签名校验；objectKey 必须对应已初始化的上传记录。\n- 处理：校验签名后更新文件记录为 AVAILABLE，写入 md5 和文件大小，并发布文件上传完成事件；重复回调会被识别并忽略。\n- 失败：回调签名非法 -> FileStorageError.STORAGE_PROVIDER_CALLBACK_SIGNATURE_INVALID；文件记录缺失或回调参数异常导致未处理失败 -> CommonError.INTERNAL_ERROR。\n- 响应：成功时返回云厂商约定的 JSON 字符串。\n",
         "operationId": "handleUploadCallback",
         "requestBody": {
           "content": {
