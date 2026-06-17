@@ -7,13 +7,13 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.31:20001",
+      "url": "http://172.28.0.16:20001",
       "description": "Generated server url"
     }
   ],
   "tags": [
     {
-      "name": "内部复旦 UIS 认证",
+      "name": "内部 - 复旦 UIS 认证",
       "description": "供用户服务查询复旦 UIS 认证任务状态"
     }
   ],

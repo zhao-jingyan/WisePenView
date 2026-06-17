@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.6:19905",
+      "url": "http://172.28.0.4:19905",
       "description": "Generated server url"
     }
   ],
@@ -21,28 +21,28 @@
       "description": "跨资源类型的全文搜索（带 ACL 可见性过滤 + 高亮）"
     },
     {
-      "name": "资源标签管理",
-      "description": "个人标签与小组资源标签的增删改查及拖拽"
+      "name": "资源标签",
+      "description": "个人与小组资源标签的树形维护、权限配置和回收站处理"
+    },
+    {
+      "name": "内部 - 资源",
+      "description": "供业务微服务注册资源、更新资源属性、查询资源信息和校验资源权限"
+    },
+    {
+      "name": "资源",
+      "description": "资源重命名、标签绑定、独立权限和分页查询"
     },
     {
       "name": "资源互动",
-      "description": "资源点赞与评分"
-    },
-    {
-      "name": "资源管理",
-      "description": "资源重命名、更新资源标签与列出资源"
-    },
-    {
-      "name": "内部资源服务",
-      "description": "提供给其他微服务的权限与资源 Feign 接口"
+      "description": "资源阅读、点赞、评分与用户互动状态"
     }
   ],
   "paths": {
     "/resource/tag/removeTag": {
       "post": {
-        "tags": ["资源标签管理"],
+        "tags": ["资源标签"],
         "summary": "级联删除标签",
-        "description": "删除个人或小组指定标签及其所有的子孙节点",
+        "description": "- 用途：删除个人或小组资源空间中的指定标签及其所有子孙标签。\n- 请求：targetTagId 指定待删除标签；groupId 确定标签空间。\n- 约束：小组空间写入要求当前用户是 OWNER 或 ADMIN；系统根节点和回收站节点不能删除；路径标签在未强制删除且未进入回收站前不能直接删除。\n- 处理：删除目标标签和所有子孙标签，并发布标签删除事件；下游会根据标签类型清理资源绑定，路径标签删除可能导致相关资源进入后续软删除流程。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；小组写入权限不足 -> PermissionError.PERMISSION_DENIED；标签不存在 -> ResourceError.TAG_NODE_NOT_FOUND；系统标签被删除 -> ResourceError.CANNOT_DELETE_SYSTEM_TAG_PATH_NODE；路径标签直接删除 -> ResourceError.CANNOT_DELETE_TAG_PATH_NODE_DIRECTLY。\n- 响应：成功时返回空结果。\n",
         "operationId": "deleteTag",
         "requestBody": {
           "content": {
@@ -78,9 +78,9 @@
     },
     "/resource/tag/moveTag": {
       "post": {
-        "tags": ["资源标签管理"],
-        "summary": "拖拽/移动标签",
-        "description": "修改个人或小组标签的树形层级结构（小组需管理权限）",
+        "tags": ["资源标签"],
+        "summary": "移动标签",
+        "description": "- 用途：调整个人或小组资源标签在树形结构中的父子层级。\n- 请求：targetTagId 指定被移动标签；newParentId 为空或 0 表示移动到根层级；groupId 确定标签空间。\n- 约束：小组空间写入要求当前用户是 OWNER 或 ADMIN；目标标签不能是系统根节点或回收站节点；不能移动到自身或自身子孙节点下；不能跨路径标签和普通标签类型移动；不能移动到回收站内部节点。\n- 处理：更新目标标签和全部子孙标签的 parentId 与 ancestors；移动到个人回收站节点时发布回收站事件以剥离相关资源小组权限，普通移动会触发受影响资源 ACL 重算；不修改资源文件内容。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；小组写入权限不足 -> PermissionError.PERMISSION_DENIED；目标标签不存在 -> ResourceError.TAG_NODE_NOT_FOUND；父标签不存在 -> ResourceError.PARENT_TAG_NODE_NOT_FOUND；移动到自身 -> ResourceError.CANNOT_MOVE_TAG_NODE_TO_SELF；移动到子孙节点 -> ResourceError.CANNOT_MOVE_TAG_NODE_TO_DESCENDANT；跨路径/普通标签类型移动 -> ResourceError.CANNOT_MOVE_TAG_NODE_ACROSS_TAG_TYPE；同级重名 -> ResourceError.TAG_NODE_NAME_CONFLICT；系统标签被移动 -> ResourceError.CANNOT_MOVE_SYSTEM_TAG_PATH_NODE；回收站内标签被移动 -> ResourceError.CANNOT_OPERATE_TRASHED_TAG_PATH_NODE。\n- 响应：成功时返回空结果。\n",
         "operationId": "moveTag",
         "requestBody": {
           "content": {
@@ -116,9 +116,9 @@
     },
     "/resource/tag/changeTag": {
       "post": {
-        "tags": ["资源标签管理"],
+        "tags": ["资源标签"],
         "summary": "更新标签",
-        "description": "修改个人或小组标签的元信息（小组需管理权限，个人不可设置可见性规则）",
+        "description": "- 用途：维护标签名称、资源可见性规则、资源挂载权限和标签默认动作配置。\n- 请求：targetTagId 指定目标标签；groupId 确定标签空间；tagName、权限范围、指定用户和 grantedActions 表达本次要更新的配置。\n- 约束：小组空间写入要求当前用户是 OWNER 或 ADMIN；目标标签必须存在且不在回收站中；系统根节点和回收站节点不能修改；个人标签不能设置可见性或挂载权限；新名称不能使用保留名称且不能与同级标签重名。\n- 处理：更新标签基本信息和权限配置，isPath 始终不允许由本接口改变；小组标签权限发生变化时通知挂载在该标签及其子孙标签下的资源重新计算 ACL；不移动标签位置。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；小组写入权限不足 -> PermissionError.PERMISSION_DENIED；标签不存在 -> ResourceError.TAG_NODE_NOT_FOUND；系统标签被修改 -> ResourceError.CANNOT_MODIFY_SYSTEM_TAG_PATH_NODE；个人标签设置权限 -> ResourceError.CANNOT_SET_TAG_NODE_VISIBILITY；同级重名 -> ResourceError.TAG_NODE_NAME_CONFLICT；使用系统保留名称 -> ResourceError.CANNOT_USE_RESERVED_TAG_PATH_NODE_NAME；回收站内标签被修改 -> ResourceError.CANNOT_OPERATE_TRASHED_TAG_PATH_NODE。\n- 响应：成功时返回空结果。\n",
         "operationId": "updateTag",
         "requestBody": {
           "content": {
@@ -154,9 +154,9 @@
     },
     "/resource/tag/addTag": {
       "post": {
-        "tags": ["资源标签管理"],
+        "tags": ["资源标签"],
         "summary": "创建标签",
-        "description": "在个人或小组指定的父节点下创建新标签（小组需管理权限）",
+        "description": "- 用途：在个人或小组资源空间的指定父节点下创建新的资源标签。\n- 请求：groupId 为空表示个人标签空间，非空表示小组标签空间；parentId 为空或 0 表示创建在根层级；tagName 为新标签名称，其余字段描述标签可见性、挂载权限和默认动作。\n- 约束：小组空间写入要求当前用户是 OWNER 或 ADMIN；不能在回收站及其子目录下创建标签；不能使用系统根节点或回收站保留名称；同一父节点下名称必须唯一。\n- 处理：根据父节点继承路径标签类型并计算 ancestors；个人标签会清空所有标签权限配置；创建成功后只新增标签节点，不自动移动资源。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；小组写入权限不足 -> PermissionError.PERMISSION_DENIED；父节点不存在 -> ResourceError.PARENT_TAG_NODE_NOT_FOUND；同级重名 -> ResourceError.TAG_NODE_NAME_CONFLICT；使用系统保留名称 -> ResourceError.CANNOT_USE_RESERVED_TAG_PATH_NODE_NAME；在回收站下创建 -> ResourceError.CANNOT_OPERATE_TRASHED_TAG_PATH_NODE。\n- 响应：返回新建标签 ID。\n",
         "operationId": "createTag",
         "requestBody": {
           "content": {
@@ -192,9 +192,9 @@
     },
     "/resource/item/renameResource": {
       "post": {
-        "tags": ["资源管理"],
+        "tags": ["资源"],
         "summary": "重命名资源",
-        "description": "用户修改资源名称",
+        "description": "- 用途：资源所有者修改资源在资源列表和搜索结果中展示的名称。\n- 请求：resourceId 指定目标资源；newName 为新的资源名称。\n- 约束：当前用户必须是资源所有者；目标资源必须存在。\n- 处理：更新资源名称并同步搜索元数据中的资源名称；不修改资源类型、文件内容、标签绑定或权限配置。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；当前用户不是资源所有者 -> ResourceError.RESOURCE_PERMISSION_DENIED；搜索索引同步失败 -> ResourceError.RESOURCE_SEARCH_FAILED。\n- 响应：成功时返回空结果。\n",
         "operationId": "renameResource",
         "requestBody": {
           "content": {
@@ -230,9 +230,9 @@
     },
     "/resource/item/removeResources": {
       "post": {
-        "tags": ["资源管理"],
+        "tags": ["资源"],
         "summary": "删除资源",
-        "description": "用户删除资源",
+        "description": "- 用途：资源所有者批量移除自己拥有的资源。\n- 请求：resourceIds 为待删除资源 ID 列表。\n- 约束：当前用户必须是每个目标资源的所有者；列表中的资源必须存在。\n- 处理：逐个校验所有权后执行软删除，将资源写入审计回收集合并从业务资源表移除；不在本接口直接抹除对象存储中的物理文件。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；任一资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；当前用户不是资源所有者 -> ResourceError.RESOURCE_PERMISSION_DENIED；搜索索引同步失败 -> ResourceError.RESOURCE_SEARCH_FAILED。\n- 响应：成功时返回空结果。\n",
         "operationId": "deleteResource",
         "parameters": [
           {
@@ -271,9 +271,9 @@
     },
     "/resource/item/changeResourceTags": {
       "post": {
-        "tags": ["资源管理"],
+        "tags": ["资源"],
         "summary": "更新资源标签",
-        "description": "用户修改资源的标签列表",
+        "description": "- 用途：调整资源挂载到个人标签空间或小组标签空间下的位置与标签集合。\n- 请求：resourceId 指定目标资源；groupId 为空表示个人标签空间，不为空表示小组标签空间；tagIds 按业务顺序给出目标标签列表。\n- 约束：个人标签更新必须由资源所有者发起，且 tagIds 必须包含唯一的路径标签并位于首位；小组标签更新允许小组 OWNER、ADMIN 操作，普通成员必须同时是资源所有者并满足标签挂载权限。\n- 处理：个人空间会覆盖该资源在个人标签空间的绑定；若移入个人回收站，会剥离非个人小组绑定、资源独立权限和已计算小组 ACL。小组空间会覆盖该小组下的绑定，并触发资源 ACL 重算；不修改资源文件内容。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；当前用户不是资源所有者 -> ResourceError.RESOURCE_PERMISSION_DENIED；标签不存在或不属于目标空间 -> ResourceError.TAG_NODE_NOT_FOUND；个人路径标签数量不唯一 -> ResourceError.CANNOT_BIND_RESOURCE_TO_MULTIPLE_PATH_NODES；个人路径标签未放在首位 -> ResourceError.CANNOT_PLACE_RESOURCE_PATH_TAG_AFTER_TAGS；小组 FOLDER 模式下绑定多个标签 -> ResourceError.CANNOT_BIND_MULTIPLE_RESOURCE_TAGS_IN_FOLDER_MODE；普通成员无标签挂载权限 -> ResourceError.BIND_RESOURCE_TO_TAG_NODE_DENIED；搜索索引同步失败 -> ResourceError.RESOURCE_SEARCH_FAILED。\n- 响应：成功时返回空结果。\n",
         "operationId": "updateResourceTags",
         "requestBody": {
           "content": {
@@ -309,9 +309,9 @@
     },
     "/resource/item/changeResourceActionPermission": {
       "post": {
-        "tags": ["资源管理"],
-        "summary": "修改资源独立权限",
-        "description": "修改资源级别的覆盖动作权限，以及为特定用户单独授予的特权动作",
+        "tags": ["资源"],
+        "summary": "更新资源独立权限",
+        "description": "- 用途：资源所有者设置资源级动作权限覆盖规则和指定用户特权动作。\n- 请求：resourceId 指定目标资源；overrideGrantedActions 为空表示清空资源级覆盖动作；specifiedUsersGrantedActions 为空表示清空指定用户特权。\n- 约束：当前用户必须是资源所有者；目标资源必须存在；动作列表必须是合法资源动作枚举。\n- 处理：保存资源级覆盖权限和指定用户权限映射，并触发资源 ACL 重算；不修改资源标签绑定、默认小组权限或资源内容。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；当前用户不是资源所有者 -> ResourceError.RESOURCE_PERMISSION_DENIED。\n- 响应：成功时返回空结果。\n",
         "operationId": "updateResourceActionPermission",
         "requestBody": {
           "content": {
@@ -349,7 +349,7 @@
       "post": {
         "tags": ["资源互动"],
         "summary": "切换资源点赞状态",
-        "description": "对资源进行点赞或取消点赞",
+        "description": "- 用途：让当前用户对资源执行点赞或取消点赞。\n- 请求：resourceId 指定目标资源。\n- 约束：当前用户必须已登录；目标资源必须存在。\n- 处理：读取当前用户点赞状态并取反，写入新的点赞状态；点赞时资源点赞数加一，取消点赞时资源点赞数减一；不影响评分和阅读状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；互动记录更新失败 -> CommonError.INTERNAL_ERROR。\n- 响应：成功时返回空结果。\n",
         "operationId": "changeResourceLikeStatus",
         "requestBody": {
           "content": {
@@ -387,6 +387,7 @@
       "post": {
         "tags": ["资源互动"],
         "summary": "记录资源阅读",
+        "description": "- 用途：在用户打开或阅读资源时记录一次有效阅读行为。\n- 请求：resourceId 指定被阅读资源。\n- 约束：当前用户必须已登录；目标资源必须存在。\n- 处理：通过 Redis 窗口判断当前用户是否为窗口期内首次阅读；首次阅读会写入用户已读记录并增加资源阅读数，重复阅读不重复累加。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；Redis 读写异常 -> CommonError.INTERNAL_ERROR。\n- 响应：成功时返回空结果。\n",
         "operationId": "changeResourceReadStatus",
         "requestBody": {
           "content": {
@@ -424,6 +425,7 @@
       "post": {
         "tags": ["资源互动"],
         "summary": "评价资源",
+        "description": "- 用途：记录或更新当前用户对资源的评分。\n- 请求：resourceId 指定目标资源；score 为用户提交的评分值。\n- 约束：当前用户必须已登录；目标资源必须存在；score 取值范围为 1 到 5。\n- 处理：写入当前用户评分；首次评分会增加评分人数和总分，修改评分只调整总分差值，相同评分不会重复改变统计；不影响点赞和阅读状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；互动统计更新失败 -> CommonError.INTERNAL_ERROR。\n- 响应：成功时返回空结果。\n",
         "operationId": "changeResourceScore",
         "requestBody": {
           "content": {
@@ -461,7 +463,7 @@
       "post": {
         "tags": ["小组资源配置"],
         "summary": "设置小组资源配置",
-        "description": "仅小组 OWNER 或 ADMIN 可操作，首次调用时创建记录",
+        "description": "- 用途：小组管理员设置小组资源的组织模式和默认权限策略。\n- 请求：请求体携带 groupId、文件组织模式和默认成员动作权限配置。\n- 约束：当前用户必须是目标小组 OWNER 或 ADMIN。\n- 处理：首次调用时创建配置记录，后续调用更新已有配置；不直接迁移已存在资源的标签绑定。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是小组 OWNER/ADMIN -> PermissionError.PERMISSION_DENIED；小组资源模式不允许从 TAG 改为 FOLDER -> ResourceError.CANNOT_CHANGE_FILE_ORG_LOGIC_FROM_TAG_TO_FOLDER。\n- 响应：成功时返回空结果。\n",
         "operationId": "upsertConfig",
         "requestBody": {
           "content": {
@@ -497,9 +499,9 @@
     },
     "/resource/tag/getTagTree": {
       "get": {
-        "tags": ["资源标签管理"],
-        "summary": "获取完整标签树",
-        "description": "获取个人或小组的标签树",
+        "tags": ["资源标签"],
+        "summary": "获取标签树",
+        "description": "- 用途：获取个人或小组资源空间的完整标签树，供资源浏览、挂载和标签维护使用。\n- 请求：groupId 为空表示当前用户个人标签空间，非空表示指定小组标签空间。\n- 约束：个人空间要求当前用户已登录；小组空间要求当前用户属于目标小组。\n- 处理：一次性读取目标空间的全部标签并在内存中组装树；个人空间缺少系统根节点或回收站节点时会自动初始化；不修改普通业务标签。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不属于目标小组 -> PermissionError.PERMISSION_DENIED。\n- 响应：返回标签树根节点列表及其子节点。\n",
         "operationId": "getTagTree",
         "parameters": [
           {
@@ -536,7 +538,8 @@
     "/resource/search/globalSearchResources": {
       "get": {
         "tags": ["全文搜索"],
-        "summary": "全局全文搜索",
+        "summary": "全文搜索资源",
+        "description": "- 用途：在当前用户可见范围内跨资源类型检索资源内容和元信息。\n- 请求：keyword 为搜索关键字，可为空；scope 指定搜索范围；page 和 size 控制分页。\n- 约束：当前用户必须已登录；scope 必须是合法枚举。\n- 处理：使用当前用户 ID 和小组角色上下文执行全文搜索，并应用资源可见性过滤与高亮处理；不返回当前用户无权查看的资源。\n- 失败：搜索服务执行失败 -> ResourceError.RESOURCE_SEARCH_FAILED。\n- 响应：返回分页搜索命中列表和总数。\n",
         "operationId": "searchResources",
         "parameters": [
           {
@@ -601,9 +604,9 @@
     },
     "/resource/item/listResources": {
       "get": {
-        "tags": ["资源管理"],
-        "summary": "分页列出资源",
-        "description": "多条件组合的高级分页查询，支持按字段升降序，多标签与/或筛选。<br><br>**核心查询场景说明：**<br>1. **个人所有资源** (`不传 groupId` 且 `不传 tagIds`)：查询当前用户作为 owner 的所有资源。<br>2. **小组所有资源** (`传 groupId` 且 `不传 tagIds`)：查询挂载在该小组下，且当前用户有权限看到的资源。<br>3. **个人指定标签** (`不传 groupId` 且 `传 tagIds`)：查询当前用户拥有，且带有指定标签的资源。<br>4. **小组指定标签** (`传 groupId` 且 `传 tagIds`)：查询挂载在该小组下、具有指定标签，且当前用户有权限看到的资源。",
+        "tags": ["资源"],
+        "summary": "分页查询资源",
+        "description": "- 用途：按个人空间或小组空间分页查询当前用户可见的资源列表。\n- 请求：groupId 为空时查询当前用户个人资源空间，非空时查询指定小组空间；tagIds 为空表示查询该空间下全部可见资源，非空时按 tagQueryLogicMode 进行多标签筛选；resourceType、page、size、sortBy、sortDir 控制类型过滤、分页和排序。\n- 约束：当前用户必须已登录；查询小组空间时必须属于目标小组；分页、排序字段、标签组合逻辑和资源类型必须合法。\n- 处理：个人空间默认排除个人回收站体系下的资源，除非显式传入回收站内标签；小组空间按当前用户在小组中的角色和资源 ACL 查询可见资源，并批量补充当前标签名和互动统计；不返回当前用户无权查看的资源。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不属于目标小组 -> PermissionError.PERMISSION_DENIED。\n- 响应：返回分页资源列表、总数、当前页资源的标签名映射和互动统计。\n",
         "operationId": "listResources",
         "parameters": [
           {
@@ -713,7 +716,8 @@
     "/resource/interaction/getResourceUserInteractionRecord": {
       "get": {
         "tags": ["资源互动"],
-        "summary": "获取资源交互状态",
+        "summary": "获取资源互动状态",
+        "description": "- 用途：查询当前用户对指定资源的阅读、点赞和评分记录。\n- 请求：resourceId 指定目标资源。\n- 约束：当前用户必须已登录；本接口按用户与资源 ID 查询互动记录，不承担资源可见性校验。\n- 处理：读取当前用户的资源互动记录；若不存在记录则返回默认未读、未点赞、未评分状态；不更新资源全局统计。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；互动查询发生未处理异常 -> CommonError.INTERNAL_ERROR。\n- 响应：返回当前用户对该资源的互动状态。\n",
         "operationId": "getResourceUserInteractionRecord",
         "parameters": [
           {
@@ -751,7 +755,7 @@
       "get": {
         "tags": ["小组资源配置"],
         "summary": "获取小组资源配置",
-        "description": "小组成员可查询，查不到时默认返回 FOLDER 模式",
+        "description": "- 用途：查询指定小组的资源组织模式和默认成员动作权限配置。\n- 请求：groupId 指定目标小组。\n- 约束：当前用户必须已登录且属于目标小组。\n- 处理：读取小组资源配置；查不到配置时由服务层返回默认 FOLDER 模式。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不属于目标小组 -> PermissionError.PERMISSION_DENIED。\n- 响应：返回小组资源配置。\n",
         "operationId": "getConfig",
         "parameters": [
           {

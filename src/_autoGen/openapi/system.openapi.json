@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.22:19902",
+      "url": "http://172.28.0.15:19902",
       "description": "Generated server url"
     }
   ],
@@ -17,19 +17,20 @@
       "description": "用户提交问题报错、功能建议与使用咨询"
     },
     {
-      "name": "内部日志服务",
-      "description": "供其他微服务写入系统操作日志"
+      "name": "内部 - 日志",
+      "description": "供业务微服务写入系统操作日志"
     },
     {
-      "name": "邮件服务",
-      "description": "系统邮件发送接口"
+      "name": "内部 - 邮件",
+      "description": "供业务微服务发送系统邮件"
     }
   ],
   "paths": {
     "/system/mail/send": {
       "post": {
-        "tags": ["邮件服务"],
+        "tags": ["内部 - 邮件"],
         "summary": "内部发送系统邮件",
+        "description": "- 用途：供业务服务发送密码重置、验证通知等系统邮件。\n- 请求：toEmail 为收件人邮箱；subject 为邮件主题；content 为 HTML 邮件正文。\n- 约束：调用方必须通过内部服务调用边界；邮件配置必须可用；收件人、主题和内容需由上游业务准备。\n- 处理：使用系统发件地址构造 UTF-8 MIME 邮件并发送；不记录业务发送任务，也不自动重试。\n- 失败：邮件服务连接失败、地址非法或发送异常 -> SysError.MAIL_SEND_FAILED。\n- 响应：成功时返回空结果。\n",
         "operationId": "sendMail",
         "requestBody": {
           "content": {
@@ -62,8 +63,9 @@
     },
     "/system/log/save": {
       "post": {
-        "tags": ["内部日志服务"],
+        "tags": ["内部 - 日志"],
         "summary": "内部保存操作日志",
+        "description": "- 用途：供业务微服务通过内部调用写入系统操作日志。\n- 请求：请求体携带操作模块、业务类型、请求信息、响应信息和操作者等日志字段。\n- 约束：调用方必须通过内部服务调用边界；日志 DTO 字段由调用方按统一日志模型提供。\n- 处理：将 DTO 转换为系统操作日志实体并插入日志表；不校验业务对象是否存在，不回写调用方业务状态。\n- 失败：日志写入发生未处理异常 -> CommonError.INTERNAL_ERROR。\n- 响应：返回日志写入是否成功。\n",
         "operationId": "save",
         "requestBody": {
           "content": {
@@ -98,7 +100,7 @@
       "post": {
         "tags": ["用户反馈"],
         "summary": "提交用户反馈",
-        "description": "提交问题报错、功能建议、使用咨询等反馈信息",
+        "description": "- 用途：让登录用户提交问题报错、功能建议或使用咨询反馈。\n- 请求：content 为反馈正文；type 为反馈类型；contact 和 browser 为可选补充信息。\n- 约束：当前用户必须已登录；content 和 type 必须表达有效的反馈内容与反馈类型。\n- 处理：创建反馈记录并将状态初始化为 PENDING；不在本接口分派处理人或发送通知。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；反馈记录写入发生未处理异常 -> CommonError.INTERNAL_ERROR。\n- 响应：成功时返回空结果。\n",
         "operationId": "createFeedback",
         "requestBody": {
           "content": {

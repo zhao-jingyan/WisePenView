@@ -1,4 +1,4 @@
-import UploadZone from '@/components/Common/UploadZone';
+import UploadZone from '@/components/UploadZone';
 import { useGroupService, useImageService, useUserService } from '@/domains';
 import type { CreateGroupRequest, GroupFileOrgLogic } from '@/domains/Group';
 import {

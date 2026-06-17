@@ -1,25 +1,94 @@
-.hint {
-  margin: 0 0 16px 0;
-  color: #71717a;
-  font-size: 14px;
+.container {
+  width: min(640px, calc(100vw - var(--space-xl)));
 }
 
-.progressWrap {
-  margin-top: 16px;
+.dialog {
+  overflow: hidden;
 }
 
-.progressLabel {
-  margin-bottom: 8px;
-  color: #71717a;
-  font-size: 13px;
+.header {
+  border-bottom: var(--line-width) solid var(--border-light);
 }
 
-.progressTrack {
-  background: #e4e4e7;
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
-.progressOutput {
-  margin-top: 6px;
-  color: #52525b;
-  font-size: 12px;
+.titleIcon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: var(--line-width) solid var(--accent-border);
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.subtitle {
+  margin-top: var(--space-2xs);
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.statusPanel {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+}
+
+.statusPanel[data-active='true'] {
+  padding: var(--space-sm);
+  border: var(--line-width) solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface-secondary);
+}
+
+.statusHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.statusTitle {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+}
+
+.statusValue {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--line-height-xs);
+}
+
+.spinIcon {
+  animation: upload-document-spin 0.9s linear infinite;
+}
+
+.footer {
+  border-top: var(--line-width) solid var(--border-light);
+}
+
+@keyframes upload-document-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

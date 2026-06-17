@@ -21,8 +21,7 @@ const reactFcImportRule = {
 const antdMessageImportRule = {
   name: 'antd',
   importNames: ['message'],
-  message:
-    '项目约定禁止使用 antd message 静态方法，请改为 App.useApp() 或 useAppMessage() 返回的实例方法。',
+  message: '项目已移除 Ant Design，请不要从 antd 导入 message。',
 };
 
 const directAxiosImportRule = {
@@ -129,16 +128,6 @@ export default defineConfig([
       ],
       'no-restricted-syntax': [
         'error',
-        {
-          selector:
-            "CallExpression[callee.object.name='Modal'][callee.property.name=/^(confirm|info|success|error|warning)$/]",
-          message: '项目约定禁止使用 Modal 静态方法，请改为受控 Antd <Modal /> 组件。',
-        },
-        {
-          selector:
-            "CallExpression[callee.object.name='modal'][callee.property.name=/^(confirm|info|success|error|warning)$/]",
-          message: '项目约定禁止使用 modal 静态方法，请改为受控 Antd <Modal /> 组件。',
-        },
         {
           selector:
             "TSTypeReference[typeName.type='TSQualifiedName'][typeName.left.name='React'][typeName.right.name='FC']",

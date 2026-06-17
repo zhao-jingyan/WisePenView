@@ -1,0 +1,135 @@
+.nativeInput {
+  display: none;
+}
+
+.dropZone {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.dropArea {
+  display: flex;
+  width: 100%;
+  min-height: 188px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-xl) var(--space-lg);
+  border: var(--line-width) dashed var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  color: var(--foreground);
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color var(--motion-duration-mid) ease,
+    background var(--motion-duration-mid) ease,
+    box-shadow var(--motion-duration-mid) ease,
+    color var(--motion-duration-mid) ease;
+}
+
+.dropArea:focus-visible,
+.dropArea[data-active='true'] {
+  border-color: var(--accent-border);
+  background: var(--surface-secondary);
+  box-shadow: 0 0 0 3px var(--accent-softer);
+}
+
+.dropArea[data-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.uploadIcon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.uploadText {
+  font-size: var(--font-size-heading-5);
+  font-weight: var(--font-weight-medium);
+}
+
+.uploadHint {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+}
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border: var(--line-width) solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+}
+
+.fileListActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fileIcon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: var(--line-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-secondary);
+  color: var(--muted);
+}
+
+.fileInfo {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.fileTextRow {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.fileName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.fileMeta {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+}
+
+.fileProgressTrack {
+  background: var(--border);
+}

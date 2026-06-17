@@ -1,4 +1,4 @@
-import UploadZone from '@/components/Common/UploadZone';
+import UploadZone from '@/components/UploadZone';
 import { useImageService, useUserService } from '@/domains';
 import { assertImageProxyUploadLimit } from '@/domains/Image';
 import { getVerificationModeLabel, IDENTITY, USER_STATUS } from '@/domains/User';
