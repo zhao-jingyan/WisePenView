@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.15:19902",
-      "description": "Generated server url"
+      "url": "/docs/proxy/system",
+      "description": "WisePen Docs Proxy"
     }
   ],
   "tags": [
@@ -53,20 +53,15 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
+        }
       }
     },
-    "/system/log/save": {
+    "/system/log/saveLog": {
       "post": {
         "tags": ["内部 - 日志"],
         "summary": "内部保存操作日志",
         "description": "- 用途：供业务微服务通过内部调用写入系统操作日志。\n- 请求：请求体携带操作模块、业务类型、请求信息、响应信息和操作者等日志字段。\n- 约束：调用方必须通过内部服务调用边界；日志 DTO 字段由调用方按统一日志模型提供。\n- 处理：将 DTO 转换为系统操作日志实体并插入日志表；不校验业务对象是否存在，不回写调用方业务状态。\n- 失败：日志写入发生未处理异常 -> CommonError.INTERNAL_ERROR。\n- 响应：返回日志写入是否成功。\n",
-        "operationId": "save",
+        "operationId": "saveLog",
         "requestBody": {
           "content": {
             "application/json": {
@@ -88,12 +83,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
+        }
       }
     },
     "/system/feedback/addFeedback": {
@@ -126,12 +116,94 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
           }
         ]
+      }
+    },
+    "/system/log/listLogs": {
+      "get": {
+        "tags": ["内部 - 日志"],
+        "summary": "内部查询操作日志",
+        "operationId": "listLogs",
+        "parameters": [
+          {
+            "name": "operUrl",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "operUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRSysOperLogResponse"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -238,7 +310,6 @@
         }
       },
       "FeedbackRequest": {
-        "required": ["content", "type"],
         "type": "object",
         "properties": {
           "content": {
@@ -254,17 +325,104 @@
             "type": "string",
             "enum": ["BUG_REPORT", "SUGGESTION", "CONSULTATION", "COMPLAINT", "OTHER"]
           }
-        },
-        "description": "用户反馈传输对象"
+        }
+      },
+      "PageRSysOperLogResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SysOperLogResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRSysOperLogResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRSysOperLogResponse"
+          }
+        }
+      },
+      "SysOperLogResponse": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "businessType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "method": {
+            "type": "string"
+          },
+          "reqMethod": {
+            "type": "string"
+          },
+          "operUserId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "operUrl": {
+            "type": "string"
+          },
+          "operIp": {
+            "type": "string"
+          },
+          "operParam": {
+            "type": "string"
+          },
+          "jsonResult": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorMsg": {
+            "type": "string"
+          },
+          "operTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "costTime": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
       }
     },
     "securitySchemes": {
-      "FromSource": {
-        "type": "apiKey",
-        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
-        "name": "X-From-Source",
-        "in": "header"
-      },
       "UserID": {
         "type": "apiKey",
         "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",

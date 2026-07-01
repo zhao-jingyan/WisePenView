@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.2:19903",
-      "description": "Generated server url"
+      "url": "/docs/proxy/user",
+      "description": "WisePen Docs Proxy"
     }
   ],
   "tags": [
@@ -76,7 +76,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -114,7 +113,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -152,7 +150,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -190,7 +187,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -236,7 +232,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -274,7 +269,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -312,7 +306,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -350,7 +343,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -388,7 +380,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -426,7 +417,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -464,7 +454,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -502,7 +491,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -540,7 +528,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -578,7 +565,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -613,12 +599,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
+        }
       }
     },
     "/auth/resetPassword": {
@@ -648,12 +629,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
+        }
       }
     },
     "/auth/register": {
@@ -683,12 +659,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
+        }
       }
     },
     "/auth/logout": {
@@ -711,7 +682,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -746,12 +716,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
+        }
       }
     },
     "/admin/user/wallet/changeBalance": {
@@ -784,7 +749,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -822,7 +786,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -860,7 +823,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -898,7 +860,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -985,7 +946,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1013,7 +973,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1041,7 +1000,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1076,12 +1034,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "FromSource": []
-          }
-        ]
+        }
       }
     },
     "/user/getUserInfo": {
@@ -1104,7 +1057,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1165,7 +1117,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1204,7 +1155,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1243,7 +1193,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1295,7 +1244,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1354,7 +1302,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1393,7 +1340,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1432,7 +1378,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1508,7 +1453,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -1547,7 +1491,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -2806,12 +2749,6 @@
       }
     },
     "securitySchemes": {
-      "FromSource": {
-        "type": "apiKey",
-        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
-        "name": "X-From-Source",
-        "in": "header"
-      },
       "UserID": {
         "type": "apiKey",
         "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",

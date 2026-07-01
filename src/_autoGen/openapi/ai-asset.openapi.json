@@ -7,11 +7,15 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.28:19910",
-      "description": "Generated server url"
+      "url": "/docs/proxy/ai-asset",
+      "description": "WisePen Docs Proxy"
     }
   ],
   "tags": [
+    {
+      "name": "智能体资产",
+      "description": "智能体资产创建、资料维护、版本发布和草稿文件管理"
+    },
     {
       "name": "技能资产",
       "description": "技能资产创建、资料维护、版本发布和草稿文件管理"
@@ -22,13 +26,13 @@
       "post": {
         "tags": ["技能资产"],
         "summary": "发布技能版本",
-        "description": "- 用途：将技能资产的指定草稿版本确认为正式发布版本。\n- 请求：resourceId 指定技能资产；draftVersion 指定待发布草稿版本。\n- 约束：当前用户必须是资源所有者；目标版本必须是 DRAFT；主技能文件必须存在且已上传完成；所有草稿资产都必须处于可用状态。\n- 处理：将草稿版本标记为 PUBLISHED，更新技能主档当前版本号，并创建下一版草稿；不复制文件，也不修改已发布版本内容。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> SkillError.SKILL_PERMISSION_DENIED；版本不存在 -> SkillError.SKILL_VERSION_NOT_FOUND；版本不是草稿 -> SkillError.CANNOT_OPERATE_NON_DRAFT_SKILL_VERSION；主文件缺失 -> SkillError.SKILL_CORE_ASSET_NOT_FOUND；存在上传中的资产 -> SkillError.SKILL_ASSET_NOT_READY。\n- 响应：成功时返回空结果。\n",
+        "description": "- 用途：将技能资产的当前草稿版本确认为正式发布版本。\n- 请求：resourceId 指定技能资产。\n- 约束：当前用户必须是资源所有者；目标版本必须是 DRAFT；主技能文件必须存在且已上传完成；所有草稿资产都必须处于可用状态。\n- 处理：将草稿版本标记为 PUBLISHED，更新技能主档当前版本号，并创建下一版草稿；不复制文件，也不修改已发布版本内容。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；资源不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND；版本不是草稿 -> AIResourceError.CANNOT_OPERATE_NON_DRAFT_AI_RESOURCE_VERSION；主文件缺失 -> AIResourceError.AI_RESOURCE_CORE_ASSET_NOT_FOUND；存在上传中的资产 -> AIResourceError.AI_RESOURCE_ASSET_NOT_READY。\n- 响应：成功时返回空结果。\n",
         "operationId": "publishSkillVersion",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SkillVersionPublishRequest"
+                "$ref": "#/components/schemas/AIResourceVersionPublishRequest"
               }
             }
           },
@@ -48,7 +52,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -60,13 +63,13 @@
       "post": {
         "tags": ["技能资产"],
         "summary": "初始化技能文件上传",
-        "description": "- 用途：为技能资产草稿版本新增或替换一批资产文件，并申请对象存储上传凭证。\n- 请求：resourceId 指定技能资产；draftVersion 指定草稿版本；assets 中的 path、name、skillAssetResourceType、md5、expectedSize 描述待上传文件。\n- 约束：当前用户必须是资源所有者；目标版本必须是 DRAFT；path 必须以 / 开头且不能包含非法目录跳转；name 不能包含路径分隔符；资产列表不能为空。\n- 处理：在草稿版本中查找或创建资产条目，向文件存储服务申请上传 URL 或秒传，更新资产 objectKey、大小和上传状态；被替换且不再被任何版本引用的旧文件会发布删除事件；不发布草稿版本。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> SkillError.SKILL_PERMISSION_DENIED；版本不存在 -> SkillError.SKILL_VERSION_NOT_FOUND；版本不是草稿 -> SkillError.CANNOT_OPERATE_NON_DRAFT_SKILL_VERSION；资产路径非法 -> SkillError.SKILL_ASSET_PATH_INVALID；存储上传凭证申请失败 -> SkillError.SKILL_ASSET_UPLOAD_URL_APPLY_FAILED。\n- 响应：返回每个资产的 assetId、路径、文件名、objectKey、上传凭证和是否秒传。\n",
+        "description": "- 用途：为技能资产草稿版本新增或替换一批资产文件，并申请对象存储上传凭证。\n- 请求：resourceId 指定技能资产；draftVersion 指定草稿版本；assets 中的 path、name、assetResourceType、md5、expectedSize 描述待上传文件。\n- 约束：当前用户必须是资源所有者；目标版本必须是 DRAFT；path 必须以 / 开头且不能包含非法目录跳转；name 不能包含路径分隔符；资产列表不能为空。\n- 处理：在草稿版本中查找或创建资产条目，向文件存储服务申请上传 URL 或秒传，更新资产 objectKey、大小和上传状态；被替换且不再被任何版本引用的旧文件会发布删除事件；不发布草稿版本。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND；版本不是草稿 -> AIResourceError.CANNOT_OPERATE_NON_DRAFT_AI_RESOURCE_VERSION；资产路径非法 -> AIResourceError.AI_RESOURCE_ASSET_PATH_INVALID；存储上传凭证申请失败 -> AIResourceError.AI_RESOURCE_ASSET_UPLOAD_URL_APPLY_FAILED。\n- 响应：返回每个资产的 assetId、路径、文件名、objectKey、上传凭证和是否秒传。\n",
         "operationId": "initUploadSkillAssets",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SkillAssetUploadInitRequest"
+                "$ref": "#/components/schemas/AssetUploadInitRequest"
               }
             }
           },
@@ -78,7 +81,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/RSkillAssetUploadInitResponse"
+                  "$ref": "#/components/schemas/RAssetUploadInitResponse"
                 }
               }
             }
@@ -86,7 +89,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -94,12 +96,12 @@
         ]
       }
     },
-    "/skill/getSkillVersionInfo": {
+    "/skill/getSkillVersionBundleInfo": {
       "post": {
         "tags": ["技能资产"],
-        "summary": "获取技能版本信息",
-        "description": "- 用途：查询技能资产指定版本或当前已发布版本的文件快照。\n- 请求：resourceId 指定技能资产；version 为空时使用技能主档当前发布版本。\n- 约束：当前用户必须是资源所有者；技能资产和目标版本必须存在。\n- 处理：确定目标版本后读取版本记录及其资产文件列表；不生成下载地址，不改变草稿或发布状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> SkillError.SKILL_PERMISSION_DENIED；技能不存在 -> SkillError.SKILL_NOT_FOUND；版本不存在 -> SkillError.SKILL_VERSION_NOT_FOUND。\n- 响应：返回技能版本信息和资产文件元数据。\n",
-        "operationId": "getSkillVersionInfo",
+        "summary": "获取技能版本包信息",
+        "description": "- 用途：查询技能资产指定版本或当前已发布版本的文件快照。\n- 请求：resourceId 指定技能资产；version 为空时使用技能主档当前发布版本。\n- 约束：当前用户必须是资源所有者；技能资产和目标版本必须存在。\n- 处理：确定目标版本后读取版本记录及其资产文件列表；不生成下载地址，不改变草稿或发布状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；技能不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND。\n- 响应：返回技能版本包信息和资产文件元数据。\n",
+        "operationId": "getSkillVersionBundleInfo",
         "parameters": [
           {
             "name": "resourceId",
@@ -125,7 +127,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/RSkillVersionInfoResponse"
+                  "$ref": "#/components/schemas/RSkillVersionBundleInfoResponse"
                 }
               }
             }
@@ -133,7 +135,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -145,7 +146,7 @@
       "post": {
         "tags": ["技能资产"],
         "summary": "获取技能资产信息",
-        "description": "- 用途：获取技能资源详情和技能资产主档信息。\n- 请求：resourceId 指定技能资产资源。\n- 约束：当前用户必须已登录，且必须通过资源服务的资源详情权限校验；目标技能资产必须存在。\n- 处理：通过资源服务获取资源详情和当前用户动作集合，再读取技能主档信息并组合响应；不读取版本文件快照。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；资源无查看权限 -> ResourceError.RESOURCE_PERMISSION_DENIED；技能不存在 -> SkillError.SKILL_NOT_FOUND。\n- 响应：返回资源信息与技能资产信息。\n",
+        "description": "- 用途：获取技能资源详情和技能资产主档信息。\n- 请求：resourceId 指定技能资产资源；targetVersion 可选，用于 Market 版本限定权限裁决。\n- 约束：当前用户必须已登录，且必须通过资源服务的资源详情权限校验；Market 来源查看必须传当前上架 offerVersion；目标技能资产必须存在。\n- 处理：通过资源服务获取资源详情和当前用户动作集合，再读取技能主档信息并组合响应；不读取版本文件快照。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；资源无查看权限 -> ResourceError.RESOURCE_PERMISSION_DENIED；技能不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND。\n- 响应：返回资源信息与技能资产信息。\n",
         "operationId": "getSkillInfo",
         "parameters": [
           {
@@ -155,6 +156,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "targetVersion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         ],
         "responses": {
@@ -163,7 +173,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/RSkillInfoResponse"
+                  "$ref": "#/components/schemas/RSkillResourceInfoResponse"
                 }
               }
             }
@@ -171,7 +181,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -179,55 +188,17 @@
         ]
       }
     },
-    "/skill/deleteSkillAssets": {
+    "/skill/forkSkill": {
       "post": {
         "tags": ["技能资产"],
-        "summary": "删除技能草稿文件",
-        "description": "- 用途：从技能资产草稿版本中移除一批资产文件。\n- 请求：resourceId 指定技能资产；draftVersion 指定草稿版本；assetIds 为待删除资产 ID 列表。\n- 约束：当前用户必须是资源所有者；目标版本必须是 DRAFT；assetIds 不能为空。\n- 处理：从草稿版本中移除匹配的主文件或普通资产文件，并对不再被任何版本引用的 objectKey 发布文件删除事件；不影响已发布版本中仍被引用的文件。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> SkillError.SKILL_PERMISSION_DENIED；版本不存在 -> SkillError.SKILL_VERSION_NOT_FOUND；版本不是草稿 -> SkillError.CANNOT_OPERATE_NON_DRAFT_SKILL_VERSION。\n- 响应：成功时返回空结果。\n",
-        "operationId": "deleteSkillAssets",
+        "summary": "复制技能资产",
+        "description": "- 用途：将当前用户拥有 FORK 动作的技能资产复制为自己的新技能资源。\n- 请求：resourceId 指定源技能资源；forkedResourceVersion 可选，作为权限检查 targetVersion 并指定要复制的已发布版本；forkedResourceName 指定新 Skill 资源名。\n- 约束：当前用户必须拥有源资源 FORK 动作；Market 来源授权必须传当前上架 offerVersion；源资源类型必须是 SKILL；源版本必须存在且已发布，核心 SKILL.md 必须可用。\n- 处理：先调用资源服务实时校验 FORK 权限；注册新的 SKILL 资源，复制源主档信息和源已发布版本文件到目标 PUBLISHED version=1，并创建 DRAFT version=2。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；源资源不是技能或技能不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND；无 FORK 权限 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND；核心文件缺失 -> AIResourceError.AI_RESOURCE_CORE_ASSET_NOT_FOUND；存在未就绪资产 -> AIResourceError.AI_RESOURCE_ASSET_NOT_READY；资源注册失败 -> AIResourceError.AI_RESOURCE_REGISTER_FAILED；复制失败 -> AIResourceError.AI_RESOURCE_FORK_FAILED。\n- 响应：返回新技能资源 ID。\n",
+        "operationId": "forkSkill",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SkillAssetDeleteRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RVoid"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "FromSource": [],
-            "UserID": [],
-            "IdentityType": [],
-            "GroupRoleMap": []
-          }
-        ]
-      }
-    },
-    "/skill/createSkill": {
-      "post": {
-        "tags": ["技能资产"],
-        "summary": "创建技能资产",
-        "description": "- 用途：为当前用户创建一个可管理和发布的技能资产。\n- 请求：title 为资源展示标题；name、description 和 sourceType 为技能资产元信息，sourceType 为空时按 MANUAL 处理。\n- 约束：当前用户必须已登录；title 必须是可用于展示的资源标题。\n- 处理：调用资源服务注册 SKILL 类型资源，以当前用户作为所有者；创建技能主档并初始化首个草稿版本 1；不上传技能文件，也不发布版本。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源注册失败或技能主档落库失败 -> SkillError.SKILL_RESOURCE_REGISTER_FAILED。\n- 响应：返回技能资产资源 ID。\n",
-        "operationId": "createSkill",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SkillCreateRequest"
+                "$ref": "#/components/schemas/AIResourceForkRequest"
               }
             }
           },
@@ -247,7 +218,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -255,17 +225,17 @@
         ]
       }
     },
-    "/skill/changeSkillInfo": {
+    "/skill/deleteSkillAssets": {
       "post": {
         "tags": ["技能资产"],
-        "summary": "更新技能资产信息",
-        "description": "- 用途：维护技能资产的名称和描述信息。\n- 请求：resourceId 指定技能资产；name 和 description 为空时不更新对应字段。\n- 约束：当前用户必须是资源所有者；目标技能资产必须存在。\n- 处理：按非空字段更新技能主档元信息；不修改资源标题、草稿文件、版本号或发布状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> SkillError.SKILL_PERMISSION_DENIED；技能不存在 -> SkillError.SKILL_NOT_FOUND。\n- 响应：成功时返回空结果。\n",
-        "operationId": "updateSkillInfo",
+        "summary": "删除技能草稿文件",
+        "description": "- 用途：从技能资产草稿版本中移除一批资产文件。\n- 请求：resourceId 指定技能资产；draftVersion 指定草稿版本；assetIds 为待删除资产 ID 列表。\n- 约束：当前用户必须是资源所有者；目标版本必须是 DRAFT；assetIds 不能为空。\n- 处理：从草稿版本中移除匹配的资产文件，并对不再被任何版本引用的 objectKey 发布文件删除事件；不影响已发布版本中仍被引用的文件。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND；版本不是草稿 -> AIResourceError.CANNOT_OPERATE_NON_DRAFT_AI_RESOURCE_VERSION。\n- 响应：成功时返回空结果。\n",
+        "operationId": "deleteSkillAssets",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SkillUpdateRequest"
+                "$ref": "#/components/schemas/AssetDeleteRequest"
               }
             }
           },
@@ -285,7 +255,431 @@
         },
         "security": [
           {
-            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/skill/createSkill": {
+      "post": {
+        "tags": ["技能资产"],
+        "summary": "创建技能资产",
+        "description": "- 用途：为当前用户创建一个可管理和发布的技能资产。\n- 请求：title 为资源展示标题；name、description 和 sourceType 为技能资产元信息，sourceType 为空时按 MANUAL 处理。\n- 约束：当前用户必须已登录；title 必须是可用于展示的资源标题。\n- 处理：调用资源服务注册 SKILL 类型资源，以当前用户作为所有者；创建技能主档并初始化首个草稿版本 1；不上传技能文件，也不发布版本。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源注册失败或技能主档落库失败 -> AIResourceError.AI_RESOURCE_REGISTER_FAILED。\n- 响应：返回技能资产资源 ID。\n",
+        "operationId": "createSkill",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIResourceCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/skill/changeSkillInfo": {
+      "post": {
+        "tags": ["技能资产"],
+        "summary": "更新技能资产信息",
+        "description": "- 用途：维护技能资产的名称和描述信息。\n- 请求：resourceId 指定技能资产；name 和 description 为空时不更新对应字段。\n- 约束：当前用户必须是资源所有者；目标技能资产必须存在。\n- 处理：按非空字段更新技能主档元信息；不修改资源标题、草稿文件、版本号或发布状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；技能不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND。\n- 响应：成功时返回空结果。\n",
+        "operationId": "updateSkillInfo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIResourceUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/agent/updateAgentSpec": {
+      "post": {
+        "tags": ["智能体资产"],
+        "summary": "更新智能体草稿运行配置",
+        "description": "- 用途：维护智能体草稿版本的运行配置（系统提示词与模型、工具、记忆策略），发布前必须配置完成。\n- 请求：resourceId 指定智能体资产；draftVersion 指定草稿版本；spec 为完整运行配置，整体覆盖草稿中现有配置。\n- 约束：当前用户必须是资源所有者；目标版本必须存在且是 DRAFT。\n- 处理：将草稿版本的运行配置整体替换为请求中的 spec；不修改草稿文件、版本号或发布状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND；版本不是草稿 -> AIResourceError.CANNOT_OPERATE_NON_DRAFT_AI_RESOURCE_VERSION。\n- 响应：成功时返回空结果。\n",
+        "operationId": "updateAgentSpec",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentSpecUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/agent/publishAgentVersion": {
+      "post": {
+        "tags": ["智能体资产"],
+        "summary": "发布智能体版本",
+        "description": "- 用途：将智能体资产的当前草稿版本确认为正式发布版本。\n- 请求：resourceId 指定智能体资产。\n- 约束：当前用户必须是资源所有者；目标版本必须是 DRAFT；运行配置中的系统提示词不能为空；所有草稿资产都必须处于可用状态。\n- 处理：将草稿版本标记为 PUBLISHED，更新智能体主档当前版本号，并创建下一版草稿；不复制文件，也不修改已发布版本内容。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；资源不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND；版本不是草稿 -> AIResourceError.CANNOT_OPERATE_NON_DRAFT_AI_RESOURCE_VERSION；系统提示词为空 -> AIResourceError.AI_RESOURCE_CORE_ASSET_NOT_FOUND；存在上传中的资产 -> AIResourceError.AI_RESOURCE_ASSET_NOT_READY。\n- 响应：成功时返回空结果。\n",
+        "operationId": "publishAgentVersion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIResourceVersionPublishRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/agent/initUploadAgentAssets": {
+      "post": {
+        "tags": ["智能体资产"],
+        "summary": "初始化智能体文件上传",
+        "description": "- 用途：为智能体资产草稿版本新增或替换一批资产文件，并申请对象存储上传凭证。\n- 请求：resourceId 指定智能体资产；draftVersion 指定草稿版本；assets 中的 path、name、assetResourceType、md5、expectedSize 描述待上传文件。\n- 约束：当前用户必须是资源所有者；目标版本必须是 DRAFT；path 必须以 / 开头且不能包含非法目录跳转；name 不能包含路径分隔符；资产列表不能为空。\n- 处理：在草稿版本中查找或创建资产条目，向文件存储服务申请上传 URL 或秒传，更新资产 objectKey、大小和上传状态；被替换且不再被任何版本引用的旧文件会发布删除事件；不发布草稿版本。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND；版本不是草稿 -> AIResourceError.CANNOT_OPERATE_NON_DRAFT_AI_RESOURCE_VERSION；资产路径非法 -> AIResourceError.AI_RESOURCE_ASSET_PATH_INVALID；存储上传凭证申请失败 -> AIResourceError.AI_RESOURCE_ASSET_UPLOAD_URL_APPLY_FAILED。\n- 响应：返回每个资产的 assetId、路径、文件名、objectKey、上传凭证和是否秒传。\n",
+        "operationId": "initUploadAgentAssets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUploadInitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAssetUploadInitResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/agent/getAgentVersionBundleInfo": {
+      "post": {
+        "tags": ["智能体资产"],
+        "summary": "获取智能体版本包信息",
+        "description": "- 用途：查询智能体资产指定版本或当前已发布版本的运行配置与文件快照。\n- 请求：resourceId 指定智能体资产；version 为空时使用智能体主档当前发布版本。\n- 约束：当前用户必须是资源所有者；智能体资产和目标版本必须存在。\n- 处理：确定目标版本后读取版本记录、运行配置 spec 及其资产文件列表；不生成下载地址，不改变草稿或发布状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；资源不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND。\n- 响应：返回智能体版本包信息、运行配置和资产文件元数据。\n",
+        "operationId": "getAgentVersionBundleInfo",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAgentVersionBundleInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/agent/getAgentInfo": {
+      "post": {
+        "tags": ["智能体资产"],
+        "summary": "获取智能体资产信息",
+        "description": "- 用途：获取智能体资源详情和智能体资产主档信息。\n- 请求：resourceId 指定智能体资产资源；targetVersion 可选，用于 Market 版本限定权限裁决。\n- 约束：当前用户必须已登录，且必须通过资源服务的资源详情权限校验；Market 来源查看必须传当前上架 offerVersion；目标智能体资产必须存在。\n- 处理：通过资源服务获取资源详情和当前用户动作集合，再读取智能体主档信息并组合响应；不读取版本快照。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；资源无查看权限 -> ResourceError.RESOURCE_PERMISSION_DENIED；智能体不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND。\n- 响应：返回资源信息与智能体资产信息。\n",
+        "operationId": "getAgentInfo",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetVersion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAgentResourceInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/agent/forkAgent": {
+      "post": {
+        "tags": ["智能体资产"],
+        "summary": "复制智能体资产",
+        "description": "- 用途：将当前用户拥有 FORK 动作的智能体资产复制为自己的新智能体资源。\n- 请求：resourceId 指定源智能体资源；forkedResourceVersion 可选，作为权限检查 targetVersion 并指定要复制的已发布版本；forkedResourceName 指定新 Agent 资源名。\n- 约束：当前用户必须拥有源资源 FORK 动作；Market 来源授权必须传当前上架 offerVersion；源资源类型必须是 AGENT；源版本必须存在且已发布，运行配置必须可发布。\n- 处理：先调用资源服务实时校验 FORK 权限；注册新的 AGENT 资源，复制源主档信息、源已发布版本的 spec 和资产文件到目标 PUBLISHED version=1，并创建 DRAFT version=2。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；源资源不是智能体或智能体不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND；无 FORK 权限 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND；运行配置不可发布 -> AIResourceError.AI_RESOURCE_CORE_ASSET_NOT_FOUND；存在未就绪资产 -> AIResourceError.AI_RESOURCE_ASSET_NOT_READY；资源注册失败 -> AIResourceError.AI_RESOURCE_REGISTER_FAILED；复制失败 -> AIResourceError.AI_RESOURCE_FORK_FAILED。\n- 响应：返回新智能体资源 ID。\n",
+        "operationId": "forkAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIResourceForkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/agent/deleteAgentAssets": {
+      "post": {
+        "tags": ["智能体资产"],
+        "summary": "删除智能体草稿文件",
+        "description": "- 用途：从智能体资产草稿版本中移除一批资产文件。\n- 请求：resourceId 指定智能体资产；draftVersion 指定草稿版本；assetIds 为待删除资产 ID 列表。\n- 约束：当前用户必须是资源所有者；目标版本必须是 DRAFT；assetIds 不能为空。\n- 处理：从草稿版本中移除匹配的资产文件，并对不再被任何版本引用的 objectKey 发布文件删除事件；不影响已发布版本中仍被引用的文件。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；版本不存在 -> AIResourceError.AI_RESOURCE_VERSION_NOT_FOUND；版本不是草稿 -> AIResourceError.CANNOT_OPERATE_NON_DRAFT_AI_RESOURCE_VERSION。\n- 响应：成功时返回空结果。\n",
+        "operationId": "deleteAgentAssets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/agent/createAgent": {
+      "post": {
+        "tags": ["智能体资产"],
+        "summary": "创建智能体资产",
+        "description": "- 用途：为当前用户创建一个可管理和发布的智能体资产。\n- 请求：title 为资源展示标题；name、description 和 sourceType 为智能体元信息，sourceType 为空时按 MANUAL 处理。\n- 约束：当前用户必须已登录；title 必须是可用于展示的资源标题。\n- 处理：调用资源服务注册 AGENT 类型资源，以当前用户作为所有者；创建智能体主档并初始化首个草稿版本 1；不上传文件，也不发布版本。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源注册失败或智能体主档落库失败 -> AIResourceError.AI_RESOURCE_REGISTER_FAILED。\n- 响应：返回智能体资产资源 ID。\n",
+        "operationId": "createAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIResourceCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/agent/changeAgentInfo": {
+      "post": {
+        "tags": ["智能体资产"],
+        "summary": "更新智能体资产信息",
+        "description": "- 用途：维护智能体资产的名称和描述信息。\n- 请求：resourceId 指定智能体资产；name 和 description 为空时不更新对应字段。\n- 约束：当前用户必须是资源所有者；目标智能体资产必须存在。\n- 处理：按非空字段更新智能体主档元信息；不修改资源标题、草稿文件、版本号或发布状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不是资源所有者 -> AIResourceError.AI_RESOURCE_PERMISSION_DENIED；智能体不存在 -> AIResourceError.AI_RESOURCE_NOT_FOUND。\n- 响应：成功时返回空结果。\n",
+        "operationId": "updateAgentInfo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIResourceUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -296,16 +690,12 @@
   },
   "components": {
     "schemas": {
-      "SkillVersionPublishRequest": {
-        "required": ["draftVersion", "resourceId"],
+      "AIResourceVersionPublishRequest": {
+        "required": ["resourceId"],
         "type": "object",
         "properties": {
           "resourceId": {
             "type": "string"
-          },
-          "draftVersion": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },
@@ -327,8 +717,8 @@
           }
         }
       },
-      "SkillAssetUploadInitRequest": {
-        "required": ["assets", "resourceId"],
+      "AssetUploadInitRequest": {
+        "required": ["assets", "draftVersion", "resourceId"],
         "type": "object",
         "properties": {
           "resourceId": {
@@ -341,13 +731,13 @@
           "assets": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/SkillAssetUploadRequest"
+              "$ref": "#/components/schemas/AssetUploadRequest"
             }
           }
         }
       },
-      "SkillAssetUploadRequest": {
-        "required": ["name", "path", "skillAssetResourceType"],
+      "AssetUploadRequest": {
+        "required": ["assetResourceType", "name", "path"],
         "type": "object",
         "properties": {
           "name": {
@@ -356,7 +746,7 @@
           "path": {
             "type": "string"
           },
-          "skillAssetResourceType": {
+          "assetResourceType": {
             "type": "string",
             "enum": ["MD", "PYTHON_SCRIPT", "TEXT", "JSON", "YAML", "TOML"]
           },
@@ -366,6 +756,24 @@
           "expectedSize": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "AssetUploadInitResponse": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assetUploadTickets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetUploadTicket"
+            }
           }
         }
       },
@@ -395,7 +803,7 @@
           }
         }
       },
-      "RSkillAssetUploadInitResponse": {
+      "RAssetUploadInitResponse": {
         "type": "object",
         "properties": {
           "code": {
@@ -409,47 +817,11 @@
             "type": "string"
           },
           "data": {
-            "$ref": "#/components/schemas/SkillAssetUploadInitResponse"
+            "$ref": "#/components/schemas/AssetUploadInitResponse"
           }
         }
       },
-      "SkillAssetUploadInitResponse": {
-        "type": "object",
-        "properties": {
-          "resourceId": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "assetUploadTickets": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AssetUploadTicket"
-            }
-          }
-        }
-      },
-      "RSkillVersionInfoResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "key": {
-            "type": "string"
-          },
-          "msg": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/SkillVersionInfoResponse"
-          }
-        }
-      },
-      "SkillAssetInfoBase": {
+      "AssetInfoBase": {
         "type": "object",
         "properties": {
           "id": {
@@ -464,7 +836,7 @@
           "objectKey": {
             "type": "string"
           },
-          "skillAssetResourceType": {
+          "assetResourceType": {
             "type": "string",
             "enum": ["MD", "PYTHON_SCRIPT", "TEXT", "JSON", "YAML", "TOML"]
           },
@@ -478,32 +850,7 @@
           }
         }
       },
-      "SkillVersionInfoResponse": {
-        "type": "object",
-        "properties": {
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "mainSkillMD": {
-            "$ref": "#/components/schemas/SkillAssetInfoBase"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["DRAFT", "PUBLISHED"]
-          },
-          "skillAssets": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SkillAssetInfoBase"
-            }
-          },
-          "resourceId": {
-            "type": "string"
-          }
-        }
-      },
-      "RSkillInfoResponse": {
+      "RSkillVersionBundleInfoResponse": {
         "type": "object",
         "properties": {
           "code": {
@@ -517,7 +864,142 @@
             "type": "string"
           },
           "data": {
-            "$ref": "#/components/schemas/SkillInfoResponse"
+            "$ref": "#/components/schemas/SkillVersionBundleInfoResponse"
+          }
+        }
+      },
+      "SkillVersionBundleInfoResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["DRAFT", "PUBLISHED"]
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetInfoBase"
+            }
+          },
+          "resourceId": {
+            "type": "string"
+          }
+        }
+      },
+      "AIResourceInfoBase": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": ["BY_AGENT", "MANUAL"]
+          }
+        }
+      },
+      "MarketSaleInfoResponse": {
+        "type": "object",
+        "properties": {
+          "reviewActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
+            }
+          },
+          "reviewContentPercentage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "marketSaleTiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketSaleTierResponse"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING_REVIEW", "PUBLISHED", "REJECTED", "BANNED", "OFF_SHELF"]
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "auditMessage": {
+            "type": "string"
+          },
+          "auditAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MarketSaleTierResponse": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string"
+          },
+          "grantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
+            }
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RSkillResourceInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SkillResourceInfoResponse"
           }
         }
       },
@@ -539,6 +1021,14 @@
           "scoreTotal": {
             "type": "integer",
             "format": "int32"
+          },
+          "favoriteCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "commentCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -552,6 +1042,7 @@
             "type": "string",
             "enum": [
               "NOTE",
+              "DRAWIO",
               "PDF",
               "DOC",
               "DOCX",
@@ -574,33 +1065,56 @@
             "type": "integer",
             "format": "int64"
           },
+          "resourceInteractionInfo": {
+            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
+          },
           "resourceId": {
             "type": "string"
           },
           "ownerInfo": {
             "$ref": "#/components/schemas/UserDisplayBase"
           },
-          "resourceInteractionInfo": {
-            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
-          },
           "currentTags": {
             "type": "object",
             "additionalProperties": {
-              "type": "string"
+              "$ref": "#/components/schemas/TagInfoBase"
             }
           },
           "currentActions": {
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
             }
           },
           "overrideGrantedActions": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "DISCOVER",
+                  "VIEW",
+                  "LOAD",
+                  "EDIT",
+                  "INLINE_COMMENT",
+                  "DOWNLOAD_WATERMARK",
+                  "DOWNLOAD_ORIGINAL",
+                  "FORK",
+                  "COMMENT"
+                ]
+              }
             }
           },
           "specifiedUsersGrantedActions": {
@@ -609,39 +1123,62 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+                "enum": [
+                  "DISCOVER",
+                  "VIEW",
+                  "LOAD",
+                  "EDIT",
+                  "INLINE_COMMENT",
+                  "DOWNLOAD_WATERMARK",
+                  "DOWNLOAD_ORIGINAL",
+                  "FORK",
+                  "COMMENT"
+                ]
               }
+            }
+          },
+          "marketSaleInfos": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MarketSaleInfoResponse"
             }
           }
         }
       },
-      "SkillInfoBase": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sourceType": {
-            "type": "string",
-            "enum": ["BY_AGENT", "MANUAL"]
-          }
-        }
-      },
-      "SkillInfoResponse": {
+      "SkillResourceInfoResponse": {
         "type": "object",
         "properties": {
           "resourceInfo": {
             "$ref": "#/components/schemas/ResourceItemResponse"
           },
           "skillInfo": {
-            "$ref": "#/components/schemas/SkillInfoBase"
+            "$ref": "#/components/schemas/AIResourceInfoBase"
+          }
+        }
+      },
+      "TagInfoBase": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "tagName": {
+            "type": "string"
+          },
+          "tagDesc": {
+            "type": "string"
+          },
+          "tagIcon": {
+            "type": "string"
+          },
+          "tagColor": {
+            "type": "string"
+          },
+          "tagCreator": {
+            "type": "string"
+          },
+          "isPath": {
+            "type": "boolean"
           }
         }
       },
@@ -663,41 +1200,19 @@
           }
         }
       },
-      "SkillAssetDeleteRequest": {
-        "required": ["assetIds", "resourceId"],
+      "AIResourceForkRequest": {
+        "required": ["resourceId"],
         "type": "object",
         "properties": {
           "resourceId": {
             "type": "string"
           },
-          "draftVersion": {
+          "forkedResourceVersion": {
             "type": "integer",
             "format": "int32"
           },
-          "assetIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "SkillCreateRequest": {
-        "required": ["title"],
-        "type": "object",
-        "properties": {
-          "title": {
+          "forkedResourceName": {
             "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "sourceType": {
-            "type": "string",
-            "enum": ["BY_AGENT", "MANUAL"]
           }
         }
       },
@@ -719,7 +1234,45 @@
           }
         }
       },
-      "SkillUpdateRequest": {
+      "AssetDeleteRequest": {
+        "required": ["assetIds", "draftVersion", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "draftVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assetIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AIResourceCreateRequest": {
+        "required": ["title"],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": ["BY_AGENT", "MANUAL"]
+          }
+        }
+      },
+      "AIResourceUpdateRequest": {
         "type": "object",
         "properties": {
           "resourceId": {
@@ -732,15 +1285,206 @@
             "type": "string"
           }
         }
+      },
+      "AgentMemoryPolicy": {
+        "type": "object",
+        "properties": {
+          "enableChatMemory": {
+            "type": "boolean"
+          },
+          "enablePersistenceChatMemory": {
+            "type": "boolean"
+          },
+          "enableChatMemorySummary": {
+            "type": "boolean"
+          },
+          "highWatermarkRatio": {
+            "type": "number",
+            "format": "double"
+          },
+          "lowWatermarkRatio": {
+            "type": "number",
+            "format": "double"
+          },
+          "summaryPrompt": {
+            "type": "string"
+          },
+          "enableLongTermMemory": {
+            "type": "boolean"
+          },
+          "longTermMemoryLimit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "longTermMemoryScoreThreshold": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "AgentModelPolicy": {
+        "type": "object",
+        "properties": {
+          "defaultModelId": {
+            "type": "string"
+          },
+          "defaultProviderId": {
+            "type": "string"
+          },
+          "allowRequestOverride": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AgentSpecInfoBase": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string"
+          },
+          "autoGenerateTitle": {
+            "type": "boolean"
+          },
+          "modelPolicy": {
+            "$ref": "#/components/schemas/AgentModelPolicy"
+          },
+          "toolAndSkillPolicy": {
+            "$ref": "#/components/schemas/AgentToolAndSkillPolicy"
+          },
+          "memoryPolicy": {
+            "$ref": "#/components/schemas/AgentMemoryPolicy"
+          }
+        }
+      },
+      "AgentSpecUpdateRequest": {
+        "required": ["draftVersion", "resourceId", "spec"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "draftVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/AgentSpecInfoBase"
+          }
+        }
+      },
+      "AgentToolAndSkillPolicy": {
+        "type": "object",
+        "properties": {
+          "enableUseTool": {
+            "type": "boolean"
+          },
+          "allowToolNames": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "denyToolNames": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enableUseSkill": {
+            "type": "boolean"
+          },
+          "onDemandSkillIds": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "forceEnabledSkillIds": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AgentVersionBundleInfoResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["DRAFT", "PUBLISHED"]
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetInfoBase"
+            }
+          },
+          "resourceId": {
+            "type": "string"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/AgentSpecInfoBase"
+          }
+        }
+      },
+      "RAgentVersionBundleInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AgentVersionBundleInfoResponse"
+          }
+        }
+      },
+      "AgentResourceInfoResponse": {
+        "type": "object",
+        "properties": {
+          "resourceInfo": {
+            "$ref": "#/components/schemas/ResourceItemResponse"
+          },
+          "agentInfo": {
+            "$ref": "#/components/schemas/AIResourceInfoBase"
+          }
+        }
+      },
+      "RAgentResourceInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AgentResourceInfoResponse"
+          }
+        }
       }
     },
     "securitySchemes": {
-      "FromSource": {
-        "type": "apiKey",
-        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
-        "name": "X-From-Source",
-        "in": "header"
-      },
       "UserID": {
         "type": "apiKey",
         "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",
