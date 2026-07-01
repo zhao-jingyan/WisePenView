@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.4:19905",
-      "description": "Generated server url"
+      "url": "/docs/proxy/resource",
+      "description": "WisePen Docs Proxy"
     }
   ],
   "tags": [
@@ -33,8 +33,24 @@
       "description": "资源重命名、标签绑定、独立权限和分页查询"
     },
     {
+      "name": "收藏管理",
+      "description": "资源收藏关系与收藏集合标签管理"
+    },
+    {
       "name": "资源互动",
       "description": "资源阅读、点赞、评分与用户互动状态"
+    },
+    {
+      "name": "资源评论",
+      "description": "资源评论区的发布、删除、点赞与分页查询"
+    },
+    {
+      "name": "集市",
+      "description": "资源上架、下架、购买和购买记录查询"
+    },
+    {
+      "name": "管理员 - 集市",
+      "description": "平台管理员审核集市销售信息"
     }
   ],
   "paths": {
@@ -68,7 +84,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -106,7 +121,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -144,7 +158,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -182,7 +195,117 @@
         },
         "security": [
           {
-            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/market/purchaseResource": {
+      "post": {
+        "tags": ["集市"],
+        "summary": "购买资源",
+        "description": "- 用途：买家购买集市资源的某个售卖档位授权。\n- 请求：resourceId 指定资源；marketGroupId 使用原始集市组ID，定位该资源在目标集市组中的销售信息；offerId 指定要购买的售卖档位。\n- 约束：集市销售信息必须存在且状态为 PUBLISHED；买家不能购买自己上架的资源；offerId 必须命中当前售卖档位；买家尚未完整拥有该档位授权。\n- 处理：按 offerId 选中售卖档位并请求钱包结算；创建购买订单，记录 traceId、购买版本、授权动作和支付价格；将售卖档位授权按位或写入 marketSpecifiedUsersGrantedActionsMask 并触发 ACL 重算。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；集市销售信息不存在 -> ResourceError.MARKET_SALE_INFO_NOT_FOUND；集市销售信息未上架 -> ResourceError.CANNOT_PURCHASE_OFF_SHELF_MARKET_SALE；购买自己上架的资源 -> ResourceError.CANNOT_PURCHASE_OWN_MARKET_SALE；售卖档位不存在 -> ResourceError.MARKET_SALE_TIER_NOT_FOUND；已拥有该售卖档位授权 -> ResourceError.MARKET_SALE_TIER_GRANT_ALREADY_EXISTS。\n- 响应：返回本次购买记录信息。\n",
+        "operationId": "purchaseResource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketPurchaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RMarketOrderResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/market/publishSaleInfo": {
+      "post": {
+        "tags": ["集市"],
+        "summary": "提交上架信息",
+        "description": "- 用途：资源所有者在集市组中提交或更新资源的集市销售信息。\n- 请求：resourceId 指定资源；marketGroupId 使用原始集市组ID；tagIds 指定该集市组下的标签；offerVersion 指定本次提交对应的资源版本；reviewContentPercentage 与 reviewActions 指定预览范围和预览动作；marketSaleTiers 指定售卖档位、授权动作和价格。\n- 约束：当前用户必须是资源所有者；marketGroupId 必须对应 MARKET_GROUP；tagIds 必须属于该集市组标签空间；已封禁的集市销售信息不能再次提交；预览动作和售卖档位动作不能包含 EDIT；售卖档位授权动作不能重复。\n- 处理：覆盖该集市组绑定的 tagIds 和整组 marketSaleInfo；已发布或已下架且 offerVersion 未变化时直接置为 PUBLISHED 并移除该集市组 override；其他提交进入 PENDING_REVIEW，清空审核信息并设置该集市组 override=0；提交后为 PUBLISHED 时触发 ACL 重算。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；当前用户不是资源所有者 -> ResourceError.RESOURCE_PERMISSION_DENIED；集市组不存在或不是 MARKET_GROUP -> ResourceError.MARKET_GROUP_NOT_FOUND；标签不存在或不属于该集市组标签空间 -> ResourceError.TAG_NODE_NOT_FOUND；已封禁的集市销售信息再次提交 -> ResourceError.CANNOT_REPUBLISH_BANNED_MARKET_SALE；集市权限包含禁止动作 -> ResourceError.MARKET_ACTIONS_INVALID；售卖档位授权动作重复 -> ResourceError.MARKET_SALE_TIER_ACTIONS_DUPLICATED。\n- 响应：成功时返回空结果。\n",
+        "operationId": "publishSaleInfo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketSalePublishRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/market/offShelfSaleInfo": {
+      "post": {
+        "tags": ["集市"],
+        "summary": "下架资源",
+        "description": "- 用途：资源所有者将已经发布的集市销售信息下架。\n- 请求：resourceId 指定资源；marketGroupId 使用原始集市组ID，定位该资源在目标集市组中的销售信息。\n- 约束：当前用户必须是资源所有者；目标集市销售信息必须存在且状态为 PUBLISHED；已封禁、待审核、已驳回或已下架的销售信息不能通过该接口下架。\n- 处理：将整组 marketSaleInfo 状态置为 OFF_SHELF，设置该集市组 override=0 并触发 ACL 重算；不删除售卖档位、购买记录或已写入的购买授权。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；当前用户不是资源所有者 -> ResourceError.RESOURCE_PERMISSION_DENIED；集市销售信息不存在 -> ResourceError.MARKET_SALE_INFO_NOT_FOUND；已封禁的集市销售信息不可操作 -> ResourceError.CANNOT_REPUBLISH_BANNED_MARKET_SALE；集市销售信息未上架或已下架 -> ResourceError.CANNOT_OPERATE_OFF_SHELF_MARKET_SALE。\n- 响应：成功时返回空结果。\n",
+        "operationId": "offShelfSaleInfo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketSaleOffShelfRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -220,7 +343,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -261,7 +383,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -299,7 +420,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -311,7 +431,7 @@
       "post": {
         "tags": ["资源"],
         "summary": "更新资源独立权限",
-        "description": "- 用途：资源所有者设置资源级动作权限覆盖规则和指定用户特权动作。\n- 请求：resourceId 指定目标资源；overrideGrantedActions 为空表示清空资源级覆盖动作；specifiedUsersGrantedActions 为空表示清空指定用户特权。\n- 约束：当前用户必须是资源所有者；目标资源必须存在；动作列表必须是合法资源动作枚举。\n- 处理：保存资源级覆盖权限和指定用户权限映射，并触发资源 ACL 重算；不修改资源标签绑定、默认小组权限或资源内容。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；当前用户不是资源所有者 -> ResourceError.RESOURCE_PERMISSION_DENIED。\n- 响应：成功时返回空结果。\n",
+        "description": "- 用途：资源所有者设置资源级动作权限覆盖规则和指定用户特权动作。\n- 请求：resourceId 指定目标资源；overrideGrantedActions 是 groupId -> actions 的覆盖映射，null 表示清空普通组覆盖；specifiedUsersGrantedActions 为空表示清空指定用户特权。\n- 约束：当前用户必须是资源所有者；目标资源必须存在；动作列表必须是合法资源动作枚举；Market group 覆盖不能通过本接口修改。\n- 处理：保存资源级覆盖权限和指定用户权限映射，并触发资源 ACL 重算；Market 审核 override 会被保留；不修改资源标签绑定、默认小组权限或资源内容。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；当前用户不是资源所有者 -> ResourceError.RESOURCE_PERMISSION_DENIED。\n- 响应：成功时返回空结果。\n",
         "operationId": "updateResourceActionPermission",
         "requestBody": {
           "content": {
@@ -337,7 +457,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -349,7 +468,7 @@
       "post": {
         "tags": ["资源互动"],
         "summary": "切换资源点赞状态",
-        "description": "- 用途：让当前用户对资源执行点赞或取消点赞。\n- 请求：resourceId 指定目标资源。\n- 约束：当前用户必须已登录；目标资源必须存在。\n- 处理：读取当前用户点赞状态并取反，写入新的点赞状态；点赞时资源点赞数加一，取消点赞时资源点赞数减一；不影响评分和阅读状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；互动记录更新失败 -> CommonError.INTERNAL_ERROR。\n- 响应：成功时返回空结果。\n",
+        "description": "- 用途：让当前用户对资源执行点赞或取消点赞。\n- 请求：resourceId 指定目标资源。\n- 约束：当前用户必须已登录；目标资源必须存在且未被删除。\n- 处理：读取当前用户点赞状态并取反，写入新的点赞状态；点赞时资源点赞数加一，取消点赞时资源点赞数减一；不影响评分和阅读状态。\n- 失败：资源不存在或已被删除 -> ResourceError.RESOURCE_NOT_FOUND。\n- 响应：成功时返回空结果。\n",
         "operationId": "changeResourceLikeStatus",
         "requestBody": {
           "content": {
@@ -375,7 +494,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -387,7 +505,7 @@
       "post": {
         "tags": ["资源互动"],
         "summary": "记录资源阅读",
-        "description": "- 用途：在用户打开或阅读资源时记录一次有效阅读行为。\n- 请求：resourceId 指定被阅读资源。\n- 约束：当前用户必须已登录；目标资源必须存在。\n- 处理：通过 Redis 窗口判断当前用户是否为窗口期内首次阅读；首次阅读会写入用户已读记录并增加资源阅读数，重复阅读不重复累加。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；Redis 读写异常 -> CommonError.INTERNAL_ERROR。\n- 响应：成功时返回空结果。\n",
+        "description": "- 用途：在用户打开或阅读资源时记录一次有效阅读行为。\n- 请求：resourceId 指定被阅读资源。\n- 约束：当前用户必须已登录；目标资源必须存在且未被删除。\n- 处理：通过 Redis 窗口判断当前用户是否为窗口期内首次阅读；首次阅读会写入用户已读记录并增加资源阅读数，重复阅读不重复累加。\n- 失败：资源不存在或已被删除 -> ResourceError.RESOURCE_NOT_FOUND；Redis 读写异常 -> CommonError.INTERNAL_ERROR。\n- 响应：成功时返回空结果。\n",
         "operationId": "changeResourceReadStatus",
         "requestBody": {
           "content": {
@@ -413,7 +531,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -425,7 +542,7 @@
       "post": {
         "tags": ["资源互动"],
         "summary": "评价资源",
-        "description": "- 用途：记录或更新当前用户对资源的评分。\n- 请求：resourceId 指定目标资源；score 为用户提交的评分值。\n- 约束：当前用户必须已登录；目标资源必须存在；score 取值范围为 1 到 5。\n- 处理：写入当前用户评分；首次评分会增加评分人数和总分，修改评分只调整总分差值，相同评分不会重复改变统计；不影响点赞和阅读状态。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；互动统计更新失败 -> CommonError.INTERNAL_ERROR。\n- 响应：成功时返回空结果。\n",
+        "description": "- 用途：记录或更新当前用户对资源的评分。\n- 请求：resourceId 指定目标资源；score 为用户提交的评分值。\n- 约束：当前用户必须已登录；目标资源必须存在且未被删除；score 取值范围为 1 到 5。\n- 处理：写入当前用户评分；首次评分会增加评分人数和总分，修改评分只调整总分差值，相同评分不会重复改变统计；不影响点赞和阅读状态。\n- 失败：资源不存在或已被删除 -> ResourceError.RESOURCE_NOT_FOUND。\n- 响应：成功时返回空结果。\n",
         "operationId": "changeResourceScore",
         "requestBody": {
           "content": {
@@ -451,7 +568,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -489,7 +605,339 @@
         },
         "security": [
           {
-            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/favorite/updateCollectionInfo": {
+      "post": {
+        "tags": ["收藏管理"],
+        "summary": "修改收藏集合名称或描述",
+        "description": "- 用途：更新收藏集合的展示名称或描述，不影响集合内的资源引用和收藏关系。\n- 请求：collectionId、collectionName、description 均在请求体中；Full Update 语义，必须同时传入 collectionName 和 description，description 传 null 表示清除描述。\n- 约束：当前用户必须已登录；目标收藏集合必须存在且归属当前用户；collectionName 不能为空字符串。\n- 处理：更新集合名称和描述；不修改 isDefault 标记、itemCount、收藏资源关系或创建时间。\n- 失败：目标收藏集合不存在或不归属当前用户 -> ResourceError.FAVORITE_COLLECTION_NOT_FOUND。\n- 响应：成功时返回空结果。\n",
+        "operationId": "updateCollectionInfo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteCollectionInfoUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/favorite/deleteCollection": {
+      "post": {
+        "tags": ["收藏管理"],
+        "summary": "删除收藏集合",
+        "description": "- 用途：删除当前用户的指定收藏集合标签，并处理原本只归属该集合的收藏资源。\n- 请求：collectionId 在请求体中指定目标集合；keepResourcesToDefault=false 或未传时，直接删除这些收藏关系；keepResourcesToDefault=true 时，将失去最后一个集合标签的收藏资源转入默认收藏集合。\n- 约束：当前用户必须已登录；目标收藏集合必须存在且归属当前用户；默认收藏集合不可删除。\n- 处理：从受影响的收藏引用中移除目标 collectionId；仍有其他集合标签的引用继续保留；无其他集合标签的引用按 keepResourcesToDefault 规则转入默认集合或删除，并同步维护资源 favoriteCount 与收藏集合 itemCount；不删除资源本身。\n- 失败：目标收藏集合不存在或不归属当前用户 -> ResourceError.FAVORITE_COLLECTION_NOT_FOUND；尝试删除默认收藏集合 -> ResourceError.DEFAULT_COLLECTION_CANNOT_DELETE。\n- 响应：成功时返回空结果。\n",
+        "operationId": "deleteCollection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteCollectionDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/favorite/createCollection": {
+      "post": {
+        "tags": ["收藏管理"],
+        "summary": "新建收藏集合",
+        "description": "- 用途：为当前用户创建一个自定义收藏集合标签，用于分类管理收藏资源。\n- 请求：collectionName 为集合名称，不能为空；description 为可选描述，不传表示无描述。\n- 约束：当前用户必须已登录；collectionName 不能为空字符串。\n- 处理：创建新收藏集合，isDefault 固定为 false，itemCount 初始为 0；不自动添加任何资源；返回服务端生成的 collectionId。\n- 失败：无业务失败点。\n- 响应：返回服务端生成的收藏集合 ID（ObjectId 字符串）。\n",
+        "operationId": "createCollection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteCollectionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/favorite/changeResourceFavoriteStatus": {
+      "post": {
+        "tags": ["收藏管理"],
+        "summary": "更改资源收藏状态",
+        "description": "- 用途：维护当前用户对单个资源的收藏关系，以及该资源归属的收藏集合标签。\n- 请求：resourceId 指定目标资源；favorite=true 表示收藏或更新收藏集合标签，favorite=false 表示取消收藏；collectionIds 仅在 favorite=true 时生效，未传或为空时自动使用默认收藏集合。\n- 约束：当前用户必须已登录；目标资源必须存在且未被软删除；favorite=true 时传入的 collectionIds 必须全部归属当前用户。\n- 处理：favorite=true 时创建或更新当前用户对该资源的唯一收藏引用，并同步维护资源 favoriteCount 与收藏集合 itemCount；favorite=false 时删除收藏引用并递减相关计数；不修改资源本身。\n- 失败：目标资源不存在或已删除 -> ResourceError.RESOURCE_NOT_FOUND；目标收藏集合不存在或不归属当前用户 -> ResourceError.FAVORITE_COLLECTION_NOT_FOUND。\n- 响应：成功时返回空结果。\n",
+        "operationId": "changeResourceFavoriteStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceFavoriteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/comment/toggleLike": {
+      "post": {
+        "tags": ["资源评论"],
+        "summary": "切换评论点赞状态",
+        "description": "- 用途：用户对顶级评论或回复进行点赞或取消点赞（切换语义）。\n- 请求：resourceId 指定目标资源；commentId 为目标评论或回复的统一评论 ID。\n- 约束：当前用户必须已登录；目标资源必须存在且未被软删除；目标评论/回复必须属于该资源且未被软删除。\n- 处理：$addToSet/$pull 维护 likedCommentIds；同步 $inc 目标 likeCount。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；目标资源不存在或已删除 -> ResourceError.RESOURCE_NOT_FOUND；目标评论或回复不存在或已删除 -> ResourceError.COMMENT_NOT_FOUND。\n- 响应：返回操作后的点赞状态（true 表示已点赞）。\n",
+        "operationId": "toggleLike",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentLikeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/comment/deleteCommentItem": {
+      "post": {
+        "tags": ["资源评论"],
+        "summary": "删除评论或回复",
+        "description": "- 用途：用户软删除自己发布的顶级评论或回复。\n- 请求：resourceId 指定目标资源；commentId 为目标评论或回复的统一评论 ID。\n- 约束：当前用户必须已登录；目标资源必须存在且未被软删除；目标评论必须属于该资源且未被软删除；操作人必须是管理员、资源所有者或该评论的 authorId。\n- 处理（顶级评论）：软删除评论；资源 commentCount -1；不级联删除回复。\n- 处理（回复）：软删除回复；所属顶级评论 replyCount -1；资源 commentCount -1。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；目标资源不存在或已删除 -> ResourceError.RESOURCE_NOT_FOUND；目标评论或回复不存在或已删除 -> ResourceError.COMMENT_NOT_FOUND；操作人无删除权限 -> ResourceError.COMMENT_DELETE_ACCESS_DENIED。\n- 响应：成功时返回空结果。\n",
+        "operationId": "deleteCommentItem",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/comment/createReply": {
+      "post": {
+        "tags": ["资源评论"],
+        "summary": "发布回复",
+        "description": "- 用途：用户对某条顶级评论或某条回复进行回复。\n- 请求：resourceId 指定目标资源；replyTo 为同一资源下被回复目标的 commentId；content 不能为空；imageUrls 可选。\n- 约束：当前用户必须已登录；目标资源必须存在且未被软删除；replyTo 对应目标必须存在且未被软删除。\n- 处理：创建统一评论文档，按父目标类型写入 commentType、rootCommentId、replyTo 和 replyToUserId；所属顶级评论 replyCount +1；资源 commentCount +1。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；目标资源不存在或已删除 -> ResourceError.RESOURCE_NOT_FOUND；replyTo 对应目标不存在或已删除 -> ResourceError.COMMENT_NOT_FOUND。\n- 响应：返回服务端生成的 commentId。\n",
+        "operationId": "createReply",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentReplyCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/comment/createComment": {
+      "post": {
+        "tags": ["资源评论"],
+        "summary": "发布顶级评论",
+        "description": "- 用途：用户在资源展示页发布顶级评论。\n- 请求：resourceId 指定目标资源；content 为评论正文，不能为空；imageUrls 为可选图片 URL 列表。\n- 约束：当前用户必须已登录；目标资源必须存在且未被软删除。\n- 处理：插入顶级评论文档，authorId 取当前登录用户；资源 commentCount +1。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；目标资源不存在或已删除 -> ResourceError.RESOURCE_NOT_FOUND。\n- 响应：返回服务端生成的 commentId。\n",
+        "operationId": "createComment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/admin/market/auditSale": {
+      "post": {
+        "tags": ["管理员 - 集市"],
+        "summary": "审核资源",
+        "description": "- 用途：平台管理员审核资源在指定集市组中的整组销售信息。\n- 请求：resourceId 指定资源；marketGroupId 使用原始集市组ID，定位该资源在目标集市组中的销售信息；offerVersion 必须匹配当前提交版本；status 是审核后写入的目标状态；auditMessage 是审核说明。\n- 约束：当前用户必须是平台管理员；集市销售信息必须存在；offerVersion 必须与当前提交版本一致；status 为 REJECTED 或 BANNED 时必须填写 auditMessage。\n- 处理：写入 marketSaleInfo 的目标状态、审核说明、审核时间和审核人；状态为 PUBLISHED 时移除该集市组 override，其他状态设置 override=0；仅当状态在 PUBLISHED 与非 PUBLISHED 之间切换时触发 ACL 重算。\n- 失败：当前身份不是平台管理员 -> PermissionError.UNAUTHORIZED；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；集市销售信息不存在 -> ResourceError.MARKET_SALE_INFO_NOT_FOUND；驳回或封禁未填写审核说明 -> ResourceError.MARKET_AUDIT_MESSAGE_INVALID；审核版本与当前提交版本不一致 -> ResourceError.MARKET_AUDIT_VERSION_CONFLICT。\n- 响应：成功时返回空结果。\n",
+        "operationId": "auditSale",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketSaleAuditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -527,7 +975,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -594,7 +1041,57 @@
         },
         "security": [
           {
-            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/market/listOrders": {
+      "get": {
+        "tags": ["集市"],
+        "summary": "分页查询我的购买",
+        "description": "- 用途：查询当前用户购买过的集市资源订单，供用户查看已购买授权、支付价格和购买版本。\n- 请求：page、size 控制分页。\n- 约束：当前用户必须已登录。\n- 处理：按当前用户 buyerId 分页查询订单；不校验原资源当前是否仍存在、上架或可访问。\n- 失败：未登录 -> PermissionError.NOT_LOGIN。\n- 响应：返回当前用户购买记录分页。\n",
+        "operationId": "listOrders",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRMarketOrderResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -606,7 +1103,7 @@
       "get": {
         "tags": ["资源"],
         "summary": "分页查询资源",
-        "description": "- 用途：按个人空间或小组空间分页查询当前用户可见的资源列表。\n- 请求：groupId 为空时查询当前用户个人资源空间，非空时查询指定小组空间；tagIds 为空表示查询该空间下全部可见资源，非空时按 tagQueryLogicMode 进行多标签筛选；resourceType、page、size、sortBy、sortDir 控制类型过滤、分页和排序。\n- 约束：当前用户必须已登录；查询小组空间时必须属于目标小组；分页、排序字段、标签组合逻辑和资源类型必须合法。\n- 处理：个人空间默认排除个人回收站体系下的资源，除非显式传入回收站内标签；小组空间按当前用户在小组中的角色和资源 ACL 查询可见资源，并批量补充当前标签名和互动统计；不返回当前用户无权查看的资源。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不属于目标小组 -> PermissionError.PERMISSION_DENIED。\n- 响应：返回分页资源列表、总数、当前页资源的标签名映射和互动统计。\n",
+        "description": "- 用途：按个人空间或小组空间分页查询当前用户可见的资源列表。\n- 请求：groupId 为空时查询当前用户个人资源空间，非空时查询指定小组空间；tagIds 为空表示查询该空间下全部可见资源，非空时按 tagQueryLogicMode 进行多标签筛选；resourceType、page、size、sortBy、sortDir 控制类型过滤、分页和排序。\n- 约束：当前用户必须已登录；查询小组空间时必须属于目标小组；分页、排序字段、标签组合逻辑和资源类型必须合法。\n- 处理：个人空间默认排除个人回收站体系下的资源，除非显式传入回收站内标签；小组空间按当前用户在小组中的角色和资源 ACL 查询具备 DISCOVER 的资源；批量补充 ownerInfo、当前查询空间的 currentTags、currentActions 和互动统计；当前 groupId 下的 marketOffers（买家仅见已审核通过且在售条目，资源所有者与小组管理员可见全部）；仅资源所有者返回 overrideGrantedActions 与 specifiedUsersGrantedActions；不返回当前用户无权发现的资源。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；当前用户不属于目标小组 -> PermissionError.PERMISSION_DENIED。\n- 响应：返回分页资源列表、总数，以及当前页资源的完整列表态 ResourceItemResponse。\n",
         "operationId": "listResources",
         "parameters": [
           {
@@ -705,7 +1202,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -717,7 +1213,7 @@
       "get": {
         "tags": ["资源互动"],
         "summary": "获取资源互动状态",
-        "description": "- 用途：查询当前用户对指定资源的阅读、点赞和评分记录。\n- 请求：resourceId 指定目标资源。\n- 约束：当前用户必须已登录；本接口按用户与资源 ID 查询互动记录，不承担资源可见性校验。\n- 处理：读取当前用户的资源互动记录；若不存在记录则返回默认未读、未点赞、未评分状态；不更新资源全局统计。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；互动查询发生未处理异常 -> CommonError.INTERNAL_ERROR。\n- 响应：返回当前用户对该资源的互动状态。\n",
+        "description": "- 用途：查询当前用户对指定资源的阅读、点赞和评分记录。\n- 请求：resourceId 指定目标资源。\n- 约束：当前用户必须已登录；本接口按用户与资源 ID 查询互动记录，不承担资源可见性校验。\n- 处理：读取当前用户的资源互动记录；若不存在记录则返回默认未读、未点赞、未评分状态；不更新资源全局统计。\n- 失败：无业务失败点。\n- 响应：返回当前用户对该资源的互动状态。\n",
         "operationId": "getResourceUserInteractionRecord",
         "parameters": [
           {
@@ -743,7 +1239,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -781,7 +1276,259 @@
         },
         "security": [
           {
-            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/favorite/listFavoritedResources": {
+      "get": {
+        "tags": ["收藏管理"],
+        "summary": "分页查询已收藏资源",
+        "description": "- 用途：分页展示当前用户已收藏的资源，可作为总收藏视图，也可按收藏集合标签过滤。\n- 请求：collectionId 为可选 Query 参数；不传时查询当前用户全部收藏资源，传入时只查询归属该收藏集合的资源；page 为页码（从 1 开始，默认 1）；size 为每页条数（默认 20，最大 100）。\n- 约束：当前用户必须已登录；collectionId 传入时目标收藏集合必须存在且归属当前用户；page 不能小于 1；size 不能超过 100。\n- 处理：直接分页查询收藏引用集合，按 favoritedAt 倒序、id 倒序返回；批量加载当前页资源详情，并按当前用户权限填充列表态 ResourceItemResponse；资源不存在、已删除或当前用户不再具备 DISCOVER 时返回 accessible=false 且不返回 resourceInfo。\n- 失败：目标收藏集合不存在或不归属当前用户 -> ResourceError.FAVORITE_COLLECTION_NOT_FOUND。\n- 响应：返回分页收藏条目列表；可访问条目包含 resourceId、resourceInfo、favoritedAt、collectionIds 和 accessible；不可访问条目仅保留 resourceId、favoritedAt、collectionIds 和 accessible=false。\n",
+        "operationId": "listFavoritedResources",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRFavoriteItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/favorite/listCollections": {
+      "get": {
+        "tags": ["收藏管理"],
+        "summary": "查询当前用户收藏集合列表",
+        "description": "- 用途：获取当前用户创建的所有收藏集合标签，用于收藏集合列表展示和收藏操作时的集合选择。\n- 请求：无入参，取当前登录用户的全部收藏集合。\n- 约束：当前用户必须已登录。\n- 处理：确保当前用户存在默认收藏集合；查询当前用户全部收藏集合，按默认集合置顶、创建时间倒序排列；每条返回集合基本信息和已维护的 itemCount；不加载资源详情。\n- 失败：无业务失败点。\n- 响应：返回收藏集合列表，默认集合排在最前。\n",
+        "operationId": "listCollections",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RListFavoriteCollectionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/favorite/getResourceFavoriteStatus": {
+      "get": {
+        "tags": ["收藏管理"],
+        "summary": "查询资源收藏状态",
+        "description": "- 用途：查询当前用户对指定资源的收藏状态及所归属的收藏集合 ID 列表，用于资源详情页收藏按钮状态渲染。\n- 请求：resourceId 指定目标资源。\n- 约束：当前用户必须已登录。\n- 处理：按 userId+resourceId 精确查询收藏引用（唯一复合索引，O(1) 查询）；无收藏记录时返回 collectionIds=[].\n- 失败：无业务失败点。\n- 响应：返回 collectionIds；列表非空即表示已收藏，同时包含资源所归属的所有收藏集合 ID。\n",
+        "operationId": "getResourceFavoriteStatus",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RResourceFavoriteStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/comment/listReplies": {
+      "get": {
+        "tags": ["资源评论"],
+        "summary": "分页查询回复列表",
+        "description": "- 用途：展开某顶级评论的回复弹窗，加载该评论下全部回复。\n- 请求：rootCommentId 必传；page 从 1 开始；size 默认 10，最大 50。\n- 约束：当前用户必须已登录。\n- 处理：按时间从新到旧页码分页查询回复，批量补 authorInfo 和 replyToUserInfo；回复列表平铺返回。\n- 失败：未登录 -> PermissionError.NOT_LOGIN。\n- 响应：PageR 含回复列表、total、page 和 size。\n",
+        "operationId": "listReplies",
+        "parameters": [
+          {
+            "name": "rootCommentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRResourceCommentItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/resource/comment/listComments": {
+      "get": {
+        "tags": ["资源评论"],
+        "summary": "分页查询顶级评论",
+        "description": "- 用途：加载资源评论区的顶级评论列表。\n- 请求：resourceId 必传；sortBy 按 CommentSortBy 传 CREATE_TIME 或 LIKE_COUNT；page 从 1 开始；size 默认 10，最大 50。\n- 约束：当前用户必须已登录。\n- 处理：按页码分页查询顶级评论（含已软删除），批量补 authorInfo；不内嵌回复列表。\n- 失败：未登录 -> PermissionError.NOT_LOGIN。\n- 响应：PageR 含顶级评论列表、total、page 和 size。\n",
+        "operationId": "listComments",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["CREATE_TIME", "LIKE_COUNT"]
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRResourceCommentItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -893,7 +1640,17 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
             }
           }
         }
@@ -928,7 +1685,17 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
             }
           },
           "tagMountPermissionScope": {
@@ -957,6 +1724,174 @@
             "type": "string"
           },
           "data": {
+            "type": "string"
+          }
+        }
+      },
+      "MarketPurchaseRequest": {
+        "required": ["marketGroupId", "offerId", "resourceId"],
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string"
+          },
+          "resourceId": {
+            "type": "string"
+          },
+          "marketGroupId": {
+            "type": "string"
+          }
+        }
+      },
+      "MarketOrderResponse": {
+        "type": "object",
+        "properties": {
+          "traceId": {
+            "type": "string"
+          },
+          "buyerId": {
+            "type": "string"
+          },
+          "sellerId": {
+            "type": "string"
+          },
+          "purchasedResourceId": {
+            "type": "string"
+          },
+          "purchasedOfferVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "marketGroupId": {
+            "type": "string"
+          },
+          "buyerGrantedActionsMask": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "buyerPaidPrice": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RMarketOrderResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MarketOrderResponse"
+          }
+        }
+      },
+      "MarketSalePublishRequest": {
+        "required": ["marketGroupId", "marketSaleTiers", "offerVersion", "resourceId", "tagIds"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "marketGroupId": {
+            "type": "string"
+          },
+          "tagIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reviewContentPercentage": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "reviewActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
+            }
+          },
+          "marketSaleTiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketSaleTier"
+            }
+          },
+          "offerVersion": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MarketSaleTier": {
+        "required": ["grantedActions", "price"],
+        "type": "object",
+        "properties": {
+          "grantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
+            }
+          },
+          "price": {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MarketSaleOffShelfRequest": {
+        "required": ["marketGroupId", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "marketGroupId": {
             "type": "string"
           }
         }
@@ -999,10 +1934,23 @@
             "type": "string"
           },
           "overrideGrantedActions": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "DISCOVER",
+                  "VIEW",
+                  "LOAD",
+                  "EDIT",
+                  "INLINE_COMMENT",
+                  "DOWNLOAD_WATERMARK",
+                  "DOWNLOAD_ORIGINAL",
+                  "FORK",
+                  "COMMENT"
+                ]
+              }
             }
           },
           "specifiedUsersGrantedActions": {
@@ -1011,7 +1959,17 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+                "enum": [
+                  "DISCOVER",
+                  "VIEW",
+                  "LOAD",
+                  "EDIT",
+                  "INLINE_COMMENT",
+                  "DOWNLOAD_WATERMARK",
+                  "DOWNLOAD_ORIGINAL",
+                  "FORK",
+                  "COMMENT"
+                ]
               }
             }
           }
@@ -1065,8 +2023,232 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
             }
+          }
+        }
+      },
+      "FavoriteCollectionInfoUpdateRequest": {
+        "required": ["collectionId", "collectionName"],
+        "type": "object",
+        "properties": {
+          "collectionId": {
+            "type": "string"
+          },
+          "collectionName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "FavoriteCollectionDeleteRequest": {
+        "required": ["collectionId"],
+        "type": "object",
+        "properties": {
+          "collectionId": {
+            "type": "string"
+          },
+          "keepResourcesToDefault": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FavoriteCollectionCreateRequest": {
+        "required": ["collectionName"],
+        "type": "object",
+        "properties": {
+          "collectionName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "ResourceFavoriteRequest": {
+        "required": ["favorite", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "favorite": {
+            "type": "boolean"
+          },
+          "collectionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CommentLikeRequest": {
+        "required": ["commentId", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "commentId": {
+            "type": "string"
+          }
+        }
+      },
+      "RBoolean": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CommentDeleteRequest": {
+        "required": ["commentId", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "commentId": {
+            "type": "string"
+          }
+        }
+      },
+      "CommentReplyCreateRequest": {
+        "required": ["content", "replyTo", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "replyTo": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CommentCreateRequest": {
+        "required": ["content", "resourceId"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MarketSaleInfoResponse": {
+        "type": "object",
+        "properties": {
+          "reviewActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
+            }
+          },
+          "reviewContentPercentage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "marketSaleTiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketSaleTierResponse"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING_REVIEW", "PUBLISHED", "REJECTED", "BANNED", "OFF_SHELF"]
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "auditMessage": {
+            "type": "string"
+          },
+          "auditAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MarketSaleTierResponse": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string"
+          },
+          "grantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
+            }
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -1088,6 +2270,14 @@
           "scoreTotal": {
             "type": "integer",
             "format": "int32"
+          },
+          "favoriteCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "commentCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -1101,6 +2291,7 @@
             "type": "string",
             "enum": [
               "NOTE",
+              "DRAWIO",
               "PDF",
               "DOC",
               "DOCX",
@@ -1123,33 +2314,56 @@
             "type": "integer",
             "format": "int64"
           },
+          "resourceInteractionInfo": {
+            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
+          },
           "resourceId": {
             "type": "string"
           },
           "ownerInfo": {
             "$ref": "#/components/schemas/UserDisplayBase"
           },
-          "resourceInteractionInfo": {
-            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
-          },
           "currentTags": {
             "type": "object",
             "additionalProperties": {
-              "type": "string"
+              "$ref": "#/components/schemas/TagInfoBase"
             }
           },
           "currentActions": {
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
             }
           },
           "overrideGrantedActions": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "DISCOVER",
+                  "VIEW",
+                  "LOAD",
+                  "EDIT",
+                  "INLINE_COMMENT",
+                  "DOWNLOAD_WATERMARK",
+                  "DOWNLOAD_ORIGINAL",
+                  "FORK",
+                  "COMMENT"
+                ]
+              }
             }
           },
           "specifiedUsersGrantedActions": {
@@ -1158,9 +2372,51 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+                "enum": [
+                  "DISCOVER",
+                  "VIEW",
+                  "LOAD",
+                  "EDIT",
+                  "INLINE_COMMENT",
+                  "DOWNLOAD_WATERMARK",
+                  "DOWNLOAD_ORIGINAL",
+                  "FORK",
+                  "COMMENT"
+                ]
               }
             }
+          },
+          "marketSaleInfos": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MarketSaleInfoResponse"
+            }
+          }
+        }
+      },
+      "TagInfoBase": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "tagName": {
+            "type": "string"
+          },
+          "tagDesc": {
+            "type": "string"
+          },
+          "tagIcon": {
+            "type": "string"
+          },
+          "tagColor": {
+            "type": "string"
+          },
+          "tagCreator": {
+            "type": "string"
+          },
+          "isPath": {
+            "type": "boolean"
           }
         }
       },
@@ -1179,6 +2435,29 @@
           "identityType": {
             "type": "string",
             "enum": ["1", "2", "3"]
+          }
+        }
+      },
+      "MarketSaleAuditRequest": {
+        "required": ["marketGroupId", "offerVersion", "resourceId", "status"],
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "marketGroupId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING_REVIEW", "PUBLISHED", "REJECTED", "BANNED", "OFF_SHELF"]
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "auditMessage": {
+            "type": "string"
           }
         }
       },
@@ -1261,7 +2540,17 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
             }
           }
         }
@@ -1321,6 +2610,7 @@
             "type": "string",
             "enum": [
               "NOTE",
+              "DRAWIO",
               "PDF",
               "DOC",
               "DOCX",
@@ -1342,6 +2632,51 @@
           "updateTime": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "PageRMarketOrderResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketOrderResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRMarketOrderResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRMarketOrderResponse"
           }
         }
       },
@@ -1421,6 +2756,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "likedCommentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "resourceId": {
             "type": "string"
           }
@@ -1440,7 +2781,17 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
             }
           }
         }
@@ -1462,15 +2813,249 @@
             "$ref": "#/components/schemas/GroupResConfigResponse"
           }
         }
+      },
+      "FavoriteItemResponse": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "resourceInfo": {
+            "$ref": "#/components/schemas/ResourceItemResponse"
+          },
+          "favoritedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "collectionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "accessible": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PageRFavoriteItemResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FavoriteItemResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRFavoriteItemResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRFavoriteItemResponse"
+          }
+        }
+      },
+      "FavoriteCollectionResponse": {
+        "type": "object",
+        "properties": {
+          "collectionName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "collectionId": {
+            "type": "string"
+          },
+          "itemCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RListFavoriteCollectionResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FavoriteCollectionResponse"
+            }
+          }
+        }
+      },
+      "RResourceFavoriteStatusResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResourceFavoriteStatusResponse"
+          }
+        }
+      },
+      "ResourceFavoriteStatusResponse": {
+        "type": "object",
+        "properties": {
+          "collectionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PageRResourceCommentItemResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceCommentItemResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRResourceCommentItemResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRResourceCommentItemResponse"
+          }
+        }
+      },
+      "ResourceCommentItemResponse": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "replyToUserId": {
+            "type": "string"
+          },
+          "authorId": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "likeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "replyCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "commentType": {
+            "type": "string",
+            "enum": ["COMMENT", "REPLY_TO_COMMENT", "REPLY_TO_REPLY"]
+          },
+          "commentId": {
+            "type": "string"
+          },
+          "authorInfo": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          },
+          "replyToUserInfo": {
+            "$ref": "#/components/schemas/UserDisplayBase"
+          },
+          "createTime": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "deleted": {
+            "type": "boolean"
+          }
+        }
       }
     },
     "securitySchemes": {
-      "FromSource": {
-        "type": "apiKey",
-        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
-        "name": "X-From-Source",
-        "in": "header"
-      },
       "UserID": {
         "type": "apiKey",
         "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",

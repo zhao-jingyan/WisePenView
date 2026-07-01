@@ -7,22 +7,70 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.29:19906",
-      "description": "Generated server url"
+      "url": "/docs/proxy/document",
+      "description": "WisePen Docs Proxy"
     }
   ],
   "tags": [
     {
       "name": "文档处理",
       "description": "文档上传、处理状态、预览与信息查询"
+    },
+    {
+      "name": "ONLYOFFICE 文档编辑",
+      "description": "ONLYOFFICE 编辑器配置与保存回调"
     }
   ],
   "paths": {
+    "/external/document/onlyoffice/callback/{sessionId}": {
+      "post": {
+        "tags": ["ONLYOFFICE 文档编辑"],
+        "summary": "接收 ONLYOFFICE 保存回调",
+        "description": "- 用途：接收 ONLYOFFICE Document Server 的保存回调。\n- 请求：sessionId 指定编辑会话；请求体是 ONLYOFFICE 回调载荷；Authorization 头或请求体 token 用于 JWT 校验。\n- 约束：该接口不依赖登录态，必须通过 ONLYOFFICE JWT 和 session 校验。\n- 处理：status=6 保存草稿不发布；status=2 创建新文档版本并发布解析任务；status=4 关闭会话。\n- 失败：编辑会话不存在或过期 -> DocumentError.DOCUMENT_EDIT_SESSION_NOT_FOUND；回调签名或 document key 校验失败 -> DocumentError.DOCUMENT_EDIT_CALLBACK_INVALID；保存编辑结果失败 -> DocumentError.DOCUMENT_EDIT_SAVE_FAILED。\n- 响应：按 ONLYOFFICE 要求返回 error=0。\n",
+        "operationId": "callback",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Callback"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/document/uploadDoc": {
       "post": {
         "tags": ["文档处理"],
         "summary": "初始化文档上传",
-        "description": "- 用途：为当前用户创建文档上传任务，并申请对象存储直传凭证。\n- 请求：filename 为展示文件名；extension 为文件扩展名；md5 用于秒传判定；expectedSize 为预期文件大小。\n- 约束：当前用户必须已登录；扩展名必须属于文档服务支持的文件类型；请求字段必须通过校验。\n- 处理：生成 documentId，向文件存储服务申请上传 URL 或触发秒传；保存文档上传元信息。命中秒传时立即发布文档解析任务；未命中秒传时不直接接收文件内容。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；文件类型不支持 -> DocumentError.CANNOT_SUPPORT_FILE_TYPE；存储服务申请上传凭证失败 -> DocumentError.DOCUMENT_UPLOAD_URL_APPLY_FAILED。\n- 响应：返回 documentId、objectKey、上传凭证信息和是否秒传。\n",
+        "description": "- 用途：为当前用户创建文档上传任务，并申请对象存储直传凭证。\n- 请求：filename 为展示文件名；extension 为文件扩展名；md5 用于秒传判定；expectedSize 为预期文件大小。\n- 约束：当前用户必须已登录；扩展名必须属于文档服务支持的文件类型；请求字段必须通过校验。\n- 处理：创建首个待处理版本，向文件存储服务申请上传 URL 或触发秒传；命中秒传时立即发布文档解析任务；版本解析完成后注册资源并发布为当前版本。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；文件类型不支持 -> DocumentError.CANNOT_SUPPORT_FILE_TYPE；存储服务申请上传凭证失败 -> DocumentError.DOCUMENT_UPLOAD_URL_APPLY_FAILED；资源注册失败 -> DocumentError.DOCUMENT_REGISTER_RESOURCE_FAILED。\n- 响应：返回 documentId、objectKey、上传凭证信息和是否秒传。\n",
         "operationId": "uploadDoc",
         "requestBody": {
           "content": {
@@ -48,7 +96,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -86,7 +133,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -124,7 +170,43 @@
         },
         "security": [
           {
-            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/forkDocument": {
+      "post": {
+        "tags": ["文档处理"],
+        "summary": "复制文档",
+        "description": "- 用途：将当前用户拥有 FORK 动作的文档复制为自己的新文档资源。\n- 请求：resourceId 指定源文档资源；forkedResourceVersion 可选，作为权限检查 targetVersion；forkedResourceName 指定新文档资源名。\n- 约束：当前用户必须拥有源资源 FORK 动作；Market 来源授权必须传当前上架 offerVersion；源资源类型必须是文档服务支持的文档类型；源文档必须已处理完成。\n- 处理：先调用资源服务实时校验 FORK 权限；复制源文件、预览文件、正文内容、PDF 元信息和文档元信息，注册新的文档资源并发布文档就绪事件。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；源资源不是文档或文档不存在 -> DocumentError.DOCUMENT_NOT_FOUND；源文档尚无可用版本 -> DocumentError.DOCUMENT_HAS_NO_VERSION；无 FORK 权限 -> DocumentError.DOCUMENT_PERMISSION_DENIED；源文档未就绪 -> DocumentError.DOCUMENT_PREVIEW_NOT_READY；资源注册失败 -> DocumentError.DOCUMENT_REGISTER_RESOURCE_FAILED；复制失败 -> DocumentError.DOCUMENT_FORK_FAILED。\n- 响应：返回新文档资源 ID。\n",
+        "operationId": "forkDocument",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentForkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -162,7 +244,80 @@
         },
         "security": [
           {
-            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/addDocument": {
+      "post": {
+        "tags": ["文档处理"],
+        "summary": "创建文档",
+        "description": "- 用途：为当前用户创建一份新的文档资源。\n- 请求：title 为文档标题。\n- 约束：当前用户必须已登录；title 必须是可用于展示的文档标题；resourceType 必须属于文档服务支持的文件型文档类型。\n- 处理：调用资源服务注册选定的文档类型资源，以当前用户作为所有者；随后创建文档信息记录并将当前用户写入作者列表。\n- 失败：文件类型不支持 -> DocumentError.CANNOT_SUPPORT_FILE_TYPE；资源注册失败或文档信息落库失败 -> DocumentError.DOCUMENT_REGISTER_RESOURCE_FAILED。\n- 响应：返回新文档的资源 ID。\n",
+        "operationId": "createDocument",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RString"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/onlyoffice/editorConfig": {
+      "get": {
+        "tags": ["ONLYOFFICE 文档编辑"],
+        "summary": "获取 ONLYOFFICE 编辑器配置",
+        "description": "- 用途：为未来前端嵌入 ONLYOFFICE 编辑器提供完整配置。\n- 请求：resourceId 指定文档资源。\n- 约束：当前用户必须拥有 EDIT 权限；仅支持最新 READY Office 文档；PDF 首版不支持编辑。\n- 处理：复用同一资源的活跃编辑会话，生成 document/editorConfig/JWT token。\n- 失败：文档资源不存在 -> DocumentError.DOCUMENT_NOT_FOUND；文档预览未就绪 -> DocumentError.DOCUMENT_PREVIEW_NOT_READY；非 Office 可编辑类型 -> DocumentError.DOCUMENT_EDIT_NOT_SUPPORTED；当前用户无编辑权限 -> DocumentError.DOCUMENT_PERMISSION_DENIED。\n- 响应：返回 Document Server 前端地址、sessionId 与 editor config。\n",
+        "operationId": "getEditorConfig",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ROnlyOfficeEditorConfigResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -182,7 +337,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/RListDocumentInfoBase"
+                  "$ref": "#/components/schemas/RListDocumentVersionBase"
                 }
               }
             }
@@ -190,7 +345,63 @@
         },
         "security": [
           {
-            "FromSource": [],
+            "UserID": [],
+            "IdentityType": [],
+            "GroupRoleMap": []
+          }
+        ]
+      }
+    },
+    "/document/listDocVersions": {
+      "get": {
+        "tags": ["文档处理"],
+        "summary": "分页查询文档版本",
+        "description": "- 用途：查看一个文档资源的版本轨迹，用于版本选择、复制指定版本和后续回退能力。\n- 请求：resourceId 指定文档资源；page、size 控制分页。\n- 约束：当前用户必须通过资源服务的资源详情权限校验；目标文档资源必须存在。\n- 处理：通过资源服务校验详情访问权限后，按版本号倒序分页读取已发布版本摘要；不返回 objectKey、正文或 PDF 元数据。\n- 失败：资源无访问权限 -> ResourceError.RESOURCE_PERMISSION_DENIED；文档不存在 -> DocumentError.DOCUMENT_NOT_FOUND。\n- 响应：返回版本摘要分页列表。\n",
+        "operationId": "listDocumentVersions",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageRDocumentVersionInfoResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -202,7 +413,7 @@
       "get": {
         "tags": ["文档处理"],
         "summary": "获取文档预览",
-        "description": "- 用途：为有查看权限的用户输出文档 PDF 预览流。\n- 请求：resourceId 指定文档资源；Range 请求头可用于分段读取。\n- 约束：当前用户必须已登录，且必须是资源所有者或拥有 VIEW 动作；文档必须已经处理完成并具备预览文件。\n- 处理：先通过资源服务校验权限，再读取文档预览元数据和对象存储下载地址；支持全量或 Range 响应，并在预览流尾部追加水印附录；不修改文档内容或资源权限。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源无查看权限 -> DocumentError.DOCUMENT_PERMISSION_DENIED；文档不存在 -> DocumentError.DOCUMENT_NOT_FOUND；预览未就绪 -> DocumentError.DOCUMENT_PREVIEW_NOT_READY；预览元数据缺失或响应流写入失败 -> DocumentError.DOCUMENT_PREVIEW_FAILED。\n- 响应：直接写出 application/pdf 预览流。\n",
+        "description": "- 用途：为有查看权限的用户输出文档 PDF 预览流。\n- 请求：resourceId 指定文档资源；targetVersion 可选，用于 Market 版本限定权限裁决；Range 请求头可用于分段读取。\n- 约束：当前用户必须已登录，且必须是资源所有者或拥有 VIEW 动作；Market 来源预览必须传当前上架 offerVersion；文档必须已经处理完成并具备预览文件。\n- 处理：先通过资源服务校验权限，再读取文档预览元数据和对象存储下载地址；支持全量或 Range 响应，并在预览流尾部追加水印附录；不修改文档内容或资源权限。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源无查看权限 -> DocumentError.DOCUMENT_PERMISSION_DENIED；文档不存在 -> DocumentError.DOCUMENT_NOT_FOUND；文档尚无可用版本 -> DocumentError.DOCUMENT_HAS_NO_VERSION；预览未就绪 -> DocumentError.DOCUMENT_PREVIEW_NOT_READY；预览元数据缺失 -> DocumentError.DOCUMENT_PREVIEW_META_NOT_FOUND；响应流写入失败 -> DocumentError.DOCUMENT_PREVIEW_FAILED。\n- 响应：直接写出 application/pdf 预览流。\n",
         "operationId": "previewDocument",
         "parameters": [
           {
@@ -211,6 +422,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "targetVersion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -221,7 +441,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -233,8 +452,8 @@
       "get": {
         "tags": ["文档处理"],
         "summary": "获取文档信息",
-        "description": "- 用途：获取文档资源详情和文档处理信息，用于文档详情页展示。\n- 请求：resourceId 指定文档资源。\n- 约束：当前用户必须已登录，且必须通过资源服务的资源详情权限校验；目标文档信息必须存在。\n- 处理：通过资源服务获取资源详情和当前用户可执行动作，再读取文档信息并组合响应；不刷新文档状态，不触发解析或重试。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；资源无查看权限 -> ResourceError.RESOURCE_PERMISSION_DENIED；文档不存在 -> DocumentError.DOCUMENT_NOT_FOUND。\n- 响应：返回资源信息与文档信息组合结果。\n",
-        "operationId": "getNoteInfo",
+        "description": "- 用途：获取文档资源详情和文档处理信息，用于文档详情页展示。\n- 请求：resourceId 指定文档资源；targetVersion 可选，用于 Market 版本限定权限裁决。\n- 约束：当前用户必须已登录，且必须通过资源服务的资源详情权限校验；Market 来源查看必须传当前上架 offerVersion；目标文档信息必须存在。\n- 处理：通过资源服务获取资源详情和当前用户可执行动作，再读取文档信息并组合响应；不刷新文档状态，不触发解析或重试。\n- 失败：未登录 -> PermissionError.NOT_LOGIN；资源不存在 -> ResourceError.RESOURCE_NOT_FOUND；资源无查看权限 -> ResourceError.RESOURCE_PERMISSION_DENIED；文档不存在 -> DocumentError.DOCUMENT_NOT_FOUND。\n- 响应：返回资源信息与文档信息组合结果。\n",
+        "operationId": "getDocumentInfo",
         "parameters": [
           {
             "name": "resourceId",
@@ -242,6 +461,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "targetVersion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -259,7 +487,6 @@
         },
         "security": [
           {
-            "FromSource": [],
             "UserID": [],
             "IdentityType": [],
             "GroupRoleMap": []
@@ -270,10 +497,85 @@
   },
   "components": {
     "schemas": {
+      "Action": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["0", "1", "2"]
+          },
+          "userid": {
+            "type": "string"
+          }
+        }
+      },
+      "Callback": {
+        "type": "object",
+        "properties": {
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            }
+          },
+          "changesurl": {
+            "type": "string"
+          },
+          "filetype": {
+            "type": "string"
+          },
+          "forcesavetype": {
+            "type": "string",
+            "enum": ["0", "1", "2", "3"]
+          },
+          "formsdataurl": {
+            "type": "string"
+          },
+          "history": {
+            "$ref": "#/components/schemas/History"
+          },
+          "key": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["1", "2", "3", "4", "6", "7"]
+          },
+          "url": {
+            "type": "string"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "History": {
+        "type": "object",
+        "properties": {
+          "serverVersion": {
+            "type": "string"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
       "DocumentUploadInitRequest": {
         "required": ["expectedSize", "extension", "filename", "md5"],
         "type": "object",
         "properties": {
+          "resourceId": {
+            "type": "string"
+          },
           "filename": {
             "type": "string"
           },
@@ -384,18 +686,745 @@
           }
         }
       },
-      "DocumentInfoBase": {
+      "DocumentForkRequest": {
+        "required": ["resourceId"],
         "type": "object",
         "properties": {
-          "uploadMeta": {
-            "$ref": "#/components/schemas/DocumentUploadMeta"
+          "resourceId": {
+            "type": "string"
           },
-          "documentStatus": {
-            "$ref": "#/components/schemas/DocumentStatus"
-          },
-          "maxPreviewPages": {
+          "forkedResourceVersion": {
             "type": "integer",
             "format": "int32"
+          },
+          "forkedResourceName": {
+            "type": "string"
+          }
+        }
+      },
+      "RString": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          }
+        }
+      },
+      "DocumentCreateRequest": {
+        "required": ["resourceType", "title"],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "NOTE",
+              "DRAWIO",
+              "PDF",
+              "DOC",
+              "DOCX",
+              "PPT",
+              "PPTX",
+              "XLS",
+              "XLSX",
+              "SKILL",
+              "AGENT",
+              "UNKNOWN"
+            ]
+          }
+        }
+      },
+      "Anonymous": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "Close": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "CoEditing": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": ["fast", "strict"]
+          },
+          "change": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CommentGroups": {
+        "type": "object",
+        "properties": {
+          "edit": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "remove": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "view": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Config": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "enum": ["word", "cell", "slide", "pdf", "diagram"]
+          },
+          "height": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["desktop", "mobile", "embedded"]
+          },
+          "width": {
+            "type": "string"
+          },
+          "editorConfig": {
+            "$ref": "#/components/schemas/EditorConfig"
+          },
+          "document": {
+            "$ref": "#/components/schemas/Document"
+          }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "info": {
+            "type": "string"
+          },
+          "logo": {
+            "type": "string"
+          },
+          "logoDark": {
+            "type": "string"
+          },
+          "mail": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "www": {
+            "type": "string"
+          }
+        }
+      },
+      "Customization": {
+        "type": "object",
+        "properties": {
+          "anonymous": {
+            "$ref": "#/components/schemas/Anonymous"
+          },
+          "autosave": {
+            "type": "boolean"
+          },
+          "chat": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "close": {
+            "$ref": "#/components/schemas/Close"
+          },
+          "commentAuthorOnly": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "comments": {
+            "type": "boolean"
+          },
+          "compactHeader": {
+            "type": "boolean"
+          },
+          "compactToolbar": {
+            "type": "boolean"
+          },
+          "compatibleFeatures": {
+            "type": "boolean"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
+          "features": {
+            "$ref": "#/components/schemas/Features"
+          },
+          "feedback": {
+            "type": "boolean"
+          },
+          "forcesave": {
+            "type": "boolean"
+          },
+          "forceWesternFontSize": {
+            "type": "boolean"
+          },
+          "goback": {
+            "$ref": "#/components/schemas/Goback"
+          },
+          "help": {
+            "type": "boolean"
+          },
+          "hideNotes": {
+            "type": "boolean"
+          },
+          "hideRightMenu": {
+            "type": "boolean"
+          },
+          "hideRulers": {
+            "type": "boolean"
+          },
+          "integrationMode": {
+            "type": "string"
+          },
+          "logo": {
+            "$ref": "#/components/schemas/Logo"
+          },
+          "macros": {
+            "type": "boolean"
+          },
+          "macrosMode": {
+            "type": "string",
+            "enum": ["disable", "enable", "warn"]
+          },
+          "mentionShare": {
+            "type": "boolean"
+          },
+          "mobile": {
+            "$ref": "#/components/schemas/Mobile"
+          },
+          "mobileForceView": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "plugins": {
+            "type": "boolean"
+          },
+          "pointerMode": {
+            "type": "string"
+          },
+          "review": {
+            "$ref": "#/components/schemas/Review"
+          },
+          "reviewDisplay": {
+            "type": "string",
+            "deprecated": true,
+            "enum": ["markup", "simple", "final", "original"]
+          },
+          "showHorizontalScroll": {
+            "type": "boolean"
+          },
+          "showReviewChanges": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "showVerticalScroll": {
+            "type": "boolean"
+          },
+          "slidePlayerBackground": {
+            "type": "string"
+          },
+          "spellcheck": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "submitForm": {
+            "type": "object"
+          },
+          "toolbarHideFileName": {
+            "type": "boolean"
+          },
+          "toolbarNoTabs": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "trackChanges": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "uiTheme": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["cm", "pt", "inch"]
+          },
+          "wordHeadingsColor": {
+            "type": "string"
+          },
+          "zoom": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "Document": {
+        "type": "object",
+        "properties": {
+          "fileType": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "referenceData": {
+            "$ref": "#/components/schemas/ReferenceData"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "info": {
+            "$ref": "#/components/schemas/Info"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions"
+          }
+        }
+      },
+      "EditorConfig": {
+        "type": "object",
+        "properties": {
+          "actionLink": {
+            "type": "object"
+          },
+          "callbackUrl": {
+            "type": "string"
+          },
+          "coEditing": {
+            "$ref": "#/components/schemas/CoEditing"
+          },
+          "createUrl": {
+            "type": "string"
+          },
+          "lang": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "deprecated": true
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["view", "edit"]
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recent"
+            }
+          },
+          "region": {
+            "type": "string"
+          },
+          "templates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Template"
+            }
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "customization": {
+            "$ref": "#/components/schemas/Customization"
+          },
+          "embedded": {
+            "$ref": "#/components/schemas/Embedded"
+          },
+          "plugins": {
+            "$ref": "#/components/schemas/Plugins"
+          }
+        }
+      },
+      "Embedded": {
+        "type": "object",
+        "properties": {
+          "embedUrl": {
+            "type": "string"
+          },
+          "fullscreenUrl": {
+            "type": "string"
+          },
+          "saveUrl": {
+            "type": "string"
+          },
+          "shareUrl": {
+            "type": "string"
+          },
+          "toolbarDocked": {
+            "type": "string",
+            "enum": ["top", "bottom"]
+          }
+        }
+      },
+      "Features": {
+        "type": "object",
+        "properties": {
+          "featuresTips": {
+            "type": "boolean"
+          },
+          "roles": {
+            "type": "boolean"
+          },
+          "spellcheck": {
+            "type": "boolean"
+          },
+          "tabBackground": {
+            "type": "object"
+          },
+          "tabStyle": {
+            "type": "object"
+          }
+        }
+      },
+      "Goback": {
+        "type": "object",
+        "properties": {
+          "blank": {
+            "type": "boolean"
+          },
+          "requestClose": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "text": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "Info": {
+        "type": "object",
+        "properties": {
+          "author": {
+            "type": "string",
+            "deprecated": true
+          },
+          "created": {
+            "type": "string",
+            "deprecated": true
+          },
+          "favorite": {
+            "type": "boolean"
+          },
+          "folder": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "sharingSettings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharingSettings"
+            }
+          },
+          "uploaded": {
+            "type": "string"
+          }
+        }
+      },
+      "Logo": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string"
+          },
+          "imageDark": {
+            "type": "string"
+          },
+          "imageLight": {
+            "type": "string"
+          },
+          "imageEmbedded": {
+            "type": "string",
+            "deprecated": true
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "Mobile": {
+        "type": "object",
+        "properties": {
+          "forceView": {
+            "type": "boolean"
+          },
+          "info": {
+            "type": "boolean"
+          },
+          "standardView": {
+            "type": "boolean"
+          }
+        }
+      },
+      "OnlyOfficeEditorConfigResponse": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "config": {
+            "$ref": "#/components/schemas/Config"
+          }
+        }
+      },
+      "Permissions": {
+        "type": "object",
+        "properties": {
+          "chat": {
+            "type": "boolean"
+          },
+          "comment": {
+            "type": "boolean"
+          },
+          "commentGroups": {
+            "$ref": "#/components/schemas/CommentGroups"
+          },
+          "copy": {
+            "type": "boolean"
+          },
+          "deleteCommentAuthorOnly": {
+            "type": "boolean"
+          },
+          "download": {
+            "type": "boolean"
+          },
+          "edit": {
+            "type": "boolean"
+          },
+          "editCommentAuthorOnly": {
+            "type": "boolean"
+          },
+          "fillForms": {
+            "type": "boolean"
+          },
+          "modifyContentControl": {
+            "type": "boolean"
+          },
+          "modifyFilter": {
+            "type": "boolean"
+          },
+          "print": {
+            "type": "boolean"
+          },
+          "protect": {
+            "type": "boolean"
+          },
+          "rename": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "review": {
+            "type": "boolean"
+          },
+          "reviewGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userInfoGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Plugins": {
+        "type": "object",
+        "properties": {
+          "autostart": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pluginsData": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "disable": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ROnlyOfficeEditorConfigResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/OnlyOfficeEditorConfigResponse"
+          }
+        }
+      },
+      "Recent": {
+        "type": "object",
+        "properties": {
+          "folder": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "ReferenceData": {
+        "type": "object",
+        "properties": {
+          "fileKey": {
+            "type": "string"
+          },
+          "instanceId": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          }
+        }
+      },
+      "Review": {
+        "type": "object",
+        "properties": {
+          "hideReviewDisplay": {
+            "type": "boolean"
+          },
+          "hoverMode": {
+            "type": "boolean"
+          },
+          "reviewDisplay": {
+            "type": "string",
+            "enum": ["markup", "simple", "final", "original"]
+          },
+          "showReviewChanges": {
+            "type": "boolean"
+          },
+          "trackChanges": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SharingSettings": {
+        "type": "object",
+        "properties": {
+          "isLink": {
+            "type": "boolean"
+          },
+          "permissions": {
+            "type": "string",
+            "enum": ["Full Access", "Read Only", "Deny Access"]
+          },
+          "user": {
+            "type": "string"
+          }
+        }
+      },
+      "Template": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -413,6 +1442,7 @@
             "type": "string",
             "enum": [
               "NOTE",
+              "DRAWIO",
               "PDF",
               "DOC",
               "DOCX",
@@ -431,7 +1461,22 @@
           }
         }
       },
-      "RListDocumentInfoBase": {
+      "DocumentVersionBase": {
+        "type": "object",
+        "properties": {
+          "uploadMeta": {
+            "$ref": "#/components/schemas/DocumentUploadMeta"
+          },
+          "documentStatus": {
+            "$ref": "#/components/schemas/DocumentStatus"
+          },
+          "maxPreviewPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RListDocumentVersionBase": {
         "type": "object",
         "properties": {
           "code": {
@@ -447,8 +1492,72 @@
           "data": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/DocumentInfoBase"
+              "$ref": "#/components/schemas/DocumentVersionBase"
             }
+          }
+        }
+      },
+      "DocumentVersionInfoResponse": {
+        "type": "object",
+        "properties": {
+          "uploadMeta": {
+            "$ref": "#/components/schemas/DocumentUploadMeta"
+          },
+          "documentStatus": {
+            "$ref": "#/components/schemas/DocumentStatus"
+          },
+          "maxPreviewPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PageRDocumentVersionInfoResponse": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentVersionInfoResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RPageRDocumentVersionInfoResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRDocumentVersionInfoResponse"
           }
         }
       },
@@ -458,8 +1567,90 @@
           "resourceInfo": {
             "$ref": "#/components/schemas/ResourceItemResponse"
           },
-          "documentInfo": {
-            "$ref": "#/components/schemas/DocumentInfoBase"
+          "documentVersionInfo": {
+            "$ref": "#/components/schemas/DocumentVersionInfoResponse"
+          },
+          "authorsDisplay": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UserDisplayBase"
+            }
+          }
+        }
+      },
+      "MarketSaleInfoResponse": {
+        "type": "object",
+        "properties": {
+          "reviewActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
+            }
+          },
+          "reviewContentPercentage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "marketSaleTiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketSaleTierResponse"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING_REVIEW", "PUBLISHED", "REJECTED", "BANNED", "OFF_SHELF"]
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "auditMessage": {
+            "type": "string"
+          },
+          "auditAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MarketSaleTierResponse": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string"
+          },
+          "grantedActions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
+            }
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -499,6 +1690,14 @@
           "scoreTotal": {
             "type": "integer",
             "format": "int32"
+          },
+          "favoriteCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "commentCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -512,6 +1711,7 @@
             "type": "string",
             "enum": [
               "NOTE",
+              "DRAWIO",
               "PDF",
               "DOC",
               "DOCX",
@@ -534,33 +1734,56 @@
             "type": "integer",
             "format": "int64"
           },
+          "resourceInteractionInfo": {
+            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
+          },
           "resourceId": {
             "type": "string"
           },
           "ownerInfo": {
             "$ref": "#/components/schemas/UserDisplayBase"
           },
-          "resourceInteractionInfo": {
-            "$ref": "#/components/schemas/ResourceInteractionInfoBase"
-          },
           "currentTags": {
             "type": "object",
             "additionalProperties": {
-              "type": "string"
+              "$ref": "#/components/schemas/TagInfoBase"
             }
           },
           "currentActions": {
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+              "enum": [
+                "DISCOVER",
+                "VIEW",
+                "LOAD",
+                "EDIT",
+                "INLINE_COMMENT",
+                "DOWNLOAD_WATERMARK",
+                "DOWNLOAD_ORIGINAL",
+                "FORK",
+                "COMMENT"
+              ]
             }
           },
           "overrideGrantedActions": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "DISCOVER",
+                  "VIEW",
+                  "LOAD",
+                  "EDIT",
+                  "INLINE_COMMENT",
+                  "DOWNLOAD_WATERMARK",
+                  "DOWNLOAD_ORIGINAL",
+                  "FORK",
+                  "COMMENT"
+                ]
+              }
             }
           },
           "specifiedUsersGrantedActions": {
@@ -569,9 +1792,51 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["DISCOVER", "VIEW", "EDIT", "DOWNLOAD_WATERMARK", "DOWNLOAD_ORIGINAL"]
+                "enum": [
+                  "DISCOVER",
+                  "VIEW",
+                  "LOAD",
+                  "EDIT",
+                  "INLINE_COMMENT",
+                  "DOWNLOAD_WATERMARK",
+                  "DOWNLOAD_ORIGINAL",
+                  "FORK",
+                  "COMMENT"
+                ]
               }
             }
+          },
+          "marketSaleInfos": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MarketSaleInfoResponse"
+            }
+          }
+        }
+      },
+      "TagInfoBase": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "tagName": {
+            "type": "string"
+          },
+          "tagDesc": {
+            "type": "string"
+          },
+          "tagIcon": {
+            "type": "string"
+          },
+          "tagColor": {
+            "type": "string"
+          },
+          "tagCreator": {
+            "type": "string"
+          },
+          "isPath": {
+            "type": "boolean"
           }
         }
       },
@@ -595,12 +1860,6 @@
       }
     },
     "securitySchemes": {
-      "FromSource": {
-        "type": "apiKey",
-        "description": "内部来源校验头。直连微服务测试时填写 APISIX 注入的固定来源值。",
-        "name": "X-From-Source",
-        "in": "header"
-      },
       "UserID": {
         "type": "apiKey",
         "description": "当前用户 ID。直连微服务测试 @CheckLogin 接口时手工模拟 APISIX 注入。",

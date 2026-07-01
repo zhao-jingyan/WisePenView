@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "http://172.28.0.16:20001",
-      "description": "Generated server url"
+      "url": "/docs/proxy/fudan-extension",
+      "description": "WisePen Docs Proxy"
     }
   ],
   "tags": [
