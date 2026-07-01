@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom';
 
 import { ResultState } from '@/components/Common/Feedback';
-import LandingNavbar from '@/components/LandingNavbar';
+import LandingNavbar from '@/layouts/Home/_components/LandingNavbar';
 import ResourceNotFound from '@/views/app/error/ResourceNotFound';
 import { Button, toast, Tooltip } from '@heroui/react';
 import styles from './style.module.less';

@@ -2,7 +2,7 @@ import { Button } from '@heroui/react';
 import { useNavigate } from 'react-router-dom';
 
 import { ResultState } from '@/components/Common/Feedback';
-import LandingNavbar from '@/components/LandingNavbar';
+import LandingNavbar from '@/layouts/Home/_components/LandingNavbar';
 import styles from './style.module.less';
 
 function ResourceNotFound() {

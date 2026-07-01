@@ -2,10 +2,10 @@ import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 // 引入布局（保持同步加载，保证首屏壳子稳定）
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminLayout from '@/layouts/Admin/AdminLayout';
 import AppLayout from '@/layouts/AppLayout';
-import AuthLayout from '@/layouts/AuthLayout';
-import HomeLayout from '@/layouts/HomeLayout';
+import AuthLayout from '@/layouts/Auth/AuthLayout';
+import HomeLayout from '@/layouts/Home/HomeLayout';
 import AdminRouteGuard from '@/views/admin/guard/AdminRouteGuard';
 
 // 页面使用 lazy load，按路由切分 chunk
