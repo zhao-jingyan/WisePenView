@@ -1,4 +1,4 @@
-import SelectedMemberList from '@/components/Common/SelectedMemberList';
+import SelectedMemberList from '@/components/SelectedMemberList';
 import { useGroupService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, Modal, toast } from '@heroui/react';

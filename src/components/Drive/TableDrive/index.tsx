@@ -1,4 +1,4 @@
-import IconText from '@/components/Common/IconText';
+import IconText from '@/components/IconText';
 import {
   FolderTable,
   type FolderTableBreadcrumbItem,

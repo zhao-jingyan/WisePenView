@@ -1,4 +1,4 @@
-import { Spin } from '@/components/Common/Feedback';
+import { Spin } from '@/components/Feedback';
 import { Toast } from '@heroui/react';
 import { useMount, useUnmount } from 'ahooks';
 import { Suspense, useRef } from 'react';

@@ -1,4 +1,4 @@
-import IconText from '@/components/Common/IconText';
+import IconText from '@/components/IconText';
 import { Button } from '@heroui/react';
 import { useKeyPress } from 'ahooks';
 import { Search } from 'lucide-react';

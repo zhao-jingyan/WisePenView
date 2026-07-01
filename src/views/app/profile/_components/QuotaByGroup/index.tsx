@@ -1,4 +1,4 @@
-import QuotaBar from '@/components/Common/QuotaBar';
+import QuotaBar from '@/components/QuotaBar';
 import { useQuotaService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
 import { Pagination, Table, toast, type SortDescriptor } from '@heroui/react';

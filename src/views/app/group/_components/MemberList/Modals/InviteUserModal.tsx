@@ -1,4 +1,4 @@
-import IconText from '@/components/Common/IconText';
+import IconText from '@/components/IconText';
 import { Button, Modal, toast } from '@heroui/react';
 import { Copy } from 'lucide-react';
 import { useState } from 'react';

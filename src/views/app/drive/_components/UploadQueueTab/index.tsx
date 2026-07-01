@@ -1,4 +1,4 @@
-import { Empty } from '@/components/Common/Feedback';
+import { Empty } from '@/components/Feedback';
 import { DataTable, type DataTableColumn } from '@/components/Table';
 import { useDocumentService } from '@/domains';
 import type { PendingDocItem } from '@/domains/Document';

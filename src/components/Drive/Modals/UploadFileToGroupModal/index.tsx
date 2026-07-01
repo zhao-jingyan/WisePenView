@@ -1,5 +1,5 @@
-import StepDots from '@/components/Common/StepDots';
 import DriveNav from '@/components/Drive/DriveNav';
+import StepDots from '@/components/StepDots';
 import { useResourceService } from '@/domains';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { parseErrorMessage } from '@/utils/error';

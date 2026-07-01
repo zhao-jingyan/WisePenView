@@ -1,4 +1,4 @@
-import { Spin } from '@/components/Common/Feedback';
+import { Spin } from '@/components/Feedback';
 import { useStickerService } from '@/domains';
 import type { Sticker } from '@/domains/Sticker';
 import { parseErrorMessage } from '@/utils/error';

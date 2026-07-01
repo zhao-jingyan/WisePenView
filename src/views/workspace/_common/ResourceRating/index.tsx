@@ -2,7 +2,7 @@
 import { useDebounceFn, useRequest } from 'ahooks';
 import { useMemo, useState } from 'react';
 
-import Rating from '@/components/Common/Rating';
+import Rating from '@/components/Rating';
 import { useResourceService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';

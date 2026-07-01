@@ -1,4 +1,4 @@
-import EntryIcon from '@/components/Common/EntryIcon';
+import EntryIcon from '@/components/EntryIcon';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import TableTextCell from '../../../shared/cells/TextCell';

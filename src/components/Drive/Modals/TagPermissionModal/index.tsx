@@ -1,6 +1,6 @@
-import { Empty, Spin } from '@/components/Common/Feedback';
-import SegmentedTabs from '@/components/Common/SegmentedTabs';
 import DriveNav from '@/components/Drive/DriveNav';
+import { Empty, Spin } from '@/components/Feedback';
+import SegmentedTabs from '@/components/SegmentedTabs';
 import { useDriveService, useGroupService, useTagService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
 import { mapTagToFolderNode } from '@/domains/Drive/mapper/DriveServices.map';

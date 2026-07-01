@@ -1,4 +1,4 @@
-import { Spin } from '@/components/Common/Feedback';
+import { Spin } from '@/components/Feedback';
 import { useUserService } from '@/domains';
 import { IDENTITY } from '@/domains/User';
 import { useMount, useUpdateEffect } from 'ahooks';

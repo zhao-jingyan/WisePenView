@@ -2,10 +2,10 @@ import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 // 引入布局（保持同步加载，保证首屏壳子稳定）
-import AdminLayout from '@/layouts/AdminLayout';
-import AppLayout from '@/layouts/AppLayout';
-import AuthLayout from '@/layouts/AuthLayout';
-import HomeLayout from '@/layouts/HomeLayout';
+import AdminLayout from '@/layouts/Admin/AdminLayout';
+import AppLayout from '@/layouts/App/AppLayout';
+import AuthLayout from '@/layouts/Auth/AuthLayout';
+import HomeLayout from '@/layouts/Home/HomeLayout';
 import AdminRouteGuard from '@/views/admin/guard/AdminRouteGuard';
 
 // 页面使用 lazy load，按路由切分 chunk
@@ -30,8 +30,8 @@ const Register = lazy(() => import('@/views/app/auth/Register'));
 const ResetPassword = lazy(() => import('@/views/app/auth/ResetPassword'));
 const NewPassword = lazy(() => import('@/views/app/auth/NewPassword'));
 const VerifyEmail = lazy(() => import('@/views/app/auth/VerifyEmail'));
-const NoteView = lazy(() => import('@/views/app/note'));
-const PdfPreview = lazy(() => import('@/views/app/pdf/PdfPreview'));
+const NoteView = lazy(() => import('@/views/workspace/note'));
+const PdfPreview = lazy(() => import('@/views/workspace/pdf'));
 const ChatPage = lazy(() => import('@/views/chat'));
 const ResourceNotFound = lazy(() => import('@/views/app/error/ResourceNotFound'));
 const AppError = lazy(() => import('@/views/app/error/AppError'));

@@ -1,6 +1,6 @@
-import { Empty, Spin } from '@/components/Common/Feedback';
-import type { DataNode } from '@/components/Common/Tree';
-import Tree from '@/components/Common/Tree';
+import { Empty, Spin } from '@/components/Feedback';
+import type { DataNode } from '@/components/Tree';
+import Tree from '@/components/Tree';
 import { useDriveService } from '@/domains';
 import type { DriveNode, LoadMoreNode } from '@/domains/Drive';
 import { useNavigateResource } from '@/hooks/useNavigateResource';

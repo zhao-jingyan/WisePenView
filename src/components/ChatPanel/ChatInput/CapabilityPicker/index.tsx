@@ -1,5 +1,5 @@
 import popupStyles from '@/components/ChatPanel/popupSurface.module.less';
-import { EmptyState } from '@/components/Common/Feedback';
+import { EmptyState } from '@/components/Feedback';
 import type { CapabilityPickerItem } from '@/domains/Chat/mapper/capabilityPicker.mapper';
 import { Check, Wrench } from 'lucide-react';
 import chatInputStyles from '../style.module.less';

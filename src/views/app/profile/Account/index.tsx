@@ -1,5 +1,5 @@
-import DescriptionGrid from '@/components/Common/DescriptionGrid';
-import { Spin } from '@/components/Common/Feedback';
+import DescriptionGrid from '@/components/DescriptionGrid';
+import { Spin } from '@/components/Feedback';
 import { useUserService } from '@/domains';
 import type { UserAccountProfile } from '@/domains/User';
 import { IDENTITY } from '@/domains/User';

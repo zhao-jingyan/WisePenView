@@ -1,5 +1,5 @@
-import type { TreeDataNode } from '@/components/Common/Tree';
-import Tree from '@/components/Common/Tree';
+import type { TreeDataNode } from '@/components/Tree';
+import Tree from '@/components/Tree';
 import { buildAgentFromSkillTreeGroup } from '@/domains/Chat/mapper/agent.mapper';
 import type { SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';

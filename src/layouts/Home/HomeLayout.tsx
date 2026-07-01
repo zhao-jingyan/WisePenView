@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 
-import LandingNavbar from '@/components/LandingNavbar';
+import LandingNavbar from '@/layouts/Home/_components/LandingNavbar';
 import styles from './HomeLayout.module.less';
 
 function HomeLayout() {

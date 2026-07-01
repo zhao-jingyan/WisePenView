@@ -1,4 +1,4 @@
-import SegmentedTabs from '@/components/Common/SegmentedTabs';
+import SegmentedTabs from '@/components/SegmentedTabs';
 import { SEARCH_SCOPE, type SearchScope } from '@/domains/Resource';
 import { InputGroup, Modal, TextField } from '@heroui/react';
 import { useDebounce, useKeyPress } from 'ahooks';

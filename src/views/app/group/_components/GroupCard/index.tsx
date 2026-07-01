@@ -1,4 +1,4 @@
-import UserCapsule from '@/components/Common/UserCapsule';
+import UserCapsule from '@/components/UserCapsule';
 import { GROUP_TYPE } from '@/domains/Group';
 import { PLACEHOLDER_IMAGE } from '@/utils/image/placeholder';
 import { Card } from '@heroui/react';

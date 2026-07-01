@@ -1,7 +1,7 @@
-import { Spin } from '@/components/Common/Feedback';
-import IconText from '@/components/Common/IconText';
-import SegmentedTabs from '@/components/Common/SegmentedTabs';
 import StickerManageModal from '@/components/Drive/Modals/StickerManageModal';
+import { Spin } from '@/components/Feedback';
+import IconText from '@/components/IconText';
+import SegmentedTabs from '@/components/SegmentedTabs';
 import { useStickerService } from '@/domains';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR, TAG_QUERY_LOGIC_MODE } from '@/domains/Resource';
 import type { Sticker } from '@/domains/Sticker';

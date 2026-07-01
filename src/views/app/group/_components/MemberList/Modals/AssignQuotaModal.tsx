@@ -1,4 +1,4 @@
-import SelectedMemberList from '@/components/Common/SelectedMemberList';
+import SelectedMemberList from '@/components/SelectedMemberList';
 import { useQuotaService } from '@/domains';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { parseErrorMessage } from '@/utils/error';

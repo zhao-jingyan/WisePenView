@@ -1,4 +1,4 @@
-import QuotaBar from '@/components/Common/QuotaBar';
+import QuotaBar from '@/components/QuotaBar';
 import {
   DataTable,
   ManageTable,

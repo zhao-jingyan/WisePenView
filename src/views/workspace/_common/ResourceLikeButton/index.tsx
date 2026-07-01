@@ -2,7 +2,7 @@
 import { useDebounceFn, useRequest } from 'ahooks';
 import { useState } from 'react';
 
-import LikeButton from '@/components/Common/LikeButton';
+import LikeButton from '@/components/LikeButton';
 import { useResourceService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';

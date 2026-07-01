@@ -1,6 +1,6 @@
-import EntryIcon from '@/components/Common/EntryIcon';
-import IconText from '@/components/Common/IconText';
 import { ROOT_DISPLAY } from '@/components/Drive/common/constants';
+import EntryIcon from '@/components/EntryIcon';
+import IconText from '@/components/IconText';
 import type { DriveNode, LoadMoreNode } from '@/domains/Drive';
 import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
 import styles from './style.module.less';

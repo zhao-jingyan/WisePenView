@@ -5,7 +5,6 @@
  * 个人「充值」仅 REFILL；小组「充值」与「消费」通过 walletService.listMergedTransactions 合并两类流水；其余走 listTransactions。
  * 数据请求使用 ahooks（不使用 useEffect）。
  */
-import RechargeModal from '@/components/Wallet/RechargeModal';
 import { useGroupService, useWalletService } from '@/domains';
 import { WALLET_TARGET_TYPE, WALLET_TOKEN_TX_TYPE } from '@/domains/Wallet';
 import type { EnumValue } from '@/utils/enum';
@@ -13,6 +12,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { usePagination, useRequest, useUnmount } from 'ahooks';
 import { useImperativeHandle, useRef, useState, type Ref } from 'react';
+import RechargeModal from '../RechargeModal';
 import type { ComputeWalletProps, ComputeWalletRef } from './index.type';
 import styles from './style.module.less';
 import WalletBalanceHeader from './WalletBalanceHeader';

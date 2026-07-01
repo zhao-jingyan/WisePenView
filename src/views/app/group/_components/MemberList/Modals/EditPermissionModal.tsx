@@ -1,4 +1,4 @@
-import SelectedMemberList from '@/components/Common/SelectedMemberList';
+import SelectedMemberList from '@/components/SelectedMemberList';
 import { useGroupService } from '@/domains';
 import { ROLE } from '@/domains/Group';
 import type { EnumKey } from '@/utils/enum';

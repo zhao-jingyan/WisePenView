@@ -1,5 +1,5 @@
-import EntryIcon from '@/components/Common/EntryIcon';
-import IconText from '@/components/Common/IconText';
+import EntryIcon from '@/components/EntryIcon';
+import IconText from '@/components/IconText';
 import { DataTable, type DataTableColumn } from '@/components/Table';
 import { useResourceService } from '@/domains';
 import type { ResourceItem } from '@/domains/Resource';

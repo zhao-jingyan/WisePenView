@@ -6,8 +6,8 @@ import { useMemo, useState } from 'react';
 
 import { Claude, DeepSeek, Doubao, Gemini, Grok, Meta, Mistral, OpenAI } from '@lobehub/icons';
 
-import { EmptyState } from '@/components/Common/Feedback';
-import IconText from '@/components/Common/IconText';
+import { EmptyState } from '@/components/Feedback';
+import IconText from '@/components/IconText';
 import { useChatService } from '@/domains';
 import { useChatModelPreferenceStore } from '@/store/useChatModelPreferenceStore';
 import type { Model } from '../index.type';

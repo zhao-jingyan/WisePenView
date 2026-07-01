@@ -1,6 +1,6 @@
-import { Empty, Spin } from '@/components/Common/Feedback';
-import IconText from '@/components/Common/IconText';
-import SegmentedTabs from '@/components/Common/SegmentedTabs';
+import { Empty, Spin } from '@/components/Feedback';
+import IconText from '@/components/IconText';
+import SegmentedTabs from '@/components/SegmentedTabs';
 import { useGroupService } from '@/domains';
 import type { FetchGroupListRequest, Group } from '@/domains/Group';
 import { GROUP_ROLE_FILTER_MAP } from '@/domains/Group';

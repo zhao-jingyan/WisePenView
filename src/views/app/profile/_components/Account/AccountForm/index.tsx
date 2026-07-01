@@ -1,4 +1,4 @@
-import IconText from '@/components/Common/IconText';
+import IconText from '@/components/IconText';
 import { useUserService } from '@/domains';
 import type { UpdateUserInfoRequest } from '@/domains/User';
 import { DEGREE, SEX } from '@/domains/User';

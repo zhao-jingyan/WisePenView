@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { ArrowLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import IconText from '@/components/Common/IconText';
+import IconText from '@/components/IconText';
 import type { ResourceViewerHeaderProps } from './index.type';
 import styles from './style.module.less';
 

@@ -1,5 +1,5 @@
-import ConfirmAction from '@/components/Common/ConfirmAction';
-import IconText from '@/components/Common/IconText';
+import ConfirmAction from '@/components/ConfirmAction';
+import IconText from '@/components/IconText';
 import { useStickerService } from '@/domains';
 import type { Sticker } from '@/domains/Sticker';
 import { useEffectForce } from '@/hooks/useEffectForce';

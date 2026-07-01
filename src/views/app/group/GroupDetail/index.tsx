@@ -2,17 +2,17 @@ import { LogOut, Pencil, Trash2 } from 'lucide-react';
 /**
  * 小组详情：展示/ Tab / 小组盘只读等由 getGroupDisplayConfig（如 showWalletTabs、driveReadOnlyMode）驱动。
  */
-import { Spin } from '@/components/Common/Feedback';
-import IconText from '@/components/Common/IconText';
-import type { SegmentedTabItem } from '@/components/Common/SegmentedTabs';
-import SegmentedTabs from '@/components/Common/SegmentedTabs';
-import UserCapsule from '@/components/Common/UserCapsule';
 import TableDrive from '@/components/Drive/TableDrive';
-import ComputeWallet from '@/components/Wallet/ComputeWallet';
-import type { ComputeWalletRef } from '@/components/Wallet/ComputeWallet/index.type';
+import { Spin } from '@/components/Feedback';
+import IconText from '@/components/IconText';
+import type { SegmentedTabItem } from '@/components/SegmentedTabs';
+import SegmentedTabs from '@/components/SegmentedTabs';
+import UserCapsule from '@/components/UserCapsule';
 import { useGroupService } from '@/domains';
 import type { Group, GroupResConfig } from '@/domains/Group';
 import { WALLET_TARGET_TYPE } from '@/domains/Wallet';
+import ComputeWallet from '@/views/app/_common/Wallet/ComputeWallet';
+import type { ComputeWalletRef } from '@/views/app/_common/Wallet/ComputeWallet/index.type';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import type { ReactNode } from 'react';

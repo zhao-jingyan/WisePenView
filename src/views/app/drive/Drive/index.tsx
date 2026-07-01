@@ -1,8 +1,8 @@
-import IconText from '@/components/Common/IconText';
-import SegmentedTabs from '@/components/Common/SegmentedTabs';
 import GlobalSearchBox from '@/components/Drive/GlobalSearchBox';
 import { StickerManageModal } from '@/components/Drive/Modals';
 import TableDrive from '@/components/Drive/TableDrive';
+import IconText from '@/components/IconText';
+import SegmentedTabs from '@/components/SegmentedTabs';
 import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
 import { Button } from '@heroui/react';
 import { CloudUpload, Tags } from 'lucide-react';
