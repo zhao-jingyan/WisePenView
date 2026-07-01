@@ -14,9 +14,6 @@ import {
   NOTE_OUTLINE_TITLE_ID,
   type NoteOutlineItem,
 } from '@/components/Note/NoteOutline/index.type';
-import ResourceInteractFooter from '@/components/Resource/ResourceInteractFooter';
-import ResourceViewerHeader from '@/components/Resource/ResourceViewerHeader';
-import rvhStyles from '@/components/Resource/ResourceViewerHeader/style.module.less';
 import { useNoteService, useResourceService, useUserService } from '@/domains';
 import type { AiDiffDisplayMode, NoteInfoDisplayData } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, AI_DIFF_DISPLAY_MODE_LABELS, useNoteSession } from '@/domains/Note';
@@ -25,6 +22,9 @@ import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useAiDiffDisplayStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
+import ResourceInteractFooter from '@/views/workspace/_common/ResourceInteractFooter';
+import ResourceViewerHeader from '@/views/workspace/_common/ResourceViewerHeader';
+import rvhStyles from '@/views/workspace/_common/ResourceViewerHeader/style.module.less';
 import { Alert, Button, Dropdown, toast } from '@heroui/react';
 import NoteInfoBar from './_components/NoteInfoBar';
 import NotePermissionModal from './_components/NotePermissionModal';

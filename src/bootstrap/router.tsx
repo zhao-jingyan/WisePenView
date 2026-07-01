@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 // 引入布局（保持同步加载，保证首屏壳子稳定）
 import AdminLayout from '@/layouts/Admin/AdminLayout';
-import AppLayout from '@/layouts/AppLayout';
+import AppLayout from '@/layouts/App/AppLayout';
 import AuthLayout from '@/layouts/Auth/AuthLayout';
 import HomeLayout from '@/layouts/Home/HomeLayout';
 import AdminRouteGuard from '@/views/admin/guard/AdminRouteGuard';

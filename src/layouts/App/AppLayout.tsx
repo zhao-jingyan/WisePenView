@@ -1,6 +1,7 @@
 import ChatPanel from '@/components/ChatPanel';
 import AppSidebar from '@/components/Sidebar/AppSidebar';
 import DriveSidebar from '@/components/Sidebar/DriveSidebar';
+import { useChatPanelResize } from '@/layouts/useChatPanelResize';
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
 import { useUpdateEffect } from 'ahooks';
 import clsx from 'clsx';
@@ -8,7 +9,6 @@ import { Bot } from 'lucide-react';
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import styles from './AppLayout.module.less';
-import { useChatPanelResize } from './useChatPanelResize';
 
 const RESOURCE_SIDEBAR_PATH_REGEX = /^\/app\/(note|pdf)\//;
 
