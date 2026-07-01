@@ -1,7 +1,7 @@
-import ServiceAgreement from '@/components/ServiceAgreement/index';
 import { useAuthService } from '@/domains';
 import type { RegisterRequest } from '@/domains/Auth';
 import { parseErrorMessage } from '@/utils/error';
+import ServiceAgreement from '@/views/app/auth/_components/ServiceAgreement/index';
 import { Button, Checkbox, Form, Input, Label, Modal, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Lock, User } from 'lucide-react';
