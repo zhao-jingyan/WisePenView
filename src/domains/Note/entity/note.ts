@@ -68,15 +68,10 @@ export interface CustomInlineContent {
 /** 表格内容占位类型 */
 export type TableContent = unknown;
 
-/** Note 元信息（对齐 WisepenCloud noteService 的 NoteInfoBase） */
-export interface NoteMetaInfo {
-  lastUpdatedAt?: number | string;
-  authors?: string[];
-}
-
 /** 获取 Note 信息返回体（对齐 /note/getNoteInfo） */
 export interface NoteInfoResponse {
   authorsDisplay?: Record<string, UserDisplayBase>;
   resourceInfo: ResourceItem;
-  noteInfo: NoteMetaInfo;
+  /** 当前笔记版本号 */
+  version?: number;
 }
