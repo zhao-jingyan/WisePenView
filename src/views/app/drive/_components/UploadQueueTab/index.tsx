@@ -1,4 +1,3 @@
-import { Empty } from '@/components/Feedback';
 import { DataTable, type DataTableColumn } from '@/components/Table';
 import { useDocumentService } from '@/domains';
 import type { PendingDocItem } from '@/domains/Document';
@@ -259,7 +258,6 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
           columns={columns}
           loading={listLoading}
           emptyText="暂无上传队列"
-          emptyIcon={<Empty description="暂无上传队列" />}
           summary={false}
         />
       </main>
