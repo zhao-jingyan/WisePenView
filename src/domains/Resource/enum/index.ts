@@ -37,6 +37,7 @@ export const SEARCH_SCOPE = createEnum([
 /** 全文搜索可命中的资源细分类型：仅文档类 + 笔记（Skill/Agent 属 AI 资产，不进搜索）；小写值对齐后端 extension */
 export const SEARCH_RESOURCE_TYPE = createEnum([
   { value: 'note', key: 'NOTE', label: 'Note' },
+  { value: 'drawio', key: 'DRAWIO', label: 'Draw.io 图' },
   { value: 'pdf', key: 'PDF', label: 'PDF' },
   { value: 'doc', key: 'DOC', label: 'DOC' },
   { value: 'docx', key: 'DOCX', label: 'DOCX' },

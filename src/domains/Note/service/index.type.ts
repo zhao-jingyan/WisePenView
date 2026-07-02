@@ -18,6 +18,16 @@ export interface INoteService {
   getNoteInfoDisplay(params: GetNoteInfoRequest): Promise<NoteInfoDisplayData>;
   /** 获取 Note 权限配置所需的最小数据 */
   getNotePermissionConfig(params: GetNotePermissionConfigRequest): Promise<NotePermissionConfig>;
+  /** 获取 DRAWIO 最新完整快照 */
+  getDrawIoLatestSnapshot(
+    params: GetDrawIoLatestSnapshotRequest
+  ): Promise<DrawIoLatestSnapshotData>;
+  /** 保存 DRAWIO 完整 XML 快照 */
+  saveDrawIoSnapshot(params: SaveDrawIoSnapshotRequest): Promise<void>;
+  /** 复制 NOTE/DRAWIO 资源 */
+  forkNote(params: ForkNoteRequest): Promise<ForkNoteResponse>;
+  /** 查询 NOTE/DRAWIO 版本摘要列表 */
+  listNoteVersions(params: ListNoteVersionsRequest): Promise<NoteVersionListPage>;
 }
 
 export interface NoteInfoDisplayAuthor {
@@ -32,6 +42,8 @@ export interface NoteInfoDisplayData {
   lastEditedAtText: string;
   /** 资源实体，供展示阅读量/点赞/评分等统计字段 */
   resourceInfo?: ResourceItem;
+  /** 当前内容版本号 */
+  version?: number;
   /** 当前用户是否具备协同编辑（EDIT）权限 */
   canCollaborativeEdit: boolean;
 }
@@ -46,6 +58,7 @@ export interface NotePermissionConfig {
 export interface CreateNoteRequest {
   initial_content?: Block[];
   title: string;
+  resourceType?: 'NOTE' | 'DRAWIO';
   /** 从已有文档创建副本时传入源文档 ID */
   source?: string;
 }
@@ -70,4 +83,52 @@ export interface GetNoteInfoRequest {
 
 export interface GetNotePermissionConfigRequest {
   resourceId: string;
+}
+
+export interface GetDrawIoLatestSnapshotRequest {
+  resourceId: string;
+}
+
+export interface DrawIoLatestSnapshotData {
+  resourceId: string;
+  version: number;
+  fullSnapshot?: string | null;
+  deltas?: string[] | null;
+}
+
+export interface SaveDrawIoSnapshotRequest {
+  resourceId: string;
+  version: number;
+  xml: string;
+  plainText?: string;
+}
+
+export interface ForkNoteRequest {
+  resourceId: string;
+  forkedResourceVersion?: number;
+  forkedResourceName?: string;
+}
+
+export interface ForkNoteResponse {
+  resourceId?: string;
+}
+
+export interface ListNoteVersionsRequest {
+  resourceId: string;
+  page?: number;
+  size?: number;
+}
+
+export interface NoteVersionSummary {
+  version?: number;
+  type?: 'FULL' | 'DELTA' | string;
+  createdBy?: number[];
+}
+
+export interface NoteVersionListPage {
+  list: NoteVersionSummary[];
+  total: number;
+  page: number;
+  size: number;
+  totalPage: number;
 }

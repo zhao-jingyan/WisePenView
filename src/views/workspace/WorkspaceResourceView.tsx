@@ -11,6 +11,7 @@ import {
 import { Button } from '@heroui/react';
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import DrawioView from './drawio';
 import NoteView from './note';
 import DocumentPreview from './pdf';
 import styles from './WorkspaceResourceView.module.less';
@@ -54,6 +55,10 @@ function WorkspaceResourceView() {
 
   if (editorType === RESOURCE_EDITOR_TYPE.NOTE) {
     return <NoteView resourceId={id} />;
+  }
+
+  if (editorType === RESOURCE_EDITOR_TYPE.DRAWIO) {
+    return <DrawioView resourceId={id} />;
   }
 
   if (isDocumentEditorType(editorType)) {

@@ -15,6 +15,7 @@ const EXTENSION_ICON_TYPE_MAP: Record<string, ResourceIconType> = {
 
 const RESOURCE_TYPE_ICON_TYPE_MAP: Record<string, ResourceIconType> = {
   note: 'note',
+  drawio: 'drawio',
   skill: 'skill',
   agent: 'agent',
   pdf: 'pdf',

@@ -12,6 +12,7 @@ import {
   LoaderCircle,
   NotebookPen,
   Presentation,
+  Workflow,
   Wrench,
 } from 'lucide-react';
 import type { EntryIconProps } from './index.type';
@@ -23,6 +24,7 @@ const COLOR_PDF = 'var(--danger)';
 const COLOR_PPT = 'var(--warning)';
 const COLOR_XLS = 'var(--success)';
 const COLOR_NOTE = 'var(--accent)';
+const COLOR_DRAWIO = 'var(--primary)';
 const COLOR_AI = 'var(--primary-light)';
 
 function renderResourceIcon(
@@ -40,6 +42,8 @@ function renderResourceIcon(
   switch (iconType) {
     case 'note':
       return <NotebookPen size={size} color={color ?? COLOR_NOTE} />;
+    case 'drawio':
+      return <Workflow size={size} color={color ?? COLOR_DRAWIO} />;
     case 'skill':
       return <Wrench size={size} color={color ?? COLOR_AI} />;
     case 'agent':
@@ -60,7 +64,13 @@ function renderResourceIcon(
 }
 
 /** 统一展示根目录、文件夹、资源、链接和加载占位图标 */
-function EntryIcon({ entryType, resourceType, resourceIconType, size = 18, color }: EntryIconProps) {
+function EntryIcon({
+  entryType,
+  resourceType,
+  resourceIconType,
+  size = 18,
+  color,
+}: EntryIconProps) {
   switch (entryType) {
     case 'root':
       return <HardDrive size={size} color={color ?? COLOR_SECONDARY} />;

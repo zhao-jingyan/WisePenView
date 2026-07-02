@@ -13,6 +13,7 @@ export type ResourceIconType =
   | 'pdf'
   | 'md'
   | 'note'
+  | 'drawio'
   | 'skill'
   | 'agent';
 

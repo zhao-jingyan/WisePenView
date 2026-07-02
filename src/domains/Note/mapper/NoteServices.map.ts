@@ -1,4 +1,5 @@
 import type { NoteInfoResponse } from '@/domains/Note';
+import type { SaveDrawIoSnapshotApiRequest } from '@/domains/Note/apis/NoteApi.type';
 import {
   coerceResourceActions,
   maskNoteConfigurableResourceActions,
@@ -9,9 +10,13 @@ import { normalizeResourceItem } from '@/domains/Resource/mapper/ResourceService
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import type {
   CreateNoteResponse,
+  DrawIoLatestSnapshotData,
+  ForkNoteResponse,
   NoteInfoDisplayAuthor,
   NoteInfoDisplayData,
   NotePermissionConfig,
+  NoteVersionListPage,
+  SaveDrawIoSnapshotRequest,
   SyncTitleRequest,
 } from '../service/index.type';
 
@@ -23,6 +28,10 @@ const mapSyncTitleRequest = (
 });
 
 const mapCreateNoteFromApi = (resourceId: string): CreateNoteResponse => ({
+  resourceId: resourceId || undefined,
+});
+
+const mapForkNoteFromApi = (resourceId: string): ForkNoteResponse => ({
   resourceId: resourceId || undefined,
 });
 
@@ -51,6 +60,7 @@ const mapNoteInfoDisplayFromApi = (data: NoteInfoResponse): NoteInfoDisplayData 
     lastEditedAtText: '暂无',
     // 资源实体（已归一化），供展示阅读量/点赞/评分等统计字段
     resourceInfo,
+    version: data.version,
     canCollaborativeEdit: resourceActionsInclude(resourceInfo.currentActions, RESOURCE_ACTION.EDIT),
   };
 };
@@ -90,9 +100,66 @@ const mapNotePermissionConfigFromApi = (
   };
 };
 
+const encodeBase64Utf8 = (value: string): string => {
+  const bytes = new TextEncoder().encode(value);
+  let binary = '';
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return window.btoa(binary);
+};
+
+const mapDrawIoLatestSnapshotFromApi = (
+  raw: Partial<DrawIoLatestSnapshotData> | null | undefined,
+  fallbackResourceId: string
+): DrawIoLatestSnapshotData => ({
+  resourceId: raw?.resourceId || fallbackResourceId,
+  version: raw?.version ?? 0,
+  fullSnapshot: raw?.fullSnapshot ?? null,
+  deltas: raw?.deltas ?? null,
+});
+
+const mapSaveDrawIoSnapshotRequest = (
+  params: SaveDrawIoSnapshotRequest
+): SaveDrawIoSnapshotApiRequest => ({
+  resourceId: params.resourceId,
+  version: params.version,
+  data: encodeBase64Utf8(params.xml),
+  plainText: params.plainText,
+});
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const readNumber = (value: unknown, fallback = 0): number =>
+  typeof value === 'number' ? value : fallback;
+
+const mapNoteVersionListPageFromApi = (raw: unknown): NoteVersionListPage => {
+  const page = isRecord(raw) ? raw : {};
+  const list = Array.isArray(page.list) ? page.list : [];
+
+  return {
+    list: list.filter(isRecord).map((item) => ({
+      version: typeof item.version === 'number' ? item.version : undefined,
+      type: typeof item.type === 'string' ? item.type : undefined,
+      createdBy: Array.isArray(item.createdBy)
+        ? item.createdBy.filter((value): value is number => typeof value === 'number')
+        : undefined,
+    })),
+    total: readNumber(page.total),
+    page: readNumber(page.page, 1),
+    size: readNumber(page.size, 20),
+    totalPage: readNumber(page.totalPage),
+  };
+};
+
 export const NoteServicesMap = {
   mapSyncTitleRequest,
   mapCreateNoteFromApi,
+  mapForkNoteFromApi,
   mapNoteInfoDisplayFromApi,
   mapNotePermissionConfigFromApi,
+  mapDrawIoLatestSnapshotFromApi,
+  mapSaveDrawIoSnapshotRequest,
+  mapNoteVersionListPageFromApi,
 };

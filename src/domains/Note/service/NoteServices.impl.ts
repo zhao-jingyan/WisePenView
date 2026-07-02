@@ -6,11 +6,18 @@ import type {
   CreateNoteRequest,
   CreateNoteResponse,
   DeleteNoteRequest,
+  DrawIoLatestSnapshotData,
+  ForkNoteRequest,
+  ForkNoteResponse,
+  GetDrawIoLatestSnapshotRequest,
   GetNoteInfoRequest,
   GetNotePermissionConfigRequest,
   INoteService,
+  ListNoteVersionsRequest,
   NoteInfoDisplayData,
   NotePermissionConfig,
+  NoteVersionListPage,
+  SaveDrawIoSnapshotRequest,
   SyncTitleRequest,
 } from './index.type';
 
@@ -41,6 +48,27 @@ const getNotePermissionConfig = async (
   return NoteServicesMap.mapNotePermissionConfigFromApi(noteInfoData, params.resourceId);
 };
 
+const getDrawIoLatestSnapshot = async (
+  params: GetDrawIoLatestSnapshotRequest
+): Promise<DrawIoLatestSnapshotData> => {
+  const data = await NoteApi.getDrawIoLatestSnapshot(params);
+  return NoteServicesMap.mapDrawIoLatestSnapshotFromApi(data, params.resourceId);
+};
+
+const saveDrawIoSnapshot = async (params: SaveDrawIoSnapshotRequest): Promise<void> => {
+  await NoteApi.saveDrawIoSnapshot(NoteServicesMap.mapSaveDrawIoSnapshotRequest(params));
+};
+
+const forkNote = async (params: ForkNoteRequest): Promise<ForkNoteResponse> => {
+  const resourceId = await NoteApi.forkNote(params);
+  return NoteServicesMap.mapForkNoteFromApi(resourceId);
+};
+
+const listNoteVersions = async (params: ListNoteVersionsRequest): Promise<NoteVersionListPage> => {
+  const data = await NoteApi.listNoteVersions(params);
+  return NoteServicesMap.mapNoteVersionListPageFromApi(data);
+};
+
 export const createNoteServices = (deps: NoteServicesDeps): INoteService => {
   const { resourceService } = deps;
 
@@ -60,5 +88,9 @@ export const createNoteServices = (deps: NoteServicesDeps): INoteService => {
     deleteNote,
     getNoteInfoDisplay,
     getNotePermissionConfig,
+    getDrawIoLatestSnapshot,
+    saveDrawIoSnapshot,
+    forkNote,
+    listNoteVersions,
   };
 };

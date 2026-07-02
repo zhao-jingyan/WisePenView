@@ -11,10 +11,11 @@ import {
   buildWorkspaceResourcePath,
   RESOURCE_EDITOR_TYPE,
 } from '@/utils/navigation/workspaceRoute';
-import { ListBox, ListBoxItem, toast } from '@heroui/react';
+import { Button, Input, ListBox, ListBoxItem, Modal, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
-import { Bot, CirclePlus, FileText, PenTool, Users } from 'lucide-react';
+import { Bot, CirclePlus, FileText, PenTool, Users, Workflow } from 'lucide-react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { AppHeaderNavProps } from './index.type';
 import styles from './style.module.less';
@@ -27,6 +28,8 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
   const clearCurrentSession = useCurrentChatSessionStore((s) => s.clearCurrentSession);
   const setChatPanelCollapsed = useChatPanelStore((s) => s.setChatPanelCollapsed);
   const setChatPanelDraftOpen = useChatPanelStore((s) => s.setChatPanelDraftOpen);
+  const [drawioModalOpen, setDrawioModalOpen] = useState(false);
+  const [drawioName, setDrawioName] = useState('未命名图表');
 
   const isDriveActive = location.pathname.startsWith('/app/drive');
   const isGroupActive = location.pathname.startsWith('/app/my-group');
@@ -102,71 +105,161 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
     runCreateNote();
   };
 
+  const { loading: creatingDrawio, run: runCreateDrawio } = useRequest(
+    async () => {
+      const title = drawioName.trim() || '未命名图表';
+      const { resourceId } = await noteService.createNote({
+        title,
+        resourceType: 'DRAWIO',
+      });
+      if (!resourceId) {
+        throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_CREATE_RESOURCE_ID_MISSING);
+      }
+      return { resourceId };
+    },
+    {
+      manual: true,
+      onSuccess: ({ resourceId }) => {
+        setDrawioModalOpen(false);
+        navigate(buildWorkspaceResourcePath(RESOURCE_EDITOR_TYPE.DRAWIO, resourceId));
+      },
+      onError: (err) => {
+        toast.danger(parseErrorMessage(err));
+      },
+    }
+  );
+
+  const handleOpenDrawioModal = () => {
+    if (creatingDrawio) return;
+    setDrawioName('未命名图表');
+    setDrawioModalOpen(true);
+  };
+
+  const handleConfirmCreateDrawio = () => {
+    if (creatingDrawio) return;
+    runCreateDrawio();
+  };
+
   return (
-    <ListBox
-      aria-label="应用导航"
-      selectionMode="single"
-      selectedKeys={selectedKeys}
-      className={clsx(styles.headerMenu, collapsed && styles.headerMenuCollapsed)}
-    >
-      <ListBoxItem
-        id="new-chat"
-        textValue="新建对话"
-        isDisabled={createSessionLoading}
-        className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
-        onPress={handleCreateSession}
+    <>
+      <ListBox
+        aria-label="应用导航"
+        selectionMode="single"
+        selectedKeys={selectedKeys}
+        className={clsx(styles.headerMenu, collapsed && styles.headerMenuCollapsed)}
       >
-        <span className={styles.menuIcon}>
-          <CirclePlus size={18} />
-        </span>
-        {!collapsed && <span className={styles.menuLabel}>新建对话</span>}
-      </ListBoxItem>
-      <ListBoxItem
-        id="new-note"
-        textValue="新建笔记"
-        isDisabled={creatingNote}
-        className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
-        onPress={handleCreateNote}
-      >
-        <span className={styles.menuIcon}>
-          <PenTool size={18} />
-        </span>
-        {!collapsed && <span className={styles.menuLabel}>新建笔记</span>}
-      </ListBoxItem>
-      <ListBoxItem
-        id="/app/chat"
-        textValue="AI 对话"
-        className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
-        onPress={() => navigate('/app/chat')}
-      >
-        <span className={styles.menuIcon}>
-          <Bot size={18} />
-        </span>
-        {!collapsed && <span className={styles.menuLabel}>AI 对话</span>}
-      </ListBoxItem>
-      <ListBoxItem
-        id="/app/drive"
-        textValue="文档与云盘"
-        className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
-        onPress={() => navigate('/app/drive')}
-      >
-        <span className={styles.menuIcon}>
-          <FileText size={18} />
-        </span>
-        {!collapsed && <span className={styles.menuLabel}>文档与云盘</span>}
-      </ListBoxItem>
-      <ListBoxItem
-        id="/app/my-group"
-        textValue="我的小组"
-        className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
-        onPress={() => navigate('/app/my-group')}
-      >
-        <span className={styles.menuIcon}>
-          <Users size={18} />
-        </span>
-        {!collapsed && <span className={styles.menuLabel}>我的小组</span>}
-      </ListBoxItem>
-    </ListBox>
+        <ListBoxItem
+          id="new-chat"
+          textValue="新建对话"
+          isDisabled={createSessionLoading}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={handleCreateSession}
+        >
+          <span className={styles.menuIcon}>
+            <CirclePlus size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>新建对话</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id="new-note"
+          textValue="新建笔记"
+          isDisabled={creatingNote}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={handleCreateNote}
+        >
+          <span className={styles.menuIcon}>
+            <PenTool size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>新建笔记</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id="new-drawio"
+          textValue="新建 Draw.io 图"
+          isDisabled={creatingDrawio}
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={handleOpenDrawioModal}
+        >
+          <span className={styles.menuIcon}>
+            <Workflow size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>新建图表</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id="/app/chat"
+          textValue="AI 对话"
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate('/app/chat')}
+        >
+          <span className={styles.menuIcon}>
+            <Bot size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>AI 对话</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id="/app/drive"
+          textValue="文档与云盘"
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate('/app/drive')}
+        >
+          <span className={styles.menuIcon}>
+            <FileText size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>文档与云盘</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id="/app/my-group"
+          textValue="我的小组"
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={() => navigate('/app/my-group')}
+        >
+          <span className={styles.menuIcon}>
+            <Users size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>我的小组</span>}
+        </ListBoxItem>
+      </ListBox>
+      <Modal isOpen={drawioModalOpen} onOpenChange={setDrawioModalOpen}>
+        <Modal.Backdrop isDismissable={!creatingDrawio}>
+          <Modal.Container size="sm" placement="center">
+            <Modal.Dialog>
+              <Modal.Header>
+                <Modal.Heading>新建 Draw.io 图</Modal.Heading>
+              </Modal.Header>
+              <Modal.Body>
+                <TextField aria-label="Draw.io 图名称" value={drawioName} onChange={setDrawioName}>
+                  <Input
+                    placeholder="请输入名称"
+                    autoFocus
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        handleConfirmCreateDrawio();
+                      }
+                    }}
+                  />
+                </TextField>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button
+                  variant="secondary"
+                  onPress={() => setDrawioModalOpen(false)}
+                  isDisabled={creatingDrawio}
+                >
+                  取消
+                </Button>
+                <Button
+                  variant="primary"
+                  onPress={handleConfirmCreateDrawio}
+                  isDisabled={creatingDrawio || !drawioName.trim()}
+                >
+                  创建
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
+    </>
   );
 }
 

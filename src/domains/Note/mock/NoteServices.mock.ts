@@ -2,9 +2,11 @@ import type {
   CreateNoteRequest,
   CreateNoteResponse,
   DeleteNoteRequest,
+  ForkNoteRequest,
   GetNoteInfoRequest,
   INoteService,
   NoteInfoDisplayData,
+  SaveDrawIoSnapshotRequest,
   SyncTitleRequest,
 } from '@/domains/Note';
 import { useResourceDisplayNameStore } from '@/store';
@@ -28,9 +30,33 @@ const getNoteInfoDisplay = async (_params: GetNoteInfoRequest): Promise<NoteInfo
     noteTitle: '未命名笔记',
     authors: [],
     lastEditedAtText: '暂无',
+    version: 0,
     canCollaborativeEdit: true,
   };
 };
+
+const getDrawIoLatestSnapshot = async () => ({
+  resourceId: '123',
+  version: 0,
+  fullSnapshot: null,
+  deltas: null,
+});
+
+const saveDrawIoSnapshot = async (_params: SaveDrawIoSnapshotRequest): Promise<void> => {
+  return Promise.resolve();
+};
+
+const forkNote = async (_params: ForkNoteRequest) => {
+  return { resourceId: '124' };
+};
+
+const listNoteVersions = async () => ({
+  list: [],
+  total: 0,
+  page: 1,
+  size: 20,
+  totalPage: 0,
+});
 
 export const NoteServicesMock: INoteService = {
   syncTitle,
@@ -42,4 +68,8 @@ export const NoteServicesMock: INoteService = {
     overrideGrantedActions: null,
     specifiedUsersGrantedActions: null,
   }),
+  getDrawIoLatestSnapshot,
+  saveDrawIoSnapshot,
+  forkNote,
+  listNoteVersions,
 };
