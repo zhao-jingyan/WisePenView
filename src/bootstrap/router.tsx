@@ -31,8 +31,7 @@ const Register = lazy(() => import('@/views/app/auth/Register'));
 const ResetPassword = lazy(() => import('@/views/app/auth/ResetPassword'));
 const NewPassword = lazy(() => import('@/views/app/auth/NewPassword'));
 const VerifyEmail = lazy(() => import('@/views/app/auth/VerifyEmail'));
-const NoteView = lazy(() => import('@/views/workspace/note'));
-const PdfPreview = lazy(() => import('@/views/workspace/pdf'));
+const WorkspaceResourceView = lazy(() => import('@/views/workspace/WorkspaceResourceView'));
 const ChatPage = lazy(() => import('@/views/chat'));
 const ResourceNotFound = lazy(() => import('@/views/app/error/ResourceNotFound'));
 const AppError = lazy(() => import('@/views/app/error/AppError'));
@@ -162,16 +161,8 @@ const router = createBrowserRouter([
         element: <WorkspaceLayout />,
         children: [
           {
-            path: 'note',
-            element: <NoteView />,
-          },
-          {
-            path: 'note/:noteId',
-            element: <NoteView />,
-          },
-          {
-            path: 'pdf/:resourceId',
-            element: <PdfPreview />,
+            path: 'workspace/:editorType/:id',
+            element: <WorkspaceResourceView />,
           },
         ],
       },

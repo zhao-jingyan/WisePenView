@@ -2,8 +2,9 @@ import EntryIcon from '@/components/EntryIcon';
 import { Empty, Spin } from '@/components/Feedback';
 import { useResourceService } from '@/domains';
 import type { SearchHitItem, SearchResultPage } from '@/domains/Resource';
-import { groupSearchHits } from '@/domains/Resource';
+import { SEARCH_SCOPE } from '@/domains/Resource';
 import { useNavigateResource } from '@/hooks/useNavigateResource';
+import { useActiveDriveScopeStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useInfiniteScroll, useKeyPress, useUpdateEffect } from 'ahooks';
@@ -14,6 +15,14 @@ import styles from './style.module.less';
 
 /** 单页大小：与后端 `@Max(100)` 上限一致，20 是首屏滚动加载的舒适步长 */
 const PAGE_SIZE = 20;
+
+const createEmptySearchResult = (): SearchResultPage => ({
+  list: [],
+  total: 0,
+  page: 1,
+  size: PAGE_SIZE,
+  totalPage: 0,
+});
 
 interface SearchHitRowProps {
   item: SearchHitItem;
@@ -52,20 +61,26 @@ function SearchHitRow({ item, active, flatIndex, onActivate, onOpen }: SearchHit
   );
 }
 
-/** 分组渲染 + 无限滚动 + 键盘导航；activeIndex 渲染期 clamp 规避 effect 内 setState */
-function SearchResultList({ keyword, scope, onClose }: SearchResultListProps) {
+/** 单列表渲染 + 无限滚动 + 键盘导航；activeIndex 渲染期 clamp 规避 effect 内 setState */
+function SearchResultList({ keyword, onClose }: SearchResultListProps) {
   const listRef = useRef<HTMLDivElement>(null);
-  const navigateResource = useNavigateResource();
+  // 继承当前 Drive 的 groupId，避免搜索跳转后把侧边栏上下文切回个人空间
+  const groupId = useActiveDriveScopeStore((state) => state.groupId);
+  const navigateResource = useNavigateResource(groupId);
   const resourceService = useResourceService();
   const trimmed = keyword.trim();
 
-  // ahooks useInfiniteScroll 承载分页/滚动监听/竞态拦截；keyword/scope 变化触发 reloadDeps 回 page 1
-  const { data, loadingMore, noMore } = useInfiniteScroll<SearchResultPage>(
+  // ahooks useInfiniteScroll 承载分页/滚动监听/竞态拦截；keyword 变化触发 reloadDeps 回 page 1
+  const { data, loading, loadingMore, noMore, mutate } = useInfiniteScroll<SearchResultPage>(
     async (current) => {
+      if (trimmed.length === 0) {
+        return createEmptySearchResult();
+      }
+
       const nextPage = current ? Math.floor(current.list.length / PAGE_SIZE) + 1 : 1;
       return resourceService.globalSearch({
         keyword: trimmed,
-        scope,
+        scope: SEARCH_SCOPE.ALL,
         page: nextPage,
         size: PAGE_SIZE,
       });
@@ -73,7 +88,7 @@ function SearchResultList({ keyword, scope, onClose }: SearchResultListProps) {
     {
       target: listRef,
       isNoMore: (d) => !!d && d.page >= d.totalPage,
-      reloadDeps: [trimmed, scope],
+      reloadDeps: [trimmed],
       manual: trimmed.length === 0,
       onError: (err) => {
         toast.danger(parseErrorMessage(err));
@@ -81,21 +96,16 @@ function SearchResultList({ keyword, scope, onClose }: SearchResultListProps) {
     }
   );
 
-  const groups = useMemo(() => groupSearchHits(data?.list ?? []), [data?.list]);
-  const flatItems = useMemo(() => groups.flatMap((g) => g.items), [groups]);
-  // 每组在扁平列表里的起始下标，键盘导航用；规避 indexOf 的 O(N²)
-  const groupStarts = useMemo(() => {
-    const starts: number[] = [];
-    let cursor = 0;
-    for (const group of groups) {
-      starts.push(cursor);
-      cursor += group.items.length;
-    }
-    return starts;
-  }, [groups]);
+  const flatItems = useMemo(() => data?.list ?? [], [data?.list]);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const clampedActive = flatItems.length === 0 ? 0 : Math.min(activeIndex, flatItems.length - 1);
+
+  useUpdateEffect(() => {
+    setActiveIndex(0);
+    listRef.current?.scrollTo({ top: 0 });
+    mutate(trimmed.length === 0 ? createEmptySearchResult() : undefined);
+  }, [trimmed, mutate]);
 
   // 高亮项滚入视口；block:nearest 避免列表反复跳到顶/底
   useUpdateEffect(() => {
@@ -106,7 +116,7 @@ function SearchResultList({ keyword, scope, onClose }: SearchResultListProps) {
 
   const handleOpenHit = (item: SearchHitItem) => {
     onClose();
-    navigateResource(item.resourceId, item.resourceType);
+    navigateResource(item.resourceId, { resourceType: item.resourceType });
   };
 
   useKeyPress(
@@ -136,35 +146,30 @@ function SearchResultList({ keyword, scope, onClose }: SearchResultListProps) {
     { exactMatch: true }
   );
 
-  const hasHits = flatItems.length > 0;
+  const hasKeyword = trimmed.length > 0;
+  const hasHits = hasKeyword && flatItems.length > 0;
+  const initialLoading = hasKeyword && loading && flatItems.length === 0;
 
   return (
     <div ref={listRef} className={styles.list}>
-      {hasHits ? (
+      {initialLoading ? (
+        <div className={styles.initialLoading}>
+          <Spin size="small" />
+        </div>
+      ) : hasHits ? (
         <>
-          {groups.map((group, groupIdx) => {
-            const startIndex = groupStarts[groupIdx];
-            return (
-              <section key={group.key} className={styles.group}>
-                <header className={styles.groupHeader}>{group.label}</header>
-                <ul className={styles.groupItems}>
-                  {group.items.map((item, indexInGroup) => {
-                    const flatIndex = startIndex + indexInGroup;
-                    return (
-                      <SearchHitRow
-                        key={item.resourceId}
-                        item={item}
-                        active={flatIndex === clampedActive}
-                        flatIndex={flatIndex}
-                        onActivate={setActiveIndex}
-                        onOpen={handleOpenHit}
-                      />
-                    );
-                  })}
-                </ul>
-              </section>
-            );
-          })}
+          <ul className={styles.items}>
+            {flatItems.map((item, flatIndex) => (
+              <SearchHitRow
+                key={item.resourceId}
+                item={item}
+                active={flatIndex === clampedActive}
+                flatIndex={flatIndex}
+                onActivate={setActiveIndex}
+                onOpen={handleOpenHit}
+              />
+            ))}
+          </ul>
 
           {loadingMore && (
             <div className={styles.loadingMore}>
@@ -175,7 +180,10 @@ function SearchResultList({ keyword, scope, onClose }: SearchResultListProps) {
         </>
       ) : (
         <div className={styles.emptyWrapper}>
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="搜索文档、笔记和标签" />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={hasKeyword ? '没有找到匹配结果' : '搜索文档、笔记和标签'}
+          />
         </div>
       )}
     </div>

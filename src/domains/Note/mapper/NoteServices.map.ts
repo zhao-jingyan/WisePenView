@@ -6,10 +6,10 @@ import {
   resourceActionsInclude,
 } from '@/domains/Resource';
 import { normalizeResourceItem } from '@/domains/Resource/mapper/ResourceServices.map';
-import { formatTimestampToDateTime } from '@/utils/format/formatTime';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import type {
   CreateNoteResponse,
+  NoteInfoDisplayAuthor,
   NoteInfoDisplayData,
   NotePermissionConfig,
   SyncTitleRequest,
@@ -26,26 +26,29 @@ const mapCreateNoteFromApi = (resourceId: string): CreateNoteResponse => ({
   resourceId: resourceId || undefined,
 });
 
+const mapAuthorDisplay = (author?: {
+  nickname?: string;
+  realName?: string;
+  avatar?: string;
+}): NoteInfoDisplayAuthor => ({
+  // fallback：作者展示名缺失时显示未知用户
+  name: author?.nickname || author?.realName || '未知用户',
+  avatar: author?.avatar,
+});
+
 const mapNoteInfoDisplayFromApi = (data: NoteInfoResponse): NoteInfoDisplayData => {
   // 将后端 ResourceItem 中的 Long 字段归一化为 number
   const resourceInfo = normalizeResourceItem(data.resourceInfo);
   const ownerId = normalizeId(resourceInfo.ownerId) || undefined;
-  // authors 可能缺失，按空数组处理
-  const authorIds = data.noteInfo.authors ?? [];
+  const authorsDisplay = data.authorsDisplay ?? {};
+  const authors = Object.values(authorsDisplay).map(mapAuthorDisplay);
 
   return {
     noteTitle: resourceInfo.resourceName,
     ownerId,
-    authors: authorIds.map((authorId) => {
-      const author = data.authorsDisplay?.[authorId];
-      return {
-        // fallback：作者展示名缺失时显示未知用户
-        name: author?.nickname || author?.realName || '未知用户',
-        avatar: author?.avatar,
-      };
-    }),
-    // 更新时间缺失时使用占位文案
-    lastEditedAtText: formatTimestampToDateTime(data.noteInfo.lastUpdatedAt) || '暂无',
+    authors,
+    // 新版接口未返回上次编辑时间，暂使用占位文案。
+    lastEditedAtText: '暂无',
     // 资源实体（已归一化），供展示阅读量/点赞/评分等统计字段
     resourceInfo,
     canCollaborativeEdit: resourceActionsInclude(resourceInfo.currentActions, RESOURCE_ACTION.EDIT),

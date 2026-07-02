@@ -1,6 +1,4 @@
-import SegmentedTabs from '@/components/SegmentedTabs';
-import { SEARCH_SCOPE, type SearchScope } from '@/domains/Resource';
-import { InputGroup, Modal, TextField } from '@heroui/react';
+import { InputGroup, Kbd, Modal, TextField } from '@heroui/react';
 import { useDebounce, useKeyPress } from 'ahooks';
 import { Search, X } from 'lucide-react';
 import { useState } from 'react';
@@ -11,11 +9,9 @@ import styles from './style.module.less';
 function SearchModal({ isOpen, onOpenChange }: SearchModalProps) {
   const [rawKeyword, setRawKeyword] = useState('');
   const debouncedKeyword = useDebounce(rawKeyword, { wait: 400 });
-  const [scope, setScope] = useState<SearchScope>(SEARCH_SCOPE.ALL);
 
   const handleClose = () => {
     setRawKeyword('');
-    setScope(SEARCH_SCOPE.ALL);
     onOpenChange(false);
   };
 
@@ -73,25 +69,10 @@ function SearchModal({ isOpen, onOpenChange }: SearchModalProps) {
                     ) : null}
                   </InputGroup>
                 </TextField>
-                <kbd className={styles.kbd} onClick={handleClose}>
-                  Esc
-                </kbd>
+                <Kbd onClick={handleClose}>Esc</Kbd>
               </div>
 
-              <div className={styles.tabs}>
-                <SegmentedTabs<SearchScope>
-                  ariaLabel="搜索范围"
-                  items={SEARCH_SCOPE.options.map((option) => ({
-                    key: option.value,
-                    label: option.label,
-                  }))}
-                  selectedKey={scope}
-                  onSelectionChange={setScope}
-                  block
-                />
-              </div>
-
-              <SearchResultList keyword={debouncedKeyword} scope={scope} onClose={handleClose} />
+              <SearchResultList keyword={debouncedKeyword} onClose={handleClose} />
             </Modal.Body>
           </Modal.Dialog>
         </Modal.Container>

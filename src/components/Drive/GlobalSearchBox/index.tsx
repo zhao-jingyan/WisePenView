@@ -1,11 +1,10 @@
 import IconText from '@/components/IconText';
-import { Button } from '@heroui/react';
+import { Button, Kbd } from '@heroui/react';
 import { useKeyPress } from 'ahooks';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 import SearchModal from './SearchModal';
 import type { GlobalSearchBoxProps } from './index.type';
-import styles from './style.module.less';
 
 const IS_MAC = navigator.platform.toLowerCase().includes('mac');
 const SHORTCUT_LABEL = IS_MAC ? '⌘ K' : 'Ctrl K';
@@ -29,7 +28,7 @@ function GlobalSearchBox({ className }: GlobalSearchBoxProps) {
         <IconText icon={<Search />} iconSize={16}>
           搜索
         </IconText>
-        <kbd className={styles.triggerKbd}>{SHORTCUT_LABEL}</kbd>
+        <Kbd>{SHORTCUT_LABEL}</Kbd>
       </Button>
       <SearchModal isOpen={open} onOpenChange={setOpen} />
     </>

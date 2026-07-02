@@ -3,7 +3,7 @@ import SegmentedTabs from '@/components/SegmentedTabs';
 import { useRequest, useUnmount } from 'ahooks';
 import { ChevronsLeft, Menu } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import EntryIcon from '@/components/EntryIcon';
 import IconText from '@/components/IconText';
@@ -31,7 +31,6 @@ import type { NoteTitleHandle } from './_components/NoteTitle/index.type';
 import styles from './style.module.less';
 
 interface NoteViewConnectedProps {
-  noteId?: string;
   resourceId: string;
   noteInfoDisplay: NoteInfoDisplayData;
   onRefreshNoteInfo: () => void;
@@ -81,7 +80,6 @@ function NoteToolbarTitle({ resourceId, fallbackTitle }: NoteToolbarTitleProps) 
 }
 
 function NoteViewConnected({
-  noteId,
   resourceId,
   noteInfoDisplay,
   onRefreshNoteInfo,
@@ -427,9 +425,11 @@ function NoteViewConnected({
   );
 }
 
-function NoteView() {
-  const { noteId } = useParams<{ noteId?: string }>();
-  const resourceId = noteId ?? '';
+interface NoteViewProps {
+  resourceId?: string;
+}
+
+function NoteView({ resourceId = '' }: NoteViewProps = {}) {
   const noteService = useNoteService();
   const {
     data: noteInfoDisplay,
@@ -518,7 +518,6 @@ function NoteView() {
 
   return (
     <NoteViewConnected
-      noteId={noteId}
       resourceId={resourceId}
       noteInfoDisplay={noteInfoDisplay}
       onRefreshNoteInfo={refreshNoteInfo}

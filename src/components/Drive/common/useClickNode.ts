@@ -25,6 +25,9 @@ export const useClickNode = ({ enterFolder, groupId }: UseClickNodeParams) => {
       return;
     }
     if (!node.resourceId) return;
-    navigateResource(node.resourceId, node.resourceType);
+    navigateResource(node.resourceId, {
+      resourceType: node.resourceType,
+      resourceName: node.title,
+    });
   };
 };

@@ -79,7 +79,10 @@ function SidebarDrive() {
     if (!node || (node.type !== 'resource' && node.type !== 'link')) return;
     setSelectedKeys([key]);
     if (!node.resourceId) return;
-    navigateResource(node.resourceId, node.resourceType);
+    navigateResource(node.resourceId, {
+      resourceType: node.resourceType,
+      resourceName: node.title,
+    });
   };
 
   const showSpin = treeLoading && treeData.length === 0;

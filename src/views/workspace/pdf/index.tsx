@@ -9,7 +9,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { Button } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useMemo, useState, type ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import styles from './style.module.less';
 
 interface PdfToolbarTitleProps {
@@ -36,6 +36,7 @@ interface PdfLayoutConfigProps {
   resourceName?: string;
   resourceType?: string;
   statsResourceId?: string;
+  footerResourceId?: string;
 }
 
 function PdfLayoutConfig({
@@ -43,6 +44,7 @@ function PdfLayoutConfig({
   resourceName,
   resourceType,
   statsResourceId,
+  footerResourceId,
 }: PdfLayoutConfigProps) {
   const frameConfig = useMemo(
     () => ({
@@ -55,16 +57,20 @@ function PdfLayoutConfig({
             statsResourceId,
           }
         : {},
+      footer: footerResourceId ? { resourceId: footerResourceId } : null,
     }),
-    [resourceName, resourceType, statsResourceId]
+    [footerResourceId, resourceName, resourceType, statsResourceId]
   );
   useWorkspaceLayoutConfig(frameConfig);
 
   return <>{children}</>;
 }
 
-function PdfPreview() {
-  const { resourceId } = useParams<{ resourceId: string }>();
+interface DocumentPreviewProps {
+  resourceId?: string;
+}
+
+function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
   const [viewerErrorMap, setViewerErrorMap] = useState<Record<string, unknown>>({});
   const documentService = useDocumentService();
   const resourceService = useResourceService();
@@ -205,6 +211,7 @@ function PdfPreview() {
       resourceName={docInfo.resourceInfo.resourceName}
       resourceType={docInfo.resourceInfo.resourceType}
       statsResourceId={resourceId}
+      footerResourceId={resourceId}
     >
       <div className={styles.content}>
         <div className={styles.root}>
@@ -220,4 +227,4 @@ function PdfPreview() {
   );
 }
 
-export default PdfPreview;
+export default DocumentPreview;

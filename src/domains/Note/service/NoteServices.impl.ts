@@ -25,7 +25,7 @@ const createNote = async (params: CreateNoteRequest): Promise<CreateNoteResponse
 
 const getNoteInfoDisplay = async (params: GetNoteInfoRequest): Promise<NoteInfoDisplayData> => {
   const noteInfoData = await NoteApi.getNoteInfo(params);
-  if (!noteInfoData?.resourceInfo || !noteInfoData?.noteInfo) {
+  if (!noteInfoData?.resourceInfo) {
     throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_NOT_FOUND);
   }
   return NoteServicesMap.mapNoteInfoDisplayFromApi(noteInfoData);

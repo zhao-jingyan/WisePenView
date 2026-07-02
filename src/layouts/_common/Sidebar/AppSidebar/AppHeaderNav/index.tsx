@@ -7,6 +7,10 @@ import {
   useNewNoteStore,
 } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
+import {
+  buildWorkspaceResourcePath,
+  RESOURCE_EDITOR_TYPE,
+} from '@/utils/navigation/workspaceRoute';
 import { ListBox, ListBoxItem, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
@@ -80,7 +84,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
       manual: true,
       onSuccess: ({ resourceId }) => {
         useNewNoteStore.getState().setNewNoteResourceId(resourceId);
-        navigate(`/app/note/${encodeURIComponent(resourceId)}`);
+        navigate(buildWorkspaceResourcePath(RESOURCE_EDITOR_TYPE.NOTE, resourceId));
       },
       onError: (err) => {
         toast.danger(parseErrorMessage(err));
@@ -92,7 +96,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
     if (creatingNote) return;
     const pendingNewNoteId = useNewNoteStore.getState().newNoteResourceId;
     if (pendingNewNoteId != null && pendingNewNoteId !== '') {
-      navigate(`/app/note/${encodeURIComponent(pendingNewNoteId)}`);
+      navigate(buildWorkspaceResourcePath(RESOURCE_EDITOR_TYPE.NOTE, pendingNewNoteId));
       return;
     }
     runCreateNote();

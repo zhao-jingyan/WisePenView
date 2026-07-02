@@ -1,13 +1,22 @@
-import { RESOURCE_TYPE } from '@/domains/Resource';
 import { useActiveDriveScopeStore, usePdfPreviewProgressStore } from '@/store';
+import {
+  buildWorkspaceResourcePath,
+  isDocumentEditorType,
+  resolveResourceEditorType,
+} from '@/utils/navigation/workspaceRoute';
 import { useNavigate } from 'react-router-dom';
 
+export interface NavigateResourceTarget {
+  resourceType?: string;
+  resourceName?: string;
+}
+
 export interface NavigateResourceFn {
-  (resourceId: string, resourceType?: string): void;
+  (resourceId: string, target?: NavigateResourceTarget): void;
 }
 
 /**
- * 资源跳转的统一入口：NOTE 跳笔记编辑器，其余视为 PDF 站内预览（尝试恢复 page/zoom）。
+ * 资源跳转的统一入口：先解析 editorType，再进入统一 workspace 路由。
  *
  * 跳转前会把当前 scope（groupId）写入 useActiveDriveScopeStore，
  * 让 SidebarDrive 等下游消费组件继承“点击发起方”的 scope。
@@ -15,12 +24,18 @@ export interface NavigateResourceFn {
 export const useNavigateResource = (groupId?: string): NavigateResourceFn => {
   const navigate = useNavigate();
 
-  return (resourceId, resourceType) => {
+  return (resourceId, target) => {
     if (!resourceId) return;
     useActiveDriveScopeStore.getState().setGroupId(groupId);
 
-    if (resourceType === RESOURCE_TYPE.NOTE) {
-      navigate(`/app/note/${encodeURIComponent(resourceId)}`);
+    const editorType = resolveResourceEditorType({
+      resourceType: target?.resourceType,
+      resourceName: target?.resourceName,
+    });
+    const basePath = buildWorkspaceResourcePath(editorType, resourceId);
+
+    if (!isDocumentEditorType(editorType)) {
+      navigate(basePath);
       return;
     }
 
@@ -30,7 +45,6 @@ export const useNavigateResource = (groupId?: string): NavigateResourceFn => {
       qs.set('page', String(progress.page));
       qs.set('zoom', progress.zoom);
     }
-    const basePath = `/app/pdf/${encodeURIComponent(resourceId)}`;
     navigate(qs.size > 0 ? `${basePath}?${qs.toString()}` : basePath);
   };
 };

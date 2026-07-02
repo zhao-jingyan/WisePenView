@@ -1,11 +1,21 @@
-// 卡片整体上移到视口 10vh，类 Algolia DocSearch 布局
+// 搜索面板靠近 Spotlight 的轻浮层质感，保留 HeroUI 的主题变量。
 .container {
-  margin-top: 10vh;
-  width: min(720px, calc(100vw - 32px));
+  margin-top: 12vh;
+  width: min(680px, calc(100vw - 32px));
 }
 
 .dialog {
   overflow: hidden;
+  color: var(--foreground);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--overlay) 96%, var(--surface-secondary)), var(--overlay)),
+    var(--overlay);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 18px;
+  box-shadow:
+    0 24px 64px rgba(15, 23, 42, 0.2),
+    0 8px 24px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(18px);
 }
 
 .body {
@@ -16,13 +26,13 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-xs) var(--space-md);
-  border-bottom: 1px solid var(--separator);
+  padding: 14px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--separator) 78%, transparent);
 }
 
 .headerIcon {
   font-size: var(--font-size-lg);
-  color: var(--muted);
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 
@@ -34,53 +44,40 @@
 
 .inputGroup {
   width: 100%;
+  min-height: 44px;
   border: none;
   background: transparent;
   box-shadow: none;
 }
 
 .inputControl {
-  font-size: var(--font-size-lg);
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--foreground);
+
+  &::placeholder {
+    color: var(--text-tertiary);
+  }
 }
 
 .clearButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
   padding: 0;
   color: var(--text-tertiary);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--muted);
-  }
-}
-
-.kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  padding: 2px var(--space-xs);
-  font-family: inherit;
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
   background: var(--surface-tertiary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 
   &:hover {
-    color: var(--muted);
+    color: var(--foreground);
     background: var(--surface-secondary);
   }
-}
-
-.tabs {
-  padding: var(--space-xs) var(--space-md);
-  border-bottom: 1px solid var(--separator);
 }
