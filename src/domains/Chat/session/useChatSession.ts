@@ -131,6 +131,13 @@ export const useChatSession = ({
         agentContext?: ChatAgentContext;
         allowedSkillIds?: string[];
         selectedSkillIds?: string[];
+        activeDocRefs?: {
+          resourceId: string;
+          resourceName: string;
+          resourceType: string;
+          enabled: boolean;
+        }[];
+        activeAttachments?: { attachmentId: string; filename: string; enabled: boolean }[];
         pendingImages?: { mimeType: string; base64: string; filename?: string }[];
       }
     ) => {
@@ -143,8 +150,8 @@ export const useChatSession = ({
         model: options?.model ?? model,
         selected,
         enableSelected: options?.enableSelected ?? enableSelected,
-        activeDocRefs: chatPageState.activeDocRefs,
-        activeAttachments: chatPageState.activeAttachments,
+        activeDocRefs: options?.activeDocRefs ?? chatPageState.activeDocRefs,
+        activeAttachments: options?.activeAttachments ?? chatPageState.activeAttachments,
         agentContext: options?.agentContext,
         allowedSkillIds: options?.allowedSkillIds,
         selectedSkillIds: options?.selectedSkillIds,

@@ -8,7 +8,6 @@ import type { DataNode } from '@/components/Tree';
 import Tree from '@/components/Tree';
 import { useDriveService, useGroupService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
-import { useChatPageStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, Modal, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
@@ -18,7 +17,6 @@ import { useRef, useState } from 'react';
 import type { DocumentPickerModalProps } from './index.type';
 import styles from './style.module.less';
 
-const DRIVE_ROOT_ID = 'drive-root';
 const SCOPE_KEY_PREFIX = '__document_picker_scope__';
 const CHILD_KEY_SEPARATOR = '>';
 
@@ -88,10 +86,9 @@ function isSelectableNode(node: DriveNode | undefined): boolean {
   return node?.type === 'resource' || node?.type === 'link';
 }
 
-function DocumentPickerModal({ open, onClose }: DocumentPickerModalProps) {
+function DocumentPickerModal({ open, onClose, onConfirm }: DocumentPickerModalProps) {
   const driveService = useDriveService();
   const groupService = useGroupService();
-  const addDocRef = useChatPageStore((s) => s.addDocRef);
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
   const scopeMapRef = useRef<Map<string, ScopeInfo>>(new Map());
@@ -251,17 +248,19 @@ function DocumentPickerModal({ open, onClose }: DocumentPickerModalProps) {
   }
 
   function handleConfirm(): void {
-    for (const key of checkedKeys) {
-      const driveNode = scopedDriveNodeMapRef.current.get(key);
-      if (!driveNode || (driveNode.type !== 'resource' && driveNode.type !== 'link')) continue;
-
-      addDocRef({
-        resourceId: driveNode.resourceId,
-        resourceName: driveNode.title || driveNode.resourceId,
-        resourceType: driveNode.resourceType,
+    const resources = checkedKeys
+      .map((key) => scopedDriveNodeMapRef.current.get(key))
+      .filter((node): node is Extract<DriveNode, { type: 'resource' | 'link' }> =>
+        Boolean(node && (node.type === 'resource' || node.type === 'link'))
+      )
+      .map((node) => ({
+        resourceId: node.resourceId,
+        resourceName: node.title || node.resourceId,
+        resourceType: node.resourceType ?? '',
         enabled: true,
-      });
-    }
+      }));
+
+    onConfirm(resources);
     handleClose();
   }
 
@@ -271,7 +270,7 @@ function DocumentPickerModal({ open, onClose }: DocumentPickerModalProps) {
         <Modal.Container size="md" placement="center">
           <Modal.Dialog>
             <Modal.Header>
-              <Modal.Heading>文档库选择</Modal.Heading>
+              <Modal.Heading>从云盘选取</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
               <div className={styles.wrapper}>

@@ -12,6 +12,7 @@ export type {
   CapabilityPickerItem,
   CapabilityPickerItemKind,
   CapabilityPickerSection,
+  CapabilitySkillSelection,
   CapabilityToolOption,
 } from './mapper/capabilityPicker.mapper';
 export { buildAdvancedSkillTreeGroups, getPrimarySkillsForAgent } from './mapper/skillScope.mapper';

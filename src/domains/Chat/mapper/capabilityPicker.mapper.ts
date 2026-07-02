@@ -1,6 +1,5 @@
 import type { SkillScopeTreeGroup } from '@/domains/Chat/mapper/skillScope.mapper';
 import type { SkillSummary } from '@/domains/Resource';
-import type { TemporarySkillSelection } from '@/store';
 
 export interface CapabilityToolOption {
   toolId: string;
@@ -24,9 +23,21 @@ export interface CapabilityPickerSection {
   items: CapabilityPickerItem[];
 }
 
+export interface CapabilitySkillSelection {
+  skillId: string;
+  displayName: string;
+  currentVersionId?: string;
+  scopeType?: 'PERSONAL' | 'GROUP';
+  groupId?: string;
+  groupName?: string;
+  sourceAgentId?: string;
+  sourceAgentLabel?: string;
+  external?: boolean;
+}
+
 interface BuildCapabilityPickerSectionsInput {
   primarySkills: SkillSummary[];
-  selectedSkills: TemporarySkillSelection[];
+  selectedSkills: CapabilitySkillSelection[];
   selectedTools: CapabilityToolOption[];
   toolOptions: CapabilityToolOption[];
   advancedMode: boolean;

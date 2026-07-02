@@ -1,18 +1,9 @@
 import type { ChatPanelProps, Message, Model } from '@/components/ChatPanel/index.type';
 import { useChatService } from '@/domains';
-import {
-  buildAdvancedSkillTreeGroups,
-  buildDefaultPersonalAgent,
-  getPrimarySkillsForAgent,
-} from '@/domains/Chat';
 import { useChatSession } from '@/domains/Chat/session/useChatSession';
 import {
-  clearChatCapabilityStore,
   clearChatPageStore,
   clearNewChatSessionStore,
-  useAdvancedModeStore,
-  useChatAgentStore,
-  useChatCapabilityStore,
   useChatPanelStore,
   useCurrentChatSessionStore,
   useNewChatSessionStore,
@@ -24,8 +15,6 @@ import { useMount, useRequest, useUpdateEffect } from 'ahooks';
 import { IndentIncrease } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdvancedModeToggle from './AdvancedModeToggle';
-import AgentSelector from './AgentSelector';
 import ChatInput from './ChatInput';
 import type { SendOptions } from './ChatInput/index.type';
 import {
@@ -39,8 +28,6 @@ import {
 import MessageList from './MessageList';
 import NewChatButton from './NewChatButton';
 import styles from './style.module.less';
-
-const DEFAULT_PERSONAL_AGENT = buildDefaultPersonalAgent();
 
 function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) {
   const navigate = useNavigate();
@@ -59,53 +46,12 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
     currentSessionId ? (state.selectedTextByResourceId[currentSessionId] ?? '') : ''
   );
   const clearSelectedText = useNoteSelectionStore((state) => state.clearSelectedText);
-  const draftAgent = useChatAgentStore((state) => state.draftAgent);
-  const sessionAgentBySessionId = useChatAgentStore((state) => state.sessionAgentBySessionId);
-  const setDraftAgent = useChatAgentStore((state) => state.setDraftAgent);
-  const setSessionAgent = useChatAgentStore((state) => state.setSessionAgent);
-  const advancedMode = useAdvancedModeStore((state) => state.advancedMode);
-  const selectedSkills = useChatCapabilityStore((state) => state.selectedSkills);
-  const selectedTools = useChatCapabilityStore((state) => state.selectedTools);
-
-  useUpdateEffect(() => {
-    clearChatCapabilityStore();
-  }, [currentSessionId]);
 
   const [currentModel, setCurrentModel] = useState<Model | null>(null);
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotalPage, setHistoryTotalPage] = useState(1);
   const [loadingMoreHistory, setLoadingMoreHistory] = useState(false);
-
-  const { data: workspace, loading: loadingWorkspace } = useRequest(
-    () => chatService.getWorkspace(),
-    { refreshDeps: [] }
-  );
-  const groups = workspace?.groups ?? [];
-  const personalAgentOptions = workspace?.personalAgents ?? [];
-  const groupAgentOptions = workspace?.groupAgents ?? [];
-  const agentOptions = [DEFAULT_PERSONAL_AGENT, ...personalAgentOptions, ...groupAgentOptions];
-  const agentOptionsLoaded = !loadingWorkspace;
-  const selectedAgent = (() => {
-    const storedAgent = currentSessionId ? sessionAgentBySessionId[currentSessionId] : draftAgent;
-    if (!storedAgent) return DEFAULT_PERSONAL_AGENT;
-    if (storedAgent.isDefault) return DEFAULT_PERSONAL_AGENT;
-
-    const freshAgent = agentOptions.find((agent) => agent.agentId === storedAgent.agentId);
-    if (freshAgent) return freshAgent;
-
-    return agentOptionsLoaded ? DEFAULT_PERSONAL_AGENT : storedAgent;
-  })();
-
-  const allSkills = workspace?.skills ?? [];
-  const primarySkills = getPrimarySkillsForAgent(allSkills, selectedAgent);
-  const advancedSkillGroups = buildAdvancedSkillTreeGroups(
-    allSkills,
-    groups,
-    selectedAgent,
-    primarySkills
-  );
-  const allowedSkillIds = primarySkills.map((skill) => skill.skillId);
 
   const {
     messages: liveMessages,
@@ -169,7 +115,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
   }, [currentSessionId, hasRenderableChatContent]);
 
   const sending = status === 'submitted' || status === 'streaming';
-  const chatInputModelId = currentModel?.id ?? '';
   const hasSelectedContext = enableSelectedText && Boolean(selectedContextText.trim());
   const panelTitle = currentSessionTitle || '新对话';
 
@@ -220,9 +165,10 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
   };
 
   const handleSend = async (text: string, opts?: SendOptions) => {
-    if (!currentModel) return;
+    const targetModel = opts?.model ?? currentModel;
+    if (!targetModel) return;
+    setCurrentModel(targetModel);
     let targetSessionId = currentSessionId;
-    const targetAgent = selectedAgent ?? DEFAULT_PERSONAL_AGENT;
 
     if (!targetSessionId) {
       try {
@@ -233,7 +179,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
           title: createdSession.title,
         });
         setCurrentSession({ id: createdSession.id, title: createdSession.title });
-        setSessionAgent(createdSession.id, targetAgent);
         setChatPanelDraftOpen(false);
         if (fullWidth) {
           navigate(`/app/chat/${createdSession.id}`, { replace: true });
@@ -244,22 +189,12 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
       }
     }
 
-    const selectedSkillIds = selectedSkills.map((s) => s.skillId);
-    const selectedToolIds = selectedTools.map((t) => t.toolId);
-
     const sendPromise = sendSessionMessage(text, {
-      model: currentModel.id,
+      model: targetModel.id,
       enableSelected: hasSelectedContext,
       sessionId: targetSessionId,
-      agentContext: {
-        agent_id: targetAgent.agentId,
-        agent_type: targetAgent.agentType,
-        group_id: targetAgent.groupId,
-        advanced_mode_enabled: advancedMode,
-        tools: selectedToolIds.length > 0 ? selectedToolIds : undefined,
-      },
-      allowedSkillIds,
-      selectedSkillIds: selectedSkillIds.length > 0 ? selectedSkillIds : undefined,
+      activeDocRefs: opts?.activeDocRefs,
+      activeAttachments: opts?.activeAttachments,
       pendingImages: opts?.pendingImages,
     });
 
@@ -267,14 +202,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
       clearSelectedText(targetSessionId);
     }
     await sendPromise;
-  };
-
-  const handleAgentChange = (nextAgent: (typeof agentOptions)[number]) => {
-    if (currentSessionId) {
-      setSessionAgent(currentSessionId, nextAgent);
-      return;
-    }
-    setDraftAgent(nextAgent);
   };
 
   const handleClearSelectedContext = () => {
@@ -344,20 +271,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
             </div>
           )}
         </div>
-
-        {!collapsed && (
-          <div className={styles.headerRight}>
-            <AdvancedModeToggle compact={!fullWidth} />
-            <div className={styles.agentSelectorShell}>
-              <AgentSelector
-                compact={!fullWidth}
-                options={agentOptions}
-                selectedAgent={selectedAgent}
-                onChange={handleAgentChange}
-              />
-            </div>
-          </div>
-        )}
       </div>
 
       {!collapsed && (
@@ -379,18 +292,11 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat }: ChatPanelProps) 
 
           <div className={styles.footer}>
             <ChatInput
-              currentModelId={chatInputModelId}
-              onModelChange={setCurrentModel}
               onSend={handleSend}
               sending={sending}
               hasSelectedContext={hasSelectedContext}
               selectedContextText={selectedContextText}
               onClearSelectedContext={handleClearSelectedContext}
-              selectedAgent={selectedAgent}
-              primarySkills={primarySkills}
-              advancedMode={advancedMode}
-              advancedSkillGroups={advancedSkillGroups}
-              currentModelVision={currentModel?.vision ?? false}
             />
           </div>
         </>
