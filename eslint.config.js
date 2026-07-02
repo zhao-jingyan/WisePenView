@@ -95,7 +95,7 @@ const buildRestrictedImportsRule = ({
 };
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'src/components/_shadcn/**']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
