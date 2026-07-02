@@ -22,7 +22,7 @@ function getNoteInfo(req: GetNoteInfoApiRequest): Promise<GetNoteInfoApiResponse
 function getDrawIoLatestSnapshot(
   req: GetDrawIoLatestSnapshotApiRequest
 ): Promise<GetDrawIoLatestSnapshotApiResponse> {
-  return apiGet('/internal/note/getNoteLatestVersion', { params: req });
+  return apiGet('/note/getDrawIOLatestVersion', { params: req });
 }
 
 function saveDrawIoSnapshot(req: SaveDrawIoSnapshotApiRequest): Promise<void> {
