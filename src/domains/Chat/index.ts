@@ -27,6 +27,7 @@ export {
   isDocumentPickerScopeRootKey,
   isExpandableDocumentPickerNode,
   isSelectableDocumentPickerNode,
+  mapDriveNodeToDocumentPickerNode,
   mapDocumentPickerNodesToSelectedResources,
   parseDocumentPickerTreeKey,
   replaceDocumentPickerTreeNodeChildren,
