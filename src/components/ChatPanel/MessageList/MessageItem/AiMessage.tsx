@@ -1,10 +1,10 @@
 import type { Message } from '@/components/ChatPanel/index.type';
 import { Spin } from '@/components/Feedback';
+import ProviderLogo from '@/components/Icons/ProviderLogo';
 import { Button, toast } from '@heroui/react';
 import { useInterval } from 'ahooks';
 import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
-import ProviderLogo from '../../../Icons/ProviderLogo';
 import styles from './AiMessage.module.less';
 import MessageContent from './MessageContent';
 import ThinkingBlock from './ThinkingBlock';

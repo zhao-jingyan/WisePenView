@@ -6,9 +6,9 @@ import { ArrowUpAZ, ChartBar, Check, ChevronDown, ChevronUp, LayoutGrid } from '
 import { useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/Feedback';
+import ProviderLogo from '@/components/Icons/ProviderLogo';
 import { useChatService } from '@/domains';
 import { useChatModelPreferenceStore } from '@/store/useChatModelPreferenceStore';
-import ProviderLogo from '../../Icons/ProviderLogo';
 import type { Model } from '../index.type';
 
 import styles from './style.module.less';

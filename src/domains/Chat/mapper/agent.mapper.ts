@@ -50,3 +50,14 @@ export const buildAgentFromSkillTreeGroup = (
     groupName: group.label,
   };
 };
+
+export const buildChatInputAgentOptions = (
+  agents: ChatAgentOption[],
+  currentAgent: ChatAgentOption
+): ChatAgentOption[] => (agents.length > 0 ? agents : [currentAgent]);
+
+export const resolveChatInputSelectedAgent = (
+  agents: ChatAgentOption[],
+  currentAgent: ChatAgentOption
+): ChatAgentOption =>
+  agents.find((agent) => agent.agentId === currentAgent.agentId) ?? agents[0] ?? currentAgent;

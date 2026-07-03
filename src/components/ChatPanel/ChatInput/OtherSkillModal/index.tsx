@@ -1,11 +1,11 @@
+import { Modal } from '@/components/Overlay';
 import type { TreeDataNode } from '@/components/Tree';
 import Tree from '@/components/Tree';
 import { useChatService } from '@/domains';
-import { buildAgentFromSkillTreeGroup } from '@/domains/Chat/mapper/agent.mapper';
+import { buildOtherSkillTreeGroups } from '@/domains/Chat';
 import type { SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
-import { Modal } from '@/components/Overlay';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { ChevronDown, Folder } from 'lucide-react';
@@ -44,9 +44,8 @@ function OtherSkillModalContent() {
 
   const { skillMap, treeData } = useMemo(() => {
     const mapping = new Map<string, { skill: SkillSummary; sourceAgent: ChatAgentOption | null }>();
-    const groups = rawGroups ?? [];
+    const groups = buildOtherSkillTreeGroups(rawGroups ?? [], currentAgent);
     const data: TreeDataNode[] = groups.map((group) => {
-      const sourceAgent = buildAgentFromSkillTreeGroup(group, currentAgent);
       return {
         key: group.key,
         title: (
@@ -57,7 +56,7 @@ function OtherSkillModalContent() {
         ),
         selectable: false,
         children: group.skills.map((skill) => {
-          mapping.set(skill.skillId, { skill, sourceAgent });
+          mapping.set(skill.skillId, { skill, sourceAgent: group.sourceAgent });
           return {
             key: skill.skillId,
             title: skill.displayName,

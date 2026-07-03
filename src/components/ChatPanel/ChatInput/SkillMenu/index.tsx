@@ -1,6 +1,6 @@
 import { Popover } from '@/components/Overlay';
 import { useChatService } from '@/domains';
-import { buildCapabilityPickerSections } from '@/domains/Chat';
+import { buildSkillMenuSections } from '@/domains/Chat';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, ListBox, ListBoxItem, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
@@ -13,27 +13,17 @@ import styles from '../style.module.less';
 function SkillMenu() {
   const chatService = useChatService();
   const store = useChatInputStoreApi();
-  const {
-    capabilityOpen,
-    selectedAgent,
-    selectedSkills,
-    selectedTools,
-  } = useChatInputStore(
+  const { selectedAgent, selectedSkills, selectedTools, skillMenuOpen } = useChatInputStore(
     useShallow((state) => ({
-      capabilityOpen: state.capabilityOpen,
       selectedAgent: state.selectedAgent,
       selectedSkills: state.selectedSkills,
       selectedTools: state.selectedTools,
+      skillMenuOpen: state.skillMenuOpen,
     }))
   );
-  const {
-    removeSkill,
-    setCapabilityOpen,
-    setOtherSkillModalOpen,
-    toggleSkill,
-    toggleTool,
-  } = store.getState();
-  const { data } = useRequest(
+  const { removeSkill, setOtherSkillModalOpen, setSkillMenuOpen, toggleSkill, toggleTool } =
+    store.getState();
+  const { data: skillMenuOptions } = useRequest(
     () => chatService.getChatInputCapabilityOptions({ agent: selectedAgent }),
     {
       refreshDeps: [selectedAgent.agentId],
@@ -42,15 +32,15 @@ function SkillMenu() {
   );
   const sections = useMemo(
     () =>
-      buildCapabilityPickerSections({
-        primarySkills: data?.primarySkills ?? [],
+      buildSkillMenuSections({
+        primarySkills: skillMenuOptions?.primarySkills ?? [],
         selectedSkills,
         selectedTools,
-        toolOptions: data?.tools ?? [],
+        toolOptions: skillMenuOptions?.tools ?? [],
         advancedMode: true,
-        otherSkillGroups: data?.otherSkillGroups ?? [],
+        otherSkillGroups: skillMenuOptions?.otherSkillGroups ?? [],
       }),
-    [data, selectedSkills, selectedTools]
+    [selectedSkills, selectedTools, skillMenuOptions]
   );
   const primarySection = sections.find((section) => section.key === 'primary-skills');
   const externalSection = sections.find((section) => section.key === 'external-skills');
@@ -59,31 +49,31 @@ function SkillMenu() {
   const selectedToolIds = selectedTools.map((tool) => tool.toolId);
   const externalItems =
     externalSection?.items.filter((item) => item.kind === 'external-skill') ?? [];
-  const capabilityCount = selectedSkills.length + selectedTools.length;
+  const selectedOptionCount = selectedSkills.length + selectedTools.length;
 
   function handleToggleSkill(skillId: string): void {
-    const skill = data?.primarySkills.find((item) => item.skillId === skillId);
+    const skill = skillMenuOptions?.primarySkills.find((item) => item.skillId === skillId);
     if (!skill) return;
     toggleSkill(skill, selectedAgent);
   }
 
   function handleToggleTool(toolId: string): void {
-    const tool = data?.tools.find((item) => item.toolId === toolId);
+    const tool = skillMenuOptions?.tools.find((item) => item.toolId === toolId);
     if (!tool) return;
     toggleTool(tool);
   }
 
   function handleSelectOther(): void {
-    setCapabilityOpen(false);
+    setSkillMenuOpen(false);
     setOtherSkillModalOpen(true);
   }
 
   return (
-    <Popover isOpen={capabilityOpen} onOpenChange={setCapabilityOpen}>
+    <Popover isOpen={skillMenuOpen} onOpenChange={setSkillMenuOpen}>
       <Popover.Trigger title="配置 Agent">
         <span className={styles.toolButtonWrap}>
-          {capabilityCount > 0 ? (
-            <span className={styles.capabilityBadge}>{capabilityCount}</span>
+          {selectedOptionCount > 0 ? (
+            <span className={styles.skillMenuBadge}>{selectedOptionCount}</span>
           ) : null}
           <Button
             variant="ghost"
@@ -100,13 +90,11 @@ function SkillMenu() {
         <Popover.Dialog>
           <Popover.DeferredContent
             fallback={
-              <div
-                className={`${styles.deferredPopoverPanel} ${styles.deferredCapabilityPanel}`}
-              />
+              <div className={`${styles.deferredPopoverPanel} ${styles.deferredSkillMenuPanel}`} />
             }
           >
             {() => (
-              <div className={styles.capabilityPanel}>
+              <div className={styles.skillMenuPanel}>
                 {primarySection && primarySection.items.length > 0 ? (
                   <>
                     <div className={styles.popoverTitle}>Skill</div>
@@ -157,7 +145,7 @@ function SkillMenu() {
                             <span>
                               {item.label}
                               {item.sourceText ? (
-                                <span className={styles.capabilitySourceText}>
+                                <span className={styles.skillMenuSourceText}>
                                   {item.sourceText}
                                 </span>
                               ) : null}

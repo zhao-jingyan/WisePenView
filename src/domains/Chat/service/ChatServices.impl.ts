@@ -1,4 +1,3 @@
-import { buildDriveNodeScope, type DriveNode } from '@/domains/Drive';
 import type { Group } from '@/domains/Group';
 import type { ResourceItem } from '@/domains/Resource';
 import { useCurrentChatSessionStore, useNewChatSessionStore, useNoteSelectionStore } from '@/store';
@@ -6,7 +5,14 @@ import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { ChatApi, ChatSessionApi } from '../apis/ChatApi';
 import { buildAgentFromResourceItem, buildDefaultPersonalAgent } from '../mapper/agent.mapper';
 import { ChatServicesMap } from '../mapper/ChatServices.map';
-import { buildAdvancedSkillTreeGroups, getPrimarySkillsForAgent } from '../mapper/skillScope.mapper';
+import {
+  buildDocumentPickerScopes,
+  mapDriveNodeToDocumentPickerNode,
+} from '../mapper/documentPicker.mapper';
+import {
+  buildAdvancedSkillTreeGroups,
+  getPrimarySkillsForAgent,
+} from '../mapper/skillScope.mapper';
 import { mapResourceItemToSkillSummary } from '../mapper/workspace.mapper';
 import type {
   ChatDocumentPickerNode,
@@ -185,69 +191,7 @@ const getDocumentPickerScopes = async (
   deps: ChatServiceDeps
 ): Promise<ChatDocumentPickerScope[]> => {
   const groups = await fetchAllGroups(deps);
-  const personalScope = buildDriveNodeScope();
-  return [
-    {
-      scopeKey: 'personal',
-      label: '个人文件',
-      rootId: personalScope.rootId,
-      type: 'personal',
-    },
-    ...groups.map((group) => {
-      const groupScope = buildDriveNodeScope(group.groupId);
-      return {
-        scopeKey: `group:${group.groupId}`,
-        label: group.groupName,
-        rootId: groupScope.rootId,
-        type: 'group' as const,
-        groupId: group.groupId,
-      };
-    }),
-  ];
-};
-
-const getDriveNodeTitle = (node: DriveNode): string => {
-  switch (node.type) {
-    case 'root':
-      return node.name || '云盘';
-    case 'folder':
-      return node.name || '未命名文件夹';
-    case 'resource':
-    case 'link':
-      return node.title || node.resourceId;
-    case 'loading':
-      return node.label || '';
-  }
-};
-
-const mapDriveNodeToDocumentPickerNode = (
-  node: DriveNode
-): ChatDocumentPickerNode | null => {
-  if (node.type === 'loading') return null;
-
-  const groupId = node.scope.type === 'group' ? node.scope.groupId : null;
-  const base = {
-    nodeId: node.id,
-    title: getDriveNodeTitle(node),
-    type: node.type,
-    groupId,
-    resourceId: null,
-    resourceName: null,
-    resourceType: null,
-    isLeaf: node.type === 'resource' || node.type === 'link',
-    selectable: node.type === 'resource' || node.type === 'link',
-  };
-
-  if (node.type === 'resource' || node.type === 'link') {
-    return {
-      ...base,
-      resourceId: node.resourceId,
-      resourceName: node.title || node.resourceId,
-      resourceType: node.resourceType ?? '',
-    };
-  }
-
-  return base;
+  return buildDocumentPickerScopes(groups);
 };
 
 const listDocumentPickerChildren = async (

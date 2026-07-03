@@ -1,5 +1,6 @@
 import { Popover } from '@/components/Overlay';
 import { useChatService } from '@/domains';
+import { buildChatInputAgentOptions, resolveChatInputSelectedAgent } from '@/domains/Chat';
 import type { ChatAgentOption } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, ListBox, ListBoxItem, toast } from '@heroui/react';
@@ -17,14 +18,15 @@ function AgentPicker() {
   const [open, setOpen] = useState(false);
   const { data: agents = [] } = useRequest(() => chatService.getChatInputAgents(), {
     onSuccess: (nextAgents) => {
-      if (nextAgents.length === 0) return;
       const currentAgent = store.getState().selectedAgent;
-      if (nextAgents.some((agent) => agent.agentId === currentAgent.agentId)) return;
-      setSelectedAgent(nextAgents[0]);
+      const nextAgent = resolveChatInputSelectedAgent(nextAgents, currentAgent);
+      if (nextAgent.agentId !== currentAgent.agentId) {
+        setSelectedAgent(nextAgent);
+      }
     },
     onError: (error) => toast.danger(parseErrorMessage(error)),
   });
-  const displayAgents = agents.length > 0 ? agents : [selectedAgent];
+  const displayAgents = buildChatInputAgentOptions(agents, selectedAgent);
 
   const handleSelect = (agent: ChatAgentOption) => {
     setSelectedAgent(agent);

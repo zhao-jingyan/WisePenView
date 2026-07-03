@@ -1,5 +1,5 @@
-import type { Group, IGroupService } from '@/domains/Group';
 import type { IDriveService } from '@/domains/Drive';
+import type { Group, IGroupService } from '@/domains/Group';
 import type { IResourceService, SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
 import type { CapabilityToolOption } from '../mapper/capabilityPicker.mapper';
@@ -109,6 +109,13 @@ export interface ChatDocumentPickerNode {
   resourceType: string | null;
   isLeaf: boolean;
   selectable: boolean;
+}
+
+export interface ChatDocumentPickerSelectedResource {
+  resourceId: string;
+  resourceName: string;
+  resourceType: string;
+  enabled: boolean;
 }
 
 export interface ListDocumentPickerChildrenRequest {

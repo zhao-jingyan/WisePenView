@@ -1,11 +1,16 @@
 import type { Group } from '@/domains/Group';
 import type { SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
+import { buildAgentFromSkillTreeGroup } from './agent.mapper';
 
 export interface SkillScopeTreeGroup {
   key: string;
   label: string;
   skills: SkillSummary[];
+}
+
+export interface OtherSkillTreeGroup extends SkillScopeTreeGroup {
+  sourceAgent: ChatAgentOption | null;
 }
 
 export const getSkillScopeLabel = (skill: SkillSummary): string =>
@@ -107,3 +112,12 @@ export const buildAdvancedSkillTreeGroups = (
 
   return result;
 };
+
+export const buildOtherSkillTreeGroups = (
+  groups: SkillScopeTreeGroup[],
+  currentAgent: ChatAgentOption | null
+): OtherSkillTreeGroup[] =>
+  groups.map((group) => ({
+    ...group,
+    sourceAgent: buildAgentFromSkillTreeGroup(group, currentAgent),
+  }));

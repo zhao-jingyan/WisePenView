@@ -1,10 +1,20 @@
 import { EmptyState, LoadingState } from '@/components/Feedback';
+import { Modal } from '@/components/Overlay';
 import type { DataNode } from '@/components/Tree';
 import Tree from '@/components/Tree';
 import { useChatService } from '@/domains';
-import type { ChatDocumentPickerNode, ChatDocumentPickerScope } from '@/domains/Chat';
+import {
+  buildDocumentPickerTreeNodes,
+  isDocumentPickerScopeRootKey,
+  isExpandableDocumentPickerNode,
+  isSelectableDocumentPickerNode,
+  mapDocumentPickerNodesToSelectedResources,
+  parseDocumentPickerTreeKey,
+  replaceDocumentPickerTreeNodeChildren,
+  type ChatDocumentPickerNode,
+  type ChatDocumentPickerScope,
+} from '@/domains/Chat';
 import { parseErrorMessage } from '@/utils/error';
-import { Modal } from '@/components/Overlay';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Folder, Users } from 'lucide-react';
@@ -12,25 +22,6 @@ import type { Key } from 'react';
 import { useRef, useState } from 'react';
 import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
 import styles from './style.module.less';
-
-const CHILD_KEY_SEPARATOR = '>';
-
-function isScopeRootKey(key: string): boolean {
-  return !key.includes(CHILD_KEY_SEPARATOR);
-}
-
-function buildScopedKey(scopeKey: string, nodeId: string): string {
-  return `${scopeKey}${CHILD_KEY_SEPARATOR}${nodeId}`;
-}
-
-function parseDocumentTreeKey(key: string): { scopeKey: string; nodeId: string } | null {
-  const idx = key.indexOf(CHILD_KEY_SEPARATOR);
-  if (idx === -1) return null;
-  return {
-    scopeKey: key.slice(0, idx),
-    nodeId: key.slice(idx + CHILD_KEY_SEPARATOR.length),
-  };
-}
 
 function buildScopeRootNode(scope: ChatDocumentPickerScope): DataNode {
   const icon =
@@ -56,35 +47,6 @@ function buildScopeRootNode(scope: ChatDocumentPickerScope): DataNode {
   };
 }
 
-function isSelectableDocumentNode(node: ChatDocumentPickerNode | undefined): boolean {
-  if (!node) return false;
-  if (node.selectable) return true;
-  return node.type === 'resource' || node.type === 'link';
-}
-
-function isExpandableDocumentNode(node: ChatDocumentPickerNode | undefined): boolean {
-  if (!node) return false;
-  if (node.isLeaf) return false;
-  return node.type === 'root' || node.type === 'folder';
-}
-
-function replaceTreeNodeChildren(
-  nodes: DataNode[],
-  targetKey: string,
-  children: DataNode[]
-): DataNode[] {
-  return nodes.map((node) => {
-    if (String(node.key) === targetKey) {
-      return { ...node, children };
-    }
-    if (!node.children || node.children.length === 0) return node;
-    return {
-      ...node,
-      children: replaceTreeNodeChildren(node.children, targetKey, children),
-    };
-  });
-}
-
 function DocumentPickerContent() {
   const chatService = useChatService();
   const { addDocRefs, setDocumentPickerOpen } = useChatInputStoreApi().getState();
@@ -97,18 +59,9 @@ function DocumentPickerContent() {
     scopeKey: string,
     documentNodes: ChatDocumentPickerNode[]
   ): DataNode[] {
-    return documentNodes.map((node) => {
-      const key = buildScopedKey(scopeKey, node.nodeId);
-      const selectable = isSelectableDocumentNode(node);
-      documentNodeMapRef.current.set(key, node);
-      return {
-        key,
-        title: node.title,
-        isLeaf: node.isLeaf,
-        selectable,
-        checkable: selectable,
-      };
-    });
+    const { treeNodes, nodeEntries } = buildDocumentPickerTreeNodes(scopeKey, documentNodes);
+    nodeEntries.forEach(([key, node]) => documentNodeMapRef.current.set(key, node));
+    return treeNodes;
   }
 
   async function loadChildren(
@@ -123,7 +76,11 @@ function DocumentPickerContent() {
         parentNodeId,
       });
       setTreeData((prev) =>
-        replaceTreeNodeChildren(prev, targetKey, buildDocumentTreeNodes(scope.scopeKey, children))
+        replaceDocumentPickerTreeNodeChildren(
+          prev,
+          targetKey,
+          buildDocumentTreeNodes(scope.scopeKey, children)
+        )
       );
     } catch (err) {
       toast.danger(parseErrorMessage(err));
@@ -149,27 +106,29 @@ function DocumentPickerContent() {
     const key = String(treeNode.key);
     if (treeNode.children) return;
 
-    if (isScopeRootKey(key)) {
+    if (isDocumentPickerScopeRootKey(key)) {
       const scope = scopeMapRef.current.get(key);
       if (scope) await loadChildren(scope, key);
       return;
     }
 
-    const parsed = parseDocumentTreeKey(key);
+    const parsed = parseDocumentPickerTreeKey(key);
     if (!parsed) return;
     const scope = scopeMapRef.current.get(parsed.scopeKey);
     const documentNode = documentNodeMapRef.current.get(key);
-    if (!scope || !isExpandableDocumentNode(documentNode)) return;
+    if (!scope || !isExpandableDocumentPickerNode(documentNode)) return;
     await loadChildren(scope, key, parsed.nodeId);
   }
 
   function normalizeSelectableKeys(keys: string[]): string[] {
-    return keys.filter((key) => isSelectableDocumentNode(documentNodeMapRef.current.get(key)));
+    return keys.filter((key) =>
+      isSelectableDocumentPickerNode(documentNodeMapRef.current.get(key))
+    );
   }
 
   function handleSelect(_keys: Key[], info: { node: DataNode; selected: boolean }): void {
     const clickedKey = String(info.node.key);
-    if (!isSelectableDocumentNode(documentNodeMapRef.current.get(clickedKey))) return;
+    if (!isSelectableDocumentPickerNode(documentNodeMapRef.current.get(clickedKey))) return;
 
     setCheckedKeys((prev) => {
       const next = prev.includes(clickedKey)
@@ -197,17 +156,9 @@ function DocumentPickerContent() {
   }
 
   function handleConfirm(): void {
-    const resources = checkedKeys
-      .map((key) => documentNodeMapRef.current.get(key))
-      .filter((node): node is ChatDocumentPickerNode =>
-        Boolean(node && isSelectableDocumentNode(node) && node.resourceId)
-      )
-      .map((node) => ({
-        resourceId: node.resourceId!,
-        resourceName: node.resourceName || node.title || node.resourceId!,
-        resourceType: node.resourceType ?? '',
-        enabled: true,
-      }));
+    const resources = mapDocumentPickerNodesToSelectedResources(
+      checkedKeys.map((key) => documentNodeMapRef.current.get(key))
+    );
 
     addDocRefs(resources);
     handleClose();

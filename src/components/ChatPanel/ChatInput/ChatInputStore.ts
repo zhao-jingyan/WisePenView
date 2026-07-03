@@ -1,9 +1,9 @@
+import type { Model } from '@/components/ChatPanel/index.type';
 import {
   buildDefaultPersonalAgent,
   type CapabilitySkillSelection,
   type CapabilityToolOption,
 } from '@/domains/Chat';
-import type { Model } from '@/components/ChatPanel/index.type';
 import type { SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
 import { createContext, useContext } from 'react';
@@ -59,7 +59,6 @@ interface ChatInputState {
   activeAttachments: LocalAttachmentPayload[];
   attachmentOpen: boolean;
   availableModels: Model[];
-  capabilityOpen: boolean;
   documentPickerOpen: boolean;
   isComposing: boolean;
   isDragOver: boolean;
@@ -71,6 +70,7 @@ interface ChatInputState {
   selectedModelId: string | null;
   selectedSkills: CapabilitySkillSelection[];
   selectedTools: CapabilityToolOption[];
+  skillMenuOpen: boolean;
   value: string;
 }
 
@@ -93,7 +93,6 @@ interface ChatInputActions {
   ) => void;
   setAttachmentOpen: (open: boolean) => void;
   setAvailableModels: (models: Model[]) => void;
-  setCapabilityOpen: (open: boolean) => void;
   setDocumentPickerOpen: (open: boolean) => void;
   setIsComposing: (isComposing: boolean) => void;
   setIsDragOver: (isDragOver: boolean) => void;
@@ -102,6 +101,7 @@ interface ChatInputActions {
   setPendingAttachmentUploadFailed: (id: string) => void;
   setSelectedAgent: (agent: ChatAgentOption) => void;
   setSelectedModelId: (modelId: string | null) => void;
+  setSkillMenuOpen: (open: boolean) => void;
   setValue: (value: string) => void;
   toggleSkill: (skill: SkillSummary, sourceAgent: ChatAgentOption) => void;
   toggleTool: (tool: CapabilityToolOption) => void;
@@ -117,7 +117,6 @@ const INITIAL_STATE: ChatInputState = {
   activeAttachments: [],
   attachmentOpen: false,
   availableModels: [],
-  capabilityOpen: false,
   documentPickerOpen: false,
   isComposing: false,
   isDragOver: false,
@@ -129,6 +128,7 @@ const INITIAL_STATE: ChatInputState = {
   selectedModelId: null,
   selectedSkills: [],
   selectedTools: [],
+  skillMenuOpen: false,
   value: '',
 };
 
@@ -237,7 +237,6 @@ export function createChatInputStore(): ChatInputStoreApi {
 
     setAttachmentOpen: (attachmentOpen) => set({ attachmentOpen }),
     setAvailableModels: (availableModels) => set({ availableModels }),
-    setCapabilityOpen: (capabilityOpen) => set({ capabilityOpen }),
     setDocumentPickerOpen: (documentPickerOpen) => set({ documentPickerOpen }),
     setIsComposing: (isComposing) => set({ isComposing }),
     setIsDragOver: (isDragOver) => set({ isDragOver }),
@@ -258,6 +257,7 @@ export function createChatInputStore(): ChatInputStoreApi {
           : { selectedAgent, selectedSkills: [], selectedTools: [] }
       ),
     setSelectedModelId: (selectedModelId) => set({ selectedModelId }),
+    setSkillMenuOpen: (skillMenuOpen) => set({ skillMenuOpen }),
     setValue: (value) => set({ value }),
 
     toggleSkill: (skill, sourceAgent) =>

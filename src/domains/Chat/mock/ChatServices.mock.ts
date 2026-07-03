@@ -1,6 +1,5 @@
 import type {
   ChatDocumentPickerNode,
-  ChatDocumentPickerScope,
   ChatServiceDeps,
   ChatSession,
   IChatService,
@@ -15,10 +14,11 @@ import type {
 import {
   buildAdvancedSkillTreeGroups,
   buildDefaultPersonalAgent,
+  buildDocumentPickerScopes,
   getPrimarySkillsForAgent,
+  mapDriveNodeToDocumentPickerNode,
   MODEL_TYPE,
 } from '@/domains/Chat';
-import { buildDriveNodeScope, type DriveNode } from '@/domains/Drive';
 import type { Group } from '@/domains/Group';
 
 type MockModelSeed = {
@@ -448,27 +448,7 @@ const getChatInputCapabilityOptions: IChatService['getChatInputCapabilityOptions
 
 const getDocumentPickerScopes: IChatService['getDocumentPickerScopes'] = async () => {
   const workspace = await getWorkspace();
-  const personalScope = buildDriveNodeScope();
-  const groupScopes: ChatDocumentPickerScope[] = workspace.groups.map((group) => {
-    const groupScope = buildDriveNodeScope(group.groupId);
-    return {
-      scopeKey: `group:${group.groupId}`,
-      label: group.groupName,
-      rootId: groupScope.rootId,
-      type: 'group',
-      groupId: group.groupId,
-    };
-  });
-
-  return [
-    {
-      scopeKey: 'personal',
-      label: '个人文件',
-      rootId: personalScope.rootId,
-      type: 'personal',
-    },
-    ...groupScopes,
-  ];
+  return buildDocumentPickerScopes(workspace.groups);
 };
 
 const buildMockDocumentNode = (
@@ -476,7 +456,9 @@ const buildMockDocumentNode = (
     ChatDocumentPickerNode,
     'groupId' | 'resourceId' | 'resourceName' | 'resourceType' | 'isLeaf' | 'selectable'
   > &
-    Partial<Pick<ChatDocumentPickerNode, 'groupId' | 'resourceId' | 'resourceName' | 'resourceType'>>
+    Partial<
+      Pick<ChatDocumentPickerNode, 'groupId' | 'resourceId' | 'resourceName' | 'resourceType'>
+    >
 ): ChatDocumentPickerNode => ({
   ...node,
   groupId: node.groupId ?? null,
@@ -543,41 +525,6 @@ const MOCK_DOCUMENT_CHILDREN_BY_PARENT: Record<string, ChatDocumentPickerNode[]>
       resourceType: 'DOCUMENT',
     }),
   ],
-};
-
-const getDriveNodeTitle = (node: DriveNode): string => {
-  switch (node.type) {
-    case 'root':
-      return node.name || '云盘';
-    case 'folder':
-      return node.name || '未命名文件夹';
-    case 'resource':
-    case 'link':
-      return node.title || node.resourceId;
-    case 'loading':
-      return node.label || '';
-  }
-};
-
-const mapDriveNodeToDocumentPickerNode = (node: DriveNode): ChatDocumentPickerNode | null => {
-  if (node.type === 'loading') return null;
-  const base = {
-    nodeId: node.id,
-    title: getDriveNodeTitle(node),
-    type: node.type,
-    groupId: node.scope.type === 'group' ? node.scope.groupId : null,
-  };
-
-  if (node.type === 'resource' || node.type === 'link') {
-    return buildMockDocumentNode({
-      ...base,
-      resourceId: node.resourceId,
-      resourceName: node.title || node.resourceId,
-      resourceType: node.resourceType ?? '',
-    });
-  }
-
-  return buildMockDocumentNode(base);
 };
 
 const createListDocumentPickerChildren =
