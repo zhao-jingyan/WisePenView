@@ -39,10 +39,16 @@ function DriveNav({
   onNodeChange,
 }: DriveNavProps) {
   const driveService = useDriveService();
-  const resolvedScope = useMemo(() => resolveDriveScope(scope, groupId), [scope, groupId]);
-  const finalRootId = rootId ?? resolvedScope.rootId;
+  const resolvedScope = useMemo(
+    () => resolveDriveScope(scope, groupId, rootId),
+    [scope, groupId, rootId]
+  );
+  const finalRootId = resolvedScope.rootId;
   const finalGroupId = resolvedScope.groupId;
-  const { loadChildren, reset } = useDriveTreeChildren({ groupId: finalGroupId });
+  const { loadChildren, reset } = useDriveTreeChildren({
+    groupId: finalGroupId,
+    scope: resolvedScope.scope,
+  });
   const nodeMapRef = useRef<Map<string, DriveNode>>(new Map());
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -113,7 +119,10 @@ function DriveNav({
       nodeMapRef.current.clear();
       reset();
 
-      const rootNode = await driveService.getRootNode({ groupId: finalGroupId });
+      const rootNode = await driveService.getRootNode({
+        rootId: finalRootId,
+        groupId: finalGroupId,
+      });
       const baseRoot = buildDriveTreeData(
         [rootNode],
         {

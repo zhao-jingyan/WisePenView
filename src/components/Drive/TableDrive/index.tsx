@@ -74,8 +74,11 @@ function toBreadcrumbItems(pathNodes: DriveNode[]): FolderTableBreadcrumbItem[] 
 }
 
 function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
-  const resolvedScope = useMemo(() => resolveDriveScope(scope, groupId), [scope, groupId]);
-  const finalRootId = rootId ?? resolvedScope.rootId;
+  const resolvedScope = useMemo(
+    () => resolveDriveScope(scope, groupId, rootId),
+    [scope, groupId, rootId]
+  );
+  const finalRootId = resolvedScope.rootId;
   const finalGroupId = resolvedScope.groupId;
   const {
     currentNodeId,
@@ -86,7 +89,7 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
     enterFolder,
     handleExpand,
     refresh,
-  } = useTableDrive({ rootId: finalRootId, groupId: finalGroupId });
+  } = useTableDrive({ rootId: finalRootId, groupId: finalGroupId, scope: resolvedScope.scope });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const handleEnterFolder = useCallback(

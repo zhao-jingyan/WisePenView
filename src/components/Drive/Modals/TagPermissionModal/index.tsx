@@ -24,7 +24,7 @@ import { Button, Checkbox, Modal, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
 import {
-  DEFAULT_DRIVE_ROOT_ID,
+  resolveDriveScope,
   toDriveSelectionItem,
   type DriveSelectionItem,
 } from '../../common/driveComponentModel';
@@ -75,8 +75,9 @@ const filterSelectableUserIds = (ids: string[] | undefined, selectableMemberIdSe
   return ids.filter((id) => selectableMemberIdSet.has(id));
 };
 
-const buildSelectionFromTag = (tag: TagTreeNode): DriveSelectionItem => {
-  const node = mapTagToFolderNode(tag, null);
+const buildSelectionFromTag = (tag: TagTreeNode, groupId?: string): DriveSelectionItem => {
+  const scope = resolveDriveScope(groupId ? { type: 'group', groupId } : undefined).scope;
+  const node = mapTagToFolderNode(tag, null, scope);
   const selection = toDriveSelectionItem(node);
   if (selection) return selection;
   return {
@@ -84,6 +85,9 @@ const buildSelectionFromTag = (tag: TagTreeNode): DriveSelectionItem => {
     kind: 'folder',
     label: node.name,
     parentNodeId: node.parentId,
+    scope,
+    rootId: scope.rootId,
+    groupId: scope.type === 'group' ? scope.groupId : undefined,
     tagId: tag.tagId,
   };
 };
@@ -179,7 +183,7 @@ const TagPermissionModal = ({
   const { run: runResolveInitialNode } = useRequest(
     async (tagId: string): Promise<string[] | undefined> => {
       const nodeId = await findFolderNodeIdByTagId({
-        rootId: DEFAULT_DRIVE_ROOT_ID,
+        rootId: resolveDriveScope(groupId ? { type: 'group', groupId } : undefined).rootId,
         groupId,
         tagId,
         listNodeChildren: (nodeId, currentGroupId) =>
@@ -318,7 +322,7 @@ const TagPermissionModal = ({
         setInitialTagLoading(true);
         const cachedTag = resolveCachedTag(initialTagId);
         if (cachedTag) {
-          setSelectedTag(buildSelectionFromTag(cachedTag));
+          setSelectedTag(buildSelectionFromTag(cachedTag, groupId));
           applyTagToForm(cachedTag);
         }
         try {
@@ -329,7 +333,7 @@ const TagPermissionModal = ({
         try {
           const tag = await resolveTagById(initialTagId);
           if (tag) {
-            setSelectedTag(buildSelectionFromTag(tag));
+            setSelectedTag(buildSelectionFromTag(tag, groupId));
             applyTagToForm(tag);
           }
         } finally {

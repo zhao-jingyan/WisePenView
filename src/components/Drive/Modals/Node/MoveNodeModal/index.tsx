@@ -5,7 +5,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { Button, Modal, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useMemo, useState } from 'react';
-import type { DriveActionTarget } from '../../../common/driveComponentModel';
+import { getDriveScopeGroupId, type DriveActionTarget } from '../../../common/driveComponentModel';
 import type { MoveNodeModalProps } from './index.type';
 import styles from './style.module.less';
 
@@ -43,18 +43,20 @@ function MoveNodeModal({
 }: MoveNodeModalProps) {
   const driveService = useDriveService();
   const [selectedTargetId, setSelectedTargetId] = useState<string>();
+  const effectiveRootId = node?.scope.rootId ?? rootId;
+  const effectiveGroupId = groupId ?? (node ? getDriveScopeGroupId(node.scope) : undefined);
 
   const { data: blockedIds } = useRequest(
     async (): Promise<Set<string>> => {
       if (!node) return new Set();
       const blocked = new Set<string>([node.id]);
       if (node.type !== 'folder') return blocked;
-      await collectFolderDescendantIds(driveService, node.id, groupId, blocked);
+      await collectFolderDescendantIds(driveService, node.id, effectiveGroupId, blocked);
       return blocked;
     },
     {
       ready: isOpen && Boolean(node),
-      refreshDeps: [isOpen, node?.id, rootId, groupId],
+      refreshDeps: [isOpen, node?.id, effectiveRootId, effectiveGroupId],
       onBefore: () => {
         setSelectedTargetId(undefined);
       },
@@ -67,11 +69,11 @@ function MoveNodeModal({
   const finalBlockedIds = useMemo(() => blockedIds ?? new Set<string>(), [blockedIds]);
   const disabledTargetIds = useMemo(() => {
     const next = new Set(finalBlockedIds);
-    if (groupId && node && (node.type === 'resource' || node.type === 'link')) {
-      next.add(rootId);
+    if (effectiveGroupId && node && (node.type === 'resource' || node.type === 'link')) {
+      next.add(effectiveRootId);
     }
     return next;
-  }, [finalBlockedIds, groupId, node, rootId]);
+  }, [effectiveGroupId, effectiveRootId, finalBlockedIds, node]);
 
   const { loading: moving, run: runMove } = useRequest(
     async () => {
@@ -79,7 +81,7 @@ function MoveNodeModal({
       await driveService.moveToFolder({
         nodeId: node.id,
         targetFolderNodeId: selectedTargetId,
-        groupId,
+        groupId: effectiveGroupId,
       });
     },
     {
@@ -118,8 +120,8 @@ function MoveNodeModal({
                 {node ? <div className={styles.hint}>即将移动：{getNodeName(node)}</div> : null}
                 <div className={styles.treeWrap}>
                   <DriveNav
-                    rootId={rootId}
-                    groupId={groupId}
+                    rootId={effectiveRootId}
+                    groupId={effectiveGroupId}
                     renderableTypes={['root', 'folder']}
                     selectableTypes={['root', 'folder']}
                     disabledNodeIds={[...disabledTargetIds]}

@@ -7,9 +7,9 @@ import { useNavigateResource } from '@/hooks/useNavigateResource';
 import { useActiveDriveScopeStore } from '@/store';
 import { useRequest } from 'ahooks';
 import { ChevronDown } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
-import { DEFAULT_DRIVE_ROOT_ID } from '../common/driveComponentModel';
+import { resolveDriveScope } from '../common/driveComponentModel';
 import { useDriveTreeChildren } from '../common/useDriveTreeChildren';
 import { buildDriveTreeData, replaceTreeNodeChildren } from '../DriveNav/buildTreeData';
 import styles from './style.module.less';
@@ -26,9 +26,16 @@ const EMPTY_DISABLED_IDS = new Set<string>();
 function SidebarDrive() {
   const driveService = useDriveService();
   const groupId = useActiveDriveScopeStore((state) => state.groupId);
+  const resolvedScope = useMemo(
+    () => resolveDriveScope(groupId ? { type: 'group', groupId } : undefined),
+    [groupId]
+  );
   const navigateResource = useNavigateResource(groupId);
 
-  const { loadChildren, reset } = useDriveTreeChildren({ groupId });
+  const { loadChildren, reset } = useDriveTreeChildren({
+    groupId: resolvedScope.groupId,
+    scope: resolvedScope.scope,
+  });
   const nodeMapRef = useRef<Map<string, DriveNode>>(new Map());
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
@@ -50,7 +57,10 @@ function SidebarDrive() {
       nodeMapRef.current.clear();
       reset();
       setSelectedKeys([]);
-      const rootNode = await driveService.getRootNode({ groupId });
+      const rootNode = await driveService.getRootNode({
+        rootId: resolvedScope.rootId,
+        groupId: resolvedScope.groupId,
+      });
       const baseRoot = buildChildrenData([rootNode])[0];
       if (!baseRoot) return [];
       if (rootNode.type !== 'root') return [baseRoot];
@@ -59,7 +69,7 @@ function SidebarDrive() {
       return [{ ...baseRoot, children: childData }];
     },
     {
-      refreshDeps: [groupId],
+      refreshDeps: [resolvedScope.rootId, resolvedScope.groupId],
       onSuccess: (data) => setTreeData(data),
     }
   );
@@ -87,6 +97,7 @@ function SidebarDrive() {
 
   const showSpin = treeLoading && treeData.length === 0;
   const showEmpty = !treeLoading && treeData.length === 0;
+  const rootKey = treeData[0]?.key;
 
   return (
     <div className={styles.sidebar}>
@@ -108,7 +119,7 @@ function SidebarDrive() {
           selectedKeys={selectedKeys}
           onSelect={handleSelect}
           loadData={handleLoadData}
-          defaultExpandedKeys={[DEFAULT_DRIVE_ROOT_ID]}
+          defaultExpandedKeys={rootKey ? [rootKey] : []}
           switcherIcon={
             <span>
               <ChevronDown size={14} />

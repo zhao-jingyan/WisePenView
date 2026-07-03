@@ -2,6 +2,7 @@ import {
   buildDriveTreeData,
   replaceTreeNodeChildren,
 } from '@/components/Drive/DriveNav/buildTreeData';
+import { resolveDriveScope } from '@/components/Drive/common/driveComponentModel';
 import { EmptyState, LoadingState } from '@/components/Feedback';
 import IconText from '@/components/IconText';
 import type { DataNode } from '@/components/Tree';
@@ -22,6 +23,7 @@ const CHILD_KEY_SEPARATOR = '>';
 
 interface ScopeInfo {
   label: string;
+  rootId: string;
   groupId?: string;
 }
 
@@ -118,7 +120,10 @@ function DocumentPickerModal({ open, onClose, onConfirm }: DocumentPickerModalPr
     if (!scopeInfo) return;
 
     try {
-      const rootNode = await driveService.getRootNode({ groupId: scopeInfo.groupId });
+      const rootNode = await driveService.getRootNode({
+        rootId: scopeInfo.rootId,
+        groupId: scopeInfo.groupId,
+      });
       if (rootNode.type !== 'root') {
         setTreeData((prev) => replaceTreeNodeChildren(prev, scopeKey, []));
         return;
@@ -163,7 +168,11 @@ function DocumentPickerModal({ open, onClose, onConfirm }: DocumentPickerModalPr
 
       const nodes: DataNode[] = [];
       const personalKey = buildScopeKey('personal');
-      scopeMapRef.current.set(personalKey, { label: '个人文件' });
+      const personalScope = resolveDriveScope({ type: 'personal' });
+      scopeMapRef.current.set(personalKey, {
+        label: '个人文件',
+        rootId: personalScope.rootId,
+      });
       nodes.push(buildScopeRootNode(personalKey, '个人文件', 'personal'));
 
       try {
@@ -183,7 +192,12 @@ function DocumentPickerModal({ open, onClose, onConfirm }: DocumentPickerModalPr
 
         for (const group of allGroups) {
           const groupKey = buildScopeKey(`group:${group.groupId}`);
-          scopeMapRef.current.set(groupKey, { label: group.groupName, groupId: group.groupId });
+          const groupScope = resolveDriveScope({ type: 'group', groupId: group.groupId });
+          scopeMapRef.current.set(groupKey, {
+            label: group.groupName,
+            rootId: groupScope.rootId,
+            groupId: groupScope.groupId,
+          });
           nodes.push(buildScopeRootNode(groupKey, group.groupName, 'group'));
         }
       } catch (err) {

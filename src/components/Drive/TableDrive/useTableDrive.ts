@@ -1,8 +1,8 @@
 import { useDriveService } from '@/domains';
-import type { DriveNode } from '@/domains/Drive';
+import type { DriveNode, DriveNodeScope } from '@/domains/Drive';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
-import { useRequest } from 'ahooks';
+import { useRequest, useUpdateEffect } from 'ahooks';
 import { useMemo, useState } from 'react';
 import { useDriveTreeChildren } from '../common/useDriveTreeChildren';
 import type { DriveRow } from './index.type';
@@ -10,6 +10,7 @@ import type { DriveRow } from './index.type';
 interface UseTableDriveParams {
   rootId: string;
   groupId?: string;
+  scope?: DriveNodeScope;
 }
 
 interface UseTableDriveReturn {
@@ -33,13 +34,21 @@ interface UseTableDriveReturn {
  * - 维护 currentNodeId / rows / expandedRowKeys / expandedChildrenMap
  * - 通过 driveService 派生 children + breadcrumb，分页状态机收敛在 service 内部
  */
-export function useTableDrive({ rootId, groupId }: UseTableDriveParams): UseTableDriveReturn {
+export function useTableDrive({
+  rootId,
+  groupId,
+  scope,
+}: UseTableDriveParams): UseTableDriveReturn {
   const driveService = useDriveService();
-  const { childrenMap, loadChildren, reset } = useDriveTreeChildren({ groupId });
+  const { childrenMap, loadChildren, reset } = useDriveTreeChildren({ groupId, scope });
 
   const [currentNodeId, setCurrentNodeId] = useState<string>(rootId);
   const [rows, setRows] = useState<DriveRow[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+
+  useUpdateEffect(() => {
+    setCurrentNodeId(rootId);
+  }, [rootId]);
 
   // 切换 currentNodeId / groupId：拉取当前层级 children
   const { loading, refresh } = useRequest(

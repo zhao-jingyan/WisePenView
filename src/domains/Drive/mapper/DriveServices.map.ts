@@ -1,7 +1,9 @@
 import { resolveResourceIconType, type ResourceItem } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag';
+import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
 import type {
   DriveNode,
+  DriveNodeScope,
   FolderNode,
   LinkNode,
   ResourceNode,
@@ -9,11 +11,12 @@ import type {
 } from '../entity/drive';
 
 export const DRIVE_ROOT_ID = 'drive-root';
+const DRIVE_GROUP_ROOT_PREFIX = 'drive-root:group:';
 
 type EncodedNodeKind = 'folder' | 'resource' | 'link' | 'loading';
 
 export type DecodedNodeId =
-  | { kind: 'root' }
+  | { kind: 'root'; groupId?: string }
   | { kind: 'folder'; tagId: string }
   | { kind: 'resource'; resourceId: string; parentTagId: string }
   | { kind: 'link'; resourceId: string; parentTagId: string }
@@ -30,8 +33,33 @@ export const encodeNodeId = (kind: EncodedNodeKind, ...parts: string[]): string 
   return [kind, ...parts].join(':');
 };
 
+export const encodeRootNodeId = (groupId?: string): string => {
+  const normalizedGroupId = normalizeTagGroupId(groupId);
+  return normalizedGroupId ? `${DRIVE_GROUP_ROOT_PREFIX}${normalizedGroupId}` : DRIVE_ROOT_ID;
+};
+
+export const buildDriveNodeScope = (groupId?: string): DriveNodeScope => {
+  const normalizedGroupId = normalizeTagGroupId(groupId);
+  const rootId = encodeRootNodeId(normalizedGroupId);
+  if (normalizedGroupId) {
+    return {
+      type: 'group',
+      rootId,
+      groupId: normalizedGroupId,
+    };
+  }
+  return {
+    type: 'personal',
+    rootId,
+  };
+};
+
 export const decodeNodeId = (id: string): DecodedNodeId => {
   if (id === DRIVE_ROOT_ID) return { kind: 'root' };
+  if (id.startsWith(DRIVE_GROUP_ROOT_PREFIX)) {
+    const groupId = id.slice(DRIVE_GROUP_ROOT_PREFIX.length);
+    if (groupId) return { kind: 'root', groupId };
+  }
   const [kind, ...parts] = id.split(':');
   if (kind === 'folder' && parts[0]) return { kind: 'folder', tagId: parts[0] };
   if (kind === 'resource' && parts[0] && parts[1]) {
@@ -44,11 +72,23 @@ export const decodeNodeId = (id: string): DecodedNodeId => {
   return { kind: 'unknown', raw: id };
 };
 
-export const mapTagToFolderNode = (tag: TagTreeNode, parentNodeId: string | null): FolderNode => {
+export const decodeRootNodeScope = (rootId?: string, fallbackGroupId?: string): DriveNodeScope => {
+  if (!rootId) return buildDriveNodeScope(fallbackGroupId);
+  const decoded = decodeNodeId(rootId);
+  const groupId = decoded.kind === 'root' ? (decoded.groupId ?? fallbackGroupId) : fallbackGroupId;
+  return buildDriveNodeScope(groupId);
+};
+
+export const mapTagToFolderNode = (
+  tag: TagTreeNode,
+  parentNodeId: string | null,
+  scope: DriveNodeScope
+): FolderNode => {
   return {
     id: encodeNodeId('folder', tag.tagId),
     type: 'folder',
     parentId: parentNodeId,
+    scope,
     tagId: tag.tagId,
     name: getFolderName(tag.tagName),
     childrenIds: [],
@@ -58,10 +98,12 @@ export const mapTagToFolderNode = (tag: TagTreeNode, parentNodeId: string | null
 export const mapResourceItemToChildNode = (
   item: ResourceItem,
   parentTagId: string,
-  parentNodeId: string
+  parentNodeId: string,
+  scope: DriveNodeScope
 ): ResourceNode | LinkNode => {
   const common = {
     parentId: parentNodeId,
+    scope,
     resourceId: item.resourceId,
     title: item.resourceName,
     resourceType: item.resourceType,
@@ -89,11 +131,16 @@ export const mapResourceItemToChildNode = (
   };
 };
 
-export const buildLoadingNode = (parentNodeId: string, label?: string): DriveNode => {
+export const buildLoadingNode = (
+  parentNodeId: string,
+  label?: string,
+  scope: DriveNodeScope = buildDriveNodeScope()
+): DriveNode => {
   return {
     id: encodeNodeId('loading', parentNodeId),
     type: 'loading',
     parentId: parentNodeId,
+    scope,
     label,
   };
 };
@@ -102,12 +149,17 @@ export const buildDriveRootNode = (params: {
   groupId?: string;
   personalRootTag?: TagTreeNode;
 }): RootNode => {
+  const isGroupRoot = Boolean(params.groupId);
+  const scope = buildDriveNodeScope(params.groupId);
   return {
-    id: DRIVE_ROOT_ID,
+    id: scope.rootId,
     type: 'root',
     parentId: null,
-    scope: params.groupId ? 'group' : 'personal',
-    name: params.groupId ? '小组云盘' : '个人云盘',
+    scope,
+    tagId: params.personalRootTag?.tagId,
+    isVirtual: isGroupRoot,
+    canMountResources: !isGroupRoot && Boolean(params.personalRootTag?.tagId),
+    name: isGroupRoot ? '小组云盘' : '个人云盘',
     childrenIds: [],
   };
 };

@@ -17,6 +17,22 @@ export type ResourceIconType =
   | 'skill'
   | 'agent';
 
+export interface ResourceTagInfo {
+  tagName?: string;
+  tagDesc?: string;
+  tagIcon?: string;
+  tagColor?: string;
+  tagCreator?: string;
+  isPath?: boolean;
+}
+
+export interface ResourceTagBind {
+  groupId?: string;
+  /** 后端 ResourceTagBindResponse.primaryTagId：该组内的主挂载标签。 */
+  primaryTagId?: string;
+  tags?: Record<string, ResourceTagInfo | string | null | undefined>;
+}
+
 /** 资源项（与 OpenAPI ResourceItemResponse 字段一致） */
 export interface ResourceItem {
   resourceId: string;
@@ -30,13 +46,15 @@ export interface ResourceItem {
   readCount?: number | null;
   /** 归属路径（文件夹），如 '/' 或 '/documents/notes' */
   path?: string;
-  /** 当前标签映射（tagId → tagName），与接口返回一致 */
+  /** 当前上下文标签映射（tagId → tagName），优先由 tagBinds 派生，兼容旧接口 currentTags。 */
   currentTags?: Record<string, string>;
+  /** 后端按 group 维度返回的有序标签绑定，tags 使用 LinkedHashMap 保持 tagIds 顺序。 */
+  tagBinds?: ResourceTagBind[];
   /** 图标展示用资源细分类型，避免污染 resourceType 的跳转语义 */
   resourceIconType?: ResourceIconType;
-  /** 主挂载标签（约定取 currentTags 的第一项） */
+  /** 主挂载标签，优先来自 tagBinds.primaryTagId。 */
   mainTagId?: string;
-  /** 链接挂载标签（currentTags 去掉 mainTagId 后的其余项） */
+  /** 链接挂载标签（当前 tagBind.tags 去掉 mainTagId 后的其余项） */
   linkTagIds?: string[];
   /** 当前用户对该资源已生效的权限动作（详情接口返回） */
   currentActions?: ResourceAction[] | null;

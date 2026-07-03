@@ -1,6 +1,7 @@
-import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { resolveResourceIconType } from '@/domains/Resource';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type { DriveNode, FolderNode, RootNode } from '../entity/drive';
+import { buildDriveNodeScope, decodeRootNodeScope } from '../mapper/DriveServices.map';
 import type {
   CreateDriveServiceOptions,
   CreateFolderParams,
@@ -19,6 +20,7 @@ import mockdata from './mockdata.json';
 const DEFAULT_PAGE_SIZE = 50;
 const NETWORK_DELAY_MS = 150;
 const ROOT_ID = 'drive-root';
+const GROUP_ROOT_PREFIX = 'drive-root:group:';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -43,12 +45,20 @@ type MockJson = {
 
 const md = mockdata as unknown as MockJson;
 
+const isGroupRootId = (id: string): boolean => id.startsWith(GROUP_ROOT_PREFIX);
+
+const getGroupIdFromRootId = (id: string): string | undefined =>
+  isGroupRootId(id) ? id.slice(GROUP_ROOT_PREFIX.length) : undefined;
+
 const toRootNode = (node: LegacyNode): RootNode => ({
   id: ROOT_ID,
   type: 'root',
   parentId: null,
   name: node.name ?? '个人云盘',
-  scope: 'personal',
+  scope: buildDriveNodeScope(),
+  tagId: node.tagId,
+  isVirtual: false,
+  canMountResources: Boolean(node.tagId),
   childrenIds: node.childrenIds ?? [],
 });
 
@@ -60,6 +70,7 @@ const normalizeNode = (node: LegacyNode): DriveNode | null => {
       id: node.id,
       type: 'folder',
       parentId: node.parentId ?? null,
+      scope: buildDriveNodeScope(),
       tagId: node.tagId,
       name: node.name ?? '未命名文件夹',
       childrenIds: node.childrenIds ?? [],
@@ -70,6 +81,7 @@ const normalizeNode = (node: LegacyNode): DriveNode | null => {
       id: node.id,
       type: 'resource',
       parentId: node.parentId ?? null,
+      scope: buildDriveNodeScope(),
       resourceId: node.resourceId,
       title: node.title ?? '未命名文件',
       resourceType: node.resourceType,
@@ -85,6 +97,7 @@ const normalizeNode = (node: LegacyNode): DriveNode | null => {
       id: node.id,
       type: 'link',
       parentId: node.parentId ?? null,
+      scope: buildDriveNodeScope(),
       resourceId: node.resourceId,
       title: node.title ?? '未命名文件',
       resourceType: node.resourceType,
@@ -115,7 +128,9 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
       type: 'root',
       parentId: null,
       name: '个人云盘',
-      scope: 'personal',
+      scope: buildDriveNodeScope(),
+      isVirtual: false,
+      canMountResources: false,
       childrenIds: [],
     });
   }
@@ -125,8 +140,28 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     }
   }
 
+  function ensureGroupRoot(rootId: string): RootNode | undefined {
+    const groupId = getGroupIdFromRootId(rootId);
+    if (!groupId) return undefined;
+    const existing = nodes.get(rootId);
+    if (existing?.type === 'root') return existing;
+    const scope = buildDriveNodeScope(groupId);
+    const root: RootNode = {
+      id: scope.rootId,
+      type: 'root',
+      parentId: null,
+      name: '小组云盘',
+      scope,
+      isVirtual: true,
+      canMountResources: false,
+      childrenIds: [],
+    };
+    nodes.set(rootId, root);
+    return root;
+  }
+
   function getContainer(id: string): RootNode | FolderNode | undefined {
-    const node = nodes.get(id);
+    const node = nodes.get(id) ?? ensureGroupRoot(id);
     return node && (node.type === 'root' || node.type === 'folder') ? node : undefined;
   }
 
@@ -165,6 +200,11 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
 
   const getRootNode = async (_params?: GetRootNodeParams): Promise<RootNode> => {
     await delay(NETWORK_DELAY_MS);
+    const scope = decodeRootNodeScope(_params?.rootId, _params?.groupId);
+    if (scope.type === 'group') {
+      const root = ensureGroupRoot(scope.rootId);
+      if (root) return root;
+    }
     const root = nodes.get(ROOT_ID);
     if (!root || root.type !== 'root') {
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_NOT_FOUND, { nodeId: ROOT_ID });
@@ -198,17 +238,24 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     if (node.type !== 'folder' && node.type !== 'resource' && node.type !== 'link') {
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
     }
+    if (node.scope.rootId !== newParent.scope.rootId) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
+    }
     if (node.type === 'folder' && isDescendantOf(params.targetFolderNodeId, node.id)) {
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
     }
-    if (node.type === 'link' && newParent.type === 'folder') {
-      if (node.primaryTagId === newParent.tagId) {
+    const targetTagId = newParent.tagId;
+    if ((node.type === 'resource' || node.type === 'link') && !targetTagId) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
+    }
+    if (node.type === 'link' && targetTagId) {
+      if (node.primaryTagId === targetTagId) {
         throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_LINK_MOVE_TO_PRIMARY_TAG);
       }
-      node.folderTagId = newParent.tagId;
+      node.folderTagId = targetTagId;
     }
-    if (node.type === 'resource' && newParent.type === 'folder') {
-      node.folderTagId = newParent.tagId;
+    if (node.type === 'resource' && targetTagId) {
+      node.folderTagId = targetTagId;
     }
     detachFromParent(params.nodeId);
     node.parentId = params.targetFolderNodeId;
@@ -249,6 +296,7 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
       id: newId,
       type: 'folder',
       parentId: params.parentId,
+      scope: parent.scope,
       tagId: `tag-${newId}`,
       name: params.name,
       childrenIds: [],
@@ -267,12 +315,14 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     renameNode,
     createFolder,
     async getDriveTree(params: GetDriveTreeParams) {
-      if (params.rootId !== ROOT_ID) {
+      const scope = decodeRootNodeScope(params.rootId, params.groupId);
+      const root = scope.type === 'group' ? ensureGroupRoot(scope.rootId) : nodes.get(ROOT_ID);
+      if (!root || root.type !== 'root') {
         throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_NOT_FOUND, {
           nodeId: params.rootId,
         });
       }
-      return getRootNode({ groupId: params.groupId });
+      return root;
     },
     loadNodeChildren: listNodeChildren,
     getPathById: getNodePath,

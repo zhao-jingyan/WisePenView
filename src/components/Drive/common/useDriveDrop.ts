@@ -2,6 +2,7 @@ import { useDriveService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
+import { getDriveScopeGroupId } from './driveComponentModel';
 
 /** drop dataTransfer 单一 mime：序列化整个 DriveNode；source 节点的 type 由接收端读 node.type 判断 */
 export const DRAG_TYPE_DRIVE_NODE = 'application/x-wisepen-drivenode';
@@ -35,8 +36,12 @@ export const isDropTargetDriveNode = (node: DriveNode): node is DropTargetDriveN
 
 const getTargetTagId = (target: DropTargetDriveNode): string | undefined => {
   if (target.type === 'folder') return target.tagId;
+  if (target.canMountResources) return target.tagId;
   return undefined;
 };
+
+const canMountResourceToTarget = (target: DropTargetDriveNode): boolean =>
+  target.type === 'folder' || target.canMountResources;
 
 const getNodeLabel = (node: DriveNode): string => {
   switch (node.type) {
@@ -74,7 +79,14 @@ export function useDriveDrop({ refresh, groupId }: UseDriveDropParams): UseDrive
     if (!isDropTargetDriveNode(target)) return;
     if (source.id === target.id) return;
     if (source.parentId === target.id) return;
-    if (groupId && target.type === 'root' && (source.type === 'resource' || source.type === 'link')) {
+    if (source.scope.rootId !== target.scope.rootId) {
+      toast.danger('暂不支持跨云盘移动');
+      return;
+    }
+    if (
+      !canMountResourceToTarget(target) &&
+      (source.type === 'resource' || source.type === 'link')
+    ) {
       toast.danger('小组云盘文件需要移动到具体目录');
       return;
     }
@@ -87,7 +99,8 @@ export function useDriveDrop({ refresh, groupId }: UseDriveDropParams): UseDrive
       await driveService.moveToFolder({
         nodeId: source.id,
         targetFolderNodeId: target.id,
-        groupId,
+        groupId:
+          groupId ?? getDriveScopeGroupId(target.scope) ?? getDriveScopeGroupId(source.scope),
       });
       toast.success(buildSuccessMessage(source, target));
       refresh();

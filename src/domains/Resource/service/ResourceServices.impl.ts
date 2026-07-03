@@ -32,7 +32,7 @@ const requestResourceItemList = async (
 ): Promise<ResourceListPage> => {
   const query = ResourceServicesMap.mapListResourceItemsRequest(params, queryOverrides);
   const data = await ResourceItemApi.listResources(query);
-  return ResourceServicesMap.mapResourceListPageFromApi(data);
+  return ResourceServicesMap.mapResourceListPageFromApi(data, { groupId: query.groupId });
 };
 
 const getUserResources = async (params: GetUserResourcesRequest): Promise<ResourceListPage> => {

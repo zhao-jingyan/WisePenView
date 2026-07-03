@@ -1,4 +1,4 @@
-import type { ResourceItem } from '@/domains/Resource';
+import type { ResourceItem, ResourceTagBind } from '@/domains/Resource';
 import type { GetUserInteractionRecordApiResponse } from '../apis/InteractApi.type';
 import type {
   ChangeResourceActionPermissionApiRequest,
@@ -21,12 +21,18 @@ import type {
 } from '../service/index.type';
 import { resolveResourceIconType } from '../utils/resolveResourceIconType';
 
+const PERSONAL_GROUP_PREFIX = 'p_';
+
 /** 后端 ResourceItemResponse 中的嵌套互动统计结构 */
 interface RawInteractionInfo {
   readCount?: number | string | null;
   likeCount?: number | string | null;
   scoreCount?: number | string | null;
   scoreTotal?: number | string | null;
+}
+
+interface MapResourceItemContext {
+  groupId?: string;
 }
 
 /**
@@ -80,13 +86,49 @@ const mapListResourceItemsRequest = (
   };
 };
 
+const resolveTagName = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && 'tagName' in value) {
+    const tagName = (value as { tagName?: unknown }).tagName;
+    if (typeof tagName === 'string') return tagName;
+  }
+  return '';
+};
+
+const resolveCurrentTagBind = (
+  item: ResourceItem,
+  context: MapResourceItemContext
+): ResourceTagBind | undefined => {
+  const binds = item.tagBinds ?? [];
+  if (binds.length === 0) return undefined;
+  if (context.groupId) {
+    return binds.find((bind) => bind.groupId === context.groupId) ?? binds[0];
+  }
+  return binds.find((bind) => bind.groupId?.startsWith(PERSONAL_GROUP_PREFIX)) ?? binds[0];
+};
+
+const mapTagsToCurrentTags = (
+  tags: ResourceTagBind['tags']
+): Record<string, string> | undefined => {
+  if (!tags || typeof tags !== 'object') return undefined;
+  return Object.fromEntries(
+    Object.entries(tags).map(([tagId, tagInfo]) => [tagId, resolveTagName(tagInfo)])
+  );
+};
+
 /** 单条资源：Java Long 字符串、标签派生字段 */
-const mapResourceItemFromApi = (raw: ResourceItem): ResourceItem => {
+const mapResourceItemFromApi = (
+  raw: ResourceItem,
+  context: MapResourceItemContext = {}
+): ResourceItem => {
   const item = normalizeResourceItem(raw) as ResourceItem;
-  const currentTags =
+  const currentTagBind = resolveCurrentTagBind(item, context);
+  const tagsFromBind = mapTagsToCurrentTags(currentTagBind?.tags);
+  const fallbackCurrentTags =
     item.currentTags && !Array.isArray(item.currentTags) ? item.currentTags : undefined;
-  // fallback：后端暂未返回有序 tagIds 时，只能按 currentTags 的对象顺序派生。
+  const currentTags = tagsFromBind ?? fallbackCurrentTags;
   const tagIds = Object.keys(currentTags ?? {});
+  const mainTagId = currentTagBind?.primaryTagId ?? tagIds[0];
 
   return {
     ...item,
@@ -95,16 +137,17 @@ const mapResourceItemFromApi = (raw: ResourceItem): ResourceItem => {
       resourceType: item.resourceType,
       resourceName: item.resourceName,
     }),
-    // fallback：无标签时为 undefined
-    mainTagId: tagIds[0],
-    // fallback：仅一个或无标签时为 []
-    linkTagIds: tagIds.slice(1),
+    mainTagId,
+    linkTagIds: mainTagId ? tagIds.filter((tagId) => tagId !== mainTagId) : tagIds.slice(1),
   };
 };
 
 /** 分页列表 API 响应 → Service 领域分页 */
-const mapResourceListPageFromApi = (data: ResourceListPageApiResponse): ResourceListPage => {
-  const list = data.list.map(mapResourceItemFromApi);
+const mapResourceListPageFromApi = (
+  data: ResourceListPageApiResponse,
+  context: MapResourceItemContext = {}
+): ResourceListPage => {
+  const list = data.list.map((item) => mapResourceItemFromApi(item, context));
 
   return {
     list,

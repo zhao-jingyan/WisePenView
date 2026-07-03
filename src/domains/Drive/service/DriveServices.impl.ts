@@ -7,10 +7,13 @@ import { useTrashTagStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
 import {
+  buildDriveNodeScope,
   buildDriveRootNode,
   decodeNodeId,
+  decodeRootNodeScope,
   DRIVE_ROOT_ID,
   encodeNodeId,
+  encodeRootNodeId,
   isContainerNode,
   mapResourceItemToChildNode,
   mapTagToFolderNode,
@@ -105,19 +108,32 @@ export const createDriveServices = (
   };
 
   const getRootNode: IDriveService['getRootNode'] = async (params) => {
-    const groupKey = resolveGroupKey(params?.groupId);
+    const requestedScope = decodeRootNodeScope(
+      params?.rootId,
+      normalizeTagGroupId(params?.groupId)
+    );
+    const requestedGroupId =
+      requestedScope.type === 'group' ? normalizeTagGroupId(requestedScope.groupId) : undefined;
+    const groupKey = resolveGroupKey(requestedGroupId);
     const normalizedGroupId = resolveGroupIdFromKey(groupKey);
-    const personalRootTag = normalizedGroupId ? undefined : await getPersonalRootTag(params?.groupId);
+    const personalRootTag = normalizedGroupId ? undefined : await getPersonalRootTag();
     const rootNode = buildDriveRootNode({ groupId: normalizedGroupId, personalRootTag });
     trackNode(rootNode, groupKey);
     return rootNode;
   };
 
   const getNodeGroupId = (nodeId: string): string | undefined => {
+    const node = nodeMap.get(nodeId);
+    if (node?.scope.type === 'group') return normalizeTagGroupId(node.scope.groupId);
     const groupKey = nodeGroupKeyMap.get(nodeId);
     if (groupKey) return resolveGroupIdFromKey(groupKey);
+    const decoded = decodeNodeId(nodeId);
+    if (decoded.kind === 'root') return normalizeTagGroupId(decoded.groupId);
     return undefined;
   };
+
+  const resolveEffectiveGroupId = (nodeId: string, groupId?: string): string | undefined =>
+    normalizeTagGroupId(groupId) ?? getNodeGroupId(nodeId);
 
   const getNodeOrThrow = (nodeId: string): DriveNode => {
     const node = nodeMap.get(nodeId);
@@ -140,48 +156,62 @@ export const createDriveServices = (
   const resolveParentTagId = async (
     nodeId: string,
     groupId?: string
-  ): Promise<{ parentTagId?: string; isGroupVirtualRoot: boolean }> => {
+  ): Promise<{ parentTagId?: string; isVirtualRoot: boolean }> => {
     const decoded = decodeNodeId(nodeId);
+    const effectiveGroupId =
+      decoded.kind === 'root'
+        ? (normalizeTagGroupId(decoded.groupId) ?? normalizeTagGroupId(groupId))
+        : resolveEffectiveGroupId(nodeId, groupId);
     if (decoded.kind === 'root') {
-      if (normalizeTagGroupId(groupId)) return { parentTagId: undefined, isGroupVirtualRoot: true };
-      const personalRootTag = await getPersonalRootTag(groupId);
-      return { parentTagId: personalRootTag.tagId, isGroupVirtualRoot: false };
+      if (effectiveGroupId) return { parentTagId: undefined, isVirtualRoot: true };
+      const personalRootTag = await getPersonalRootTag();
+      return { parentTagId: personalRootTag.tagId, isVirtualRoot: false };
     }
-    if (decoded.kind === 'folder') return { parentTagId: decoded.tagId, isGroupVirtualRoot: false };
-    return { parentTagId: undefined, isGroupVirtualRoot: false };
+    if (decoded.kind === 'folder') return { parentTagId: decoded.tagId, isVirtualRoot: false };
+    return { parentTagId: undefined, isVirtualRoot: false };
   };
 
   const loadFolderNodes = async (nodeId: string, groupId?: string): Promise<FolderNode[]> => {
     const decoded = decodeNodeId(nodeId);
     if (decoded.kind === 'root') {
-      const normalizedGroupId = normalizeTagGroupId(groupId);
+      const normalizedGroupId =
+        normalizeTagGroupId(decoded.groupId) ?? normalizeTagGroupId(groupId);
+      const rootNodeId = encodeRootNodeId(normalizedGroupId);
+      const scope = buildDriveNodeScope(normalizedGroupId);
       if (normalizedGroupId) {
         const roots = await readRawRoots(normalizedGroupId);
-        return roots.filter(isVisibleFolderTag).map((tag) => mapTagToFolderNode(tag, DRIVE_ROOT_ID));
+        return roots
+          .filter(isVisibleFolderTag)
+          .map((tag) => mapTagToFolderNode(tag, rootNodeId, scope));
       }
-      const personalRoot = await getPersonalRootTag(groupId);
+      const personalRoot = await getPersonalRootTag();
       const children = personalRoot.children ?? [];
-      return children.filter(isVisibleFolderTag).map((tag) => mapTagToFolderNode(tag, DRIVE_ROOT_ID));
+      return children
+        .filter(isVisibleFolderTag)
+        .map((tag) => mapTagToFolderNode(tag, rootNodeId, scope));
     }
 
     if (decoded.kind !== 'folder') return [];
-    const tag = tagService.getRawTagById(decoded.tagId, groupId);
+    const normalizedGroupId = resolveEffectiveGroupId(nodeId, groupId);
+    const scope = buildDriveNodeScope(normalizedGroupId);
+    const tag = tagService.getRawTagById(decoded.tagId, normalizedGroupId);
     const children = tag?.children ?? [];
     return children
       .filter(isVisibleFolderTag)
-      .map((child) => mapTagToFolderNode(child, encodeNodeId('folder', decoded.tagId)));
+      .map((child) => mapTagToFolderNode(child, encodeNodeId('folder', decoded.tagId), scope));
   };
 
   const fetchAllResourceNodes = async (
     nodeId: string,
     groupId: string | undefined
   ): Promise<Array<ResourceNode | LinkNode>> => {
-    const { parentTagId, isGroupVirtualRoot } = await resolveParentTagId(nodeId, groupId);
-    if (!parentTagId || isGroupVirtualRoot) {
+    const { parentTagId, isVirtualRoot } = await resolveParentTagId(nodeId, groupId);
+    if (!parentTagId || isVirtualRoot) {
       return [];
     }
 
     const normalizedGroupId = normalizeTagGroupId(groupId);
+    const scope = buildDriveNodeScope(normalizedGroupId);
     const nodes: Array<ResourceNode | LinkNode> = [];
     let page = 1;
 
@@ -199,7 +229,7 @@ export const createDriveServices = (
         : await resourceService.getUserResources(listParams);
 
       for (const item of result.list) {
-        const childNode = mapResourceItemToChildNode(item, parentTagId, nodeId);
+        const childNode = mapResourceItemToChildNode(item, parentTagId, nodeId, scope);
         resourceItemByNodeId.set(childNode.id, item);
         nodes.push(childNode);
       }
@@ -224,9 +254,10 @@ export const createDriveServices = (
   };
 
   const listNodeChildren: IDriveService['listNodeChildren'] = async ({ nodeId, groupId }) => {
-    const groupKey = resolveGroupKey(groupId);
-    const folderNodes = await loadFolderNodes(nodeId, groupId);
-    const resourceNodes = await fetchAllResourceNodes(nodeId, groupId);
+    const effectiveGroupId = resolveEffectiveGroupId(nodeId, groupId);
+    const groupKey = resolveGroupKey(effectiveGroupId);
+    const folderNodes = await loadFolderNodes(nodeId, effectiveGroupId);
+    const resourceNodes = await fetchAllResourceNodes(nodeId, effectiveGroupId);
     const dedup = new Map<string, DriveNode>();
     [...folderNodes, ...resourceNodes].forEach((node) => dedup.set(node.id, node));
     const children = [...dedup.values()];
@@ -267,9 +298,9 @@ export const createDriveServices = (
       if (!current.parentId) break;
       current = tagService.getRawTagById(current.parentId, groupId);
     }
-    let parentId: string = DRIVE_ROOT_ID;
+    let parentId: string = root.id;
     chain.forEach((tag) => {
-      const node = mapTagToFolderNode(tag, parentId);
+      const node = mapTagToFolderNode(tag, parentId, root.scope);
       parentId = node.id;
       trackNode(node, groupKey);
       path.push(node);
@@ -296,8 +327,7 @@ export const createDriveServices = (
         throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_LINK_MOVE_TO_PRIMARY_TAG);
       }
       const linkTagIds = Object.keys(currentTags).filter(
-        (tagId) =>
-          tagId !== primaryTagId && tagId !== source.folderTagId && tagId !== targetTagId
+        (tagId) => tagId !== primaryTagId && tagId !== source.folderTagId && tagId !== targetTagId
       );
 
       // link 移动只替换辅助 tag，主 tag 仍保持在首位。
@@ -325,17 +355,18 @@ export const createDriveServices = (
   };
 
   const getNodePath: IDriveService['getNodePath'] = async ({ nodeId, groupId }) => {
-    if (nodeId === DRIVE_ROOT_ID) {
-      return [await getRootNode({ groupId })];
-    }
+    const effectiveGroupId = resolveEffectiveGroupId(nodeId, groupId);
     const decoded = decodeNodeId(nodeId);
+    if (decoded.kind === 'root') {
+      return [await getRootNode({ groupId: effectiveGroupId })];
+    }
     if (decoded.kind === 'folder') {
-      return buildPathByFolderTag(decoded.tagId, groupId);
+      return buildPathByFolderTag(decoded.tagId, effectiveGroupId);
     }
     if (decoded.kind === 'resource' || decoded.kind === 'link') {
-      return buildPathByFolderTag(decoded.parentTagId, groupId);
+      return buildPathByFolderTag(decoded.parentTagId, effectiveGroupId);
     }
-    return [await getRootNode({ groupId })];
+    return [await getRootNode({ groupId: effectiveGroupId })];
   };
 
   const moveToFolder: IDriveService['moveToFolder'] = async (params) => {
@@ -350,13 +381,12 @@ export const createDriveServices = (
     if (target.type !== 'folder' && target.type !== 'root') {
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_TARGET_UNSUPPORTED_DROP);
     }
+    if (source.scope.rootId !== target.scope.rootId) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
+    }
 
     const targetTagId =
-      target.type === 'root'
-        ? groupId
-          ? undefined
-          : (await getPersonalRootTag(groupId)).tagId
-        : target.tagId;
+      target.type === 'root' ? (target.canMountResources ? target.tagId : undefined) : target.tagId;
 
     if (source.type === 'folder') {
       if (targetTagId && isDescendantTag(targetTagId, source.tagId, groupId)) {
@@ -423,11 +453,17 @@ export const createDriveServices = (
 
   const createFolder: IDriveService['createFolder'] = async (params) => {
     const { parentId, name } = params;
-    const groupId = normalizeTagGroupId(params.groupId) ?? getNodeGroupId(parentId);
+    const groupId = resolveEffectiveGroupId(parentId, params.groupId);
     const decodedParent = decodeNodeId(parentId);
     let targetParentTagId: string | undefined;
     if (decodedParent.kind === 'root') {
-      targetParentTagId = groupId ? undefined : (await getPersonalRootTag(groupId)).tagId;
+      const rootNode = nodeMap.get(parentId);
+      targetParentTagId =
+        rootNode?.type === 'root' && rootNode.canMountResources
+          ? rootNode.tagId
+          : groupId
+            ? undefined
+            : (await getPersonalRootTag()).tagId;
     } else if (decodedParent.kind === 'folder') {
       targetParentTagId = decodedParent.tagId;
     } else {
@@ -451,10 +487,15 @@ export const createDriveServices = (
     renameNode,
     createFolder,
     getDriveTree: async ({ rootId, groupId }) => {
-      if (rootId !== DRIVE_ROOT_ID) {
+      const decodedRoot = decodeNodeId(rootId);
+      const normalizedGroupId =
+        normalizeTagGroupId(groupId) ??
+        (decodedRoot.kind === 'root' ? normalizeTagGroupId(decodedRoot.groupId) : undefined);
+      const expectedRootId = encodeRootNodeId(normalizedGroupId);
+      if (rootId !== DRIVE_ROOT_ID && rootId !== expectedRootId) {
         throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_UNSUPPORTED_ROOT, { rootId });
       }
-      return getRootNode({ groupId });
+      return getRootNode({ groupId: normalizedGroupId });
     },
     loadNodeChildren: listNodeChildren,
     getPathById: getNodePath,

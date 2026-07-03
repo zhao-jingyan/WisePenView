@@ -2,16 +2,34 @@ import type { ResourceIconType } from '@/domains/Resource';
 
 export type DriveNodeType = 'root' | 'folder' | 'resource' | 'link' | 'loading';
 
+export type DriveNodeScope =
+  | {
+      type: 'personal';
+      rootId: string;
+    }
+  | {
+      type: 'group';
+      rootId: string;
+      groupId: string;
+    };
+
 interface DriveNodeBase {
   /** 此处 id 由 service 分配，用于在 service 中查找节点 */
   id: string;
   parentId: string | null;
+  /** 节点所属的 Drive 根作用域，用于并列展示个人盘和多个小组盘。 */
+  scope: DriveNodeScope;
 }
 
 interface RootNode extends DriveNodeBase {
   type: 'root';
   name: string;
-  scope: 'personal' | 'group';
+  /** 个人云盘有真实 root tag；小组 root 是虚拟容器，没有 tagId。 */
+  tagId?: string;
+  /** 小组 root 只是 group 自身的视图入口；个人 root 是真实 root tag 的抽象节点。 */
+  isVirtual: boolean;
+  /** 只有带真实 tagId 的个人 root 允许直接挂载资源。 */
+  canMountResources: boolean;
   childrenIds: string[];
 }
 

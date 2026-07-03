@@ -1,5 +1,6 @@
 export type {
   DriveNode,
+  DriveNodeScope,
   DriveNodeType,
   FolderNode,
   LinkNode,
@@ -7,19 +8,25 @@ export type {
   ResourceNode,
   RootNode,
 } from './entity/drive';
+export {
+  DRIVE_ROOT_ID,
+  buildDriveNodeScope,
+  decodeRootNodeScope,
+  encodeRootNodeId,
+} from './mapper/DriveServices.map';
 export type {
   CreateDriveServiceOptions,
   CreateFolderParams,
   CreateNodeParams,
   GetDriveTreeParams,
   GetNodePathParams,
-  GetRootNodeParams,
   GetPathByIdParams,
+  GetRootNodeParams,
   IDriveService,
   ListNodeChildrenParams,
   LoadNodeChildrenParams,
-  MoveToFolderParams,
   MoveNodeParams,
+  MoveToFolderParams,
   RemoveNodeParams,
   RenameNodeParams,
 } from './service/index.type';
