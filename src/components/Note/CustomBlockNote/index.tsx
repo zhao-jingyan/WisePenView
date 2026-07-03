@@ -19,7 +19,7 @@ import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
 import { useCreateBlockNote } from '@blocknote/react';
 import { toast } from '@heroui/react';
-import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
+import { useMemoizedFn, useMount, useUnmount, useUpdateEffect } from 'ahooks';
 import { useCallback, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import NoteSlashMenu from '../NoteSlashMenu';
 import NoteToolbar from '../NoteToolbar';
@@ -99,19 +99,10 @@ function CustomBlockNote({
   const flatBlocksRef = useRef<{ id: string; type: string }[]>([]);
   const [pmWriteGuardReady, setPmWriteGuardReady] = useState(false);
   const effectiveBlockLocalDocWrites = blockLocalDocWrites && pmWriteGuardReady;
-  const blockLocalDocWritesPropRef = useRef(blockLocalDocWrites);
-  blockLocalDocWritesPropRef.current = blockLocalDocWrites;
-  const blockLocalDocWritesRef = useRef(effectiveBlockLocalDocWrites);
-  blockLocalDocWritesRef.current = effectiveBlockLocalDocWrites;
-  const uploadContextRef = useRef({ imageService, resourceId, readOnly });
-  uploadContextRef.current = { imageService, resourceId, readOnly };
-  const uploadFile = useRef(async (file: File) => {
-    const {
-      imageService: imageSvc,
-      resourceId: noteResourceId,
-      readOnly: isReadOnly,
-    } = uploadContextRef.current;
-    if (isReadOnly) {
+  const shouldBlockLocalDocWrites = useMemoizedFn(() => blockLocalDocWrites && pmWriteGuardReady);
+  const hasBlockLocalDocWritesProp = useMemoizedFn(() => blockLocalDocWrites);
+  const uploadFile = useMemoizedFn(async (file: File) => {
+    if (readOnly) {
       const err = new WisePenError({
         code: FRONTEND_CLIENT_ERROR.VALIDATION,
         source: 'client',
@@ -129,13 +120,13 @@ function CustomBlockNote({
       toast.danger(parseErrorMessage(error));
       throw error;
     }
-    const { publicUrl } = await imageSvc.uploadImage({
+    const { publicUrl } = await imageService.uploadImage({
       file,
       scene: 'PRIVATE_IMAGE_FOR_NOTE',
-      bizTag: `notes/${noteResourceId}`,
+      bizTag: `notes/${resourceId}`,
     });
     return publicUrl;
-  }).current;
+  });
   const [exportDisplayModeOverride, setExportDisplayModeOverride] =
     useState<AiDiffDisplayMode | null>(null);
   const effectiveAiDiffDisplayMode = exportDisplayModeOverride ?? aiDiffDisplayMode;
@@ -147,9 +138,9 @@ function CustomBlockNote({
   const editorExtensions = useMemo(
     () => [
       ...collectNoteEditorExtensions(plugins),
-      createNoteReadOnlyFilterExtension(() => blockLocalDocWritesRef.current),
+      createNoteReadOnlyFilterExtension(shouldBlockLocalDocWrites),
     ],
-    [plugins]
+    [plugins, shouldBlockLocalDocWrites]
   );
   const editorProps = useMemo(
     () => mergeReadOnlyEditorProps(collectNoteEditorProps(plugins), effectiveBlockLocalDocWrites),
@@ -215,7 +206,7 @@ function CustomBlockNote({
     lastAiDiffPresenceRef.current = nextHasAiDiffContent;
     setHasAiDiffContent(nextHasAiDiffContent);
     onAiDiffPresenceChange?.(nextHasAiDiffContent);
-  }, [editor, onAiDiffPresenceChange]);
+  }, [editor, onAiDiffPresenceChange, setHasAiDiffContent]);
 
   useMount(() => {
     syncAiDiffPresence();
@@ -224,7 +215,7 @@ function CustomBlockNote({
   useMount(() => {
     let writeGuardActivated = false;
     const activateWriteGuard = () => {
-      if (writeGuardActivated || !blockLocalDocWritesPropRef.current) {
+      if (writeGuardActivated || !hasBlockLocalDocWritesProp()) {
         return;
       }
       writeGuardActivated = true;
@@ -252,7 +243,7 @@ function CustomBlockNote({
       }
     });
 
-    if (blockLocalDocWritesPropRef.current) {
+    if (hasBlockLocalDocWritesProp()) {
       window.requestAnimationFrame(activateWriteGuard);
     }
   });

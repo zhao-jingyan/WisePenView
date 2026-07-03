@@ -113,6 +113,7 @@ function NoteViewConnected({
   const isTitleReadOnly = !noteInfoDisplay.canCollaborativeEdit;
   const blockLocalDocWrites = isConnected && !noteInfoDisplay.canCollaborativeEdit;
   const showFullPageSpin = status === 'connecting';
+  const fallbackNoteTitle = noteInfoDisplay.noteTitle;
 
   const userService = useUserService();
   const resourceService = useResourceService();
@@ -169,7 +170,7 @@ function NoteViewConnected({
       return;
     }
     const titleApi = titleEditorRef.current;
-    const title = titleApi?.getPlainTitle() ?? noteInfoDisplay?.noteTitle ?? '未命名笔记';
+    const title = titleApi?.getPlainTitle() ?? fallbackNoteTitle ?? '未命名笔记';
     const titleRoot = titleApi?.getProseMirrorRoot() ?? null;
     try {
       setPdfExportLoading(true);
@@ -179,7 +180,7 @@ function NoteViewConnected({
     } finally {
       setPdfExportLoading(false);
     }
-  }, [noteInfoDisplay?.noteTitle]);
+  }, [fallbackNoteTitle]);
 
   const handleDownloadMarkdown = useCallback(async () => {
     const bodyApi = bodyEditorRef.current;
@@ -189,8 +190,7 @@ function NoteViewConnected({
     }
     try {
       setIsDownloadingMarkdown(true);
-      const title =
-        titleEditorRef.current?.getPlainTitle() ?? noteInfoDisplay?.noteTitle ?? '未命名笔记';
+      const title = titleEditorRef.current?.getPlainTitle() ?? fallbackNoteTitle ?? '未命名笔记';
       await bodyApi.downloadMarkdown(title);
       toast.success('Markdown 下载已开始');
     } catch (err) {
@@ -198,7 +198,7 @@ function NoteViewConnected({
     } finally {
       setIsDownloadingMarkdown(false);
     }
-  }, [noteInfoDisplay?.noteTitle]);
+  }, [fallbackNoteTitle]);
 
   const headerMorePending = pdfExportLoading || isDownloadingMarkdown;
   const canManageNotePermission =

@@ -1,6 +1,7 @@
 import type {
   DocDisplayInfoResponse,
   IDocumentService,
+  OnlyOfficeEditorConfigResponse,
   PendingDocItem,
   UploadDocumentParams,
   UploadDocumentResult,
@@ -85,6 +86,16 @@ const getDocInfo = async (documentId: string): Promise<DocDisplayInfoResponse> =
   };
 };
 
+const getOnlyOfficeEditorConfig = async (
+  resourceId: string
+): Promise<OnlyOfficeEditorConfigResponse> => {
+  await delay(200);
+  return {
+    sessionId: `mock-office-${resourceId}`,
+    config: null,
+  };
+};
+
 export const DocumentServicesMock: IDocumentService = {
   uploadDocument,
   retryConvert,
@@ -94,4 +105,5 @@ export const DocumentServicesMock: IDocumentService = {
   retryPendingDoc,
   cancelPendingDoc,
   getDocInfo,
+  getOnlyOfficeEditorConfig,
 };

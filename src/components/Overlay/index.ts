@@ -1,5 +1,6 @@
-export { DeferredContent, useDeferredOverlayState } from './DeferredContent';
-export type { DeferredContentProps, DeferredOverlayState } from './DeferredContent';
+export { DeferredContent } from './DeferredContent';
+export { useDeferredOverlayState } from './DeferredContentContext';
+export type { DeferredContentProps, DeferredOverlayState } from './DeferredContentContext';
 export { Modal } from './Modal';
 export type { ModalRootProps } from './Modal';
 export { Popover } from './Popover';

@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components -- BlockNote block spec 与展示组件同文件 */
 import type {
+  BlockConfig,
   BlockNoteEditor,
   BlockSchema,
   InlineContentSchema,
@@ -46,7 +47,8 @@ const mathBlockPropSchema = {
   },
 } as const;
 
-type MathBlockRenderProps = ReactCustomBlockRenderProps<'math', typeof mathBlockPropSchema, 'none'>;
+type MathBlockConfig = BlockConfig<'math', typeof mathBlockPropSchema, 'none'>;
+type MathBlockRenderProps = ReactCustomBlockRenderProps<MathBlockConfig>;
 type MathAiDiffActionMode = 'accept' | 'discard';
 type MathAiDiffViewMode = 'hidden' | 'plain' | 'compare';
 

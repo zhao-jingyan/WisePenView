@@ -1,32 +1,19 @@
-import type { ReactNode } from 'react';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
+import { useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  DeferredOverlayContext,
+  type DeferredContentProps,
+  type DeferredOverlayContextValue,
+  type DeferredOverlayProviderProps,
+  type DeferredOverlayState,
+  type DeferredRenderable,
+} from './DeferredContentContext';
 
-export interface DeferredOverlayState {
-  isOpen: boolean;
-  ready: boolean;
-  delay: number;
-}
-
-type DeferredRenderable = ReactNode | ((state: DeferredOverlayState) => ReactNode);
-
-interface DeferredOverlayContextValue extends DeferredOverlayState {
-  enabled: boolean;
-}
-
-export interface DeferredOverlayProviderProps {
-  children: ReactNode;
-  delay: number;
-  enabled?: boolean;
-  isOpen: boolean;
-}
-
-export interface DeferredContentProps {
-  children: DeferredRenderable;
-  disabled?: boolean;
-  fallback?: DeferredRenderable;
-}
-
-const DeferredOverlayContext = createContext<DeferredOverlayContextValue | null>(null);
+export type {
+  DeferredContentProps,
+  DeferredOverlayProviderProps,
+  DeferredOverlayState,
+} from './DeferredContentContext';
 
 function renderDeferredContent(
   content: DeferredRenderable | undefined,
@@ -40,23 +27,47 @@ function renderDeferredContent(
 
 function useDeferredReady(isOpen: boolean, enabled: boolean, delay: number): boolean {
   const [ready, setReady] = useState(false);
+  const frameRef = useRef<number | null>(null);
+  const timerRef = useRef<number | null>(null);
 
-  useEffect(() => {
+  const clearDeferredReady = useCallback(() => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (frameRef.current !== null) {
+      window.cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
+  }, []);
+
+  const scheduleDeferredReady = useCallback(() => {
+    clearDeferredReady();
     if (!enabled || !isOpen) {
       setReady(false);
       return;
     }
 
-    let frame = 0;
-    const timer = window.setTimeout(() => {
-      frame = window.requestAnimationFrame(() => setReady(true));
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      frameRef.current = window.requestAnimationFrame(() => {
+        frameRef.current = null;
+        setReady(true);
+      });
     }, Math.max(0, delay));
+  }, [clearDeferredReady, delay, enabled, isOpen, setReady]);
 
-    return () => {
-      window.clearTimeout(timer);
-      window.cancelAnimationFrame(frame);
-    };
-  }, [delay, enabled, isOpen]);
+  useMount(() => {
+    scheduleDeferredReady();
+  });
+
+  useUnmount(() => {
+    clearDeferredReady();
+  });
+
+  useUpdateEffect(() => {
+    scheduleDeferredReady();
+  }, [scheduleDeferredReady]);
 
   return enabled ? ready : isOpen;
 }
@@ -94,13 +105,4 @@ export function DeferredContent({
   };
 
   return <>{renderDeferredContent(state.ready ? children : fallback, state)}</>;
-}
-
-export function useDeferredOverlayState(): DeferredOverlayState {
-  const context = useContext(DeferredOverlayContext);
-  return {
-    delay: context?.delay ?? 0,
-    isOpen: context?.isOpen ?? true,
-    ready: context == null || !context.enabled ? true : context.ready,
-  };
 }

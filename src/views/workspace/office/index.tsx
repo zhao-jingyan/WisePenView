@@ -272,7 +272,7 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
           onReady={handleEditorReady}
           onError={handleEditorError}
         />
-        {(!editorReady || editorError) && (
+        {(!editorReady || Boolean(editorError)) && (
           <div className={styles.loadingOverlay} aria-busy={!editorError} aria-live="polite">
             {editorError ? (
               <div className={styles.middleOverlayInner}>

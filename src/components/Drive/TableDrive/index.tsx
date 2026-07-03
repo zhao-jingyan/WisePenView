@@ -7,8 +7,9 @@ import {
 import type { DriveNode } from '@/domains/Drive';
 import { findTreeNodeById } from '@/utils/tree/findTreeNodeById';
 import { Button } from '@heroui/react';
+import { useUnmount } from 'ahooks';
 import { CloudUpload } from 'lucide-react';
-import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { startTransition, useCallback, useMemo, useRef, useState } from 'react';
 import { getDriveNodeLabel, resolveDriveScope } from '../common/driveComponentModel';
 import { useClickNode } from '../common/useClickNode';
 import type { DriveRow, DriveTableRow, TableDriveProps } from './index.type';
@@ -149,7 +150,7 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
     [cancelSelectedNodeIdCommit]
   );
 
-  useEffect(() => cancelSelectedNodeIdCommit, [cancelSelectedNodeIdCommit]);
+  useUnmount(cancelSelectedNodeIdCommit);
 
   const handleEnterFolder = useCallback(
     (nodeId: string) => {

@@ -140,10 +140,7 @@ interface DelegatedRowTarget {
 }
 
 function getDelegatedRowTarget(
-  event:
-    | KeyboardEvent<HTMLTableSectionElement>
-    | MouseEvent<HTMLTableSectionElement>
-    | PointerEvent<HTMLTableSectionElement>
+  event: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement> | PointerEvent<HTMLElement>
 ): DelegatedRowTarget | null {
   const target = event.target;
   if (!(target instanceof Element)) {
@@ -160,8 +157,8 @@ function getDelegatedRowTarget(
   return rowId ? { row, rowId } : null;
 }
 
-function markImmediateSelectedRow(body: HTMLTableSectionElement, selectedRow: HTMLElement) {
-  const previousRows = body.querySelectorAll<HTMLElement>(
+function markImmediateSelectedRow(container: HTMLElement, selectedRow: HTMLElement) {
+  const previousRows = container.querySelectorAll<HTMLElement>(
     `[${ROW_ID_ATTRIBUTE}][data-selected="true"], [${ROW_ID_ATTRIBUTE}][${IMMEDIATE_SELECTED_ATTRIBUTE}="true"]`
   );
   previousRows.forEach((row) => {
@@ -404,7 +401,7 @@ function FolderTable<T extends FolderTableRow>({
   );
 
   const handleBodyClick = useCallback(
-    (event: MouseEvent<HTMLTableSectionElement>) => {
+    (event: MouseEvent<HTMLElement>) => {
       if (event.defaultPrevented) {
         return;
       }
@@ -421,7 +418,7 @@ function FolderTable<T extends FolderTableRow>({
   );
 
   const handleBodyPointerDown = useCallback(
-    (event: PointerEvent<HTMLTableSectionElement>) => {
+    (event: PointerEvent<HTMLElement>) => {
       if (!onRowSelect) {
         return;
       }
@@ -435,7 +432,7 @@ function FolderTable<T extends FolderTableRow>({
   );
 
   const handleBodyKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLTableSectionElement>) => {
+    (event: KeyboardEvent<HTMLElement>) => {
       if (event.defaultPrevented || (event.key !== 'Enter' && event.key !== ' ')) {
         return;
       }
@@ -541,6 +538,9 @@ function FolderTable<T extends FolderTableRow>({
         <Table.ScrollContainer
           ref={scrollRef}
           className={styles.scrollContainer}
+          onClick={handleBodyClick}
+          onKeyDown={handleBodyKeyDown}
+          onPointerDown={handleBodyPointerDown}
           onScroll={handleScroll}
           {...scrollContainerProps}
         >
@@ -563,9 +563,6 @@ function FolderTable<T extends FolderTableRow>({
             </Table.Header>
 
             <Table.Body
-              onClick={handleBodyClick}
-              onKeyDown={handleBodyKeyDown}
-              onPointerDown={handleBodyPointerDown}
               renderEmptyState={() =>
                 showEmptyState ? (
                   <TableBodyState

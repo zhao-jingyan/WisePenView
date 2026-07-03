@@ -1,4 +1,4 @@
-export type { ResourceIconType, ResourceItem } from './entity/resource';
+export type { ResourceIconType, ResourceItem, ResourceTagBind } from './entity/resource';
 export type { SkillScopeType, SkillSummary } from './entity/skill';
 export {
   NOTE_CONFIGURABLE_RESOURCE_ACTION_OPTIONS,
