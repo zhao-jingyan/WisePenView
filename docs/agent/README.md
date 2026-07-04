@@ -13,6 +13,7 @@
 
 - `domain-api.md`：API 薄层、手写 DTO、请求协议边界。
 - `domain-mapper.md`：字段转换、fallback、旧接口兼容、归一化。
+- `fallback.md`：fallback 分层边界、允许场景和禁止场景。
 - `domain-service.md`：业务编排、依赖注入、错误处理。
 - `domain-entity.md`：展示实体、枚举、常量和类型边界。
 
@@ -41,6 +42,7 @@ view/component -> service -> mapper -> api -> entity/enum
 - 新增业务页面：`component-boundary.md`、`component-react.md`、`component-style.md`、`domain-service.md`。
 - 接入新接口：`domain-api.md`、`domain-mapper.md`、`domain-service.md`。
 - 调整后端字段：`domain-mapper.md`、`domain-entity.md`、必要时补读 `domain-api.md`。
+- 清理字段 fallback：`fallback.md`、`domain-mapper.md`、`domain-service.md`、必要时补读 `component-react.md`。
 - 新增可复用组件：`component-boundary.md`、`component-react.md`、`component-style.md`。
 - 提交或写 PR：`commit.md`。
 

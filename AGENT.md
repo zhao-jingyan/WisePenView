@@ -8,6 +8,7 @@
 - 分支命名使用 `feat/<content>` 、 `fix/<content>` 、 `refactor/<content>`，`content` 推荐英文短横线。
 - 不要盲目扫描 `node_modules`。当第三方 API 不确定时，优先询问用户提供接口文档或官方来源。
 - 不确定业务接口、字段边界、权限边界时，先询问用户，不要用防御性代码掩盖不确定性。
+- 字段 fallback、旧接口兼容和 raw DTO 归一化默认只能出现在 mapper 或明确命名的领域 normalizer 中；service、component、view 不用 `??`、`?.` 链条修补接口不稳定。
 - 不要擅自回滚用户已有改动。修改前查看工作区状态，遇到无关改动保持兼容。
 - 项目已彻底移除 Ant Design，不再新增、恢复或沿用 antd 组件、API 和样式覆盖模式。
 
@@ -16,11 +17,15 @@
 - KISS：简单直白优于复杂晦涩，避免不可维护的抽象和过度封装。
 - 先看现有实现：使用 `rg` 查找同域、同类型代码，沿用项目现有模式。
 - 新代码遵循最终目标形态，旧迁移态代码只在相关任务中渐进收敛。
+- 保持前后端契约同步：遇到字段落空、命名不一致或历史兼容时，优先修 mapper 和类型契约，不在调用处层层兜底。
+- Domain service 采用后端式、可审计写法：业务流程优先使用显式变量、`if`、`for...of` 和提前 `return`，避免用链式 `map/filter/flatMap`、嵌套三元、隐式 `...` 掩盖业务步骤。
+- 复杂 service 的内部规则收敛到同目录 `*Services.helper.ts`，只能由相邻 `*Services.impl.ts` 导入；helper 不跨领域复用，不调用 API、store 或其它 service。
 
 ## 三、按任务读取规约
 
 - 领域 API、请求类型：阅读 `docs/agent/domain-api.md`。
 - 字段映射、fallback、兼容旧接口：阅读 `docs/agent/domain-mapper.md`。
+- fallback 边界和允许场景：阅读 `docs/agent/fallback.md`。
 - Service 编排、依赖注入、错误处理：阅读 `docs/agent/domain-service.md`。
 - Entity、Enum、常量和展示类型：阅读 `docs/agent/domain-entity.md`。
 - 组件放置位置、components 与 views 边界：阅读 `docs/agent/component-boundary.md`。

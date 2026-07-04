@@ -76,7 +76,15 @@
 - Ref 类型使用 `{ComponentName}Ref` 命名。
 - 与第三方库交互且类型无法推断时，把不确定类型限制在最小范围，并尽快转换成项目内稳定类型。
 
-## 八、注释
+## 八、数据 fallback 边界
+
+- Component/view 不负责修补后端字段，业务字段 fallback 应回到 mapper 或领域 helper。
+- 允许组件为纯 UI props、空态文案、受控/非受控状态提供默认值。
+- 避免在 JSX 中写 `user?.profile?.name ?? '-'` 这类业务字段兜底；需要占位时优先让 entity 提供展示字段或显式 nullable 字段。
+- 遇到字段不确定时，不通过 `??`、`?.` 链条扩大保护范围，先确认接口或调整 mapper。
+- 清理或新增 fallback 前，先阅读 `docs/agent/fallback.md`。
+
+## 九、注释
 
 只在必要时写中文注释：
 
@@ -88,7 +96,7 @@
 
 不要为每行代码写注释，不要用注释解释显而易见的“做什么”，优先解释“为什么这样做”。
 
-## 九、检查清单
+## 十、检查清单
 
 - [ ] Hooks 调用位置合法。
 - [ ] 没有直接使用 `useEffect`。
@@ -96,4 +104,5 @@
 - [ ] 没有无收益的 memoization。
 - [ ] JSX key 稳定唯一。
 - [ ] state 更新保持不可变。
+- [ ] 业务字段 fallback 没有散落在 component/view。
 - [ ] 未新增 `any`。

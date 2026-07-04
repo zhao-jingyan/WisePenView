@@ -16,6 +16,7 @@ Service 不应负责：
 
 - 展示 UI 提示。
 - 直接操作 React 组件状态。
+- 修补 response/entity 字段缺失或后端字段别名。
 - 直接 import `@/apis/Axios`。
 - 把后端 raw response 透传给组件。
 - 直接 import 其它 service 的实现文件。
@@ -53,14 +54,22 @@ export const createXxxServices = (deps?: XxxServiceDeps): IXxxService => ({
 - UI 层 catch 后使用 `useAppMessage()` 和 `parseErrorMessage(err)`。
 - `parseErrorMessage` 只接收一个 `unknown` 参数，不传 fallback 文案。
 
-## 四、请求触发
+## 四、字段 fallback 边界
+
+- Service 默认不写字段保护型 fallback，例如 `data.foo ?? data.bar ?? ''`。
+- API response 字段别名、历史兼容、空值归一化应放到 mapper。
+- Service 可以保留清晰的请求参数默认值，例如分页默认页码，但优先通过 mapper 或具名 helper 表达。
+- 必填字段缺失时，service 应抛出业务错误或推动 mapper/entity 调整，不静默补空值。
+- 清理或新增 fallback 前，先阅读 `docs/agent/fallback.md`。
+
+## 五、请求触发
 
 - React 组件或 Hook 中调用 service 的异步请求，默认使用 `ahooks` 的 `useRequest`。
 - 用户交互触发请求使用 `useRequest(fn, { manual: true })`。
 - 初始化请求使用 `ready`、`refreshDeps` 或领域 session hook 管理时机。
 - 新建后跳转必须遵循：`create -> 获取后端 ID -> navigate`。
 
-## 五、新增 Service 流程
+## 六、新增 Service 流程
 
 新增领域 service 时，按需补齐：
 
@@ -83,7 +92,7 @@ src/domains/<Domain>/
 - `src/domains/_registry/hooks.ts`
 - `src/domains/index.ts`
 
-## 六、检查清单
+## 七、检查清单
 
 - [ ] 调用侧通过 `useXxxService()` 获取能力。
 - [ ] service 实现导出 `createXxxServices` 工厂。
@@ -91,5 +100,6 @@ src/domains/<Domain>/
 - [ ] service 不做 UI 提示。
 - [ ] service 不直接 import Axios。
 - [ ] 字段转换交给 mapper。
+- [ ] 字段 fallback 没有散落在 service。
 - [ ] 错误向上抛出。
 - [ ] 未新增 `any`。
