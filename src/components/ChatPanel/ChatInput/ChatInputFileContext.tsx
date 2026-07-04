@@ -4,11 +4,8 @@ import { base64ToFile, fileToBase64, generateThumbnail } from '@/utils/file/uplo
 import { toast } from '@heroui/react';
 import { useMount, useUnmount } from 'ahooks';
 import { useRef, type ChangeEvent, type ReactNode } from 'react';
-import {
-  selectChatInputSelectedModel,
-  useChatInputStoreApi,
-} from './ChatInputStore';
 import { ChatInputFileContext, type ChatInputFileContextValue } from './ChatInputFileContextValue';
+import { selectChatInputSelectedModel, useChatInputStoreApi } from './ChatInputStore';
 import type { LocalAttachmentPayload } from './index.type';
 
 const MAX_IMAGE_BASE64_BYTES = 5 * 1024 * 1024;
@@ -65,7 +62,7 @@ export function ChatInputFileProvider({ children }: { children: ReactNode }) {
       removePendingAttachmentUpload(id);
       const attachment: LocalAttachmentPayload = {
         attachmentId: result.attachmentId,
-        filename: result.filename ?? file.name,
+        filename: result.filename,
         enabled: true,
       };
       addActiveAttachment(attachment);

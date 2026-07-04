@@ -5,15 +5,22 @@ import { useMemo } from 'react';
 import type { SelectedMemberListProps } from './index.type';
 import styles from './style.module.less';
 
+const EMPTY_MEMBERS: GroupMember[] = [];
+
+const getRoleDisplayLabel = (role: GroupMember['role']): string => {
+  // 角色枚举未来扩展时，列表先展示原 key，避免空白。
+  return ROLE.keyLabels[role] || role;
+};
+
 function SelectedMemberList({ members, isReadOnly = true }: SelectedMemberListProps) {
   const formatDescription = (member: GroupMember) => {
     const parts = [];
     if (member.nickname) parts.push(member.nickname);
-    if (member.role) parts.push(ROLE.keyLabels[member.role] ?? member.role);
+    if (member.role) parts.push(getRoleDisplayLabel(member.role));
     return parts.join(' ') || undefined;
   };
 
-  const dataSource = useMemo(() => members ?? [], [members]);
+  const dataSource = useMemo(() => members || EMPTY_MEMBERS, [members]);
   const disabledKeys = useMemo(
     () => (isReadOnly ? dataSource.map((member) => member.userId) : []),
     [dataSource, isReadOnly]

@@ -5,8 +5,7 @@ import type { NoteInfoBarProps } from './index.type';
 import styles from './style.module.less';
 
 function NoteInfoBar({ noteInfoDisplay }: NoteInfoBarProps) {
-  const authors = noteInfoDisplay?.authors ?? [];
-  const lastEditedAtText = noteInfoDisplay?.lastEditedAtText ?? '暂无';
+  const { authors, lastEditedAtText } = noteInfoDisplay;
 
   return (
     <div className={styles.noteInfoBar}>

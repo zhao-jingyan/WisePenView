@@ -1,8 +1,8 @@
+import { Modal } from '@/components/Overlay';
 import SelectedMemberList from '@/components/SelectedMemberList';
 import { useQuotaService } from '@/domains';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { parseErrorMessage } from '@/utils/error';
-import { Modal } from '@/components/Overlay';
 import { Alert, Button, Input, Label, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
@@ -74,7 +74,7 @@ function AssignQuotaModal({
     limit: 0,
   });
 
-  const maxUsed = Math.max(0, ...members.map((m) => m.used ?? 0));
+  const maxUsed = Math.max(0, ...members.map((m) => m.used));
   const quotaMin = Math.max(1, maxUsed);
   const quotaOverGlobalMax = maxUsed > GROUP_MEMBER_TOKEN_LIMIT_MAX;
   const { canEdit, confirmDisabled } = useMemberEditGuard(

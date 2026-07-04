@@ -7,13 +7,7 @@ import type { GroupCardProps } from './index.type';
 import styles from './style.module.less';
 
 function GroupCard({ group, onClick }: GroupCardProps) {
-  const {
-    groupName,
-    ownerInfo,
-    groupCoverUrl: cover,
-    memberCount = 0,
-    groupType = GROUP_TYPE.NORMAL,
-  } = group;
+  const { groupName, ownerInfo, groupCoverUrl: cover, memberCount, groupType } = group;
 
   const handleCardClick = () => {
     onClick?.(group);
@@ -32,7 +26,7 @@ function GroupCard({ group, onClick }: GroupCardProps) {
     }
   };
 
-  const ownerName = ownerInfo?.nickname ?? '';
+  const ownerName = ownerInfo?.nickname.trim() || '';
   const groupTypeLabel = GROUP_TYPE.getLabel(groupType);
   const isSpecialGroup = groupType === GROUP_TYPE.ADVANCED || groupType === GROUP_TYPE.PUBLIC;
   const badgeClassName =

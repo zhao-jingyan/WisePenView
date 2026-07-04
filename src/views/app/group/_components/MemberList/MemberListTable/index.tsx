@@ -53,6 +53,11 @@ function getRoleClassName(role: GroupMember['role']): string {
   }
 }
 
+function getRoleDisplayLabel(role: GroupMember['role']): string {
+  // 角色枚举未来扩展时，表格先展示原 key，避免空白。
+  return ROLE.keyLabels[role] || role;
+}
+
 function canEditRole(member: GroupMember, props: MemberListTableProps): boolean {
   return (
     props.groupDisplayConfig.canModifyPermission &&
@@ -118,7 +123,7 @@ function buildPageSizeControl(
 function renderRole(role: GroupMember['role']) {
   return (
     <span className={`${styles.roleBadge} ${getRoleClassName(role)}`}>
-      {ROLE.keyLabels[role] ?? role}
+      {getRoleDisplayLabel(role)}
     </span>
   );
 }
@@ -126,7 +131,7 @@ function renderRole(role: GroupMember['role']) {
 function renderQuota(member: GroupMember) {
   return (
     <div className={styles.quotaItem}>
-      <QuotaBar used={member.used ?? 0} limit={member.limit ?? 0} />
+      <QuotaBar used={member.used} limit={member.limit} />
     </div>
   );
 }
@@ -178,8 +183,8 @@ function renderQuotaEditor(
   inlineDraft: MemberListInlineDraft,
   onInlineDraftChange: (draft: MemberListInlineDraft) => void
 ) {
-  const min = Math.max(1, member.used ?? 0);
-  const value = inlineDraft.quota ?? String(member.limit ?? min);
+  const min = Math.max(1, member.used);
+  const value = inlineDraft.quota ?? String(member.limit);
 
   return (
     <TextField

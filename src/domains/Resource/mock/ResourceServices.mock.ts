@@ -22,10 +22,19 @@ import mockdata from './mockdata.json';
 import { simulateGlobalSearch } from './searchMockData';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const normalizeMockCurrentTags = (value: unknown): Record<string, string> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+  );
+};
+
 const toResourceItem = (
   item: Omit<ResourceItem, 'ownerInfo'> & { ownerInfo?: ResourceItem['ownerInfo'] }
 ): ResourceItem => ({
   ...item,
+  // fallback：mockdata 仍保留旧接口数组形态，mock service 输出保持领域实体稳定。
+  currentTags: normalizeMockCurrentTags(item.currentTags),
   resourceIconType:
     item.resourceIconType ??
     resolveResourceIconType({

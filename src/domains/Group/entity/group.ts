@@ -11,8 +11,10 @@ export interface GroupMember {
   role: EnumKey<typeof ROLE>;
   joinTime: string;
   avatar: string;
-  limit?: number;
-  used?: number;
+  /** mapper 已将历史空配额归一化为 0，成员列表组件直接消费数字。 */
+  limit: number;
+  /** mapper 已将历史空用量归一化为 0，成员列表组件直接消费数字。 */
+  used: number;
 }
 
 /** 成员列表分页（领域层，由 GET /group/member/list 的 data 映射） */

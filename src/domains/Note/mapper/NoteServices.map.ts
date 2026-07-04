@@ -60,7 +60,8 @@ const mapNoteInfoDisplayFromApi = (data: NoteInfoResponse): NoteInfoDisplayData 
     lastEditedAtText: '暂无',
     // 资源实体（已归一化），供展示阅读量/点赞/评分等统计字段
     resourceInfo,
-    version: data.version,
+    // fallback：旧 noteInfo 响应可能缺少版本号，领域层统一按 0 处理。
+    version: data.version ?? 0,
     canCollaborativeEdit: resourceActionsInclude(resourceInfo.currentActions, RESOURCE_ACTION.EDIT),
   };
 };

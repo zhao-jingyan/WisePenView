@@ -82,6 +82,7 @@ const getDocInfo = async (documentId: string): Promise<DocDisplayInfoResponse> =
         identityType: 0,
       },
       resourceType: 'file',
+      currentTags: {},
     },
   };
 };

@@ -31,7 +31,7 @@ export interface DriveServicesDeps {
 }
 
 const isVisibleFolderTag = (node: TagTreeNode): boolean => {
-  const name = (node.tagName ?? '').trim();
+  const name = node.tagName.trim();
   if (name === TRASH_TAG_NAME) return false;
   return !name.startsWith(HIDDEN_TAG_PREFIX);
 };
@@ -185,8 +185,7 @@ export const createDriveServices = (
           .map((tag) => mapTagToFolderNode(tag, rootNodeId, scope));
       }
       const personalRoot = await getPersonalRootTag();
-      const children = personalRoot.children ?? [];
-      return children
+      return personalRoot.children
         .filter(isVisibleFolderTag)
         .map((tag) => mapTagToFolderNode(tag, rootNodeId, scope));
     }
@@ -195,7 +194,8 @@ export const createDriveServices = (
     const normalizedGroupId = resolveEffectiveGroupId(nodeId, groupId);
     const scope = buildDriveNodeScope(normalizedGroupId);
     const tag = tagService.getRawTagById(decoded.tagId, normalizedGroupId);
-    const children = tag?.children ?? [];
+    // 缓存未命中时维持旧行为空目录；TagTreeNode 的 children 完整性由 mapper 保证。
+    const children = tag ? tag.children : [];
     return children
       .filter(isVisibleFolderTag)
       .map((child) => mapTagToFolderNode(child, encodeNodeId('folder', decoded.tagId), scope));
@@ -317,7 +317,7 @@ export const createDriveServices = (
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_RESOURCE_TAG_INFO_MISSING);
     }
 
-    const currentTags = sourceItem.currentTags ?? {};
+    const currentTags = sourceItem.currentTags;
     if (source.type === 'link') {
       const primaryTagId = source.primaryTagId;
       if (!primaryTagId) {
@@ -371,7 +371,7 @@ export const createDriveServices = (
     if (!primaryTagId) {
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_RESOURCE_TAG_INFO_MISSING);
     }
-    const currentTags = sourceItem.currentTags ?? {};
+    const currentTags = sourceItem.currentTags;
     const linkTagIds = Object.keys(currentTags).filter(
       (tagId) => tagId !== primaryTagId && tagId !== source.folderTagId
     );

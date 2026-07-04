@@ -67,7 +67,7 @@ export interface DocDisplayInfoResponse {
 export type OnlyOfficeEditorConfig = Config;
 
 export interface OnlyOfficeEditorConfigResponse {
-  sessionId?: string;
+  sessionId: string;
   config?: OnlyOfficeEditorConfig | null;
   documentServerPublicUrl?: string | null;
 }

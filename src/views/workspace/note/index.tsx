@@ -368,10 +368,10 @@ function NoteViewConnected({
               ) : null}
               <div ref={titleAnchorRef}>
                 <NoteTitle
-                  key={`${resourceId}-${noteInfoDisplay?.noteTitle ?? ''}-${noteInfoDisplay.canCollaborativeEdit}`}
+                  key={`${resourceId}-${noteInfoDisplay.noteTitle}-${noteInfoDisplay.canCollaborativeEdit}`}
                   ref={titleEditorRef}
                   id={resourceId}
-                  initialContent={noteInfoDisplay?.noteTitle}
+                  initialContent={noteInfoDisplay.noteTitle}
                   readOnly={isTitleReadOnly}
                   focusOnMount={isConnected && !isTitleReadOnly}
                   onEnterKey={focusBody}

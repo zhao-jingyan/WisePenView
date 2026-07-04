@@ -9,6 +9,7 @@ import type {
   ModelProviderMappingResponse,
   RenameSessionApiRequest,
   RenameSessionApiResponse,
+  UploadAttachmentResponse,
 } from '../apis/ChatApi.type';
 import { MODEL_TYPE } from '../enum/model';
 import type {
@@ -21,6 +22,7 @@ import type {
   MessageResponse,
   PageResult,
   RenameSessionRequest,
+  UploadAttachmentResult,
 } from '../service/index.type';
 
 const PROVIDER_KEY_HINTS: Array<{ key: string; patterns: string[] }> = [
@@ -237,6 +239,15 @@ const mapListHistoryMessagesFromApi = (
   };
 };
 
+const mapUploadAttachmentFromApi = (
+  data: UploadAttachmentResponse,
+  fallbackFilename: string
+): UploadAttachmentResult => ({
+  attachmentId: data.attachment_id,
+  // fallback：旧附件接口可能省略 filename，此时沿用本地文件名。
+  filename: data.filename ?? fallbackFilename,
+});
+
 export const ChatServicesMap = {
   mapGetModelsFromApi,
   mapCreateSessionRequest,
@@ -247,4 +258,5 @@ export const ChatServicesMap = {
   mapListSessionsFromApi,
   mapListHistoryMessagesRequest,
   mapListHistoryMessagesFromApi,
+  mapUploadAttachmentFromApi,
 };

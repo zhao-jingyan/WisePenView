@@ -11,6 +11,7 @@ type QuotaRecord = UserGroupQuota & { key: string | number };
 
 const DEFAULT_PAGE_SIZE = 10;
 const SORTABLE_COLUMNS = new Set(['groupName', 'quotaUsed']);
+const EMPTY_QUOTAS: UserGroupQuota[] = [];
 
 function buildPages(totalPages: number) {
   return Array.from({ length: totalPages }, (_, index) => index + 1);
@@ -40,8 +41,8 @@ function QuotaByGroup({ pagination }: QuotaByGroupProps) {
     }
   );
 
-  const quotas: UserGroupQuota[] = useMemo(() => quotaData?.list ?? [], [quotaData?.list]);
-  const total = quotaData?.total ?? 0;
+  const quotas: UserGroupQuota[] = useMemo(() => quotaData?.list || EMPTY_QUOTAS, [quotaData]);
+  const total = quotaData?.total || 0;
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);
   const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, total);

@@ -61,8 +61,23 @@ export interface TagTreeResponse {
   children?: TagTreeResponse[];
 }
 
-/** 领域别名：路径文件夹语义（与 TagTreeResponse 相同结构） */
-export type TagTreeNode = TagTreeResponse;
+/** 领域节点：mapper 已将权限默认值与 children 补齐，service/component 不再处理缺字段兜底。 */
+export interface TagTreeNode extends Omit<
+  TagTreeResponse,
+  | 'children'
+  | 'taggedResourceAclGrantScope'
+  | 'taggedResourceAclGrantSpecifiedUsers'
+  | 'tagMountPermissionScope'
+  | 'tagMountSpecifiedUsers'
+  | 'grantedActions'
+> {
+  taggedResourceAclGrantScope: AccessControlScope;
+  taggedResourceAclGrantSpecifiedUsers: string[];
+  tagMountPermissionScope: AccessControlScope;
+  tagMountSpecifiedUsers: string[];
+  grantedActions: TagResourceAction[];
+  children: TagTreeNode[];
+}
 
 /** POST /resource/tag/addTag */
 export interface TagCreateRequest {

@@ -5,14 +5,12 @@ import type {
   TagListByTagResponse,
   TagTreeNode,
 } from '@/domains/Tag';
+import { TagServicesMap } from '../mapper/TagServices.map';
 import mockdata from './mockdata.json';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-type TagMockJson = { tagTree: TagTreeNode[] };
-const md = mockdata as TagMockJson;
-
-const tagTree = md.tagTree;
+const tagTree = TagServicesMap.mapTagTreeFromApi(mockdata.tagTree);
 
 let flatMap: Map<string, TagTreeNode> | null = null;
 
@@ -20,7 +18,7 @@ const buildFlatMap = (roots: TagTreeNode[]): Map<string, TagTreeNode> => {
   const map = new Map<string, TagTreeNode>();
   const walk = (node: TagTreeNode) => {
     map.set(node.tagId, node);
-    (node.children ?? []).forEach(walk);
+    node.children.forEach(walk);
   };
   roots.forEach(walk);
   return map;

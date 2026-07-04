@@ -59,7 +59,7 @@ export interface UploadAttachmentParams {
 
 export interface UploadAttachmentResult {
   attachmentId: string;
-  filename?: string;
+  filename: string;
 }
 
 export interface ChatServiceDeps {

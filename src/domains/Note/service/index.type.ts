@@ -41,9 +41,9 @@ export interface NoteInfoDisplayData {
   authors: NoteInfoDisplayAuthor[];
   lastEditedAtText: string;
   /** 资源实体，供展示阅读量/点赞/评分等统计字段 */
-  resourceInfo?: ResourceItem;
+  resourceInfo: ResourceItem;
   /** 当前内容版本号 */
-  version?: number;
+  version: number;
   /** 当前用户是否具备协同编辑（EDIT）权限 */
   canCollaborativeEdit: boolean;
 }

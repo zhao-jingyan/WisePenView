@@ -1,4 +1,5 @@
 import { ResultState, Spin } from '@/components/Feedback';
+import { Modal } from '@/components/Overlay';
 import { useNoteService, useResourceService, useUserService } from '@/domains';
 import type {
   DrawIoLatestSnapshotData,
@@ -12,7 +13,6 @@ import {
   buildWorkspaceResourcePath,
   RESOURCE_EDITOR_TYPE,
 } from '@/utils/navigation/workspaceRoute';
-import { Modal } from '@/components/Overlay';
 import { Button, Input, TextField, toast } from '@heroui/react';
 import { useEventListener, useRequest, useUnmount, useUpdateEffect } from 'ahooks';
 import { Copy, History, Save } from 'lucide-react';
@@ -306,7 +306,7 @@ function DrawioViewConnected({ resourceId, data }: DrawioViewConnectedProps) {
   const navigate = useNavigate();
   const userService = useUserService();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const initialVersion = Math.max(noteInfoDisplay.version ?? 0, snapshot.version ?? 0);
+  const initialVersion = Math.max(noteInfoDisplay.version, snapshot.version);
   const currentVersionRef = useRef(initialVersion);
   const lastSavedXmlRef = useRef(initialXml);
   const exportTimerRef = useRef<number | null>(null);
@@ -319,7 +319,7 @@ function DrawioViewConnected({ resourceId, data }: DrawioViewConnectedProps) {
   const [copyName, setCopyName] = useState('');
   const [versionOpen, setVersionOpen] = useState(false);
   const canEdit = noteInfoDisplay.canCollaborativeEdit;
-  const canFork = hasAction(noteInfoDisplay.resourceInfo?.currentActions, 'FORK');
+  const canFork = hasAction(noteInfoDisplay.resourceInfo.currentActions, 'FORK');
   const canViewVersions = Boolean(noteInfoDisplay.ownerId);
   const title = useResourceDisplayName(resourceId, noteInfoDisplay.noteTitle, '未命名图表');
   const drawioUrl = useMemo(() => buildDrawioUrl(canEdit), [canEdit]);
@@ -401,7 +401,7 @@ function DrawioViewConnected({ resourceId, data }: DrawioViewConnectedProps) {
   }, [canEdit, clearExportTimer, editorLoaded, postToEditor, saveState]);
 
   useUpdateEffect(() => {
-    currentVersionRef.current = Math.max(noteInfoDisplay.version ?? 0, snapshot.version ?? 0);
+    currentVersionRef.current = Math.max(noteInfoDisplay.version, snapshot.version);
     setCurrentVersion(currentVersionRef.current);
     lastSavedXmlRef.current = initialXml;
     setSaveState('saved');
@@ -680,7 +680,7 @@ function DrawioView({ resourceId }: DrawioViewProps) {
     );
   }
 
-  const resourceType = data.noteInfoDisplay.resourceInfo?.resourceType?.trim().toLowerCase();
+  const resourceType = data.noteInfoDisplay.resourceInfo.resourceType?.trim().toLowerCase();
   if (resourceType !== RESOURCE_EDITOR_TYPE.DRAWIO) {
     return (
       <DrawioLayoutConfig resourceId={resourceId}>

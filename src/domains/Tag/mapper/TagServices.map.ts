@@ -5,6 +5,7 @@ import type {
   GetTagTreeApiResponse,
 } from '@/domains/Resource/apis/ResourceApi.type';
 import {
+  ACCESS_CONTROL_SCOPE,
   normalizeResourceActions,
   resourceActionsToApiKeys,
   TAG_RESOURCE_ACTION,
@@ -45,9 +46,18 @@ const mapTagTreeNodeFromApi = (node: GetTagTreeApiResponse[number]): TagTreeNode
     ...node,
     // fallback：兼容后端返回未约束的 visibilityMode 字符串
     visibilityMode: normalizedVisibilityMode,
-    // fallback：兼容后端返回 number[] 类型的 grantedActions
-    grantedActions: mapGrantedActionsFromApi(node.grantedActions),
-    children: node.children?.map(mapTagTreeNodeFromApi),
+    // fallback：旧接口缺省 ACL scope 时按全员可见处理。
+    taggedResourceAclGrantScope: node.taggedResourceAclGrantScope ?? ACCESS_CONTROL_SCOPE.ALL,
+    // fallback：旧接口缺省指定用户列表时按空列表处理。
+    taggedResourceAclGrantSpecifiedUsers: node.taggedResourceAclGrantSpecifiedUsers ?? [],
+    // fallback：兼容后端返回 number[] 类型的 grantedActions，缺省时为空权限数组
+    grantedActions: mapGrantedActionsFromApi(node.grantedActions) ?? [],
+    // fallback：旧接口缺省挂载 scope 时按全员可挂载处理。
+    tagMountPermissionScope: node.tagMountPermissionScope ?? ACCESS_CONTROL_SCOPE.ALL,
+    // fallback：旧接口缺省挂载指定用户列表时按空列表处理。
+    tagMountSpecifiedUsers: node.tagMountSpecifiedUsers ?? [],
+    // fallback：历史标签树叶子节点可能省略 children，领域层统一消费稳定数组
+    children: node.children?.map(mapTagTreeNodeFromApi) ?? [],
   };
 };
 

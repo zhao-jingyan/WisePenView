@@ -3,7 +3,6 @@ import { ResultState, Spin } from '@/components/Feedback';
 import EntryIcon from '@/components/Icons/EntryIcon';
 import { useDocumentService, useResourceService } from '@/domains';
 import type { OnlyOfficeEditorConfigResponse } from '@/domains/Document';
-import { RESOURCE_TYPE } from '@/domains/Resource';
 import {
   useWorkspaceLayoutConfig,
   type WorkspaceLayoutConfig,
@@ -86,7 +85,7 @@ function OfficeToolbarTitle({ resourceName, resourceType }: OfficeToolbarTitlePr
   return (
     <span className={styles.toolbarTitleText}>
       <span className={styles.toolbarTitleIcon} aria-hidden="true">
-        <EntryIcon entryType="resource" resourceType={resourceType ?? RESOURCE_TYPE.FILE} />
+        <EntryIcon entryType="resource" resourceType={resourceType} />
       </span>
       <span className={styles.toolbarTitleLabel}>{resourceName}</span>
     </span>
@@ -261,7 +260,7 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
     <OfficeLayoutConfig resourceName={resourceName} resourceType={resourceType}>
       <div className={styles.content}>
         <OfficeEditorHost
-          key={`${resourceId}-${data.editorConfig.sessionId ?? 'session'}`}
+          key={`${resourceId}-${data.editorConfig.sessionId}`}
           config={data.editorConfig.config}
           documentServerUrl={documentServerUrl}
           resourceId={resourceId}

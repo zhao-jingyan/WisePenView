@@ -2,7 +2,6 @@ import { ResultState, Spin } from '@/components/Feedback';
 import EntryIcon from '@/components/Icons/EntryIcon';
 import PdfViewer from '@/components/PdfViewer/index';
 import { useDocumentService, useResourceService } from '@/domains';
-import { RESOURCE_TYPE } from '@/domains/Resource';
 import { useWorkspaceLayoutConfig } from '@/layouts/Workspace/WorkspaceOutletContext';
 import { parseErrorMessage } from '@/utils/error';
 import { Button } from '@heroui/react';
@@ -20,7 +19,7 @@ function PdfToolbarTitle({ resourceName, resourceType }: PdfToolbarTitleProps) {
   return (
     <span className={styles.toolbarTitleText}>
       <span className={styles.toolbarTitleIcon} aria-hidden="true">
-        <EntryIcon entryType="resource" resourceType={resourceType ?? RESOURCE_TYPE.FILE} />
+        <EntryIcon entryType="resource" resourceType={resourceType} />
       </span>
       <span className={styles.toolbarTitleLabel}>{resourceName}</span>
     </span>

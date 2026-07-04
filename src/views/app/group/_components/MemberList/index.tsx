@@ -21,6 +21,17 @@ import styles from './style.module.less';
 const GROUP_MEMBER_TOKEN_LIMIT_MAX = 100_000_000;
 const EMPTY_MEMBERS: GroupMember[] = [];
 
+const getInitialQuotaDraft = (member: GroupMember): string => {
+  // 0 表示历史成员未设置配额，进入编辑时至少给出当前用量下限。
+  const min = Math.max(1, member.used);
+  return String(member.limit > 0 ? member.limit : min);
+};
+
+const resolveEditableRoleValue = (role: EnumKey<typeof ROLE>) => {
+  // 内联编辑草稿异常时回到普通成员，避免提交未知角色值。
+  return ROLE[role] || ROLE.MEMBER;
+};
+
 function MemberList({ groupDisplayConfig, pagination, groupId, inviteCode }: MemberListProps) {
   const groupService = useGroupService();
   const quotaService = useQuotaService();
@@ -63,8 +74,8 @@ function MemberList({ groupDisplayConfig, pagination, groupId, inviteCode }: Mem
     }
   );
 
-  const members = membersData?.list ?? EMPTY_MEMBERS;
-  const total = membersData?.total ?? 0;
+  const members = membersData?.list || EMPTY_MEMBERS;
+  const total = membersData?.total || 0;
 
   const clearSelectedMembers = () => {
     setSelectedRowKeys([]);
@@ -136,16 +147,14 @@ function MemberList({ groupDisplayConfig, pagination, groupId, inviteCode }: Mem
     setErrorRowId(null);
     setInlineErrorMessage(null);
     setInlineDraft(
-      kind === 'role'
-        ? { role: member.role }
-        : { quota: String(member.limit ?? Math.max(1, member.used ?? 0)) }
+      kind === 'role' ? { role: member.role } : { quota: getInitialQuotaDraft(member) }
     );
   };
 
   const validateQuotaDraft = (member: GroupMember): number | null => {
     const rawValue = inlineDraft.quota?.trim();
     const value = Number(rawValue);
-    const min = Math.max(1, member.used ?? 0);
+    const min = Math.max(1, member.used);
 
     if (!rawValue || !Number.isFinite(value) || !Number.isInteger(value) || value <= 0) {
       toast.warning('请输入有效的整数配额');
@@ -178,7 +187,7 @@ function MemberList({ groupDisplayConfig, pagination, groupId, inviteCode }: Mem
         await groupService.updateMemberRole({
           groupId,
           targetUserIds: [member.userId],
-          role: ROLE[nextRole] ?? ROLE.MEMBER,
+          role: resolveEditableRoleValue(nextRole),
         });
         toast.success('已修改成员权限');
       } else {

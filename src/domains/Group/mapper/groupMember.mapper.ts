@@ -10,6 +10,8 @@ export const mapGroupMemberRawResponse = (raw: GroupMemberRawResponse): GroupMem
   role: ROLE.getKey(raw.role) ?? 'MEMBER',
   joinTime: raw.joinTime,
   avatar: raw.memberInfo.avatar ?? '',
-  limit: raw.tokenLimit,
-  used: raw.tokenUsed,
+  // fallback：旧成员接口可能缺少配额字段，领域层统一补齐为 0。
+  limit: raw.tokenLimit ?? 0,
+  // fallback：旧成员接口可能缺少用量字段，领域层统一补齐为 0。
+  used: raw.tokenUsed ?? 0,
 });

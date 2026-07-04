@@ -15,6 +15,7 @@ import page from './style.module.less';
 
 const PAGE_SIZE = 8;
 const PAGINATION_SIBLING_COUNT = 1;
+const EMPTY_GROUPS: Group[] = [];
 
 type PaginationPageItem = number | 'ellipsis';
 
@@ -42,6 +43,11 @@ function buildPaginationItems(currentPage: number, totalPages: number): Paginati
   });
 }
 
+function resolveGroupRoleFilter(activeTab: string): FetchGroupListRequest['groupRoleFilter'] {
+  // Tab 状态异常时回到“我加入的”列表。
+  return GROUP_ROLE_FILTER_MAP[activeTab] || GROUP_ROLE_FILTER_MAP.joined;
+}
+
 function MyGroup() {
   const groupService = useGroupService();
   const navigate = useNavigate();
@@ -49,7 +55,7 @@ function MyGroup() {
   const [joinGroupModalOpen, setJoinGroupModalOpen] = useState(false);
   const [createGroupModalOpen, setCreateGroupModalOpen] = useState(false);
 
-  const groupRoleFilter = GROUP_ROLE_FILTER_MAP[activeTab] ?? GROUP_ROLE_FILTER_MAP.joined;
+  const groupRoleFilter = resolveGroupRoleFilter(activeTab);
 
   const {
     data: groupsData,
@@ -75,8 +81,8 @@ function MyGroup() {
       },
     }
   );
-  const groups: Group[] = groupsData?.list ?? [];
-  const total = groupsData?.total ?? 0;
+  const groups: Group[] = groupsData?.list || EMPTY_GROUPS;
+  const total = groupsData?.total || 0;
   const totalPages = Math.max(Math.ceil(total / size), 1);
   const pages = useMemo(() => buildPaginationItems(pageNum, totalPages), [pageNum, totalPages]);
   const start = total === 0 ? 0 : (pageNum - 1) * size + 1;

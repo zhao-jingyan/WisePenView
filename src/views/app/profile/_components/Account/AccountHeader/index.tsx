@@ -1,10 +1,16 @@
+import { Modal } from '@/components/Overlay';
 import UploadZone from '@/components/UploadZone';
 import { useImageService, useUserService } from '@/domains';
 import { assertImageProxyUploadLimit } from '@/domains/Image';
-import { getVerificationModeLabel, IDENTITY, USER_STATUS } from '@/domains/User';
+import {
+  getAccountAvatarFallbackText,
+  getAccountIdentityLabel,
+  getAccountNicknameText,
+  getAccountVerifiedText,
+  USER_STATUS,
+} from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
 import { IMAGE_UPLOAD_MAX_SIZE_LABEL } from '@/utils/image/uploadLimit';
-import { Modal } from '@/components/Overlay';
 import { Avatar, Button, toast, Tooltip } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Check, TriangleAlert, X } from 'lucide-react';
@@ -26,8 +32,8 @@ function AccountHeader({ user, onUserInfoReload }: AccountHeaderProps) {
         bizTag: 'user/avatar',
       });
       await userService.updateUserInfo({
-        nickname: currentUser.userInfo.nickname ?? undefined,
-        realName: currentUser.userInfo.realName ?? undefined,
+        nickname: currentUser.userInfo.nickname,
+        realName: currentUser.userInfo.realName,
         avatar: publicUrl,
       });
       await onUserInfoReload();
@@ -90,13 +96,10 @@ function AccountHeader({ user, onUserInfoReload }: AccountHeaderProps) {
     runUpdateAvatar(avatarFile, user);
   };
 
-  const nickname = user?.userInfo?.nickname ?? user?.userInfo?.username ?? '未设置昵称';
-  const avatarLetter = (user?.userInfo?.nickname ?? user?.userInfo?.username ?? '?')
-    .charAt(0)
-    .toUpperCase();
-  const identityLabel =
-    user?.userInfo?.identityType != null ? IDENTITY.getLabel(user.userInfo.identityType) : '';
-  const verifiedText = getVerificationModeLabel(user?.userInfo?.verificationMode ?? null);
+  const nickname = getAccountNicknameText(user);
+  const avatarLetter = getAccountAvatarFallbackText(user);
+  const identityLabel = getAccountIdentityLabel(user);
+  const verifiedText = getAccountVerifiedText(user);
 
   return (
     <>

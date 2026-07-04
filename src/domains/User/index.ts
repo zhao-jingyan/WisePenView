@@ -1,3 +1,13 @@
+export {
+  USER_ACCOUNT_EMPTY_TEXT,
+  buildAccountDisplayItems,
+  getAccountAvatarFallbackText,
+  getAccountIdentityLabel,
+  getAccountIdentityType,
+  getAccountNicknameText,
+  getAccountVerifiedText,
+} from './display/userAccountDisplay';
+export type { UserAccountDisplayItem } from './display/userAccountDisplay';
 export type {
   User,
   UserAccountInfo,

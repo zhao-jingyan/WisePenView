@@ -1,5 +1,5 @@
 import type { Group, GroupMemberList, GroupResConfig } from '@/domains/Group';
-import { GROUP_FILE_ORG_LOGIC, ROLE } from '@/domains/Group';
+import { GROUP_FILE_ORG_LOGIC, GROUP_TYPE, ROLE } from '@/domains/Group';
 import {
   normalizeResourceActions,
   resourceActionsToApiKeys,
@@ -23,15 +23,25 @@ import type {
 import type { FetchGroupListRequest, UpdateGroupResConfigRequest } from '../service/index.type';
 import { mapGroupMemberRawResponse } from './groupMember.mapper';
 
-type GroupRaw = { groupId?: string | number; createTime?: number | string | null } & Record<
-  string,
-  unknown
->;
+type GroupRaw = Partial<Group> & {
+  groupId?: string | number;
+  createTime?: number | string | null;
+};
+
+const mapRequiredTextFromApi = (value: unknown): string => String(value ?? '');
 
 const mapGroupFromApi = (raw: GroupRaw): Group =>
   ({
     ...raw,
     groupId: normalizeId(raw.groupId),
+    // fallback：旧小组接口可能缺少必填展示字段，mapper 统一补齐为空文本。
+    groupName: mapRequiredTextFromApi(raw.groupName),
+    groupDesc: mapRequiredTextFromApi(raw.groupDesc),
+    groupCoverUrl: mapRequiredTextFromApi(raw.groupCoverUrl),
+    // fallback：旧小组接口缺少 groupType 时按普通组处理。
+    groupType: typeof raw.groupType === 'number' ? raw.groupType : GROUP_TYPE.NORMAL,
+    // fallback：旧小组接口缺少 memberCount 时按 0 展示。
+    memberCount: Number(raw.memberCount) || 0,
     createTime: formatTimestampToDate(raw.createTime),
   }) as Group;
 

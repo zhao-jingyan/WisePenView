@@ -36,6 +36,31 @@ type GroupDetailTabItem = SegmentedTabItem<GroupDetailTabKey> & {
   children: ReactNode;
 };
 
+const GROUP_DETAIL_EMPTY_TEXT = '暂无';
+
+const resolveLoadedGroupId = (group: Group, routeGroupId: string | undefined): string => {
+  // 详情接口旧数据若缺 groupId，编辑弹窗沿用当前路由 id。
+  const entityGroupId = group.groupId.trim();
+  if (entityGroupId) return entityGroupId;
+  return routeGroupId?.trim() || '';
+};
+
+const getGroupDescriptionText = (description: string): string => description.trim() || '暂无描述';
+
+const getGroupCreateTimeText = (createTime: string | undefined): string =>
+  createTime || GROUP_DETAIL_EMPTY_TEXT;
+
+const getGroupOwnerName = (ownerInfo: Group['ownerInfo']): string =>
+  ownerInfo?.nickname.trim() || GROUP_DETAIL_EMPTY_TEXT;
+
+const resolveActiveDetailTabKey = (
+  detailTabKeys: GroupDetailTabKey[],
+  currentKey: GroupDetailTabKey
+): GroupDetailTabKey => {
+  if (detailTabKeys.length === 0 || detailTabKeys.includes(currentKey)) return currentKey;
+  return detailTabKeys[0];
+};
+
 function GroupDetail() {
   const groupService = useGroupService();
   const { id } = useParams<{ id: string }>();
@@ -58,8 +83,9 @@ function GroupDetail() {
     }
   );
 
-  // 解包 data, 默认 currentUserRole 为 MEMBER, resConfig 为 undefined
-  const { group, currentUserRole = 'MEMBER', resConfig } = data ?? {};
+  const group = data?.group;
+  const currentUserRole = data ? data.currentUserRole : 'MEMBER';
+  const resConfig = data?.resConfig;
 
   const groupDisplayConfig = useMemo(() => {
     if (!group) {
@@ -98,7 +124,7 @@ function GroupDetail() {
       return [];
     }
 
-    const gid = group.groupId || id || '';
+    const gid = resolveLoadedGroupId(group, id);
     const items: GroupDetailTabItem[] = [
       {
         key: 'files',
@@ -175,7 +201,7 @@ function GroupDetail() {
       label: '描述',
       children: (
         <div className={layout.tabPane}>
-          <p className={layout.sectionContent}>{group.groupDesc || '暂无描述'}</p>
+          <p className={layout.sectionContent}>{getGroupDescriptionText(group.groupDesc)}</p>
         </div>
       ),
     });
@@ -191,10 +217,7 @@ function GroupDetail() {
     }
   };
 
-  const activeDetailTabKey =
-    detailTabKeys.length > 0 && !detailTabKeys.includes(detailTabKey)
-      ? (detailTabKeys[0] ?? 'files')
-      : detailTabKey;
+  const activeDetailTabKey = resolveActiveDetailTabKey(detailTabKeys, detailTabKey);
   const activeTabContent = tabItems.find((item) => item.key === activeDetailTabKey)?.children;
 
   // 渲染 UI
@@ -211,8 +234,8 @@ function GroupDetail() {
   }
 
   const { groupName, ownerInfo, groupDesc: description, groupCoverUrl: cover, createTime } = group;
-  const groupId = group.groupId || id || '';
-  const ownerName = ownerInfo?.nickname?.trim() || '-';
+  const groupId = resolveLoadedGroupId(group, id);
+  const ownerName = getGroupOwnerName(ownerInfo);
 
   return (
     <div className={layout.pageContainer}>
@@ -225,7 +248,7 @@ function GroupDetail() {
               <UserCapsule name={ownerName} avatar={ownerInfo.avatar} />
             </div>
           )}
-          <span>创建日期：{createTime ?? '暂无'}</span>
+          <span>创建日期：{getGroupCreateTimeText(createTime)}</span>
         </div>
       </div>
 

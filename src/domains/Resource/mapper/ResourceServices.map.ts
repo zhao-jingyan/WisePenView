@@ -43,6 +43,12 @@ export function normalizeResourceItem<T extends Partial<ResourceItem> | null | u
 ): T {
   if (raw == null) return raw;
   const next: Partial<ResourceItem> = { ...raw };
+  const rawCurrentTags = raw.currentTags;
+  // fallback：历史接口与 mock 可能返回数组或省略 currentTags，领域层统一为对象。
+  next.currentTags =
+    rawCurrentTags && typeof rawCurrentTags === 'object' && !Array.isArray(rawCurrentTags)
+      ? rawCurrentTags
+      : {};
 
   const interactionInfo = (raw as unknown as { resourceInteractionInfo?: RawInteractionInfo })
     .resourceInteractionInfo;
@@ -124,10 +130,11 @@ const mapResourceItemFromApi = (
   const item = normalizeResourceItem(raw) as ResourceItem;
   const currentTagBind = resolveCurrentTagBind(item, context);
   const tagsFromBind = mapTagsToCurrentTags(currentTagBind?.tags);
+  // fallback：旧接口曾把 currentTags 返回为数组；领域层统一输出 tagId -> tagName 对象。
   const fallbackCurrentTags =
     item.currentTags && !Array.isArray(item.currentTags) ? item.currentTags : undefined;
-  const currentTags = tagsFromBind ?? fallbackCurrentTags;
-  const tagIds = Object.keys(currentTags ?? {});
+  const currentTags = tagsFromBind ?? fallbackCurrentTags ?? {};
+  const tagIds = Object.keys(currentTags);
   const mainTagId = currentTagBind?.primaryTagId ?? tagIds[0];
 
   return {

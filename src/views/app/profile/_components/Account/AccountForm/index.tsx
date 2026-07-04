@@ -7,7 +7,7 @@ import { Button, Form, Input, Label, ListBox, Select, TextField, toast } from '@
 import { useRequest } from 'ahooks';
 import { Pencil, X } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
-import { buildProfileFormValues } from './buildProfileFormValues';
+import { buildProfileFormValues, buildProfileUpdatePayload } from './buildProfileFormValues';
 import type { AccountFormProps } from './index.type';
 import { getProfileDisplayString } from './profileDisplay';
 import styles from './style.module.less';
@@ -58,48 +58,12 @@ function AccountForm({
 
   const { loading: saving, runAsync: runSave } = useRequest(
     async () => {
-      const rf = new Set(user?.readonlyFields ?? []);
-      const params: UpdateUserInfoRequest = {
-        nickname:
-          fieldConfig.nickname && !rf.has('nickname')
-            ? formValues.nickname
-            : (user?.userInfo?.nickname ?? undefined),
-        realName:
-          fieldConfig.realName && !rf.has('realName')
-            ? formValues.realName
-            : (user?.userInfo?.realName ?? undefined),
-        sex: fieldConfig.sex && !rf.has('sex') ? formValues.sex : user?.userProfile?.sex,
-        university:
-          fieldConfig.university && !rf.has('university')
-            ? (formValues.university ?? null)
-            : (user?.userProfile?.university ?? null),
-        college:
-          fieldConfig.college && !rf.has('college')
-            ? formValues.college
-            : (user?.userProfile?.college ?? undefined),
-        major:
-          fieldConfig.major && !rf.has('major')
-            ? formValues.major
-            : (user?.userProfile?.major ?? undefined),
-        className:
-          fieldConfig.className && !rf.has('className')
-            ? formValues.className
-            : (user?.userProfile?.className ?? undefined),
-        enrollmentYear:
-          fieldConfig.enrollmentYear && !rf.has('enrollmentYear')
-            ? formValues.enrollmentYear
-            : (user?.userProfile?.enrollmentYear ?? undefined),
-        degreeLevel:
-          fieldConfig.degreeLevel && !rf.has('degreeLevel')
-            ? formValues.degreeLevel
-            : typeof user?.userProfile?.degreeLevel === 'number'
-              ? user.userProfile.degreeLevel
-              : undefined,
-        academicTitle:
-          fieldConfig.academicTitle && !rf.has('academicTitle')
-            ? formValues.academicTitle
-            : (user?.userProfile?.academicTitle ?? undefined),
-      };
+      const params = buildProfileUpdatePayload({
+        user,
+        formValues,
+        fieldConfig,
+        readonlyFields: readonlyFieldSet,
+      });
       await userService.updateUserInfo(params);
       await onUserInfoReload();
     },

@@ -26,7 +26,7 @@ const buildFlatMap = (roots: TagTreeNode[]): Map<string, TagTreeNode> => {
   const map = new Map<string, TagTreeNode>();
   const walk = (node: TagTreeNode) => {
     map.set(node.tagId, node);
-    (node.children ?? []).forEach(walk);
+    node.children.forEach(walk);
   };
   roots.forEach(walk);
   return map;
@@ -35,12 +35,12 @@ const buildFlatMap = (roots: TagTreeNode[]): Map<string, TagTreeNode> => {
 const filterHiddenTags = (nodes: TagTreeNode[]): TagTreeNode[] => {
   const filtered: TagTreeNode[] = [];
   for (const node of nodes) {
-    if ((node.tagName ?? '').trim().startsWith(HIDDEN_TAG_PREFIX)) {
+    if (node.tagName.trim().startsWith(HIDDEN_TAG_PREFIX)) {
       continue;
     }
     filtered.push({
       ...node,
-      children: Array.isArray(node.children) ? filterHiddenTags(node.children) : undefined,
+      children: filterHiddenTags(node.children),
     });
   }
   return filtered;
@@ -162,7 +162,8 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
     const targetTag = params.tag;
     await getTagTree(targetTag.groupId);
     const tag = getTagById(targetTag.tagId, targetTag.groupId);
-    const tags = tag?.children ?? [];
+    // 缓存未命中时维持旧行为空目录；字段完整性由 mapper 负责。
+    const tags = tag ? tag.children : [];
     const filePage = params.filePage ?? 1;
     const filePageSize = params.filePageSize ?? 20;
     const listParams = {

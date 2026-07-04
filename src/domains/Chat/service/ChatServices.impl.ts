@@ -54,7 +54,7 @@ const fetchAllGroups = async (deps: ChatServiceDeps): Promise<Group[]> => {
   ]);
 
   const seenGroupIds = new Set<string>();
-  return [...(joinedData?.groups ?? []), ...(managedData?.groups ?? [])].filter((group) => {
+  return [...joinedData.groups, ...managedData.groups].filter((group) => {
     if (seenGroupIds.has(group.groupId)) return false;
     seenGroupIds.add(group.groupId);
     return true;
@@ -89,9 +89,9 @@ const fetchAllSkills = async (
   const [personalResult, ...groupResults] = results;
 
   return [
-    ...(personalResult?.list ?? []).map((item) => mapResourceItemToSkillSummary(item)),
+    ...personalResult.list.map((item) => mapResourceItemToSkillSummary(item)),
     ...groups.flatMap((group, i) =>
-      (groupResults[i]?.list ?? []).map((item) =>
+      groupResults[i].list.map((item) =>
         mapResourceItemToSkillSummary(item, { groupId: group.groupId, groupName: group.groupName })
       )
     ),
@@ -129,12 +129,12 @@ const fetchAllAgents = async (
   const results = await Promise.all(requests);
   const [personalList, ...groupBatches] = results;
 
-  const personalAgents = ((personalList as ResourceItem[]) ?? []).map((item) =>
+  const personalAgents = (personalList as ResourceItem[]).map((item) =>
     buildAgentFromResourceItem(item)
   );
 
   const groupAgents = (groupBatches as GroupResourceBatch[]).flatMap((batch) =>
-    (batch?.list ?? []).map((item) =>
+    batch.list.map((item) =>
       buildAgentFromResourceItem(item, {
         groupId: batch.group.groupId,
         groupName: batch.group.groupName,
@@ -268,10 +268,7 @@ const uploadAttachment = async ({
   formData.append('file', file);
   formData.append('save_to_library', String(Boolean(saveToLibrary)));
   const res = await ChatApi.uploadAttachment(formData);
-  return {
-    attachmentId: res.attachment_id,
-    filename: res.filename,
-  };
+  return ChatServicesMap.mapUploadAttachmentFromApi(res, file.name);
 };
 
 export const createChatServices = (deps?: ChatServiceDeps): IChatService => ({

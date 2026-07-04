@@ -16,6 +16,8 @@ import styles from './style.module.less';
 import { useTableDrive } from './useTableDrive';
 import { useTableDriveActions } from './useTableDriveActions';
 
+const RESOURCE_TYPE_FALLBACK_LABEL = '资源';
+
 const DRIVE_TABLE_COLUMNS: FolderTableColumn<DriveTableRow>[] = [
   {
     id: 'name',
@@ -39,6 +41,12 @@ const DRIVE_TABLE_COLUMNS: FolderTableColumn<DriveTableRow>[] = [
   },
 ];
 
+const getResourceTypeLabel = (resourceType: string | undefined): string => {
+  // 资源类型是可选展示字段；缺失时使用通用资源文案。
+  const normalizedType = resourceType?.trim();
+  return normalizedType || RESOURCE_TYPE_FALLBACK_LABEL;
+};
+
 function getTypeLabel(node: DriveNode): string {
   switch (node.type) {
     case 'root':
@@ -46,7 +54,7 @@ function getTypeLabel(node: DriveNode): string {
     case 'folder':
       return '文件夹';
     case 'resource':
-      return node.resourceType ?? '资源';
+      return getResourceTypeLabel(node.resourceType);
     case 'link':
       return '链接';
     case 'loading':

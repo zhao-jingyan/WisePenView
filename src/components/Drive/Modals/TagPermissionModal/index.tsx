@@ -1,5 +1,6 @@
 import DriveNav from '@/components/Drive/DriveNav';
 import { Empty, Spin } from '@/components/Feedback';
+import { Modal } from '@/components/Overlay';
 import SegmentedTabs from '@/components/SegmentedTabs';
 import { useDriveService, useGroupService, useTagService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
@@ -20,7 +21,6 @@ import {
 } from '@/domains/Tag';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
-import { Modal } from '@/components/Overlay';
 import { Button, Checkbox, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
@@ -284,13 +284,13 @@ const TagPermissionModal = ({
 
   const applyTagToForm = (tag: TagTreeNode) => {
     setPermissionForm({
-      taggedResourceAclGrantScope: tag.taggedResourceAclGrantScope ?? ACCESS_CONTROL_SCOPE.ALL,
+      taggedResourceAclGrantScope: tag.taggedResourceAclGrantScope,
       taggedResourceAclGrantSpecifiedUsers: filterSelectableUserIds(
         tag.taggedResourceAclGrantSpecifiedUsers,
         selectableMemberIdSet
       ),
       grantedActions: normalizeResourceActions(tag.grantedActions),
-      tagMountPermissionScope: tag.tagMountPermissionScope ?? ACCESS_CONTROL_SCOPE.ALL,
+      tagMountPermissionScope: tag.tagMountPermissionScope,
       tagMountSpecifiedUsers: filterSelectableUserIds(
         tag.tagMountSpecifiedUsers,
         selectableMemberIdSet
@@ -380,22 +380,19 @@ const TagPermissionModal = ({
   };
 
   const { loading: saving, run: runSavePermission } = useRequest(
-    async (values: TagPermissionFormValues) => {
+    async (values: Required<TagPermissionFormValues>) => {
       if (!selectedTag?.tagId) return;
       if (!groupId) throw createClientError(FRONTEND_CLIENT_ERROR.GROUP_ID_REQUIRED);
-      const taggedResourceAclGrantScope =
-        values.taggedResourceAclGrantScope ?? ACCESS_CONTROL_SCOPE.ALL;
-      const tagMountPermissionScope = values.tagMountPermissionScope ?? ACCESS_CONTROL_SCOPE.ALL;
       await tagService.updateTag({
         groupId,
         targetTagId: selectedTag.tagId,
-        taggedResourceAclGrantScope,
+        taggedResourceAclGrantScope: values.taggedResourceAclGrantScope,
         taggedResourceAclGrantSpecifiedUsers: filterSelectableUserIds(
           values.taggedResourceAclGrantSpecifiedUsers,
           selectableMemberIdSet
         ),
         grantedActions: normalizeResourceActions(values.grantedActions),
-        tagMountPermissionScope,
+        tagMountPermissionScope: values.tagMountPermissionScope,
         tagMountSpecifiedUsers: filterSelectableUserIds(
           values.tagMountSpecifiedUsers,
           selectableMemberIdSet

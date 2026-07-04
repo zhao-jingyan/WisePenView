@@ -70,11 +70,17 @@ const updateResourceTags = async (params: UpdateResourceTagsRequest): Promise<vo
 const uniqueNonEmptyIds = (ids: string[]): string[] =>
   Array.from(new Set(ids.map((id) => id.trim()).filter(Boolean)));
 
+const getCurrentTagIdsForExistingResource = (item: ResourceItem | undefined): string[] => {
+  // 未查到资源时按首次挂载处理；已查到的 ResourceItem 由 mapper 保证 currentTags 为稳定对象。
+  if (!item) return [];
+  return Object.keys(item.currentTags);
+};
+
 const resolveGroupMountTags = (
   item: ResourceItem | undefined,
   targetTagId: string
 ): { tagIds: string[]; primaryTagId?: string } => {
-  const currentTagIds = Object.keys(item?.currentTags ?? {});
+  const currentTagIds = getCurrentTagIdsForExistingResource(item);
   const primaryTagId = item?.mainTagId;
   if (primaryTagId) {
     return {
