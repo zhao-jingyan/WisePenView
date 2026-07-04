@@ -1,21 +1,11 @@
 import { DataTable, type DataTableColumn } from '@/components/Table';
 import type { AdminUser } from '@/domains/Admin';
-import { IDENTITY, USER_STATUS } from '@/domains/User/enum';
 import { Chip, ListBox, Select } from '@heroui/react';
 import { useCallback, useMemo, type ReactNode } from 'react';
 import type { AdminUserTableProps } from './index.type';
 import styles from './style.module.less';
 
-const EMPTY_TEXT = '-';
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
-
-const formatOptionalText = (value?: string): string => {
-  return value && value.trim() ? value : EMPTY_TEXT;
-};
-
-const getDisplayName = (user: AdminUser): string => {
-  return user.realName || user.nickname || user.username || EMPTY_TEXT;
-};
 
 function AdminUserTable({
   users,
@@ -32,7 +22,7 @@ function AdminUserTable({
         type="button"
         className={styles.cellButton}
         onClick={() => onRowClick(record.id)}
-        aria-label={`查看用户 ${getDisplayName(record)}`}
+        aria-label={`查看用户 ${record.displayName}`}
       >
         {children}
       </button>
@@ -51,9 +41,9 @@ function AdminUserTable({
           renderRowButton(
             record,
             <DataTable.MemberCell
-              name={getDisplayName(record)}
-              subline={formatOptionalText(record.nickname)}
-              avatarSrc={record.avatar}
+              name={record.displayName}
+              subline={record.nicknameText}
+              avatarSrc={record.avatarSrc}
             />
           ),
       },
@@ -62,20 +52,14 @@ function AdminUserTable({
         label: '用户名',
         width: 'md',
         renderCell: (record) =>
-          renderRowButton(
-            record,
-            <DataTable.TextCell>{formatOptionalText(record.username)}</DataTable.TextCell>
-          ),
+          renderRowButton(record, <DataTable.TextCell>{record.usernameText}</DataTable.TextCell>),
       },
       {
         id: 'campusNo',
         label: '学工号',
         width: 'md',
         renderCell: (record) =>
-          renderRowButton(
-            record,
-            <DataTable.TextCell>{formatOptionalText(record.campusNo)}</DataTable.TextCell>
-          ),
+          renderRowButton(record, <DataTable.TextCell>{record.campusNoText}</DataTable.TextCell>),
       },
       {
         id: 'identityType',
@@ -85,7 +69,7 @@ function AdminUserTable({
           renderRowButton(
             record,
             <Chip size="sm" variant="soft">
-              <Chip.Label>{IDENTITY.getLabel(record.identityType) || EMPTY_TEXT}</Chip.Label>
+              <Chip.Label>{record.identityTypeLabel}</Chip.Label>
             </Chip>
           ),
       },
@@ -103,7 +87,7 @@ function AdminUserTable({
           return renderRowButton(
             record,
             <Chip size="sm" variant="soft" className={statusClassName}>
-              <Chip.Label>{USER_STATUS.getLabel(record.status) || EMPTY_TEXT}</Chip.Label>
+              <Chip.Label>{record.statusLabel}</Chip.Label>
             </Chip>
           );
         },
@@ -113,20 +97,14 @@ function AdminUserTable({
         label: '邮箱',
         width: 'lg',
         renderCell: (record) =>
-          renderRowButton(
-            record,
-            <DataTable.TextCell>{formatOptionalText(record.email)}</DataTable.TextCell>
-          ),
+          renderRowButton(record, <DataTable.TextCell>{record.emailText}</DataTable.TextCell>),
       },
       {
         id: 'createTime',
         label: '创建时间',
         width: 'lg',
         renderCell: (record) =>
-          renderRowButton(
-            record,
-            <DataTable.TextCell>{formatOptionalText(record.createTime)}</DataTable.TextCell>
-          ),
+          renderRowButton(record, <DataTable.TextCell>{record.createTimeText}</DataTable.TextCell>),
       },
     ],
     [renderRowButton]

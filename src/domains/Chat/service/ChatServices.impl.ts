@@ -48,7 +48,7 @@ const fetchAllGroups = async (deps: ChatServiceDeps): Promise<Group[]> => {
     deps.groupService.fetchGroupList({ groupRoleFilter: 'MANAGED', page: 1, size: 100 }),
   ]);
 
-  return mergeUniqueGroups(joinedData.groups, managedData.groups);
+  return mergeUniqueGroups(joinedData.list, managedData.list);
 };
 
 const fetchGroupResourceBatch = async (

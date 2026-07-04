@@ -7,10 +7,15 @@ export interface GroupMember {
   userId: string;
   realname: string;
   nickname: string;
+  displayName: string;
+  realNameSubline?: string;
   /** 组内角色（由接口数字角色码经 ROLE.getKey 映射） */
   role: EnumKey<typeof ROLE>;
+  roleLabel: string;
   joinTime: string;
+  joinTimeText: string;
   avatar: string;
+  avatarSrc?: string;
   /** mapper 已将历史空配额归一化为 0，成员列表组件直接消费数字。 */
   limit: number;
   /** mapper 已将历史空用量归一化为 0，成员列表组件直接消费数字。 */
@@ -19,7 +24,7 @@ export interface GroupMember {
 
 /** 成员列表分页（领域层，由 GET /group/member/list 的 data 映射） */
 export interface GroupMemberList {
-  members: GroupMember[];
+  list: GroupMember[];
   total: number;
 }
 
@@ -46,12 +51,15 @@ export interface Group {
   groupId: string;
   groupName: string;
   groupDesc: string;
+  groupDescText: string;
   groupCoverUrl: string;
   groupType: number;
   ownerId?: string;
   ownerInfo?: GroupOwnerInfo;
+  ownerName: string;
   memberCount: number;
   createTime?: string;
+  createTimeText: string;
   inviteCode?: string;
   tokenUsed?: number;
   tokenBalance?: number;

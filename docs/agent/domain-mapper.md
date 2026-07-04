@@ -34,6 +34,7 @@ Mapper 不应处理：
 
 - fallback 必须有明确原因，通常是旧接口兼容、后端过渡字段或历史数据。
 - fallback 逻辑集中写在 mapper 或明确命名的领域 normalizer，不要散落在 JSX、service、store 或组件内部。
+- service 返回给 view/component 前应已经完成字段级兜底和展示文案归一化；view/component 只处理请求未返回、loading、empty 等 UI 状态。
 - 对非显而易见的 fallback 写中文注释，说明兼容哪个后端形态。
 - 不要为了掩盖边界不清楚而写大量 `?.`、默认值或类型守卫。边界不清楚时先问。
 - 对必填字段不要静默补空字符串、空数组或 `0`；应明确输出 nullable 类型、抛错，或推动接口契约修正。
@@ -78,6 +79,7 @@ src/domains/<Domain>/mapper/<entity>.mapper.ts
 - [ ] fallback 有明确业务或兼容原因。
 - [ ] ID、时间、枚举在 mapper 中归一化。
 - [ ] 组件没有直接消费后端 raw DTO。
+- [ ] 组件没有对 service 返回字段写 `|| EMPTY_*`、`?? []` 或调用展示兜底函数。
 - [ ] service 中没有堆叠大量字段兼容逻辑。
 - [ ] mapper 输出类型清楚标记必填、optional 与 nullable。
 - [ ] 未新增 `any`。

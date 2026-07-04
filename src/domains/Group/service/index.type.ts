@@ -3,8 +3,9 @@ import type { TagResourceAction } from '@/domains/Tag';
 
 /** GroupService 接口：供依赖注入使用 */
 export interface IGroupService {
-  fetchGroupList(params: FetchGroupListRequest): Promise<{ groups: Group[]; total: number }>;
+  fetchGroupList(params: FetchGroupListRequest): Promise<FetchGroupListResponse>;
   fetchGroupInfo(groupId: string): Promise<Group>;
+  fetchGroupDetail(groupId: string): Promise<GroupDetailResponse>;
   getGroupWalletInfo(params: GetGroupWalletInfoRequest): Promise<number>;
   /** GET /resource/groupConfig/getConfig；fileOrgLogic 由 mapper 统一收敛为 TAG */
   fetchGroupResConfig(groupId: string): Promise<GroupResConfig>;
@@ -26,6 +27,12 @@ export interface IGroupService {
 export interface FetchGroupListResponse {
   total: number;
   list: Group[];
+}
+
+export interface GroupDetailResponse {
+  group: Group;
+  currentUserRole: 'OWNER' | 'ADMIN' | 'MEMBER';
+  resConfig: GroupResConfig;
 }
 
 export interface GetGroupWalletInfoRequest {

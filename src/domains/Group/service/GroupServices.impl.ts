@@ -10,7 +10,9 @@ import type {
   DeleteGroupRequest,
   EditGroupRequest,
   FetchGroupListRequest,
+  FetchGroupListResponse,
   GetGroupWalletInfoRequest,
+  GroupDetailResponse,
   IGroupService,
   JoinGroupRequest,
   KickMembersRequest,
@@ -19,23 +21,41 @@ import type {
   UpdateMemberRoleRequest,
 } from './index.type';
 
-const fetchGroupList = async (
-  params: FetchGroupListRequest
-): Promise<{ groups: Group[]; total: number }> => {
+const fetchGroupList = async (params: FetchGroupListRequest): Promise<FetchGroupListResponse> => {
   const query = GroupServicesMap.mapFetchGroupListRequest(params);
   const payload = await GroupApi.list(query);
   return GroupServicesMap.mapFetchGroupListFromApi(payload);
 };
 
-const fetchGroupInfo = async (groupId: string): Promise<Group> => {
-  const myRole = await fetchMyRoleInGroup(groupId);
+const fetchGroupInfoByRole = async (
+  groupId: string,
+  role: EnumKey<typeof ROLE>
+): Promise<Group> => {
   const query = GroupServicesMap.mapFetchGroupInfoRequest(groupId);
   const data =
-    myRole === 'MEMBER'
+    role === 'MEMBER'
       ? await GroupApi.getGroupBaseInfo(query)
       : await GroupApi.getGroupDetailInfo(query);
   if (!data) throw createClientError(FRONTEND_CLIENT_ERROR.GROUP_INFO_FETCH_FAILED);
-  return GroupServicesMap.mapFetchGroupInfoFromApi(data);
+  return GroupServicesMap.mapFetchGroupInfoFromApi(data, groupId);
+};
+
+const fetchGroupInfo = async (groupId: string): Promise<Group> => {
+  const myRole = await fetchMyRoleInGroup(groupId);
+  return fetchGroupInfoByRole(groupId, myRole);
+};
+
+const fetchGroupDetail = async (groupId: string): Promise<GroupDetailResponse> => {
+  const currentUserRole = await fetchMyRoleInGroup(groupId);
+  const [group, resConfig] = await Promise.all([
+    fetchGroupInfoByRole(groupId, currentUserRole),
+    fetchGroupResConfig(groupId),
+  ]);
+  return GroupServicesMap.mapFetchGroupDetailFromService({
+    group,
+    currentUserRole,
+    resConfig,
+  });
 };
 
 const getGroupWalletInfo = async (params: GetGroupWalletInfoRequest): Promise<number> => {
@@ -96,9 +116,6 @@ const fetchGroupMembers = async (
 ): Promise<GroupMemberList> => {
   const query = GroupServicesMap.mapFetchGroupMembersRequest(groupId, page, size);
   const data = await GroupMemberApi.list(query);
-  if (!data) {
-    return { members: [], total: 0 };
-  }
   return GroupServicesMap.mapFetchGroupMembersFromApi(data);
 };
 
@@ -131,6 +148,7 @@ const kickMembers = async (params: KickMembersRequest) => {
 export const createGroupServices = (): IGroupService => ({
   fetchGroupList,
   fetchGroupInfo,
+  fetchGroupDetail,
   getGroupWalletInfo,
   fetchGroupResConfig,
   updateGroupResConfig,

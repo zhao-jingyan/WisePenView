@@ -56,17 +56,17 @@ const isAclUserListMode = (mode?: AccessControlScope) =>
 const isMountUserListMode = (mode?: AccessControlScope) =>
   mode === ACCESS_CONTROL_SCOPE.WHITELIST || mode === ACCESS_CONTROL_SCOPE.BLACKLIST;
 
-const getSelectableMembers = (members?: GroupMember[]) =>
-  (members ?? []).filter((m) => m.role !== 'ADMIN' && m.role !== 'OWNER');
+const getSelectableMembers = (members: GroupMember[]) =>
+  members.filter((m) => m.role !== 'ADMIN' && m.role !== 'OWNER');
 
 const buildSelectableMemberIdSet = (members: GroupMember[]) =>
   new Set(members.map((m) => m.userId));
 
 const buildMemberOptions = (members: GroupMember[]) =>
   members.map((member) => {
-    const nickname = member.nickname?.trim();
-    const realname = member.realname?.trim();
-    const label = nickname && realname ? `${nickname} (${realname})` : nickname || realname || '-';
+    const label = member.realNameSubline
+      ? `${member.displayName} (${member.realNameSubline})`
+      : member.displayName;
     return { label, value: member.userId };
   });
 
@@ -205,7 +205,7 @@ const TagPermissionModal = ({
   );
 
   const {
-    data: members,
+    data: members = [],
     loading: membersLoading,
     run: runFetchMembers,
   } = useRequest(
@@ -215,7 +215,7 @@ const TagPermissionModal = ({
       let page = 1;
       let total = 0;
       do {
-        const { members: pageMembers, total: nextTotal } = await groupService.fetchGroupMembers(
+        const { list: pageMembers, total: nextTotal } = await groupService.fetchGroupMembers(
           groupId,
           page,
           MEMBER_PAGE_SIZE

@@ -10,8 +10,8 @@ import styles from './style.module.less';
 type QuotaRecord = UserGroupQuota & { key: string | number };
 
 const DEFAULT_PAGE_SIZE = 10;
+const REQUEST_PENDING_QUOTAS: UserGroupQuota[] = [];
 const SORTABLE_COLUMNS = new Set(['groupName', 'quotaUsed']);
-const EMPTY_QUOTAS: UserGroupQuota[] = [];
 
 function buildPages(totalPages: number) {
   return Array.from({ length: totalPages }, (_, index) => index + 1);
@@ -25,13 +25,12 @@ function QuotaByGroup({ pagination }: QuotaByGroupProps) {
     pagination: {
       current: currentPage = 1,
       pageSize = pagination?.defaultPageSize ?? DEFAULT_PAGE_SIZE,
+      total,
       onChange,
     },
   } = usePagination(
-    async ({ current, pageSize: nextPageSize }) => {
-      const { quotas, total } = await quotaService.fetchUserGroupQuotas(current, nextPageSize);
-      return { list: quotas, total };
-    },
+    async ({ current, pageSize: nextPageSize }) =>
+      quotaService.fetchUserGroupQuotas(current, nextPageSize),
     {
       defaultCurrent: 1,
       defaultPageSize: pagination?.defaultPageSize ?? DEFAULT_PAGE_SIZE,
@@ -41,8 +40,7 @@ function QuotaByGroup({ pagination }: QuotaByGroupProps) {
     }
   );
 
-  const quotas: UserGroupQuota[] = useMemo(() => quotaData?.list || EMPTY_QUOTAS, [quotaData]);
-  const total = quotaData?.total || 0;
+  const quotas = quotaData ? quotaData.list : REQUEST_PENDING_QUOTAS;
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);
   const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, total);
@@ -69,7 +67,7 @@ function QuotaByGroup({ pagination }: QuotaByGroupProps) {
         return (a.quotaUsed - b.quotaUsed) * direction;
       }
 
-      return (a.groupName || '').localeCompare(b.groupName || '', 'zh-CN') * direction;
+      return a.groupName.localeCompare(b.groupName, 'zh-CN') * direction;
     });
   }, [dataSource, sortDescriptor]);
 

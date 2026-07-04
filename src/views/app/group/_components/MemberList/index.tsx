@@ -19,7 +19,7 @@ import {
 import styles from './style.module.less';
 
 const GROUP_MEMBER_TOKEN_LIMIT_MAX = 100_000_000;
-const EMPTY_MEMBERS: GroupMember[] = [];
+const REQUEST_PENDING_MEMBERS: GroupMember[] = [];
 
 const getInitialQuotaDraft = (member: GroupMember): string => {
   // 0 表示历史成员未设置配额，进入编辑时至少给出当前用量下限。
@@ -56,14 +56,8 @@ function MemberList({ groupDisplayConfig, pagination, groupId, inviteCode }: Mem
     refresh,
     pagination: { current: currentPage = 1, pageSize = defaultPageSize, onChange: onPageChange },
   } = usePagination(
-    async ({ current, pageSize: nextPageSize }) => {
-      const { members, total } = await groupService.fetchGroupMembers(
-        groupId,
-        current,
-        nextPageSize
-      );
-      return { list: members, total };
-    },
+    ({ current, pageSize: nextPageSize }) =>
+      groupService.fetchGroupMembers(groupId, current, nextPageSize),
     {
       defaultCurrent: 1,
       defaultPageSize,
@@ -74,8 +68,8 @@ function MemberList({ groupDisplayConfig, pagination, groupId, inviteCode }: Mem
     }
   );
 
-  const members = membersData?.list || EMPTY_MEMBERS;
-  const total = membersData?.total || 0;
+  const members = membersData ? membersData.list : REQUEST_PENDING_MEMBERS;
+  const total = membersData ? membersData.total : 0;
 
   const clearSelectedMembers = () => {
     setSelectedRowKeys([]);

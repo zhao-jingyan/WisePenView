@@ -15,7 +15,7 @@ import page from './style.module.less';
 
 const PAGE_SIZE = 8;
 const PAGINATION_SIBLING_COUNT = 1;
-const EMPTY_GROUPS: Group[] = [];
+const REQUEST_PENDING_GROUPS: Group[] = [];
 
 type PaginationPageItem = number | 'ellipsis';
 
@@ -61,16 +61,15 @@ function MyGroup() {
     data: groupsData,
     loading,
     refresh: refreshGroups,
-    pagination: { current: pageNum, pageSize: size, onChange: onPageChange },
+    pagination: { current: pageNum, pageSize: size, total, onChange: onPageChange },
   } = usePagination(
-    async ({ current, pageSize }) => {
+    ({ current, pageSize }) => {
       const params: FetchGroupListRequest = {
         groupRoleFilter: groupRoleFilter,
         page: current,
         size: pageSize,
       };
-      const { groups, total } = await groupService.fetchGroupList(params);
-      return { list: groups, total };
+      return groupService.fetchGroupList(params);
     },
     {
       defaultCurrent: 1,
@@ -81,8 +80,7 @@ function MyGroup() {
       },
     }
   );
-  const groups: Group[] = groupsData?.list || EMPTY_GROUPS;
-  const total = groupsData?.total || 0;
+  const groups = groupsData ? groupsData.list : REQUEST_PENDING_GROUPS;
   const totalPages = Math.max(Math.ceil(total / size), 1);
   const pages = useMemo(() => buildPaginationItems(pageNum, totalPages), [pageNum, totalPages]);
   const start = total === 0 ? 0 : (pageNum - 1) * size + 1;

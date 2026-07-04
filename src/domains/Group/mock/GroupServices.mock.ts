@@ -7,6 +7,8 @@ import type {
   IGroupService,
 } from '@/domains/Group';
 import { GROUP_FILE_ORG_LOGIC } from '@/domains/Group';
+import { GroupServicesMap } from '@/domains/Group/mapper/GroupServices.map';
+import { mapGroupMemberEntityDisplay } from '@/domains/Group/mapper/groupMember.mapper';
 import { TAG_RESOURCE_ACTION } from '@/domains/Tag';
 import mockdata from './mockdata.json';
 
@@ -17,14 +19,26 @@ const groupDetail = mockdata.groupDetail as Group;
 const members = mockdata.members as GroupMember[];
 const myRole = mockdata.myRole as 'OWNER' | 'ADMIN' | 'MEMBER';
 
-const fetchGroupList = async (): Promise<{ groups: Group[]; total: number }> => {
+const fetchGroupList = async (): Promise<{ list: Group[]; total: number }> => {
   await delay(200);
-  return { groups, total: groups.length };
+  return {
+    list: groups.map((group) => GroupServicesMap.mapFetchGroupInfoFromApi(group, group.groupId)),
+    total: groups.length,
+  };
 };
 
 const fetchGroupInfo = async (_groupId: string): Promise<Group> => {
   await delay(200);
-  return groupDetail;
+  return GroupServicesMap.mapFetchGroupInfoFromApi(groupDetail, groupDetail.groupId);
+};
+
+const fetchGroupDetail = async (groupId: string) => {
+  await delay(200);
+  return {
+    group: GroupServicesMap.mapFetchGroupInfoFromApi(groupDetail, groupId),
+    currentUserRole: myRole,
+    resConfig: await fetchGroupResConfig(groupId),
+  };
 };
 
 const getGroupWalletInfo = async (_params: GetGroupWalletInfoRequest): Promise<number> => {
@@ -70,7 +84,10 @@ const fetchGroupMembers = async (
   await delay(200);
   const start = Math.max(0, (page - 1) * size);
   const end = start + size;
-  return { members: members.slice(start, end), total: members.length };
+  return {
+    list: members.slice(start, end).map(mapGroupMemberEntityDisplay),
+    total: members.length,
+  };
 };
 
 const fetchMyRoleInGroup = async (_groupId: string): Promise<'OWNER' | 'ADMIN' | 'MEMBER'> => {
@@ -97,6 +114,7 @@ const kickMembers = async (): Promise<void> => {
 export const GroupServicesMock: IGroupService = {
   fetchGroupList,
   fetchGroupInfo,
+  fetchGroupDetail,
   getGroupWalletInfo,
   fetchGroupResConfig,
   updateGroupResConfig,

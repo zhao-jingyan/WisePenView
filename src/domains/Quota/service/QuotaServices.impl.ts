@@ -1,13 +1,17 @@
 import { GroupMemberApi } from '@/domains/Group/apis/GroupApi';
-import type { GroupQuotaInfo, UserGroupQuota } from '@/domains/Wallet';
+import type { GroupQuotaInfo } from '@/domains/Wallet';
 import { QuotaServicesMap } from '../mapper/QuotaServices.map';
-import type { IQuotaService, SetGroupQuotaRequest } from './index.type';
+import type {
+  FetchUserGroupQuotasResponse,
+  IQuotaService,
+  SetGroupQuotaRequest,
+} from './index.type';
 
 /** GET /group/member/getAllMyGroupTokenInfo → PageResult<GroupMemberTokenDetailResponse> */
 const fetchUserGroupQuotas = async (
   page: number,
   pageSize: number
-): Promise<{ quotas: UserGroupQuota[]; total: number }> => {
+): Promise<FetchUserGroupQuotasResponse> => {
   const data = await GroupMemberApi.getAllMyGroupTokenInfo({
     page,
     size: pageSize,

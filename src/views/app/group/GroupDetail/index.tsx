@@ -8,7 +8,7 @@ import type { SegmentedTabItem } from '@/components/SegmentedTabs';
 import SegmentedTabs from '@/components/SegmentedTabs';
 import UserCapsule from '@/components/UserCapsule';
 import { useGroupService } from '@/domains';
-import type { Group, GroupResConfig } from '@/domains/Group';
+import type { GroupDetailResponse } from '@/domains/Group';
 import { WALLET_TARGET_TYPE } from '@/domains/Wallet';
 import ComputeWallet from '@/views/app/_common/Wallet/ComputeWallet';
 import type { ComputeWalletRef } from '@/views/app/_common/Wallet/ComputeWallet/index.type';
@@ -24,34 +24,11 @@ import OwnerGroupTokenTransfer from '../_components/OwnerGroupTokenTransfer';
 import layout from '../style.module.less';
 import page from './style.module.less';
 
-type GroupDetailLoaded = {
-  group: Group;
-  currentUserRole: 'OWNER' | 'ADMIN' | 'MEMBER';
-  resConfig: GroupResConfig;
-};
-
 type GroupDetailTabKey = 'files' | 'members' | 'wallet' | 'token-transfer' | 'description';
 
 type GroupDetailTabItem = SegmentedTabItem<GroupDetailTabKey> & {
   children: ReactNode;
 };
-
-const GROUP_DETAIL_EMPTY_TEXT = '暂无';
-
-const resolveLoadedGroupId = (group: Group, routeGroupId: string | undefined): string => {
-  // 详情接口旧数据若缺 groupId，编辑弹窗沿用当前路由 id。
-  const entityGroupId = group.groupId.trim();
-  if (entityGroupId) return entityGroupId;
-  return routeGroupId?.trim() || '';
-};
-
-const getGroupDescriptionText = (description: string): string => description.trim() || '暂无描述';
-
-const getGroupCreateTimeText = (createTime: string | undefined): string =>
-  createTime || GROUP_DETAIL_EMPTY_TEXT;
-
-const getGroupOwnerName = (ownerInfo: Group['ownerInfo']): string =>
-  ownerInfo?.nickname.trim() || GROUP_DETAIL_EMPTY_TEXT;
 
 const resolveActiveDetailTabKey = (
   detailTabKeys: GroupDetailTabKey[],
@@ -66,14 +43,7 @@ function GroupDetail() {
   const { id } = useParams<{ id: string }>();
 
   const { loading, data, refresh } = useRequest(
-    async (): Promise<GroupDetailLoaded> => {
-      const [groupData, role, cfg] = await Promise.all([
-        groupService.fetchGroupInfo(id!),
-        groupService.fetchMyRoleInGroup(id!),
-        groupService.fetchGroupResConfig(id!),
-      ]);
-      return { group: groupData, currentUserRole: role, resConfig: cfg };
-    },
+    async (): Promise<GroupDetailResponse> => groupService.fetchGroupDetail(id!),
     {
       refreshDeps: [id],
       ready: Boolean(id),
@@ -83,16 +53,12 @@ function GroupDetail() {
     }
   );
 
-  const group = data?.group;
-  const currentUserRole = data ? data.currentUserRole : 'MEMBER';
-  const resConfig = data?.resConfig;
-
   const groupDisplayConfig = useMemo(() => {
-    if (!group) {
+    if (!data) {
       return null;
     }
-    return getGroupDisplayConfig(group.groupType, currentUserRole);
-  }, [group, currentUserRole]);
+    return getGroupDisplayConfig(data.group.groupType, data.currentUserRole);
+  }, [data]);
 
   /** 仅关闭弹窗；解散/退出后会 navigate 离开本页，不应再拉详情（否则多一次失败请求） */
   const handleModalCloseOnly = () => {
@@ -120,11 +86,12 @@ function GroupDetail() {
    * group/groupDisplayConfig 为空时返回空数组（加载中或无效态不会渲染到 Tab）。
    */
   const tabItems = useMemo<GroupDetailTabItem[]>(() => {
-    if (!group || !resConfig || !groupDisplayConfig) {
+    if (!data || !groupDisplayConfig) {
       return [];
     }
 
-    const gid = resolveLoadedGroupId(group, id);
+    const { group, resConfig } = data;
+    const gid = group.groupId;
     const items: GroupDetailTabItem[] = [
       {
         key: 'files',
@@ -201,13 +168,13 @@ function GroupDetail() {
       label: '描述',
       children: (
         <div className={layout.tabPane}>
-          <p className={layout.sectionContent}>{getGroupDescriptionText(group.groupDesc)}</p>
+          <p className={layout.sectionContent}>{group.groupDescText}</p>
         </div>
       ),
     });
 
     return items;
-  }, [group, id, groupDisplayConfig, resConfig]);
+  }, [data, groupDisplayConfig]);
 
   const detailTabKeys = useMemo(() => tabItems.map((item) => item.key), [tabItems]);
 
@@ -229,13 +196,13 @@ function GroupDetail() {
     );
   }
 
-  if (!group) {
+  if (!data) {
     return <div className={layout.pageContainer}>小组不存在</div>;
   }
 
-  const { groupName, ownerInfo, groupDesc: description, groupCoverUrl: cover, createTime } = group;
-  const groupId = resolveLoadedGroupId(group, id);
-  const ownerName = getGroupOwnerName(ownerInfo);
+  const { group, currentUserRole } = data;
+  const { groupName, ownerInfo, groupDesc: description, groupCoverUrl: cover } = group;
+  const groupId = group.groupId;
 
   return (
     <div className={layout.pageContainer}>
@@ -245,10 +212,10 @@ function GroupDetail() {
           {ownerInfo && (
             <div className={layout.headerMetaItem}>
               <span>创建者：</span>
-              <UserCapsule name={ownerName} avatar={ownerInfo.avatar} />
+              <UserCapsule name={group.ownerName} avatar={ownerInfo.avatar} />
             </div>
           )}
-          <span>创建日期：{getGroupCreateTimeText(createTime)}</span>
+          <span>创建日期：{group.createTimeText}</span>
         </div>
       </div>
 

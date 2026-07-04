@@ -75,6 +75,7 @@ Domain service 的业务逻辑显式优先：
 - `Promise.all` 只用于明确互不依赖的并发请求；每个结果应有清晰命名，不构造混合数组后再用 `as` 强转。
 - service 中避免隐式对象展开掩盖请求字段来源；业务 payload 优先显式列出字段，或交给 mapper/helper 构造。
 - mapper 仍承担 DTO 兼容、fallback、字段归一化，可以保留必要的 TypeScript 表达式；service 消费稳定 entity。
+- service 返回给 view/component 的分页、详情和列表数据应已通过 mapper 归一化，调用侧不需要再补 `list`、`total` 或展示文案默认值。
 
 ## 四、错误处理
 
@@ -87,6 +88,7 @@ Domain service 的业务逻辑显式优先：
 
 - Service 默认不写字段保护型 fallback，例如 `data.foo ?? data.bar ?? ''`。
 - API response 字段别名、历史兼容、空值归一化应放到 mapper。
+- service 不向组件透传需要二次兜底的半成品数据；若组件需要直接展示的字段，应在 mapper/entity 中补齐。
 - Service 可以保留清晰的请求参数默认值，例如分页默认页码，但优先通过 mapper 或具名 helper 表达。
 - 必填字段缺失时，service 应抛出业务错误或推动 mapper/entity 调整，不静默补空值。
 - 清理或新增 fallback 前，先阅读 `docs/agent/fallback.md`。
@@ -135,5 +137,6 @@ src/domains/<Domain>/
 - [ ] 自解释代码没有冗余注释。
 - [ ] 字段转换交给 mapper。
 - [ ] 字段 fallback 没有散落在 service。
+- [ ] 返回给组件的数据结构已经可直接消费，组件不需要再兜底领域字段。
 - [ ] 错误向上抛出。
 - [ ] 未新增 `any`。

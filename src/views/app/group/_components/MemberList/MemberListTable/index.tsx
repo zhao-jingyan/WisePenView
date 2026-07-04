@@ -6,8 +6,6 @@ import {
   type ManageTableColumn,
 } from '@/components/Table';
 import type { GroupMember } from '@/domains/Group';
-import { ROLE } from '@/domains/Group';
-import { formatTimestampToDate } from '@/utils/format/formatTime';
 import { Input, Label, ListBox, Select, TextField } from '@heroui/react';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
@@ -23,23 +21,7 @@ type MemberRecord = GroupMember & { key: string };
 type ReadonlyColumn = DataTableColumn<MemberRecord>;
 type EditableColumn = ManageTableColumn<MemberRecord>;
 
-const EMPTY_TEXT = '-';
 const GROUP_MEMBER_TOKEN_LIMIT_MAX = 100_000_000;
-
-function getDisplayName(member: GroupMember): string {
-  return member.nickname?.trim() || member.realname?.trim() || '?';
-}
-
-function getMemberSubline(member: GroupMember, showRealName: boolean): string | undefined {
-  if (!showRealName) {
-    return undefined;
-  }
-  const realname = member.realname?.trim();
-  if (!realname || realname === getDisplayName(member)) {
-    return undefined;
-  }
-  return realname;
-}
 
 function getRoleClassName(role: GroupMember['role']): string {
   switch (role) {
@@ -51,11 +33,6 @@ function getRoleClassName(role: GroupMember['role']): string {
     default:
       return styles.roleMember;
   }
-}
-
-function getRoleDisplayLabel(role: GroupMember['role']): string {
-  // 角色枚举未来扩展时，表格先展示原 key，避免空白。
-  return ROLE.keyLabels[role] || role;
 }
 
 function canEditRole(member: GroupMember, props: MemberListTableProps): boolean {
@@ -120,10 +97,10 @@ function buildPageSizeControl(
   );
 }
 
-function renderRole(role: GroupMember['role']) {
+function renderRole(member: GroupMember) {
   return (
-    <span className={`${styles.roleBadge} ${getRoleClassName(role)}`}>
-      {getRoleDisplayLabel(role)}
+    <span className={`${styles.roleBadge} ${getRoleClassName(member.role)}`}>
+      {member.roleLabel}
     </span>
   );
 }
@@ -215,9 +192,9 @@ function buildReadonlyColumns(props: MemberListTableProps): ReadonlyColumn[] {
       isRowHeader: true,
       renderCell: (member) => (
         <DataTable.MemberCell
-          name={getDisplayName(member)}
-          subline={getMemberSubline(member, props.groupDisplayConfig.showRealName)}
-          avatarSrc={member.avatar?.trim() || undefined}
+          name={member.displayName}
+          subline={props.groupDisplayConfig.showRealName ? member.realNameSubline : undefined}
+          avatarSrc={member.avatarSrc}
         />
       ),
     },
@@ -229,18 +206,14 @@ function buildReadonlyColumns(props: MemberListTableProps): ReadonlyColumn[] {
       label: '角色',
       width: 'sm',
       align: 'center',
-      renderCell: (member) => renderRole(member.role),
+      renderCell: renderRole,
     },
     {
       id: 'joinTime',
       label: '加入时间',
       width: 'md',
       align: 'start',
-      renderCell: (member) => (
-        <DataTable.TextCell>
-          {formatTimestampToDate(member.joinTime) || EMPTY_TEXT}
-        </DataTable.TextCell>
-      ),
+      renderCell: (member) => <DataTable.TextCell>{member.joinTimeText}</DataTable.TextCell>,
     }
   );
 

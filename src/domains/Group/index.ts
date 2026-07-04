@@ -22,6 +22,7 @@ export type {
   FetchGroupListRequest,
   FetchGroupListResponse,
   GetGroupWalletInfoRequest,
+  GroupDetailResponse,
   GroupMemberBaseInfo,
   GroupMemberRawResponse,
   IGroupService,

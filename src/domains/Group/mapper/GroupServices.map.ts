@@ -24,6 +24,8 @@ import type {
 import type {
   CreateGroupRequest,
   FetchGroupListRequest,
+  FetchGroupListResponse,
+  GroupDetailResponse,
   UpdateGroupResConfigRequest,
 } from '../service/index.type';
 import { mapGroupMemberRawResponse } from './groupMember.mapper';
@@ -35,18 +37,34 @@ type GroupRaw = Partial<Group> & {
 
 const mapRequiredTextFromApi = (value: unknown): string => String(value ?? '');
 
-const mapGroupFromApi = (raw: GroupRaw): Group => {
+const EMPTY_TEXT = '暂无';
+const EMPTY_DESCRIPTION_TEXT = '暂无描述';
+
+const mapGroupDescriptionText = (description: string): string =>
+  description.trim() || EMPTY_DESCRIPTION_TEXT;
+
+const mapGroupOwnerName = (ownerInfo: Group['ownerInfo']): string =>
+  ownerInfo?.nickname?.trim() || EMPTY_TEXT;
+
+const mapGroupCreateTimeText = (createTime: string | undefined): string => createTime || EMPTY_TEXT;
+
+const mapGroupFromApi = (raw: GroupRaw, fallbackGroupId?: string): Group => {
+  const groupDesc = mapRequiredTextFromApi(raw.groupDesc);
+  const createTime = formatTimestampToDate(raw.createTime);
   const group: Group = {
-    groupId: normalizeId(raw.groupId),
+    groupId: normalizeId(raw.groupId ?? fallbackGroupId),
     // fallback：旧小组接口可能缺少必填展示字段，mapper 统一补齐为空文本。
     groupName: mapRequiredTextFromApi(raw.groupName),
-    groupDesc: mapRequiredTextFromApi(raw.groupDesc),
+    groupDesc,
+    groupDescText: mapGroupDescriptionText(groupDesc),
     groupCoverUrl: mapRequiredTextFromApi(raw.groupCoverUrl),
     // fallback：旧小组接口缺少 groupType 时按普通组处理。
     groupType: typeof raw.groupType === 'number' ? raw.groupType : GROUP_TYPE.NORMAL,
     // fallback：旧小组接口缺少 memberCount 时按 0 展示。
     memberCount: Number(raw.memberCount) || 0,
-    createTime: formatTimestampToDate(raw.createTime),
+    createTime,
+    createTimeText: mapGroupCreateTimeText(createTime),
+    ownerName: mapGroupOwnerName(raw.ownerInfo),
   };
   group.ownerId = raw.ownerId;
   group.ownerInfo = raw.ownerInfo;
@@ -90,17 +108,17 @@ const mapFetchGroupListRequest = (params: FetchGroupListRequest): ListGroupApiRe
   size: params.size,
 });
 
-const mapFetchGroupListFromApi = (
-  data: ListGroupApiResponse
-): { groups: Group[]; total: number } => {
+const mapFetchGroupListFromApi = (data: ListGroupApiResponse): FetchGroupListResponse => {
   return {
-    groups: data.list.map((item) => mapGroupFromApi(item as unknown as GroupRaw)),
+    list: data.list.map((item) => mapGroupFromApi(item as unknown as GroupRaw)),
     total: Number(data.total) || 0,
   };
 };
 
-const mapFetchGroupInfoFromApi = (data: Group): Group =>
-  mapGroupFromApi(data as unknown as GroupRaw);
+const mapFetchGroupInfoFromApi = (data: Group, fallbackGroupId?: string): Group =>
+  mapGroupFromApi(data as unknown as GroupRaw, fallbackGroupId);
+
+const mapFetchGroupDetailFromService = (data: GroupDetailResponse): GroupDetailResponse => data;
 
 const mapFetchGroupInfoRequest = (groupId: string): GetGroupInfoApiRequest => ({
   groupId,
@@ -156,9 +174,14 @@ const mapFetchGroupMembersRequest = (
   size,
 });
 
-const mapFetchGroupMembersFromApi = (data: FetchGroupMembersApiResponse): GroupMemberList => {
+const mapFetchGroupMembersFromApi = (
+  data: FetchGroupMembersApiResponse | null | undefined
+): GroupMemberList => {
+  if (!data) {
+    return { list: [], total: 0 };
+  }
   return {
-    members: data.list.map(mapGroupMemberRawResponse),
+    list: data.list.map(mapGroupMemberRawResponse),
     total: Number(data.total) || 0,
   };
 };
@@ -183,6 +206,7 @@ export const GroupServicesMap = {
   mapFetchGroupListRequest,
   mapFetchGroupListFromApi,
   mapFetchGroupInfoFromApi,
+  mapFetchGroupDetailFromService,
   mapFetchGroupInfoRequest,
   mapGroupWalletInfoFromApi,
   mapFetchGroupResConfigFromApi,

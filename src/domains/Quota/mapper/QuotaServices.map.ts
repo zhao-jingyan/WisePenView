@@ -5,6 +5,7 @@ import type {
 } from '@/domains/Group/apis/GroupApi.type';
 import type { GroupQuotaInfo, UserGroupQuota } from '@/domains/Wallet';
 import { normalizeId } from '@/utils/normalize/normalizeId';
+import type { FetchUserGroupQuotasResponse } from '../service/index.type';
 
 const toNum = (value: unknown, fallback = 0): number => {
   const numericValue = Number(value);
@@ -29,13 +30,13 @@ const mapUserGroupQuotaFromApi = (item: GroupTokenInfoApiResponseItem): UserGrou
 
 const mapFetchUserGroupQuotasFromApi = (
   data: GetAllMyGroupTokenInfoApiResponse
-): { quotas: UserGroupQuota[]; total: number } => {
+): FetchUserGroupQuotasResponse => {
   // fallback：兼容旧分页字段 records
   const rawList = data.list ?? data.records ?? [];
   const quotas = rawList.map(mapUserGroupQuotaFromApi);
 
   return {
-    quotas,
+    list: quotas,
     // fallback：兼容旧接口 Total 字段，缺失时用当前列表长度
     total: toNum(data.total ?? data.Total, quotas.length),
   };
