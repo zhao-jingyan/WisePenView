@@ -11,12 +11,13 @@ API 层只负责：
 - 使用请求/响应 DTO 类型。
 - 返回已经由 `src/apis/request.ts` 解包后的 `data`。
 - 做极轻协议适配，例如 GET 参数放入 `params`、POST 空 body 使用 `null` 或 `undefined`。
+- 在 `src/apis/request.ts` 做同 key GET 的并发请求去重；请求完成后必须立即释放，不作为业务结果缓存。
 
 API 层禁止：
 
 - 做业务字段映射。
 - 做 fallback、枚举转换、ID 归一化、时间格式化。
-- 读写 store、缓存、session。
+- 读写 store、session，或做跨请求生命周期的结果缓存。
 - 做 UI 提示。
 - 直接处理 React 生命周期或组件状态。
 - 直接 import service、mapper、view、component。
