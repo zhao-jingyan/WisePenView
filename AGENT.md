@@ -1,57 +1,68 @@
 # WisePenView Agent 开发规约
 
-本文件是 WisePenView 前端项目的 agent 主入口。执行任何代码修改前，先阅读本文件，再按任务类型阅读 `docs/agent` 下的专题规约。
+本文件是 WisePenView 面向 agent 的唯一总则。`docs/agent` 下的专题文档只补充目录、分层和局部约定；若专题文档与本文件冲突，以本文件为准。
 
-## 一、最高优先级规则
+## 一、基本哲学
+
+代码首先表达业务语义，其次才是语法形态。
+
+- 不用“后端式”“函数式”“过程式”这类标签替代判断。选择写法时只问：它是否让数据来源、稳定边界、业务分支和副作用更清楚。
+- 简单直白优于复杂抽象。不要为了统一风格、拆文件或展示技巧而增加读者负担。
+- 新代码朝最终形态写；修改旧代码时，只收敛当前任务触达的部分，不做无关大重构。
+- 不确定业务接口、字段边界、权限边界时，先确认契约，不用防御性代码把问题藏起来。
+
+## 二、协作底线
 
 - 注释使用中文，commit message 使用中文。
-- 分支命名使用 `feat/<content>` 、 `fix/<content>` 、 `refactor/<content>`，`content` 推荐英文短横线。
-- 不要盲目扫描 `node_modules`。当第三方 API 不确定时，优先询问用户提供接口文档或官方来源。
-- 不确定业务接口、字段边界、权限边界时，先询问用户，不要用防御性代码掩盖不确定性。
-- 字段 fallback、旧接口兼容和 raw DTO 归一化默认只能出现在 mapper 或明确命名的领域 normalizer 中；service、component、view 不用 `??`、`?.` 链条修补接口不稳定。
-- 不要擅自回滚用户已有改动。修改前查看工作区状态，遇到无关改动保持兼容。
-- 项目已彻底移除 Ant Design，不再新增、恢复或沿用 antd 组件、API 和样式覆盖模式。
+- 修改前查看工作区状态，不要擅自回滚用户已有改动。
+- 先用 `rg` 查同域、同类型实现，沿用项目已有模式。
+- 不盲扫 `node_modules`；第三方 API 不确定时，优先看官方类型、官方文档或向用户确认。
+- 项目已移除 Ant Design，不新增、恢复或沿用 antd 组件、API 和 `.ant-xxx` 样式覆盖。
 
-## 二、开发原则
+## 三、分层边界
 
-- KISS：简单直白优于复杂晦涩，避免不可维护的抽象和过度封装。
-- 先看现有实现：使用 `rg` 查找同域、同类型代码，沿用项目现有模式。
-- 新代码遵循最终目标形态，旧迁移态代码只在相关任务中渐进收敛。
-- 保持前后端契约同步：遇到字段落空、命名不一致或历史兼容时，优先修 mapper 和类型契约，不在调用处层层兜底。
-- Domain service 采用后端式、可审计写法：业务流程优先使用显式变量、`if`、`for...of` 和提前 `return`，避免用链式表达掩盖校验、副作用和异常路径。
-- Mapper 以读者清晰为准：简单字段映射和数组转换优先使用命名 mapper 函数配合 `map/filter`；多阶段分组、去重、排序或包含业务分支时使用过程式写法，并为关键规则补中文注释。
-- 复杂 service 的内部规则收敛到同目录 `*Services.helper.ts`，只能由相邻 `*Services.impl.ts` 导入；helper 不跨领域复用，不调用 API、store 或其它 service。
+- API 层只表达后端协议：URL、method、query/body 和 raw DTO。它不做展示加工、fallback、缓存或 UI 提示。
+- Mapper/领域 normalizer 是“不稳定数据变稳定”的边界：字段别名、旧接口兼容、ID、时间、枚举、权限动作和展示文案归一化都放在这里。
+- Service 是业务编排入口：做参数组织、客户端业务校验、调用 API/其它 service、调用 mapper、写缓存/session、抛错。它不修补 response 字段，也不把 raw DTO 透传给组件。
+- Entity 是 mapper 输出后的稳定前端类型。组件、service 和 store 应消费 entity，而不是消费后端 raw DTO。
+- View/component 负责 UI 状态、交互和展示。它可以处理 loading、empty、请求尚未返回、受控/非受控 props 等 UI 默认值，但不修补业务实体字段。
+- Store 保存已归一化状态；跨页面复用的归一化逻辑回到 mapper 或领域 helper。
 
-## 三、按任务读取规约
+## 四、表达方式选择
 
-- 领域 API、请求类型：阅读 `docs/agent/domain-api.md`。
-- 字段映射、fallback、兼容旧接口：阅读 `docs/agent/domain-mapper.md`。
-- fallback 边界和允许场景：阅读 `docs/agent/fallback.md`。
-- Service 编排、依赖注入、错误处理：阅读 `docs/agent/domain-service.md`。
-- Entity、Enum、常量和展示类型：阅读 `docs/agent/domain-entity.md`。
-- 组件放置位置、components 与 views 边界：阅读 `docs/agent/component-boundary.md`。
-- React、Hooks、JSX、TypeScript 编码：阅读 `docs/agent/component-react.md`。
-- 样式、UI 组件库、布局：阅读 `docs/agent/component-style.md`。
-- 分支与 commit：阅读 `docs/agent/commit.md`。
+语法服务语义，不按层级机械规定。
 
-跨层任务按调用链补读：`view/component -> service -> mapper -> api -> entity/enum`。
+- 一对一转换用 `map`，筛选用 `filter`，存在性判断用 `some/every`，排序用 `sort`。只要规则清楚，这些写法在 service、mapper、component 中都可以使用。
+- `reduce` 只在 accumulator 的业务含义清晰且命名良好时使用；否则用局部变量或 `for...of` 更容易审查。
+- `for...of` 适合有顺序要求、提前退出、异步串行、多处副作用、跨项状态累积，或链式表达会隐藏步骤的流程。
+- 校验、抛错和副作用不天然要求 `for...of`。关键是条件有名字、失败路径靠近触发点、副作用的顺序和原因可读。
+- 简单二选一可以用三元表达式；业务分支、多条件分支或嵌套分支用 `if/else`、提前 `return` 或命名变量。
+- 抽 helper 的理由是命名了业务概念、隔离了复杂规则或降低重复；不要为了“看起来规整”而抽空壳函数。
+- 注释解释“为什么”和业务规则，不解释显而易见的语法。
 
-## 四、React 编码底线
+## 五、Fallback 原则
 
-- 只写函数组件和 Hooks，不在函数组件中使用 `this`。
-- 函数组件必须返回有效 React 节点，不能没有返回值。
-- Hooks 只在顶层调用，只在函数组件或自定义 Hook 中调用。
-- 自定义 Hook 必须以 `use` 开头，并使用小驼峰命名。
-- 默认禁止直接使用 `useEffect` 组织业务逻辑，优先使用显式事件、`useRequest`、`useMount`、`useUnmount` 或领域 Hook。
-- 必须使用 effect 时，统一使用 `useEffectForce`，并在上方写 JSDoc 说明执行时机、不可替代原因和 cleanup 作用。
-- 不滥用 `useMemo`、`useCallback`、`React.memo`。只有计算昂贵或引用稳定确实影响 memo 子组件时才使用。
-- 禁止新增 `any`。与第三方库交互且无法推断时，必须把范围收窄到最小。
+`??`、`?.` 和默认值不是问题本身，问题是它们出现在哪个边界、掩盖了什么。
 
-## 五、交付说明
+- 后端字段兼容、旧数据补齐、大小写兼容和展示文案兜底，放在 mapper 或明确命名的领域 normalizer。
+- Service 默认消费稳定 entity；如果发现需要修字段，先回到 mapper 或类型契约。
+- Component/view 不对业务字段写 `user?.profile?.name ?? '-'` 这类兜底；需要占位时，让 entity 提供展示字段，或把字段显式建模为 nullable。
+- UI 默认值是允许的，例如空态文案、弹窗默认开关、分页默认页码、请求未返回时的稳定空列表常量。
+- 必填字段缺失不要静默转成空字符串、空数组或 `0`；应显式 nullable、抛业务错误，或推动接口契约修正。
+- 非显而易见的兼容 fallback 必须有中文注释说明兼容来源。
+
+## 六、React 与 TypeScript
+
+- 只写函数组件和 Hooks；Hooks 只在顶层调用。
+- 默认不直接用 `useEffect` 组织业务逻辑。请求用 `useRequest`，事件用 handler，生命周期或订阅优先封装领域 Hook；必须用 effect 时使用 `useEffectForce` 并说明原因。
+- 不滥用 `useMemo`、`useCallback`、`React.memo`。只有计算昂贵、引用稳定影响子组件或第三方库要求稳定引用时才使用。
+- 不新增 `any`。与第三方库交互无法推断时，把不确定范围缩到最小，并尽快转换成项目内稳定类型。
+
+## 七、交付
 
 完成任务后说明：
 
 - 改了什么。
 - 为什么这样改。
-- 跑了哪些验证；如果未运行 lint、compile 或 build，明确说明并给出建议命令。
-- 仍然存在的风险或需要用户确认的接口边界。
+- 跑了哪些验证；如果未运行 lint、compile 或 build，说明原因和建议命令。
+- 仍然存在的风险或需要用户确认的契约边界。

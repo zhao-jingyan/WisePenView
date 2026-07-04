@@ -69,7 +69,7 @@ refactor(domain): 收敛资源映射逻辑
 - 提交前查看 `git status --short`。
 - 不要把用户未要求的无关文件加入提交。
 - 不要擅自回滚用户已有改动。
-- 需要运行 lint、compile、build 时，优先给出建议命令让用户运行。
+- 需要运行 lint、compile、build 时，由 agent 按任务风险优先执行；无法执行时说明原因和建议命令。
 - 如果用户要求 agent commit，commit message 必须中文，并符合本文件格式。
 
 ## 七、检查清单
