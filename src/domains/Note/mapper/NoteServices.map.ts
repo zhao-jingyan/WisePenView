@@ -50,7 +50,10 @@ const mapNoteInfoDisplayFromApi = (data: NoteInfoResponse): NoteInfoDisplayData 
   const resourceInfo = normalizeResourceItem(data.resourceInfo);
   const ownerId = normalizeId(resourceInfo.ownerId) || undefined;
   const authorsDisplay = data.authorsDisplay ?? {};
-  const authors = Object.values(authorsDisplay).map(mapAuthorDisplay);
+  const authors: NoteInfoDisplayAuthor[] = [];
+  for (const userId in authorsDisplay) {
+    authors.push(mapAuthorDisplay(authorsDisplay[userId]));
+  }
 
   return {
     noteTitle: resourceInfo.resourceName,
@@ -72,12 +75,10 @@ const mapSpecifiedUsersGrantedActionsFromApi = (
   if (!raw) {
     return null;
   }
-  const mapped = Object.fromEntries(
-    Object.entries(raw).map(([userId, actions]) => [
-      userId,
-      maskNoteConfigurableResourceActions(coerceResourceActions(actions)),
-    ])
-  );
+  const mapped: NonNullable<NotePermissionConfig['specifiedUsersGrantedActions']> = {};
+  for (const userId in raw) {
+    mapped[userId] = maskNoteConfigurableResourceActions(coerceResourceActions(raw[userId]));
+  }
   return Object.keys(mapped).length > 0 ? mapped : null;
 };
 
@@ -104,9 +105,9 @@ const mapNotePermissionConfigFromApi = (
 const encodeBase64Utf8 = (value: string): string => {
   const bytes = new TextEncoder().encode(value);
   let binary = '';
-  bytes.forEach((byte) => {
+  for (const byte of bytes) {
     binary += String.fromCharCode(byte);
-  });
+  }
   return window.btoa(binary);
 };
 
@@ -138,15 +139,26 @@ const readNumber = (value: unknown, fallback = 0): number =>
 const mapNoteVersionListPageFromApi = (raw: unknown): NoteVersionListPage => {
   const page = isRecord(raw) ? raw : {};
   const list = Array.isArray(page.list) ? page.list : [];
+  const versions: NoteVersionListPage['list'] = [];
 
-  return {
-    list: list.filter(isRecord).map((item) => ({
+  for (const item of list) {
+    if (!isRecord(item)) continue;
+    const createdBy: number[] = [];
+    if (Array.isArray(item.createdBy)) {
+      for (const value of item.createdBy) {
+        if (typeof value !== 'number') continue;
+        createdBy.push(value);
+      }
+    }
+    versions.push({
       version: typeof item.version === 'number' ? item.version : undefined,
       type: typeof item.type === 'string' ? item.type : undefined,
-      createdBy: Array.isArray(item.createdBy)
-        ? item.createdBy.filter((value): value is number => typeof value === 'number')
-        : undefined,
-    })),
+      createdBy: Array.isArray(item.createdBy) ? createdBy : undefined,
+    });
+  }
+
+  return {
+    list: versions,
     total: readNumber(page.total),
     page: readNumber(page.page, 1),
     size: readNumber(page.size, 20),

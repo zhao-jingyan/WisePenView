@@ -29,13 +29,27 @@ const getFolderName = (tagName: string): string => {
   return tagName;
 };
 
-export const encodeNodeId = (kind: EncodedNodeKind, ...parts: string[]): string => {
-  return [kind, ...parts].join(':');
+export const encodeNodeId = (
+  kind: EncodedNodeKind,
+  firstPart?: string,
+  secondPart?: string
+): string => {
+  const parts: string[] = [kind];
+  if (firstPart !== undefined) {
+    parts.push(firstPart);
+  }
+  if (secondPart !== undefined) {
+    parts.push(secondPart);
+  }
+  return parts.join(':');
 };
 
 export const encodeRootNodeId = (groupId?: string): string => {
   const normalizedGroupId = normalizeTagGroupId(groupId);
-  return normalizedGroupId ? `${DRIVE_GROUP_ROOT_PREFIX}${normalizedGroupId}` : DRIVE_ROOT_ID;
+  if (normalizedGroupId) {
+    return `${DRIVE_GROUP_ROOT_PREFIX}${normalizedGroupId}`;
+  }
+  return DRIVE_ROOT_ID;
 };
 
 export const buildDriveNodeScope = (groupId?: string): DriveNodeScope => {
@@ -60,22 +74,28 @@ export const decodeNodeId = (id: string): DecodedNodeId => {
     const groupId = id.slice(DRIVE_GROUP_ROOT_PREFIX.length);
     if (groupId) return { kind: 'root', groupId };
   }
-  const [kind, ...parts] = id.split(':');
-  if (kind === 'folder' && parts[0]) return { kind: 'folder', tagId: parts[0] };
-  if (kind === 'resource' && parts[0] && parts[1]) {
-    return { kind: 'resource', resourceId: parts[0], parentTagId: parts[1] };
+  const parts = id.split(':');
+  const kind = parts[0];
+  const firstPart = parts[1];
+  const secondPart = parts[2];
+  if (kind === 'folder' && firstPart) return { kind: 'folder', tagId: firstPart };
+  if (kind === 'resource' && firstPart && secondPart) {
+    return { kind: 'resource', resourceId: firstPart, parentTagId: secondPart };
   }
-  if (kind === 'link' && parts[0] && parts[1]) {
-    return { kind: 'link', resourceId: parts[0], parentTagId: parts[1] };
+  if (kind === 'link' && firstPart && secondPart) {
+    return { kind: 'link', resourceId: firstPart, parentTagId: secondPart };
   }
-  if (kind === 'loading' && parts[0]) return { kind: 'loading', parentNodeId: parts[0] };
+  if (kind === 'loading' && firstPart) return { kind: 'loading', parentNodeId: firstPart };
   return { kind: 'unknown', raw: id };
 };
 
 export const decodeRootNodeScope = (rootId?: string, fallbackGroupId?: string): DriveNodeScope => {
   if (!rootId) return buildDriveNodeScope(fallbackGroupId);
   const decoded = decodeNodeId(rootId);
-  const groupId = decoded.kind === 'root' ? (decoded.groupId ?? fallbackGroupId) : fallbackGroupId;
+  let groupId = fallbackGroupId;
+  if (decoded.kind === 'root') {
+    groupId = decoded.groupId ?? fallbackGroupId;
+  }
   return buildDriveNodeScope(groupId);
 };
 
@@ -101,33 +121,37 @@ export const mapResourceItemToChildNode = (
   parentNodeId: string,
   scope: DriveNodeScope
 ): ResourceNode | LinkNode => {
-  const common = {
-    parentId: parentNodeId,
-    scope,
-    resourceId: item.resourceId,
-    title: item.resourceName,
-    resourceType: item.resourceType,
-    resourceIconType:
-      item.resourceIconType ??
-      resolveResourceIconType({
-        resourceType: item.resourceType,
-        resourceName: item.resourceName,
-      }),
-    folderTagId: parentTagId,
-  } as const;
+  const resourceIconType =
+    item.resourceIconType ??
+    resolveResourceIconType({
+      resourceType: item.resourceType,
+      resourceName: item.resourceName,
+    });
   const isPrimaryMount = item.mainTagId == null || item.mainTagId === parentTagId;
   if (isPrimaryMount) {
     return {
       id: encodeNodeId('resource', item.resourceId, parentTagId),
       type: 'resource',
-      ...common,
+      parentId: parentNodeId,
+      scope,
+      resourceId: item.resourceId,
+      title: item.resourceName,
+      resourceType: item.resourceType,
+      resourceIconType,
+      folderTagId: parentTagId,
     };
   }
   return {
     id: encodeNodeId('link', item.resourceId, parentTagId),
     type: 'link',
     primaryTagId: item.mainTagId,
-    ...common,
+    parentId: parentNodeId,
+    scope,
+    resourceId: item.resourceId,
+    title: item.resourceName,
+    resourceType: item.resourceType,
+    resourceIconType,
+    folderTagId: parentTagId,
   };
 };
 

@@ -63,6 +63,74 @@ const domainApiFunctionImportPattern = {
     '领域 API 函数只能由 src/domains/<Domain>/service 调用；mapper、组件和页面只允许依赖领域类型或 API type。',
 };
 
+const normalizeLintPath = (value) => value.replaceAll('\\', '/');
+
+const getServiceFileInfo = (filename) => {
+  const normalized = normalizeLintPath(filename);
+  const match = normalized.match(
+    /(^|\/)src\/domains\/([^/]+)\/service\/([^/]+Services)\.(impl|helper)\.[jt]sx?$/
+  );
+  if (!match) return null;
+  return {
+    domain: match[2],
+    serviceName: match[3],
+    kind: match[4],
+  };
+};
+
+const isServiceHelperImport = (source) => /(^|\/)[^/]+Services\.helper(\.[jt]sx?)?$/.test(source);
+
+const isForbiddenServiceHelperDependency = (source) => {
+  if (source === '@/store' || source.startsWith('@/store/')) return true;
+  if (source.includes('/store/')) return true;
+  if (source.startsWith('@/domains/_registry') || source.includes('/domains/_registry/')) {
+    return true;
+  }
+  if (/(^|\/)apis\/[^/]*Api(\.[jt]sx?)?$/.test(source)) return true;
+  if (/(^|\/)[^/]+Services\.(impl|mock|helper)(\.[jt]sx?)?$/.test(source)) return true;
+  return false;
+};
+
+const wisepenRules = {
+  'service-helper-boundary': {
+    meta: {
+      type: 'problem',
+      messages: {
+        helperImport:
+          'Service helper 只能由同目录同名 *Services.impl.ts 通过 ./XxxServices.helper 相邻导入；跨领域复用请提升到 mapper、normalizer、utils 或 _shared。',
+        helperDependency:
+          'Service helper 只放私有纯业务规则，禁止直接 import API、store、registry、其它 service 实现或其它 service helper。',
+      },
+    },
+    create(context) {
+      const currentFile = context.filename ?? context.getFilename();
+      const currentInfo = getServiceFileInfo(currentFile);
+
+      return {
+        ImportDeclaration(node) {
+          const source = node.source.value;
+          if (typeof source !== 'string') return;
+
+          if (isServiceHelperImport(source)) {
+            const expectedSource =
+              currentInfo?.kind === 'impl' ? `./${currentInfo.serviceName}.helper` : null;
+            const isAllowed =
+              expectedSource != null &&
+              (source === expectedSource || source === `${expectedSource}.ts`);
+            if (!isAllowed) {
+              context.report({ node, messageId: 'helperImport' });
+            }
+          }
+
+          if (currentInfo?.kind === 'helper' && isForbiddenServiceHelperDependency(source)) {
+            context.report({ node, messageId: 'helperDependency' });
+          }
+        },
+      };
+    },
+  },
+};
+
 const buildRestrictedImportsRule = ({
   allowApiRequest = false,
   allowDirectAxios = false,
@@ -100,6 +168,11 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    plugins: {
+      wisepen: {
+        rules: wisepenRules,
+      },
+    },
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
@@ -108,6 +181,7 @@ export default defineConfig([
       '@typescript-eslint/consistent-type-imports': 'error',
       'no-console': ['error', { allow: ['warn', 'error'] }],
       eqeqeq: ['error', 'always', { null: 'ignore' }],
+      'wisepen/service-helper-boundary': 'error',
       'no-restricted-imports': buildRestrictedImportsRule(),
       'no-restricted-properties': [
         'error',

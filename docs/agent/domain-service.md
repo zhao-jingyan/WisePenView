@@ -35,6 +35,21 @@ export const createXxxServices = (deps?: XxxServiceDeps): IXxxService => ({
 });
 ```
 
+复杂 service 可以新增同目录 helper：
+
+```text
+src/domains/<Domain>/service/
+├── XxxServices.impl.ts
+├── XxxServices.helper.ts
+└── index.type.ts
+```
+
+- `XxxServices.impl.ts` 是 public service 编排入口，只放对外能力、依赖注入、API 调用、store/cache/session 副作用和错误抛出。
+- `XxxServices.helper.ts` 是 service 私有业务规则文件，只放纯逻辑、校验、参数决策、集合处理和可复用的小型领域算法。
+- helper 只能由同目录相邻的 `XxxServices.impl.ts` 通过 `./XxxServices.helper` 导入，不跨 domain、不跨 service 复用。
+- helper 不直接 import API、store、registry、其它 service 实现或其它 service helper；需要副作用时由 impl 调用 helper 获取决策结果，再在 impl 中执行副作用。
+- helper 不是通用工具箱；跨领域复用逻辑应提升到 mapper、明确命名的 normalizer、`src/utils` 或 `src/domains/_shared`。
+
 装配层级：
 
 - Level 0：无跨 service 依赖，工厂无参。
@@ -44,17 +59,29 @@ export const createXxxServices = (deps?: XxxServiceDeps): IXxxService => ({
 禁止：
 
 - `*Services.impl.ts` 之间直接 import 彼此实现。
+- 跨目录或通过 `@/domains/...` alias import `*Services.helper.ts`。
 - 在工厂之外的模块顶层执行跨 service 调用或副作用注册。
 - 组件直接 import `*Services.impl.ts` 或 `*Services.mock.ts`。
 
-## 三、错误处理
+## 三、后端式编码风格
+
+Domain service 的业务逻辑显式优先：
+
+- public service 方法应像后端应用服务一样按步骤阅读：参数归一化、业务校验、读取上下文、调用 API、同步副作用、返回结果。
+- 有业务含义的分支优先使用 `if`、`else if`、提前 `return`，避免嵌套三元表达式。
+- 有校验、抛错、缓存写入或副作用的集合处理优先使用 `for...of`，避免链式 `map/filter/flatMap` 掩盖步骤。
+- `Promise.all` 只用于明确互不依赖的并发请求；每个结果应有清晰命名，不构造混合数组后再用 `as` 强转。
+- service 中避免隐式对象展开掩盖请求字段来源；业务 payload 优先显式列出字段，或交给 mapper/helper 构造。
+- mapper 仍承担 DTO 兼容、fallback、字段归一化，可以保留必要的 TypeScript 表达式；service 消费稳定 entity。
+
+## 四、错误处理
 
 - Service 只抛错，不做 UI 提示。
 - 客户端业务校验错误优先使用 `createClientError(code?, message?)`。
 - UI 层 catch 后使用 `useAppMessage()` 和 `parseErrorMessage(err)`。
 - `parseErrorMessage` 只接收一个 `unknown` 参数，不传 fallback 文案。
 
-## 四、字段 fallback 边界
+## 五、字段 fallback 边界
 
 - Service 默认不写字段保护型 fallback，例如 `data.foo ?? data.bar ?? ''`。
 - API response 字段别名、历史兼容、空值归一化应放到 mapper。
@@ -62,14 +89,14 @@ export const createXxxServices = (deps?: XxxServiceDeps): IXxxService => ({
 - 必填字段缺失时，service 应抛出业务错误或推动 mapper/entity 调整，不静默补空值。
 - 清理或新增 fallback 前，先阅读 `docs/agent/fallback.md`。
 
-## 五、请求触发
+## 六、请求触发
 
 - React 组件或 Hook 中调用 service 的异步请求，默认使用 `ahooks` 的 `useRequest`。
 - 用户交互触发请求使用 `useRequest(fn, { manual: true })`。
 - 初始化请求使用 `ready`、`refreshDeps` 或领域 session hook 管理时机。
 - 新建后跳转必须遵循：`create -> 获取后端 ID -> navigate`。
 
-## 六、新增 Service 流程
+## 七、新增 Service 流程
 
 新增领域 service 时，按需补齐：
 
@@ -92,13 +119,16 @@ src/domains/<Domain>/
 - `src/domains/_registry/hooks.ts`
 - `src/domains/index.ts`
 
-## 七、检查清单
+## 八、检查清单
 
 - [ ] 调用侧通过 `useXxxService()` 获取能力。
 - [ ] service 实现导出 `createXxxServices` 工厂。
 - [ ] 跨 service 依赖通过 registry 注入。
+- [ ] 复杂 service 的内部规则已收敛到同目录 helper。
+- [ ] helper 只由相邻 impl 导入，且不直接 import API、store、registry 或其它 service。
 - [ ] service 不做 UI 提示。
 - [ ] service 不直接 import Axios。
+- [ ] service 业务流程使用显式变量、分支和循环，避免过度链式表达。
 - [ ] 字段转换交给 mapper。
 - [ ] 字段 fallback 没有散落在 service。
 - [ ] 错误向上抛出。

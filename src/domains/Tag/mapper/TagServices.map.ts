@@ -18,32 +18,52 @@ import type { TagCreateRequest, TagTreeNode, TagUpdateRequest } from '../service
 
 const mapGetTagTreeRequest = (groupId?: string): GetTagTreeApiRequest | undefined => {
   const normalizedGroupId = normalizeTagGroupId(groupId);
-  return normalizedGroupId
-    ? {
-        groupId: normalizedGroupId,
-      }
-    : undefined;
+  if (!normalizedGroupId) {
+    return undefined;
+  }
+  return {
+    groupId: normalizedGroupId,
+  };
 };
 
-const isTagVisibilityModeString = (value: unknown): value is TagVisibilityModeString =>
-  typeof value === 'string' && TAG_VISIBILITY_MODE.getKey(value) != null;
+const isTagVisibilityModeString = (value: unknown): value is TagVisibilityModeString => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  return TAG_VISIBILITY_MODE.getKey(value) != null;
+};
 
 const mapGrantedActionsFromApi = (actions: unknown): TagResourceAction[] | undefined => {
   if (!Array.isArray(actions)) return undefined;
-  const normalized = actions
-    .map((item) => Number(item))
-    .filter((item): item is TagResourceAction => TAG_RESOURCE_ACTION.getKey(item) != null);
+  const normalized: TagResourceAction[] = [];
+  for (const item of actions) {
+    const action = Number(item);
+    if (TAG_RESOURCE_ACTION.getKey(action) == null) continue;
+    normalized.push(action as TagResourceAction);
+  }
   return normalizeResourceActions(normalized);
 };
 
 const mapTagTreeNodeFromApi = (node: GetTagTreeApiResponse[number]): TagTreeNode => {
   const visibilityMode = node.visibilityMode;
-  const normalizedVisibilityMode = isTagVisibilityModeString(visibilityMode)
-    ? visibilityMode
-    : undefined;
+  let normalizedVisibilityMode: TagVisibilityModeString | undefined;
+  if (isTagVisibilityModeString(visibilityMode)) {
+    normalizedVisibilityMode = visibilityMode;
+  }
+  const children: TagTreeNode[] = [];
+  for (const child of node.children ?? []) {
+    children.push(mapTagTreeNodeFromApi(child));
+  }
 
   return {
-    ...node,
+    tagId: node.tagId,
+    tagName: node.tagName,
+    groupId: node.groupId,
+    tagDesc: node.tagDesc,
+    tagIcon: node.tagIcon,
+    tagColor: node.tagColor,
+    tagCreator: node.tagCreator,
+    isPath: node.isPath,
     // fallback：兼容后端返回未约束的 visibilityMode 字符串
     visibilityMode: normalizedVisibilityMode,
     // fallback：旧接口缺省 ACL scope 时按全员可见处理。
@@ -56,23 +76,58 @@ const mapTagTreeNodeFromApi = (node: GetTagTreeApiResponse[number]): TagTreeNode
     tagMountPermissionScope: node.tagMountPermissionScope ?? ACCESS_CONTROL_SCOPE.ALL,
     // fallback：旧接口缺省挂载指定用户列表时按空列表处理。
     tagMountSpecifiedUsers: node.tagMountSpecifiedUsers ?? [],
+    taggedResourceGrantedActionsMask: node.taggedResourceGrantedActionsMask,
+    parentId: node.parentId,
     // fallback：历史标签树叶子节点可能省略 children，领域层统一消费稳定数组
-    children: node.children?.map(mapTagTreeNodeFromApi) ?? [],
+    children,
   };
 };
 
-const mapTagTreeFromApi = (data: GetTagTreeApiResponse): TagTreeNode[] =>
-  data.map(mapTagTreeNodeFromApi);
+const mapTagTreeFromApi = (data: GetTagTreeApiResponse): TagTreeNode[] => {
+  const roots: TagTreeNode[] = [];
+  for (const node of data) {
+    roots.push(mapTagTreeNodeFromApi(node));
+  }
+  return roots;
+};
 
-const mapAddTagRequest = (params: TagCreateRequest): AddTagApiRequest => ({
-  ...params,
-  grantedActions: resourceActionsToApiKeys(params.grantedActions),
-});
+const mapAddTagRequest = (params: TagCreateRequest): AddTagApiRequest => {
+  return {
+    groupId: params.groupId,
+    parentId: params.parentId,
+    tagName: params.tagName,
+    tagDesc: params.tagDesc,
+    tagIcon: params.tagIcon,
+    tagColor: params.tagColor,
+    tagCreator: params.tagCreator,
+    isPath: params.isPath,
+    visibilityMode: params.visibilityMode,
+    taggedResourceAclGrantScope: params.taggedResourceAclGrantScope,
+    taggedResourceAclGrantSpecifiedUsers: params.taggedResourceAclGrantSpecifiedUsers,
+    tagMountPermissionScope: params.tagMountPermissionScope,
+    tagMountSpecifiedUsers: params.tagMountSpecifiedUsers,
+    grantedActions: resourceActionsToApiKeys(params.grantedActions),
+  };
+};
 
-const mapUpdateTagRequest = (params: TagUpdateRequest): ChangeTagApiRequest => ({
-  ...params,
-  grantedActions: resourceActionsToApiKeys(params.grantedActions),
-});
+const mapUpdateTagRequest = (params: TagUpdateRequest): ChangeTagApiRequest => {
+  return {
+    groupId: params.groupId,
+    targetTagId: params.targetTagId,
+    tagName: params.tagName,
+    tagDesc: params.tagDesc,
+    tagIcon: params.tagIcon,
+    tagColor: params.tagColor,
+    tagCreator: params.tagCreator,
+    isPath: params.isPath,
+    visibilityMode: params.visibilityMode,
+    taggedResourceAclGrantScope: params.taggedResourceAclGrantScope,
+    taggedResourceAclGrantSpecifiedUsers: params.taggedResourceAclGrantSpecifiedUsers,
+    tagMountPermissionScope: params.tagMountPermissionScope,
+    tagMountSpecifiedUsers: params.tagMountSpecifiedUsers,
+    grantedActions: resourceActionsToApiKeys(params.grantedActions),
+  };
+};
 
 const mapAddTagFromApi = (data: string): string => {
   // fallback：旧接口可能返回空 data，保持原有空串行为

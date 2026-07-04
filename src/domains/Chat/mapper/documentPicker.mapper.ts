@@ -28,24 +28,27 @@ export interface BuildDocumentPickerTreeNodesResult {
 
 export function buildDocumentPickerScopes(groups: Group[]): ChatDocumentPickerScope[] {
   const personalScope = buildDriveNodeScope();
-  return [
+  const scopes: ChatDocumentPickerScope[] = [
     {
       scopeKey: 'personal',
       label: '个人文件',
       rootId: personalScope.rootId,
       type: 'personal',
     },
-    ...groups.map((group) => {
-      const groupScope = buildDriveNodeScope(group.groupId);
-      return {
-        scopeKey: `group:${group.groupId}`,
-        label: group.groupName,
-        rootId: groupScope.rootId,
-        type: 'group' as const,
-        groupId: group.groupId,
-      };
-    }),
   ];
+
+  for (const group of groups) {
+    const groupScope = buildDriveNodeScope(group.groupId);
+    scopes.push({
+      scopeKey: `group:${group.groupId}`,
+      label: group.groupName,
+      rootId: groupScope.rootId,
+      type: 'group',
+      groupId: group.groupId,
+    });
+  }
+
+  return scopes;
 }
 
 function getDriveNodeTitle(node: DriveNode): string {
@@ -79,14 +82,12 @@ export function mapDriveNodeToDocumentPickerNode(node: DriveNode): ChatDocumentP
     selectable: isResourceNode,
   };
 
-  if (!isResourceNode) return base;
-
-  return {
-    ...base,
-    resourceId: node.resourceId,
-    resourceName: node.title || node.resourceId,
-    resourceType: node.resourceType ?? '',
-  };
+  if (isResourceNode) {
+    base.resourceId = node.resourceId;
+    base.resourceName = node.title || node.resourceId;
+    base.resourceType = node.resourceType ?? '';
+  }
+  return base;
 }
 
 export function buildDocumentPickerScopedKey(scopeKey: string, nodeId: string): string {
@@ -123,18 +124,20 @@ export function buildDocumentPickerTreeNodes(
   documentNodes: ChatDocumentPickerNode[]
 ): BuildDocumentPickerTreeNodesResult {
   const nodeEntries: Array<[string, ChatDocumentPickerNode]> = [];
-  const treeNodes = documentNodes.map((node) => {
+  const treeNodes: DocumentPickerTreeNode[] = [];
+
+  for (const node of documentNodes) {
     const key = buildDocumentPickerScopedKey(scopeKey, node.nodeId);
     const selectable = isSelectableDocumentPickerNode(node);
     nodeEntries.push([key, node]);
-    return {
+    treeNodes.push({
       key,
       title: node.title,
       isLeaf: node.isLeaf,
       selectable,
       checkable: selectable,
-    };
-  });
+    });
+  }
 
   return { treeNodes, nodeEntries };
 }
@@ -144,16 +147,23 @@ export function replaceDocumentPickerTreeNodeChildren<T extends { key: unknown; 
   targetKey: string,
   children: T[]
 ): T[] {
-  return nodes.map((node) => {
+  const result: T[] = [];
+  for (const node of nodes) {
     if (String(node.key) === targetKey) {
-      return { ...node, children };
+      const nextNode = Object.assign({}, node) as T;
+      nextNode.children = children;
+      result.push(nextNode);
+      continue;
     }
-    if (!node.children || node.children.length === 0) return node;
-    return {
-      ...node,
-      children: replaceDocumentPickerTreeNodeChildren(node.children, targetKey, children),
-    };
-  });
+    if (!node.children || node.children.length === 0) {
+      result.push(node);
+      continue;
+    }
+    const nextNode = Object.assign({}, node) as T;
+    nextNode.children = replaceDocumentPickerTreeNodeChildren(node.children, targetKey, children);
+    result.push(nextNode);
+  }
+  return result;
 }
 
 export function mapDocumentPickerNodeToSelectedResource(
@@ -171,7 +181,11 @@ export function mapDocumentPickerNodeToSelectedResource(
 export function mapDocumentPickerNodesToSelectedResources(
   nodes: Array<ChatDocumentPickerNode | undefined>
 ): ChatDocumentPickerSelectedResource[] {
-  return nodes
-    .map((node) => mapDocumentPickerNodeToSelectedResource(node))
-    .filter((node): node is ChatDocumentPickerSelectedResource => Boolean(node));
+  const resources: ChatDocumentPickerSelectedResource[] = [];
+  for (const node of nodes) {
+    const resource = mapDocumentPickerNodeToSelectedResource(node);
+    if (!resource) continue;
+    resources.push(resource);
+  }
+  return resources;
 }

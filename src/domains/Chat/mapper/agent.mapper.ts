@@ -17,13 +17,18 @@ export const buildAgentFromResourceItem = (
   group?: { groupId: string; groupName: string }
 ): ChatAgentOption => {
   const raw = item as ResourceItem & { defaultSkillIds?: string[] };
-  return {
+  const agent: ChatAgentOption = {
     agentId: `agent-${item.resourceId}`,
-    agentType: group ? 'GROUP' : 'PERSONAL',
+    agentType: 'PERSONAL',
     label: item.resourceName,
-    ...(group ? { groupId: group.groupId, groupName: group.groupName } : {}),
     defaultSkillIds: raw.defaultSkillIds,
   };
+  if (group) {
+    agent.agentType = 'GROUP';
+    agent.groupId = group.groupId;
+    agent.groupName = group.groupName;
+  }
+  return agent;
 };
 
 export const buildGroupAgent = (group: Group): ChatAgentOption => ({
@@ -54,10 +59,24 @@ export const buildAgentFromSkillTreeGroup = (
 export const buildChatInputAgentOptions = (
   agents: ChatAgentOption[],
   currentAgent: ChatAgentOption
-): ChatAgentOption[] => (agents.length > 0 ? agents : [currentAgent]);
+): ChatAgentOption[] => {
+  if (agents.length > 0) {
+    return agents;
+  }
+  return [currentAgent];
+};
 
 export const resolveChatInputSelectedAgent = (
   agents: ChatAgentOption[],
   currentAgent: ChatAgentOption
-): ChatAgentOption =>
-  agents.find((agent) => agent.agentId === currentAgent.agentId) ?? agents[0] ?? currentAgent;
+): ChatAgentOption => {
+  for (const agent of agents) {
+    if (agent.agentId === currentAgent.agentId) {
+      return agent;
+    }
+  }
+  if (agents[0]) {
+    return agents[0];
+  }
+  return currentAgent;
+};

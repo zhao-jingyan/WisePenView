@@ -51,16 +51,20 @@ const MODEL_TYPE_LABEL_MAP: Record<number, ChatModel['category']> = {
   [MODEL_TYPE.UNKNOWN_MODEL]: 'chat',
 };
 
-const inferProviderKey = (...values: Array<string | null | undefined>): string => {
-  const haystack = values
-    .filter((value): value is string => Boolean(value))
-    .join(' ')
-    .toLowerCase();
+const inferProviderKey = (values: Array<string | null | undefined>): string => {
+  let haystack = '';
+  for (const value of values) {
+    if (!value) continue;
+    haystack = `${haystack} ${value}`;
+  }
+  haystack = haystack.toLowerCase();
 
-  const matched = PROVIDER_KEY_HINTS.find((item) =>
-    item.patterns.some((pattern) => haystack.includes(pattern))
-  );
-  return matched?.key ?? 'openai';
+  for (const item of PROVIDER_KEY_HINTS) {
+    for (const pattern of item.patterns) {
+      if (haystack.includes(pattern)) return item.key;
+    }
+  }
+  return 'openai';
 };
 
 const normalizeProviderOption = (
@@ -70,12 +74,12 @@ const normalizeProviderOption = (
   providerId: mapping.provider_id,
   providerName: mapping.provider_name,
   providerModelName: mapping.provider_model_name,
-  provider: inferProviderKey(
+  provider: inferProviderKey([
     mapping.provider_name,
     mapping.provider_model_name,
     MODEL_FAMILY_PROVIDER_MAP[model.model_family],
-    model.display_name
-  ),
+    model.display_name,
+  ]),
   supportRuntimeOptions: mapping.support_runtime_options ?? {},
   isPreferred: mapping.is_preferred,
   isActive: mapping.is_active,
@@ -84,14 +88,19 @@ const normalizeProviderOption = (
 
 const getOrderedProviderOptions = (
   model: ListModelsApiResponse['system_models'][number]
-): ChatModelProviderOption[] =>
-  (model.mappings ?? [])
-    .filter((mapping) => mapping.is_active)
-    .map((mapping) => normalizeProviderOption(mapping, model))
-    .sort((a, b) => {
-      if (a.isPreferred !== b.isPreferred) return a.isPreferred ? -1 : 1;
-      return a.priority - b.priority || a.providerModelName.localeCompare(b.providerModelName);
-    });
+): ChatModelProviderOption[] => {
+  const options: ChatModelProviderOption[] = [];
+  const mappings = model.mappings ?? [];
+  for (const mapping of mappings) {
+    if (!mapping.is_active) continue;
+    options.push(normalizeProviderOption(mapping, model));
+  }
+  options.sort((a, b) => {
+    if (a.isPreferred !== b.isPreferred) return a.isPreferred ? -1 : 1;
+    return a.priority - b.priority || a.providerModelName.localeCompare(b.providerModelName);
+  });
+  return options;
+};
 
 const buildSelectionId = (modelId: string, providerId?: string): string =>
   providerId ? `${modelId}:${providerId}` : modelId;
@@ -100,20 +109,30 @@ const buildModelTags = (
   model: ListModelsApiResponse['system_models'][number],
   providerOption: ChatModelProviderOption | undefined,
   index: number
-): ChatModel['tags'] => [
-  ...(model.is_active && index === 0 ? [{ text: 'Default', type: 'blue' }] : []),
-  ...(model.support_thinking ? [{ text: 'Thinking', type: 'purple' }] : []),
-  ...(model.support_vision ? [{ text: 'Vision', type: 'green' }] : []),
-  ...(providerOption?.isPreferred ? [{ text: 'Preferred', type: 'blue' }] : []),
-];
+): ChatModel['tags'] => {
+  const tags: ChatModel['tags'] = [];
+  if (model.is_active && index === 0) {
+    tags.push({ text: 'Default', type: 'blue' });
+  }
+  if (model.support_thinking) {
+    tags.push({ text: 'Thinking', type: 'purple' });
+  }
+  if (model.support_vision) {
+    tags.push({ text: 'Vision', type: 'green' });
+  }
+  if (providerOption?.isPreferred) {
+    tags.push({ text: 'Preferred', type: 'blue' });
+  }
+  return tags;
+};
 
 const createFallbackProviderOption = (
   model: ListModelsApiResponse['system_models'][number]
 ): ChatModelProviderOption => {
-  const provider = inferProviderKey(
+  const provider = inferProviderKey([
     MODEL_FAMILY_PROVIDER_MAP[model.model_family],
-    model.display_name
-  );
+    model.display_name,
+  ]);
   return {
     providerId: '',
     providerName: null,
@@ -137,7 +156,7 @@ const mapModelOption = (
   name: model.display_name,
   provider:
     providerOption?.provider ??
-    inferProviderKey(MODEL_FAMILY_PROVIDER_MAP[model.model_family], model.display_name),
+    inferProviderKey([MODEL_FAMILY_PROVIDER_MAP[model.model_family], model.display_name]),
   providerId: providerOption?.providerId || undefined,
   providerName: providerOption?.providerName,
   providerModelName: providerOption?.providerModelName,
@@ -158,23 +177,28 @@ const mapModelOption = (
 });
 
 const mapGetModelsFromApi = (data: ListModelsApiResponse): ChatModel[] => {
-  const groupedModels = [...data.system_models, ...data.user_models].filter(
-    (item) => item.is_active
-  );
   const modelOptions: ChatModel[] = [];
 
-  groupedModels.forEach((model) => {
+  const appendModelOptions = (model: ListModelsApiResponse['system_models'][number]): void => {
+    if (!model.is_active) return;
     const providerOptions = getOrderedProviderOptions(model);
     const options =
       providerOptions.length > 0 ? providerOptions : [createFallbackProviderOption(model)];
 
-    options.forEach((providerOption) => {
+    for (const providerOption of options) {
       const effectiveProviderOptions = providerOptions.length > 0 ? providerOptions : [];
       modelOptions.push(
         mapModelOption(model, effectiveProviderOptions, providerOption, modelOptions.length)
       );
-    });
-  });
+    }
+  };
+
+  for (const model of data.system_models) {
+    appendModelOptions(model);
+  }
+  for (const model of data.user_models) {
+    appendModelOptions(model);
+  }
 
   return modelOptions;
 };
@@ -183,9 +207,11 @@ const mapCreateSessionRequest = (params?: CreateSessionRequest): CreateSessionAp
   const title = params?.title;
   const hasTitle = title !== undefined;
 
-  return {
-    ...(hasTitle ? { title } : {}),
-  };
+  const request: CreateSessionApiRequest = {};
+  if (hasTitle) {
+    request.title = title;
+  }
+  return request;
 };
 
 const mapCreateSessionFromApi = (data: CreateSessionApiResponse): ChatSession => data;
@@ -194,18 +220,27 @@ const mapRenameSessionRequest = (params: RenameSessionRequest): RenameSessionApi
   const newTitle = params.newTitle;
   const hasNewTitle = newTitle !== undefined;
 
-  return {
+  const request: RenameSessionApiRequest = {
     sessionId: params.sessionId,
-    ...(hasNewTitle ? { newTitle } : {}),
   };
+  if (hasNewTitle) {
+    request.newTitle = newTitle;
+  }
+  return request;
 };
 
 const mapRenameSessionFromApi = (data: RenameSessionApiResponse): ChatSession => data;
 
-const mapListSessionsRequest = (params?: ListSessionsRequest): ListSessionsApiRequest => ({
-  ...(params?.page !== undefined ? { page: params.page } : {}),
-  ...(params?.size !== undefined ? { size: params.size } : {}),
-});
+const mapListSessionsRequest = (params?: ListSessionsRequest): ListSessionsApiRequest => {
+  const request: ListSessionsApiRequest = {};
+  if (params?.page !== undefined) {
+    request.page = params.page;
+  }
+  if (params?.size !== undefined) {
+    request.size = params.size;
+  }
+  return request;
+};
 
 const mapListSessionsFromApi = (data: ListSessionsApiResponse): PageResult<ChatSession> => {
   const totalPage = data.totalPage ?? data.total_page ?? 1;
@@ -220,11 +255,18 @@ const mapListSessionsFromApi = (data: ListSessionsApiResponse): PageResult<ChatS
 
 const mapListHistoryMessagesRequest = (
   params: ListHistoryMessagesRequest
-): ListHistoryMessagesApiRequest => ({
-  sessionId: params.sessionId,
-  ...(params.page !== undefined ? { page: params.page } : {}),
-  ...(params.size !== undefined ? { size: params.size } : {}),
-});
+): ListHistoryMessagesApiRequest => {
+  const request: ListHistoryMessagesApiRequest = {
+    sessionId: params.sessionId,
+  };
+  if (params.page !== undefined) {
+    request.page = params.page;
+  }
+  if (params.size !== undefined) {
+    request.size = params.size;
+  }
+  return request;
+};
 
 const mapListHistoryMessagesFromApi = (
   data: ListHistoryMessagesApiResponse

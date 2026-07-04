@@ -10,9 +10,15 @@ import { ResourceInteractApi } from '../apis/InteractApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
 import type { ResourceItem } from '../entity/resource';
-import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '../enum';
 import type { ResourceInteractStats } from '../mapper/ResourceServices.map';
 import { ResourceServicesMap } from '../mapper/ResourceServices.map';
+import {
+  buildGroupMountResourceRequest,
+  buildGroupResourceScanRequest,
+  GROUP_RESOURCE_SCAN_PAGE_SIZE,
+  resolveGroupMountTags,
+  uniqueNonEmptyIds,
+} from './ResourceServices.helper';
 import type {
   GetGroupResourceRequest,
   GetUserResourcesRequest,
@@ -28,8 +34,6 @@ import type {
   UpdateResourceActionPermissionRequest,
   UpdateResourceTagsRequest,
 } from './index.type';
-
-const GROUP_RESOURCE_SCAN_PAGE_SIZE = 200;
 
 const requestResourceItemList = async (
   params: GetUserResourcesRequest,
@@ -67,36 +71,6 @@ const updateResourceTags = async (params: UpdateResourceTagsRequest): Promise<vo
   await ResourceItemApi.changeResourceTags(params);
 };
 
-const uniqueNonEmptyIds = (ids: string[]): string[] =>
-  Array.from(new Set(ids.map((id) => id.trim()).filter(Boolean)));
-
-const getCurrentTagIdsForExistingResource = (item: ResourceItem | undefined): string[] => {
-  // 未查到资源时按首次挂载处理；已查到的 ResourceItem 由 mapper 保证 currentTags 为稳定对象。
-  if (!item) return [];
-  return Object.keys(item.currentTags);
-};
-
-const resolveGroupMountTags = (
-  item: ResourceItem | undefined,
-  targetTagId: string
-): { tagIds: string[]; primaryTagId?: string } => {
-  const currentTagIds = getCurrentTagIdsForExistingResource(item);
-  const primaryTagId = item?.mainTagId;
-  if (primaryTagId) {
-    return {
-      tagIds: uniqueNonEmptyIds([
-        primaryTagId,
-        ...currentTagIds.filter((tagId) => tagId !== primaryTagId),
-        targetTagId,
-      ]),
-    };
-  }
-  return {
-    tagIds: uniqueNonEmptyIds([targetTagId, ...currentTagIds]),
-    primaryTagId: targetTagId,
-  };
-};
-
 const fetchGroupResourceItemsById = async (
   groupId: string,
   resourceIds: string[]
@@ -106,13 +80,8 @@ const fetchGroupResourceItemsById = async (
   let page = 1;
 
   while (pendingIds.size > 0) {
-    const result = await getGroupResources({
-      groupId,
-      page,
-      size: GROUP_RESOURCE_SCAN_PAGE_SIZE,
-      sortBy: RESOURCE_SORT_BY.UPDATE_TIME,
-      sortDir: RESOURCE_SORT_DIR.DESC,
-    });
+    const request = buildGroupResourceScanRequest(groupId, page);
+    const result = await getGroupResources(request);
 
     for (const item of result.list) {
       if (!pendingIds.has(item.resourceId)) continue;
@@ -137,16 +106,13 @@ const mountResourcesToGroupTag = async (params: MountResourcesToGroupTagRequest)
   if (resourceIds.length === 0 || !targetTagId) return;
 
   const existingItems = await fetchGroupResourceItemsById(params.groupId, resourceIds);
-  await Promise.all(
-    resourceIds.map((resourceId) => {
-      const tagPayload = resolveGroupMountTags(existingItems.get(resourceId), targetTagId);
-      return updateResourceTags({
-        resourceId,
-        groupId: params.groupId,
-        ...tagPayload,
-      });
-    })
-  );
+  const updateTasks: Array<Promise<void>> = [];
+  for (const resourceId of resourceIds) {
+    const tagPayload = resolveGroupMountTags(existingItems.get(resourceId), targetTagId);
+    const request = buildGroupMountResourceRequest(resourceId, params.groupId, tagPayload);
+    updateTasks.push(updateResourceTags(request));
+  }
+  await Promise.all(updateTasks);
 };
 
 const updateResourceActionPermission = async (

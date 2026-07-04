@@ -42,25 +42,36 @@ export function normalizeResourceItem<T extends Partial<ResourceItem> | null | u
   raw: T
 ): T {
   if (raw == null) return raw;
-  const next: Partial<ResourceItem> = { ...raw };
+  const next = Object.assign({}, raw) as Partial<ResourceItem>;
   const rawCurrentTags = raw.currentTags;
   // fallback：历史接口与 mock 可能返回数组或省略 currentTags，领域层统一为对象。
-  next.currentTags =
-    rawCurrentTags && typeof rawCurrentTags === 'object' && !Array.isArray(rawCurrentTags)
-      ? rawCurrentTags
-      : {};
+  if (rawCurrentTags && typeof rawCurrentTags === 'object' && !Array.isArray(rawCurrentTags)) {
+    next.currentTags = rawCurrentTags;
+  } else {
+    next.currentTags = {};
+  }
 
   const interactionInfo = (raw as unknown as { resourceInteractionInfo?: RawInteractionInfo })
     .resourceInteractionInfo;
 
   if (interactionInfo) {
-    next.readCount =
-      interactionInfo.readCount != null ? Number(interactionInfo.readCount) : undefined;
-    next.likeCount =
-      interactionInfo.likeCount != null ? Number(interactionInfo.likeCount) : undefined;
+    if (interactionInfo.readCount != null) {
+      next.readCount = Number(interactionInfo.readCount);
+    } else {
+      next.readCount = undefined;
+    }
+    if (interactionInfo.likeCount != null) {
+      next.likeCount = Number(interactionInfo.likeCount);
+    } else {
+      next.likeCount = undefined;
+    }
     const scoreCount = interactionInfo.scoreCount != null ? Number(interactionInfo.scoreCount) : 0;
     const scoreTotal = interactionInfo.scoreTotal != null ? Number(interactionInfo.scoreTotal) : 0;
-    next.scoreAvg = scoreCount > 0 ? scoreTotal / scoreCount : null;
+    if (scoreCount > 0) {
+      next.scoreAvg = scoreTotal / scoreCount;
+    } else {
+      next.scoreAvg = null;
+    }
   }
 
   return next as T;
@@ -76,20 +87,27 @@ const mapListResourceItemsRequest = (
   const hasResourceType = resourceType != null && resourceType !== '';
   const hasTagIds = tagIds != null && tagIds.length > 0;
 
-  return {
+  const request: ListResourceItemsApiRequest = {
     page: params.page,
     size: params.size,
     sortBy: params.sortBy,
     sortDir: params.sortDir,
     // fallback：未传时与 OpenAPI 默认 OR 一致
     tagQueryLogicMode: params.tagQueryLogicMode ?? TAG_QUERY_LOGIC_MODE.OR,
-    // 不传 resourceType：空串会被后端当作有效筛选值
-    ...(hasResourceType ? { resourceType } : {}),
-    // 不传 tagIds：空数组仍会触发按标签过滤
-    ...(hasTagIds ? { tagIds } : {}),
-    // 小组列表等场景由 Service 注入 groupId 等覆盖项
-    ...overrides,
   };
+  // 不传 resourceType：空串会被后端当作有效筛选值
+  if (hasResourceType) {
+    request.resourceType = resourceType;
+  }
+  // 不传 tagIds：空数组仍会触发按标签过滤
+  if (hasTagIds) {
+    request.tagIds = tagIds;
+  }
+  // 小组列表等场景由 Service 注入 groupId 等覆盖项
+  if (overrides.groupId != null) {
+    request.groupId = overrides.groupId;
+  }
+  return request;
 };
 
 const resolveTagName = (value: unknown): string => {
@@ -108,18 +126,30 @@ const resolveCurrentTagBind = (
   const binds = item.tagBinds ?? [];
   if (binds.length === 0) return undefined;
   if (context.groupId) {
-    return binds.find((bind) => bind.groupId === context.groupId) ?? binds[0];
+    for (const bind of binds) {
+      if (bind.groupId === context.groupId) {
+        return bind;
+      }
+    }
+    return binds[0];
   }
-  return binds.find((bind) => bind.groupId?.startsWith(PERSONAL_GROUP_PREFIX)) ?? binds[0];
+  for (const bind of binds) {
+    if (bind.groupId?.startsWith(PERSONAL_GROUP_PREFIX)) {
+      return bind;
+    }
+  }
+  return binds[0];
 };
 
 const mapTagsToCurrentTags = (
   tags: ResourceTagBind['tags']
 ): Record<string, string> | undefined => {
   if (!tags || typeof tags !== 'object') return undefined;
-  return Object.fromEntries(
-    Object.entries(tags).map(([tagId, tagInfo]) => [tagId, resolveTagName(tagInfo)])
-  );
+  const currentTags: Record<string, string> = {};
+  for (const tagId in tags) {
+    currentTags[tagId] = resolveTagName(tags[tagId]);
+  }
+  return currentTags;
 };
 
 /** 单条资源：Java Long 字符串、标签派生字段 */
@@ -136,17 +166,27 @@ const mapResourceItemFromApi = (
   const currentTags = tagsFromBind ?? fallbackCurrentTags ?? {};
   const tagIds = Object.keys(currentTags);
   const mainTagId = currentTagBind?.primaryTagId ?? tagIds[0];
+  const linkTagIds: string[] = [];
+  if (mainTagId) {
+    for (const tagId of tagIds) {
+      if (tagId === mainTagId) continue;
+      linkTagIds.push(tagId);
+    }
+  } else {
+    for (let index = 1; index < tagIds.length; index += 1) {
+      linkTagIds.push(tagIds[index]);
+    }
+  }
 
-  return {
-    ...item,
-    currentTags,
-    resourceIconType: resolveResourceIconType({
-      resourceType: item.resourceType,
-      resourceName: item.resourceName,
-    }),
-    mainTagId,
-    linkTagIds: mainTagId ? tagIds.filter((tagId) => tagId !== mainTagId) : tagIds.slice(1),
-  };
+  const mapped = Object.assign({}, item) as ResourceItem;
+  mapped.currentTags = currentTags;
+  mapped.resourceIconType = resolveResourceIconType({
+    resourceType: item.resourceType,
+    resourceName: item.resourceName,
+  });
+  mapped.mainTagId = mainTagId;
+  mapped.linkTagIds = linkTagIds;
+  return mapped;
 };
 
 /** 分页列表 API 响应 → Service 领域分页 */
@@ -154,7 +194,10 @@ const mapResourceListPageFromApi = (
   data: ResourceListPageApiResponse,
   context: MapResourceItemContext = {}
 ): ResourceListPage => {
-  const list = data.list.map((item) => mapResourceItemFromApi(item, context));
+  const list: ResourceItem[] = [];
+  for (const item of data.list) {
+    list.push(mapResourceItemFromApi(item, context));
+  }
 
   return {
     list,
@@ -229,22 +272,33 @@ const mapInteractStatsFromApi = (resourceInfo: ResourceItem): ResourceInteractSt
 };
 
 // 枚举归一化大小写，下游 === 比较与分组 label 生效
-const mapSearchHitFromApi = (raw: GlobalSearchApiResponse['list'][number]): SearchHitItem => ({
-  ...raw,
-  resourceType: normalizeSearchResourceType(raw.resourceType),
-  resourceIconType: resolveResourceIconType({
-    resourceType: raw.resourceType,
+const mapSearchHitFromApi = (raw: GlobalSearchApiResponse['list'][number]): SearchHitItem => {
+  return {
+    resourceId: raw.resourceId,
+    resourceType: normalizeSearchResourceType(raw.resourceType),
+    resourceIconType: resolveResourceIconType({
+      resourceType: raw.resourceType,
+      resourceName: raw.resourceName,
+    }),
     resourceName: raw.resourceName,
-  }),
-});
+    highlightContent: raw.highlightContent,
+    updateTime: raw.updateTime,
+  };
+};
 
-const mapSearchResultPageFromApi = (data: GlobalSearchApiResponse): SearchResultPage => ({
-  list: data.list.map(mapSearchHitFromApi),
-  total: data.total,
-  page: data.page,
-  size: data.size,
-  totalPage: data.totalPage,
-});
+const mapSearchResultPageFromApi = (data: GlobalSearchApiResponse): SearchResultPage => {
+  const list: SearchHitItem[] = [];
+  for (const item of data.list) {
+    list.push(mapSearchHitFromApi(item));
+  }
+  return {
+    list,
+    total: data.total,
+    page: data.page,
+    size: data.size,
+    totalPage: data.totalPage,
+  };
+};
 
 export const ResourceServicesMap = {
   mapListResourceItemsRequest,

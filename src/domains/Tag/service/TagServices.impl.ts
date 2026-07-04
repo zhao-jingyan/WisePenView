@@ -1,6 +1,9 @@
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
-import type { IResourceService } from '@/domains/Resource';
-import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
+import type {
+  GetGroupResourceRequest,
+  IResourceService,
+  ResourceListPage,
+} from '@/domains/Resource';
 import { ResourceTagApi } from '@/domains/Resource/apis/ResourceApi';
 import type { TagListByTagResponse } from '@/domains/Tag';
 import { useTrashTagStore } from '@/store';
@@ -16,38 +19,20 @@ import type {
   TagTreeResponse,
   TagUpdateRequest,
 } from './index.type';
+import {
+  buildTagFlatMap,
+  buildTaggedResourceListRequest,
+  filterTagTreeForView,
+  TAG_CACHE_KEY_DEFAULT,
+} from './TagServices.helper';
 
-const CACHE_KEY_DEFAULT = '__default__';
-/** 系统保留前缀：以 `.` 开头的 tag（如 `.Trash`）对 Tag 视图不可见 */
-const HIDDEN_TAG_PREFIX = '.';
 const TRASH_FOLDER_NAME = '.Trash';
 
-const buildFlatMap = (roots: TagTreeNode[]): Map<string, TagTreeNode> => {
-  const map = new Map<string, TagTreeNode>();
-  const walk = (node: TagTreeNode) => {
-    map.set(node.tagId, node);
-    node.children.forEach(walk);
-  };
-  roots.forEach(walk);
-  return map;
-};
-
-const filterHiddenTags = (nodes: TagTreeNode[]): TagTreeNode[] => {
-  const filtered: TagTreeNode[] = [];
-  for (const node of nodes) {
-    if (node.tagName.trim().startsWith(HIDDEN_TAG_PREFIX)) {
-      continue;
-    }
-    filtered.push({
-      ...node,
-      children: filterHiddenTags(node.children),
-    });
-  }
-  return filtered;
-};
-
 const syncTrashTagIdToStore = (groupId: string | undefined, roots: TagTreeResponse[]): void => {
-  const queue: TagTreeResponse[] = [...roots];
+  const queue: TagTreeResponse[] = [];
+  for (const root of roots) {
+    queue.push(root);
+  }
   while (queue.length > 0) {
     const node = queue.shift();
     if (!node) continue;
@@ -55,8 +40,10 @@ const syncTrashTagIdToStore = (groupId: string | undefined, roots: TagTreeRespon
       useTrashTagStore.getState().setTrashTagId(groupId, node.tagId);
       return;
     }
-    if (Array.isArray(node.children) && node.children.length > 0) {
-      queue.push(...node.children);
+    if (Array.isArray(node.children)) {
+      for (const child of node.children) {
+        queue.push(child);
+      }
     }
   }
   useTrashTagStore.getState().setTrashTagId(groupId, undefined);
@@ -80,7 +67,7 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
 
   const clearTagTreeCache = (groupId?: string): void => {
     if (groupId !== undefined) {
-      const cacheKey = normalizeTagGroupId(groupId) ?? CACHE_KEY_DEFAULT;
+      const cacheKey = normalizeTagGroupId(groupId) ?? TAG_CACHE_KEY_DEFAULT;
       rawTagTreeCache.delete(cacheKey);
       rawTagFlatCache.delete(cacheKey);
       tagTreeCache.delete(cacheKey);
@@ -97,7 +84,7 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
 
   const getRawTagTree = async (groupId?: string): Promise<TagTreeNode[]> => {
     const normalizedGroupId = normalizeTagGroupId(groupId);
-    const cacheKey = normalizedGroupId ?? CACHE_KEY_DEFAULT;
+    const cacheKey = normalizedGroupId ?? TAG_CACHE_KEY_DEFAULT;
     const cached = rawTagTreeCache.get(cacheKey);
     if (cached) {
       return cached;
@@ -107,18 +94,18 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
     const roots = TagServicesMap.mapTagTreeFromApi(data);
     syncTrashTagIdToStore(normalizedGroupId, roots);
     rawTagTreeCache.set(cacheKey, roots);
-    rawTagFlatCache.set(cacheKey, buildFlatMap(roots));
+    rawTagFlatCache.set(cacheKey, buildTagFlatMap(roots));
     return roots;
   };
 
   const getRawTagById = (tagId: string, groupId?: string): TagTreeNode | undefined => {
-    const cacheKey = normalizeTagGroupId(groupId) ?? CACHE_KEY_DEFAULT;
+    const cacheKey = normalizeTagGroupId(groupId) ?? TAG_CACHE_KEY_DEFAULT;
     return rawTagFlatCache.get(cacheKey)?.get(tagId);
   };
 
   const getTagTree = async (groupId?: string): Promise<TagTreeNode[]> => {
     const normalizedGroupId = normalizeTagGroupId(groupId);
-    const cacheKey = normalizedGroupId ?? CACHE_KEY_DEFAULT;
+    const cacheKey = normalizedGroupId ?? TAG_CACHE_KEY_DEFAULT;
     const cached = tagTreeCache.get(cacheKey);
     if (cached) {
       return cached;
@@ -126,17 +113,14 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
 
     const rawRoots = await getRawTagTree(normalizedGroupId);
     // 剥离路径型（folder）与系统保留前缀（`.` 开头）
-    const nonFolderRoots: TagTreeNode[] = rawRoots.filter(
-      (item) => !(item.tagName && item.tagName.startsWith('/'))
-    );
-    const roots: TagTreeNode[] = filterHiddenTags(nonFolderRoots);
+    const roots = filterTagTreeForView(rawRoots);
     tagTreeCache.set(cacheKey, roots);
-    tagFlatCache.set(cacheKey, buildFlatMap(roots));
+    tagFlatCache.set(cacheKey, buildTagFlatMap(roots));
     return roots;
   };
 
   const getTagById = (tagId: string, groupId?: string): TagTreeNode | undefined => {
-    const cacheKey = normalizeTagGroupId(groupId) ?? CACHE_KEY_DEFAULT;
+    const cacheKey = normalizeTagGroupId(groupId) ?? TAG_CACHE_KEY_DEFAULT;
     return tagFlatCache.get(cacheKey)?.get(tagId);
   };
 
@@ -163,21 +147,29 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
     await getTagTree(targetTag.groupId);
     const tag = getTagById(targetTag.tagId, targetTag.groupId);
     // 缓存未命中时维持旧行为空目录；字段完整性由 mapper 负责。
-    const tags = tag ? tag.children : [];
+    let tags: TagTreeNode[] = [];
+    if (tag) {
+      tags = tag.children;
+    }
     const filePage = params.filePage ?? 1;
     const filePageSize = params.filePageSize ?? 20;
-    const listParams = {
-      page: filePage,
-      size: filePageSize,
-      sortBy: RESOURCE_SORT_BY.UPDATE_TIME,
-      sortDir: RESOURCE_SORT_DIR.DESC,
-      tagIds: [targetTag.tagId],
-      tagQueryLogicMode: 'AND' as const,
-    };
+    const listParams = buildTaggedResourceListRequest(targetTag.tagId, filePage, filePageSize);
     const normalizedGroupId = normalizeTagGroupId(targetTag.groupId);
-    const res = normalizedGroupId
-      ? await resourceService.getGroupResources({ ...listParams, groupId: normalizedGroupId })
-      : await resourceService.getUserResources(listParams);
+    let res: ResourceListPage;
+    if (normalizedGroupId) {
+      const groupListParams: GetGroupResourceRequest = {
+        page: listParams.page,
+        size: listParams.size,
+        sortBy: listParams.sortBy,
+        sortDir: listParams.sortDir,
+        tagIds: listParams.tagIds,
+        tagQueryLogicMode: listParams.tagQueryLogicMode,
+        groupId: normalizedGroupId,
+      };
+      res = await resourceService.getGroupResources(groupListParams);
+    } else {
+      res = await resourceService.getUserResources(listParams);
+    }
 
     return { tags, files: res.list, totalFiles: res.total };
   };

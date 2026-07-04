@@ -43,16 +43,27 @@ const mapFetchAdminUserListRequest = (
 
 const mapFetchAdminUserListFromApi = (
   data: FetchAdminUserListApiResponse
-): FetchAdminUserListResponse => ({
-  users: data.list.map(mapAdminUserApiModelToEntity),
-  total: data.total,
-  page: data.page,
-  size: data.size,
-  totalPage: data.totalPage,
-});
+): FetchAdminUserListResponse => {
+  const users: AdminUser[] = [];
+  for (const item of data.list) {
+    users.push(mapAdminUserApiModelToEntity(item));
+  }
+  return {
+    users,
+    total: data.total,
+    page: data.page,
+    size: data.size,
+    totalPage: data.totalPage,
+  };
+};
 
-const mapAdminUserListFromApi = (data: AdminUserApiModel[]): AdminUser[] =>
-  data.map(mapAdminUserApiModelToEntity);
+const mapAdminUserListFromApi = (data: AdminUserApiModel[]): AdminUser[] => {
+  const users: AdminUser[] = [];
+  for (const item of data) {
+    users.push(mapAdminUserApiModelToEntity(item));
+  }
+  return users;
+};
 
 const mapGetAdminUserInfoFromApi = (data: {
   userInfo: AdminUserApiModel;

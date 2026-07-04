@@ -58,53 +58,75 @@ export function buildCapabilityPickerSections(
     otherSkillGroups,
   } = input;
 
-  const selectedSkillIdSet = new Set(selectedSkills.map((s) => s.skillId));
-  const selectedToolIdSet = new Set(selectedTools.map((t) => t.toolId));
+  const selectedSkillIdSet = new Set<string>();
+  for (const skill of selectedSkills) {
+    selectedSkillIdSet.add(skill.skillId);
+  }
+  const selectedToolIdSet = new Set<string>();
+  for (const tool of selectedTools) {
+    selectedToolIdSet.add(tool.toolId);
+  }
 
   const sections: CapabilityPickerSection[] = [];
 
   // Primary skills
   if (primarySkills.length > 0) {
-    sections.push({
-      key: 'primary-skills',
-      items: primarySkills.map((skill) => ({
+    const primaryItems: CapabilityPickerItem[] = [];
+    for (const skill of primarySkills) {
+      primaryItems.push({
         key: skill.skillId,
-        kind: 'primary-skill' as const,
+        kind: 'primary-skill',
         label: skill.displayName,
         checked: selectedSkillIdSet.has(skill.skillId),
         skill,
-      })),
+      });
+    }
+
+    sections.push({
+      key: 'primary-skills',
+      items: primaryItems,
     });
   }
 
   // External skills (advanced mode only)
   if (advancedMode) {
-    const orderMap = new Map(otherSkillGroups.map((group, index) => [group.key, index]));
-    const externalItems: CapabilityPickerItem[] = selectedSkills
-      .filter((item) => item.external)
-      .sort((a, b) => {
-        const aKey = a.groupId ? `group-${a.groupId}` : 'personal';
-        const bKey = b.groupId ? `group-${b.groupId}` : 'personal';
-        return (
-          (orderMap.get(aKey) ?? Number.MAX_SAFE_INTEGER) -
-          (orderMap.get(bKey) ?? Number.MAX_SAFE_INTEGER)
-        );
-      })
-      .map((item) => ({
+    const orderMap = new Map<string, number>();
+    for (let index = 0; index < otherSkillGroups.length; index += 1) {
+      const group = otherSkillGroups[index];
+      orderMap.set(group.key, index);
+    }
+
+    const externalSelections: CapabilitySkillSelection[] = [];
+    for (const item of selectedSkills) {
+      if (!item.external) continue;
+      externalSelections.push(item);
+    }
+
+    externalSelections.sort((a, b) => {
+      const aKey = a.groupId ? `group-${a.groupId}` : 'personal';
+      const bKey = b.groupId ? `group-${b.groupId}` : 'personal';
+      return (
+        (orderMap.get(aKey) ?? Number.MAX_SAFE_INTEGER) -
+        (orderMap.get(bKey) ?? Number.MAX_SAFE_INTEGER)
+      );
+    });
+
+    const externalItems: CapabilityPickerItem[] = [];
+    for (const item of externalSelections) {
+      const sourceName = item.groupName || item.sourceAgentLabel;
+      externalItems.push({
         key: item.skillId,
-        kind: 'external-skill' as const,
+        kind: 'external-skill',
         label: item.displayName,
         checked: true,
-        sourceText:
-          item.groupName || item.sourceAgentLabel
-            ? ` · ${(item.groupName || item.sourceAgentLabel) ?? ''}提供`
-            : undefined,
-      }));
+        sourceText: sourceName ? ` · ${sourceName}提供` : undefined,
+      });
+    }
 
     externalItems.push({
       key: SELECT_OTHER_KEY,
       kind: 'select-other',
-      label: '选择其他 Skill...',
+      label: '选择其他 Skill',
     });
 
     sections.push({
@@ -115,15 +137,20 @@ export function buildCapabilityPickerSections(
 
   // Tools
   if (toolOptions.length > 0) {
-    sections.push({
-      key: 'tools',
-      items: toolOptions.map((tool) => ({
+    const toolItems: CapabilityPickerItem[] = [];
+    for (const tool of toolOptions) {
+      toolItems.push({
         key: tool.toolId,
-        kind: 'tool' as const,
+        kind: 'tool',
         label: tool.label,
         checked: selectedToolIdSet.has(tool.toolId),
         tool,
-      })),
+      });
+    }
+
+    sections.push({
+      key: 'tools',
+      items: toolItems,
     });
   }
 

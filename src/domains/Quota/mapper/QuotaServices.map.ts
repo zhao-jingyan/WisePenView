@@ -32,7 +32,10 @@ const mapFetchUserGroupQuotasFromApi = (
 ): { quotas: UserGroupQuota[]; total: number } => {
   // fallback：兼容旧分页字段 records
   const rawList = data.list ?? data.records ?? [];
-  const quotas = rawList.map(mapUserGroupQuotaFromApi);
+  const quotas: UserGroupQuota[] = [];
+  for (const item of rawList) {
+    quotas.push(mapUserGroupQuotaFromApi(item));
+  }
 
   return {
     quotas,

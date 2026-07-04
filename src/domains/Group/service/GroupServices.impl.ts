@@ -30,9 +30,10 @@ const fetchGroupList = async (
 const fetchGroupInfo = async (groupId: string): Promise<Group> => {
   const myRole = await fetchMyRoleInGroup(groupId);
   const query = GroupServicesMap.mapFetchGroupInfoRequest(groupId);
-  const data = await (myRole === 'MEMBER'
-    ? GroupApi.getGroupBaseInfo(query)
-    : GroupApi.getGroupDetailInfo(query));
+  const data =
+    myRole === 'MEMBER'
+      ? await GroupApi.getGroupBaseInfo(query)
+      : await GroupApi.getGroupDetailInfo(query);
   if (!data) throw createClientError(FRONTEND_CLIENT_ERROR.GROUP_INFO_FETCH_FAILED);
   return GroupServicesMap.mapFetchGroupInfoFromApi(data);
 };
@@ -62,8 +63,8 @@ const updateGroupResConfig = async (params: UpdateGroupResConfigRequest) => {
 };
 
 const createGroup = async (params: CreateGroupRequest): Promise<string> => {
-  const { defaultMemberActions, ...groupParams } = params;
-  const payload = await GroupApi.addGroup(groupParams);
+  const request = GroupServicesMap.mapCreateGroupRequest(params);
+  const payload = await GroupApi.addGroup(request);
   if (payload == null) {
     throw createClientError(FRONTEND_CLIENT_ERROR.GROUP_CREATE_FAILED);
   }
@@ -73,7 +74,9 @@ const createGroup = async (params: CreateGroupRequest): Promise<string> => {
   }
   await updateGroupResConfig({
     groupId,
-    defaultMemberActions: normalizeResourceActions(defaultMemberActions ?? DEFAULT_MEMBER_ACTIONS),
+    defaultMemberActions: normalizeResourceActions(
+      params.defaultMemberActions ?? DEFAULT_MEMBER_ACTIONS
+    ),
   });
   return groupId;
 };

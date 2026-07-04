@@ -10,6 +10,7 @@ import type { EnumKey } from '@/utils/enum';
 import { formatTimestampToDate } from '@/utils/format/formatTime';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import type {
+  AddGroupApiRequest,
   ChangeGroupConfigApiRequest,
   FetchGroupMembersApiResponse,
   GetGroupConfigApiRequest,
@@ -20,7 +21,11 @@ import type {
   ListGroupApiResponse,
   ListMemberApiRequest,
 } from '../apis/GroupApi.type';
-import type { FetchGroupListRequest, UpdateGroupResConfigRequest } from '../service/index.type';
+import type {
+  CreateGroupRequest,
+  FetchGroupListRequest,
+  UpdateGroupResConfigRequest,
+} from '../service/index.type';
 import { mapGroupMemberRawResponse } from './groupMember.mapper';
 
 type GroupRaw = Partial<Group> & {
@@ -30,9 +35,8 @@ type GroupRaw = Partial<Group> & {
 
 const mapRequiredTextFromApi = (value: unknown): string => String(value ?? '');
 
-const mapGroupFromApi = (raw: GroupRaw): Group =>
-  ({
-    ...raw,
+const mapGroupFromApi = (raw: GroupRaw): Group => {
+  const group: Group = {
     groupId: normalizeId(raw.groupId),
     // fallback：旧小组接口可能缺少必填展示字段，mapper 统一补齐为空文本。
     groupName: mapRequiredTextFromApi(raw.groupName),
@@ -43,7 +47,14 @@ const mapGroupFromApi = (raw: GroupRaw): Group =>
     // fallback：旧小组接口缺少 memberCount 时按 0 展示。
     memberCount: Number(raw.memberCount) || 0,
     createTime: formatTimestampToDate(raw.createTime),
-  }) as Group;
+  };
+  group.ownerId = raw.ownerId;
+  group.ownerInfo = raw.ownerInfo;
+  group.inviteCode = raw.inviteCode;
+  group.tokenUsed = raw.tokenUsed;
+  group.tokenBalance = raw.tokenBalance;
+  return group;
+};
 
 const mapTagResourceActionFromApi = (value: unknown): TagResourceAction | undefined => {
   if (typeof value === 'number' && TAG_RESOURCE_ACTION.getKey(value) != null) {
@@ -56,20 +67,29 @@ const mapTagResourceActionFromApi = (value: unknown): TagResourceAction | undefi
   if (Number.isInteger(numericValue) && TAG_RESOURCE_ACTION.getKey(numericValue) != null) {
     return numericValue as TagResourceAction;
   }
-  const action = TAG_RESOURCE_ACTION.options.find((item) => item.key === text.toUpperCase())?.value;
+  let action: TagResourceAction | undefined;
+  for (const item of TAG_RESOURCE_ACTION.options) {
+    if (item.key !== text.toUpperCase()) continue;
+    action = item.value as TagResourceAction;
+    break;
+  }
   // fallback：兼容旧接口把动作枚举序列化成枚举名
-  return action != null && TAG_RESOURCE_ACTION.getKey(action) != null
-    ? (action as TagResourceAction)
-    : undefined;
+  if (action != null && TAG_RESOURCE_ACTION.getKey(action) != null) {
+    return action as TagResourceAction;
+  }
+  return undefined;
 };
 
-const mapDefaultMemberActionsFromApi = (actions?: unknown[]): TagResourceAction[] =>
-  normalizeResourceActions(
-    // fallback：缺失 defaultMemberActions 时按空权限处理
-    (actions ?? [])
-      .map(mapTagResourceActionFromApi)
-      .filter((value): value is TagResourceAction => value != null)
-  );
+const mapDefaultMemberActionsFromApi = (actions?: unknown[]): TagResourceAction[] => {
+  const normalized: TagResourceAction[] = [];
+  // fallback：缺失 defaultMemberActions 时按空权限处理
+  for (const action of actions ?? []) {
+    const mapped = mapTagResourceActionFromApi(action);
+    if (mapped == null) continue;
+    normalized.push(mapped);
+  }
+  return normalizeResourceActions(normalized);
+};
 
 const mapFetchGroupListRequest = (params: FetchGroupListRequest): ListGroupApiRequest => ({
   groupRoleFilter: params.groupRoleFilter,
@@ -79,10 +99,16 @@ const mapFetchGroupListRequest = (params: FetchGroupListRequest): ListGroupApiRe
 
 const mapFetchGroupListFromApi = (
   data: ListGroupApiResponse
-): { groups: Group[]; total: number } => ({
-  groups: data.list.map((item) => mapGroupFromApi(item as unknown as GroupRaw)),
-  total: Number(data.total) || 0,
-});
+): { groups: Group[]; total: number } => {
+  const groups: Group[] = [];
+  for (const item of data.list) {
+    groups.push(mapGroupFromApi(item as unknown as GroupRaw));
+  }
+  return {
+    groups,
+    total: Number(data.total) || 0,
+  };
+};
 
 const mapFetchGroupInfoFromApi = (data: Group): Group =>
   mapGroupFromApi(data as unknown as GroupRaw);
@@ -120,6 +146,15 @@ const mapUpdateGroupResConfigRequest = (
   defaultMemberActions: resourceActionsToApiKeys(params.defaultMemberActions),
 });
 
+const mapCreateGroupRequest = (params: CreateGroupRequest): AddGroupApiRequest => {
+  return {
+    groupName: params.groupName,
+    groupType: params.groupType,
+    groupDesc: params.groupDesc,
+    groupCoverUrl: params.groupCoverUrl,
+  };
+};
+
 const mapCreateGroupFromApi = (data: string | number): string => normalizeId(data);
 
 const mapFetchGroupMembersRequest = (
@@ -132,17 +167,28 @@ const mapFetchGroupMembersRequest = (
   size,
 });
 
-const mapFetchGroupMembersFromApi = (data: FetchGroupMembersApiResponse): GroupMemberList => ({
-  members: data.list.map(mapGroupMemberRawResponse),
-  total: Number(data.total) || 0,
-});
+const mapFetchGroupMembersFromApi = (data: FetchGroupMembersApiResponse): GroupMemberList => {
+  const members: GroupMemberList['members'] = [];
+  for (const item of data.list) {
+    members.push(mapGroupMemberRawResponse(item));
+  }
+  return {
+    members,
+    total: Number(data.total) || 0,
+  };
+};
 
 const mapFetchMyRoleInGroupRequest = (groupId: string): string => groupId;
 
 const mapFetchMyRoleInGroupFromApi = (
   data: number | GroupRoleApiResponse
 ): EnumKey<typeof ROLE> | null => {
-  const roleNum = typeof data === 'number' ? data : data.role;
+  let roleNum: number;
+  if (typeof data === 'number') {
+    roleNum = data;
+  } else {
+    roleNum = data.role;
+  }
   if (roleNum == null || roleNum < 0) return null;
   // fallback：未知角色值按普通成员处理，保持旧行为
   return ROLE.getKey(roleNum) ?? 'MEMBER';
@@ -157,6 +203,7 @@ export const GroupServicesMap = {
   mapFetchGroupResConfigFromApi,
   mapFetchGroupResConfigRequest,
   mapUpdateGroupResConfigRequest,
+  mapCreateGroupRequest,
   mapCreateGroupFromApi,
   mapFetchGroupMembersRequest,
   mapFetchGroupMembersFromApi,

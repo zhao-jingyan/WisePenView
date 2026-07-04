@@ -13,14 +13,22 @@ export interface OtherSkillTreeGroup extends SkillScopeTreeGroup {
   sourceAgent: ChatAgentOption | null;
 }
 
-export const getSkillScopeLabel = (skill: SkillSummary): string =>
-  skill.scopeType === 'GROUP' ? skill.groupName || '小组' : '个人';
+export const getSkillScopeLabel = (skill: SkillSummary): string => {
+  if (skill.scopeType === 'GROUP') {
+    return skill.groupName || '小组';
+  }
+  return '个人';
+};
 
-const getSkillTreeGroupKey = (agent: ChatAgentOption | null | undefined): string =>
-  !agent || agent.agentType === 'PERSONAL' ? 'personal' : `group-${agent.groupId ?? agent.agentId}`;
+const getSkillTreeGroupKey = (agent: ChatAgentOption | null | undefined): string => {
+  if (!agent || agent.agentType === 'PERSONAL') return 'personal';
+  return `group-${agent.groupId ?? agent.agentId}`;
+};
 
-const getSkillTreeGroupLabel = (agent: ChatAgentOption | null | undefined): string =>
-  !agent || agent.agentType === 'PERSONAL' ? '个人' : agent.groupName || agent.label || '小组';
+const getSkillTreeGroupLabel = (agent: ChatAgentOption | null | undefined): string => {
+  if (!agent || agent.agentType === 'PERSONAL') return '个人';
+  return agent.groupName || agent.label || '小组';
+};
 
 const buildCurrentAgentSkillTreeGroup = (
   agent: ChatAgentOption | null | undefined,
@@ -48,7 +56,14 @@ const isSkillInAgentScope = (
 export const getPrimarySkillsForAgent = (
   skills: SkillSummary[],
   agent: ChatAgentOption | null | undefined
-): SkillSummary[] => skills.filter((skill) => isSkillInAgentScope(skill, agent));
+): SkillSummary[] => {
+  const primarySkills: SkillSummary[] = [];
+  for (const skill of skills) {
+    if (!isSkillInAgentScope(skill, agent)) continue;
+    primarySkills.push(skill);
+  }
+  return primarySkills;
+};
 
 export const buildAdvancedSkillTreeGroups = (
   skills: SkillSummary[],
@@ -57,34 +72,49 @@ export const buildAdvancedSkillTreeGroups = (
   currentAgentSkills: SkillSummary[] = []
 ): SkillScopeTreeGroup[] => {
   const groupSkillMap = new Map<string, SkillSummary[]>();
-  skills
-    .filter((skill) => skill.scopeType === 'GROUP' && skill.groupId)
-    .forEach((skill) => {
-      const groupId = skill.groupId!;
-      const existing = groupSkillMap.get(groupId) ?? [];
-      existing.push(skill);
-      groupSkillMap.set(groupId, existing);
-    });
+  const personalSkills: SkillSummary[] = [];
 
-  const orderedGroups: SkillScopeTreeGroup[] = groups
-    .map((group) => ({
+  for (const skill of skills) {
+    if (skill.scopeType !== 'GROUP') {
+      personalSkills.push(skill);
+      continue;
+    }
+    if (!skill.groupId) continue;
+    const existing = groupSkillMap.get(skill.groupId) ?? [];
+    existing.push(skill);
+    groupSkillMap.set(skill.groupId, existing);
+  }
+
+  const orderedGroups: SkillScopeTreeGroup[] = [];
+  const knownGroupIds = new Set<string>();
+  for (const group of groups) {
+    knownGroupIds.add(group.groupId);
+    const groupSkills = groupSkillMap.get(group.groupId) ?? [];
+    if (groupSkills.length === 0) continue;
+    orderedGroups.push({
       key: `group-${group.groupId}`,
       label: group.groupName,
-      skills: groupSkillMap.get(group.groupId) ?? [],
-    }))
-    .filter((item) => item.skills.length > 0);
+      skills: groupSkills,
+    });
+  }
 
-  const knownGroupIds = new Set(groups.map((group) => group.groupId));
-  const extraGroups = Array.from(groupSkillMap.entries())
-    .filter(([groupId]) => !knownGroupIds.has(groupId))
-    .map(([groupId, groupSkills]) => ({
+  const extraGroups: SkillScopeTreeGroup[] = [];
+  for (const [groupId, groupSkills] of groupSkillMap.entries()) {
+    if (knownGroupIds.has(groupId)) continue;
+    extraGroups.push({
       key: `group-${groupId}`,
       label: groupSkills[0]?.groupName || groupId,
       skills: groupSkills,
-    }));
+    });
+  }
 
-  const personalSkills = skills.filter((skill) => skill.scopeType !== 'GROUP');
-  const result = [...orderedGroups, ...extraGroups];
+  const result: SkillScopeTreeGroup[] = [];
+  for (const group of orderedGroups) {
+    result.push(group);
+  }
+  for (const group of extraGroups) {
+    result.push(group);
+  }
   if (personalSkills.length > 0) {
     result.push({
       key: 'personal',
@@ -95,12 +125,22 @@ export const buildAdvancedSkillTreeGroups = (
 
   if (currentAgent) {
     const currentGroup = buildCurrentAgentSkillTreeGroup(currentAgent, currentAgentSkills);
-    const alreadyIncluded = result.some((group) => group.key === currentGroup.key);
+    let alreadyIncluded = false;
+    for (const group of result) {
+      if (group.key !== currentGroup.key) continue;
+      alreadyIncluded = true;
+      break;
+    }
     if (!alreadyIncluded) {
       if (currentGroup.key === 'personal') {
         result.push(currentGroup);
       } else {
-        const personalIndex = result.findIndex((group) => group.key === 'personal');
+        let personalIndex = -1;
+        for (let index = 0; index < result.length; index += 1) {
+          if (result[index].key !== 'personal') continue;
+          personalIndex = index;
+          break;
+        }
         if (personalIndex === -1) {
           result.push(currentGroup);
         } else {
@@ -116,8 +156,15 @@ export const buildAdvancedSkillTreeGroups = (
 export const buildOtherSkillTreeGroups = (
   groups: SkillScopeTreeGroup[],
   currentAgent: ChatAgentOption | null
-): OtherSkillTreeGroup[] =>
-  groups.map((group) => ({
-    ...group,
-    sourceAgent: buildAgentFromSkillTreeGroup(group, currentAgent),
-  }));
+): OtherSkillTreeGroup[] => {
+  const result: OtherSkillTreeGroup[] = [];
+  for (const group of groups) {
+    result.push({
+      key: group.key,
+      label: group.label,
+      skills: group.skills,
+      sourceAgent: buildAgentFromSkillTreeGroup(group, currentAgent),
+    });
+  }
+  return result;
+};

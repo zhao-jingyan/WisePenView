@@ -126,16 +126,21 @@ const mapListTransactionsRequest = (
       ? WALLET_TOKEN_TX_TYPE.getKey(params.type)
       : undefined;
 
-  return {
+  const request: ListTransactionsApiRequest = {
     // fallback：未传分页时使用钱包页默认第一页
     page: params.page ?? 1,
     // fallback：未传分页大小时使用钱包页默认 20
     size: params.size ?? 20,
-    // 不传 groupId：空值表示查询个人流水
-    ...(hasGroupId ? { groupId: String(groupId) } : {}),
-    // 不传 type：全部流水；无法映射枚举名时也省略，避免后端 400
-    ...(typeName != null ? { type: typeName } : {}),
   };
+  // 不传 groupId：空值表示查询个人流水
+  if (hasGroupId) {
+    request.groupId = String(groupId);
+  }
+  // 不传 type：全部流水；无法映射枚举名时也省略，避免后端 400
+  if (typeName != null) {
+    request.type = typeName;
+  }
+  return request;
 };
 
 const mapListTransactionsFromApi = (
@@ -144,9 +149,11 @@ const mapListTransactionsFromApi = (
   // fallback：兼容旧分页字段 records
   const rawList = data.list ?? data.records ?? [];
   const list = Array.isArray(rawList) ? rawList : [];
-  const records = list
-    .filter((item): item is Record<string, unknown> => item != null && typeof item === 'object')
-    .map(mapTransactionRowFromApi);
+  const records: WalletTransactionRecord[] = [];
+  for (const item of list) {
+    if (item == null || typeof item !== 'object') continue;
+    records.push(mapTransactionRowFromApi(item as Record<string, unknown>));
+  }
 
   return {
     // fallback：缺失 total 时使用当前记录数
