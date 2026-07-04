@@ -9,6 +9,7 @@ export {
   buildGroupAgent,
   resolveChatInputSelectedAgent,
 } from './mapper/agent.mapper';
+export { mapUploadAttachmentResultToContext } from './mapper/attachment.mapper';
 export {
   buildCapabilityPickerSections,
   buildCapabilityPickerSections as buildSkillMenuSections,
@@ -27,8 +28,8 @@ export {
   isDocumentPickerScopeRootKey,
   isExpandableDocumentPickerNode,
   isSelectableDocumentPickerNode,
-  mapDriveNodeToDocumentPickerNode,
   mapDocumentPickerNodesToSelectedResources,
+  mapDriveNodeToDocumentPickerNode,
   parseDocumentPickerTreeKey,
   replaceDocumentPickerTreeNodeChildren,
 } from './mapper/documentPicker.mapper';

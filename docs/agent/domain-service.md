@@ -69,7 +69,9 @@ Domain service 的业务逻辑显式优先：
 
 - public service 方法应像后端应用服务一样按步骤阅读：参数归一化、业务校验、读取上下文、调用 API、同步副作用、返回结果。
 - 有业务含义的分支优先使用 `if`、`else if`、提前 `return`，避免嵌套三元表达式。
-- 有校验、抛错、缓存写入或副作用的集合处理优先使用 `for...of`，避免链式 `map/filter/flatMap` 掩盖步骤。
+- 有校验、抛错、缓存写入或副作用的集合处理优先使用 `for...of`，避免链式表达掩盖步骤。
+- service 内若存在多阶段合并、过滤、排序、去重或跨 service 协作，应为关键业务规则写中文注释；普通参数传递和自解释 API 调用不写冗余注释。
+- 纯数据转换不在 service 中展开，交给 mapper；简单集合转换在 mapper 中可以使用 `map/filter`。
 - `Promise.all` 只用于明确互不依赖的并发请求；每个结果应有清晰命名，不构造混合数组后再用 `as` 强转。
 - service 中避免隐式对象展开掩盖请求字段来源；业务 payload 优先显式列出字段，或交给 mapper/helper 构造。
 - mapper 仍承担 DTO 兼容、fallback、字段归一化，可以保留必要的 TypeScript 表达式；service 消费稳定 entity。
@@ -129,6 +131,8 @@ src/domains/<Domain>/
 - [ ] service 不做 UI 提示。
 - [ ] service 不直接 import Axios。
 - [ ] service 业务流程使用显式变量、分支和循环，避免过度链式表达。
+- [ ] service 中复杂过滤、排序、合并或跨 service 协作有必要中文注释。
+- [ ] 自解释代码没有冗余注释。
 - [ ] 字段转换交给 mapper。
 - [ ] 字段 fallback 没有散落在 service。
 - [ ] 错误向上抛出。

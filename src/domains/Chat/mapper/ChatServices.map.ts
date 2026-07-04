@@ -89,17 +89,15 @@ const normalizeProviderOption = (
 const getOrderedProviderOptions = (
   model: ListModelsApiResponse['system_models'][number]
 ): ChatModelProviderOption[] => {
-  const options: ChatModelProviderOption[] = [];
-  const mappings = model.mappings ?? [];
-  for (const mapping of mappings) {
-    if (!mapping.is_active) continue;
-    options.push(normalizeProviderOption(mapping, model));
-  }
-  options.sort((a, b) => {
+  const options = (model.mappings ?? [])
+    .filter((mapping) => mapping.is_active)
+    .map((mapping) => normalizeProviderOption(mapping, model));
+
+  // provider 选择器优先展示推荐项，其次按后端优先级和 provider model 名稳定排序。
+  return options.sort((a, b) => {
     if (a.isPreferred !== b.isPreferred) return a.isPreferred ? -1 : 1;
     return a.priority - b.priority || a.providerModelName.localeCompare(b.providerModelName);
   });
-  return options;
 };
 
 const buildSelectionId = (modelId: string, providerId?: string): string =>

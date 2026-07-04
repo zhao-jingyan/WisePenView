@@ -37,7 +37,6 @@ function SkillMenu() {
         selectedSkills,
         selectedTools,
         toolOptions: skillMenuOptions?.tools ?? [],
-        advancedMode: true,
         otherSkillGroups: skillMenuOptions?.otherSkillGroups ?? [],
       }),
     [selectedSkills, selectedTools, skillMenuOptions]

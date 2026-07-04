@@ -149,11 +149,9 @@ const mapListTransactionsFromApi = (
   // fallback：兼容旧分页字段 records
   const rawList = data.list ?? data.records ?? [];
   const list = Array.isArray(rawList) ? rawList : [];
-  const records: WalletTransactionRecord[] = [];
-  for (const item of list) {
-    if (item == null || typeof item !== 'object') continue;
-    records.push(mapTransactionRowFromApi(item as Record<string, unknown>));
-  }
+  const records = list
+    .filter((item): item is Record<string, unknown> => item != null && typeof item === 'object')
+    .map(mapTransactionRowFromApi);
 
   return {
     // fallback：缺失 total 时使用当前记录数

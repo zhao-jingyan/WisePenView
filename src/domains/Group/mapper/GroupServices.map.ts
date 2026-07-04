@@ -67,12 +67,8 @@ const mapTagResourceActionFromApi = (value: unknown): TagResourceAction | undefi
   if (Number.isInteger(numericValue) && TAG_RESOURCE_ACTION.getKey(numericValue) != null) {
     return numericValue as TagResourceAction;
   }
-  let action: TagResourceAction | undefined;
-  for (const item of TAG_RESOURCE_ACTION.options) {
-    if (item.key !== text.toUpperCase()) continue;
-    action = item.value as TagResourceAction;
-    break;
-  }
+  const action = TAG_RESOURCE_ACTION.options.find((item) => item.key === text.toUpperCase())
+    ?.value as TagResourceAction | undefined;
   // fallback：兼容旧接口把动作枚举序列化成枚举名
   if (action != null && TAG_RESOURCE_ACTION.getKey(action) != null) {
     return action as TagResourceAction;
@@ -81,13 +77,10 @@ const mapTagResourceActionFromApi = (value: unknown): TagResourceAction | undefi
 };
 
 const mapDefaultMemberActionsFromApi = (actions?: unknown[]): TagResourceAction[] => {
-  const normalized: TagResourceAction[] = [];
   // fallback：缺失 defaultMemberActions 时按空权限处理
-  for (const action of actions ?? []) {
-    const mapped = mapTagResourceActionFromApi(action);
-    if (mapped == null) continue;
-    normalized.push(mapped);
-  }
+  const normalized = (actions ?? [])
+    .map(mapTagResourceActionFromApi)
+    .filter((action): action is TagResourceAction => action != null);
   return normalizeResourceActions(normalized);
 };
 
@@ -100,12 +93,8 @@ const mapFetchGroupListRequest = (params: FetchGroupListRequest): ListGroupApiRe
 const mapFetchGroupListFromApi = (
   data: ListGroupApiResponse
 ): { groups: Group[]; total: number } => {
-  const groups: Group[] = [];
-  for (const item of data.list) {
-    groups.push(mapGroupFromApi(item as unknown as GroupRaw));
-  }
   return {
-    groups,
+    groups: data.list.map((item) => mapGroupFromApi(item as unknown as GroupRaw)),
     total: Number(data.total) || 0,
   };
 };
@@ -168,12 +157,8 @@ const mapFetchGroupMembersRequest = (
 });
 
 const mapFetchGroupMembersFromApi = (data: FetchGroupMembersApiResponse): GroupMemberList => {
-  const members: GroupMemberList['members'] = [];
-  for (const item of data.list) {
-    members.push(mapGroupMemberRawResponse(item));
-  }
   return {
-    members,
+    members: data.list.map(mapGroupMemberRawResponse),
     total: Number(data.total) || 0,
   };
 };

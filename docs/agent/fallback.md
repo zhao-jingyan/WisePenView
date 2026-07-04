@@ -6,6 +6,7 @@ WisePenView 的目标是保持前端契约精简、同步、可追踪。`fallbac
 
 - 字段兼容、旧接口兼容、大小写兼容、历史数据补齐，统一放在 `src/domains/<Domain>/mapper` 或明确命名的领域 normalizer 中。
 - Service、component、view 默认消费稳定 entity，不用 `??`、`?.` 链条修补后端字段。
+- fallback 表达式如果让对象字面量难读，应抽成命名 mapper/normalizer，并在函数名或中文注释中说明兼容来源。
 - 接口字段不确定时，先确认契约或调整 mapper，不用默认值掩盖问题。
 - 必填字段缺失时，不要静默转成空字符串、空数组或 `0`；应在 mapper 中转成显式 nullable 类型，或由 service 抛出业务错误。
 - 每个非显而易见的兼容 fallback 都要有中文注释说明兼容来源，例如旧字段、后端过渡字段或历史数据。

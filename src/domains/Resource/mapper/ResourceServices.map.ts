@@ -194,13 +194,8 @@ const mapResourceListPageFromApi = (
   data: ResourceListPageApiResponse,
   context: MapResourceItemContext = {}
 ): ResourceListPage => {
-  const list: ResourceItem[] = [];
-  for (const item of data.list) {
-    list.push(mapResourceItemFromApi(item, context));
-  }
-
   return {
-    list,
+    list: data.list.map((item) => mapResourceItemFromApi(item, context)),
     total: data.total,
     page: data.page,
     size: data.size,
@@ -271,7 +266,6 @@ const mapInteractStatsFromApi = (resourceInfo: ResourceItem): ResourceInteractSt
   };
 };
 
-// 枚举归一化大小写，下游 === 比较与分组 label 生效
 const mapSearchHitFromApi = (raw: GlobalSearchApiResponse['list'][number]): SearchHitItem => {
   return {
     resourceId: raw.resourceId,
@@ -287,12 +281,8 @@ const mapSearchHitFromApi = (raw: GlobalSearchApiResponse['list'][number]): Sear
 };
 
 const mapSearchResultPageFromApi = (data: GlobalSearchApiResponse): SearchResultPage => {
-  const list: SearchHitItem[] = [];
-  for (const item of data.list) {
-    list.push(mapSearchHitFromApi(item));
-  }
   return {
-    list,
+    list: data.list.map(mapSearchHitFromApi),
     total: data.total,
     page: data.page,
     size: data.size,

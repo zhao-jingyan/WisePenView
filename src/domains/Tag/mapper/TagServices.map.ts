@@ -35,12 +35,9 @@ const isTagVisibilityModeString = (value: unknown): value is TagVisibilityModeSt
 
 const mapGrantedActionsFromApi = (actions: unknown): TagResourceAction[] | undefined => {
   if (!Array.isArray(actions)) return undefined;
-  const normalized: TagResourceAction[] = [];
-  for (const item of actions) {
-    const action = Number(item);
-    if (TAG_RESOURCE_ACTION.getKey(action) == null) continue;
-    normalized.push(action as TagResourceAction);
-  }
+  const normalized = actions
+    .map(Number)
+    .filter((action): action is TagResourceAction => TAG_RESOURCE_ACTION.getKey(action) != null);
   return normalizeResourceActions(normalized);
 };
 
@@ -50,10 +47,7 @@ const mapTagTreeNodeFromApi = (node: GetTagTreeApiResponse[number]): TagTreeNode
   if (isTagVisibilityModeString(visibilityMode)) {
     normalizedVisibilityMode = visibilityMode;
   }
-  const children: TagTreeNode[] = [];
-  for (const child of node.children ?? []) {
-    children.push(mapTagTreeNodeFromApi(child));
-  }
+  const children = (node.children ?? []).map(mapTagTreeNodeFromApi);
 
   return {
     tagId: node.tagId,
@@ -83,13 +77,8 @@ const mapTagTreeNodeFromApi = (node: GetTagTreeApiResponse[number]): TagTreeNode
   };
 };
 
-const mapTagTreeFromApi = (data: GetTagTreeApiResponse): TagTreeNode[] => {
-  const roots: TagTreeNode[] = [];
-  for (const node of data) {
-    roots.push(mapTagTreeNodeFromApi(node));
-  }
-  return roots;
-};
+const mapTagTreeFromApi = (data: GetTagTreeApiResponse): TagTreeNode[] =>
+  data.map(mapTagTreeNodeFromApi);
 
 const mapAddTagRequest = (params: TagCreateRequest): AddTagApiRequest => {
   return {

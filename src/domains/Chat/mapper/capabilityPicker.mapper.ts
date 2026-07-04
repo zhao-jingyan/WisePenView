@@ -6,7 +6,7 @@ export interface CapabilityToolOption {
   label: string;
 }
 
-export type CapabilityPickerItemKind = 'primary-skill' | 'external-skill' | 'tool' | 'select-other';
+export type CapabilityPickerItemKind = 'primary-skill' | 'external-skill' | 'tool';
 
 export interface CapabilityPickerItem {
   key: string;
@@ -40,68 +40,61 @@ interface BuildCapabilityPickerSectionsInput {
   selectedSkills: CapabilitySkillSelection[];
   selectedTools: CapabilityToolOption[];
   toolOptions: CapabilityToolOption[];
-  advancedMode: boolean;
   otherSkillGroups: SkillScopeTreeGroup[];
 }
 
-const SELECT_OTHER_KEY = '__select-other__';
+const mapPrimarySkillToPickerItem =
+  (selectedSkillIdSet: Set<string>) =>
+  (skill: SkillSummary): CapabilityPickerItem => ({
+    key: skill.skillId,
+    kind: 'primary-skill',
+    label: skill.displayName,
+    checked: selectedSkillIdSet.has(skill.skillId),
+    skill,
+  });
+
+const mapToolToPickerItem =
+  (selectedToolIdSet: Set<string>) =>
+  (tool: CapabilityToolOption): CapabilityPickerItem => ({
+    key: tool.toolId,
+    kind: 'tool',
+    label: tool.label,
+    checked: selectedToolIdSet.has(tool.toolId),
+    tool,
+  });
+
+const mapExternalSelectionToPickerItem = (item: CapabilitySkillSelection): CapabilityPickerItem => {
+  const sourceName = item.groupName || item.sourceAgentLabel;
+  return {
+    key: item.skillId,
+    kind: 'external-skill',
+    label: item.displayName,
+    checked: true,
+    sourceText: sourceName ? ` · ${sourceName}提供` : undefined,
+  };
+};
 
 export function buildCapabilityPickerSections(
   input: BuildCapabilityPickerSectionsInput
 ): CapabilityPickerSection[] {
-  const {
-    primarySkills,
-    selectedSkills,
-    selectedTools,
-    toolOptions,
-    advancedMode,
-    otherSkillGroups,
-  } = input;
+  const { primarySkills, selectedSkills, selectedTools, toolOptions, otherSkillGroups } = input;
 
-  const selectedSkillIdSet = new Set<string>();
-  for (const skill of selectedSkills) {
-    selectedSkillIdSet.add(skill.skillId);
-  }
-  const selectedToolIdSet = new Set<string>();
-  for (const tool of selectedTools) {
-    selectedToolIdSet.add(tool.toolId);
-  }
+  const selectedSkillIdSet = new Set(selectedSkills.map((skill) => skill.skillId));
+  const selectedToolIdSet = new Set(selectedTools.map((tool) => tool.toolId));
 
   const sections: CapabilityPickerSection[] = [];
 
-  // Primary skills
   if (primarySkills.length > 0) {
-    const primaryItems: CapabilityPickerItem[] = [];
-    for (const skill of primarySkills) {
-      primaryItems.push({
-        key: skill.skillId,
-        kind: 'primary-skill',
-        label: skill.displayName,
-        checked: selectedSkillIdSet.has(skill.skillId),
-        skill,
-      });
-    }
-
     sections.push({
       key: 'primary-skills',
-      items: primaryItems,
+      items: primarySkills.map(mapPrimarySkillToPickerItem(selectedSkillIdSet)),
     });
   }
 
-  // External skills (advanced mode only)
-  if (advancedMode) {
-    const orderMap = new Map<string, number>();
-    for (let index = 0; index < otherSkillGroups.length; index += 1) {
-      const group = otherSkillGroups[index];
-      orderMap.set(group.key, index);
-    }
-
-    const externalSelections: CapabilitySkillSelection[] = [];
-    for (const item of selectedSkills) {
-      if (!item.external) continue;
-      externalSelections.push(item);
-    }
-
+  const externalSelections = selectedSkills.filter((item) => item.external);
+  if (externalSelections.length > 0) {
+    const orderMap = new Map(otherSkillGroups.map((group, index) => [group.key, index]));
+    // 已选的其他 Skill 按弹窗树顺序展示，避免确认后菜单顺序跳变。
     externalSelections.sort((a, b) => {
       const aKey = a.groupId ? `group-${a.groupId}` : 'personal';
       const bKey = b.groupId ? `group-${b.groupId}` : 'personal';
@@ -111,46 +104,16 @@ export function buildCapabilityPickerSections(
       );
     });
 
-    const externalItems: CapabilityPickerItem[] = [];
-    for (const item of externalSelections) {
-      const sourceName = item.groupName || item.sourceAgentLabel;
-      externalItems.push({
-        key: item.skillId,
-        kind: 'external-skill',
-        label: item.displayName,
-        checked: true,
-        sourceText: sourceName ? ` · ${sourceName}提供` : undefined,
-      });
-    }
-
-    externalItems.push({
-      key: SELECT_OTHER_KEY,
-      kind: 'select-other',
-      label: '选择其他 Skill',
-    });
-
     sections.push({
       key: 'external-skills',
-      items: externalItems,
+      items: externalSelections.map(mapExternalSelectionToPickerItem),
     });
   }
 
-  // Tools
   if (toolOptions.length > 0) {
-    const toolItems: CapabilityPickerItem[] = [];
-    for (const tool of toolOptions) {
-      toolItems.push({
-        key: tool.toolId,
-        kind: 'tool',
-        label: tool.label,
-        checked: selectedToolIdSet.has(tool.toolId),
-        tool,
-      });
-    }
-
     sections.push({
       key: 'tools',
-      items: toolItems,
+      items: toolOptions.map(mapToolToPickerItem(selectedToolIdSet)),
     });
   }
 
