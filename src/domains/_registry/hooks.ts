@@ -10,6 +10,7 @@ import type { IImageService } from '@/domains/Image';
 import type { INoteService } from '@/domains/Note';
 import type { IQuotaService } from '@/domains/Quota';
 import type { IResourceService } from '@/domains/Resource';
+import type { ISkillService } from '@/domains/Skill';
 import type { ITagService } from '@/domains/Tag';
 import type { IUserService } from '@/domains/User';
 import type { IWalletService } from '@/domains/Wallet';
@@ -36,6 +37,7 @@ export const useImageService = (): IImageService => useServicesContext().imageSe
 export const useNoteService = (): INoteService => useServicesContext().noteService;
 export const useQuotaService = (): IQuotaService => useServicesContext().quotaService;
 export const useResourceService = (): IResourceService => useServicesContext().resourceService;
+export const useSkillService = (): ISkillService => useServicesContext().skillService;
 export const useTagService = (): ITagService => useServicesContext().tagService;
 export const useUserService = (): IUserService => useServicesContext().userService;
 /** 个人中心钱包、高级组 token 相关页注入 */

@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
-// 引入布局（保持同步加载，保证首屏壳子稳定）
+// Layout imports
 import AdminLayout from '@/layouts/Admin/AdminLayout';
 import AppLayout from '@/layouts/App/AppLayout';
 import AuthLayout from '@/layouts/Auth/AuthLayout';
@@ -160,6 +160,10 @@ const router = createBrowserRouter([
       {
         element: <WorkspaceLayout />,
         children: [
+          {
+            path: 'workspace/:editorType',
+            element: <WorkspaceResourceView />,
+          },
           {
             path: 'workspace/:editorType/:id',
             element: <WorkspaceResourceView />,

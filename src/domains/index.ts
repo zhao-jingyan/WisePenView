@@ -13,6 +13,7 @@ export {
   useNoteService,
   useQuotaService,
   useResourceService,
+  useSkillService,
   useTagService,
   useUserService,
   useWalletService,

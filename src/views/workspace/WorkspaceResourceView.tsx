@@ -16,6 +16,7 @@ import DrawioView from './drawio';
 import NoteView from './note';
 import OfficeView from './office';
 import DocumentPreview from './pdf';
+import SkillView from './skill';
 import styles from './WorkspaceResourceView.module.less';
 
 interface UnsupportedResourceProps {
@@ -51,7 +52,15 @@ function WorkspaceResourceView() {
   const { editorType: rawEditorType, id } = useParams<{ editorType?: string; id?: string }>();
   const editorType = normalizeResourceEditorType(rawEditorType);
 
-  if (!id || editorType == null || rawEditorType !== editorType) {
+  if (editorType == null || rawEditorType !== editorType) {
+    return <UnsupportedResource editorType={rawEditorType} />;
+  }
+
+  if (editorType === RESOURCE_EDITOR_TYPE.SKILL) {
+    return <SkillView resourceId={id} />;
+  }
+
+  if (!id) {
     return <UnsupportedResource editorType={rawEditorType} />;
   }
 

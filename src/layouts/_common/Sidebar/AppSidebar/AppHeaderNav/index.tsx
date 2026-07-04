@@ -1,3 +1,4 @@
+import { Modal } from '@/components/Overlay';
 import { useChatService, useNoteService } from '@/domains';
 import {
   clearNewChatSessionStore,
@@ -11,11 +12,10 @@ import {
   buildWorkspaceResourcePath,
   RESOURCE_EDITOR_TYPE,
 } from '@/utils/navigation/workspaceRoute';
-import { Modal } from '@/components/Overlay';
 import { Button, Input, ListBox, ListBoxItem, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
-import { Bot, CirclePlus, FileText, PenTool, Users, Workflow } from 'lucide-react';
+import { Bot, CirclePlus, FileText, PenTool, Puzzle, Users, Workflow } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { AppHeaderNavProps } from './index.type';
@@ -35,13 +35,18 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
   const isDriveActive = location.pathname.startsWith('/app/drive');
   const isGroupActive = location.pathname.startsWith('/app/my-group');
   const isChatActive = location.pathname.startsWith('/app/chat');
+  const isSkillActive =
+    location.pathname.startsWith('/app/workspace/skill') ||
+    location.pathname.startsWith('/app/skill');
   const selectedKeys = isChatActive
     ? ['/app/chat']
-    : isDriveActive
-      ? ['/app/drive']
-      : isGroupActive
-        ? ['/app/my-group']
-        : [];
+    : isSkillActive
+      ? ['/app/workspace/skill']
+      : isDriveActive
+        ? ['/app/drive']
+        : isGroupActive
+          ? ['/app/my-group']
+          : [];
   const { run: runCreateSession, loading: createSessionLoading } = useRequest(
     async () => chatService.createSession(),
     {
@@ -104,6 +109,10 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
       return;
     }
     runCreateNote();
+  };
+
+  const handleCreateSkill = () => {
+    navigate('/app/workspace/skill');
   };
 
   const { loading: creatingDrawio, run: runCreateDrawio } = useRequest(
@@ -184,6 +193,17 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
             <Workflow size={18} />
           </span>
           {!collapsed && <span className={styles.menuLabel}>新建图表</span>}
+        </ListBoxItem>
+        <ListBoxItem
+          id="new-skill"
+          textValue="新建 Skill"
+          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
+          onPress={handleCreateSkill}
+        >
+          <span className={styles.menuIcon}>
+            <Puzzle size={18} />
+          </span>
+          {!collapsed && <span className={styles.menuLabel}>新建 Skill</span>}
         </ListBoxItem>
         <ListBoxItem
           id="/app/chat"

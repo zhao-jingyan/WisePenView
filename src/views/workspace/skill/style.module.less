@@ -1,0 +1,218 @@
+.pageWrap {
+  min-height: 0;
+}
+
+.toolbarTitleText {
+  max-width: min(40vw, 420px);
+  min-width: 0;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.toolbarTitleIcon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.toolbarTitleContent {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toolbarTitleName {
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbarSaveStatus {
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.2;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbarSaveStatusDirty {
+  color: var(--warning);
+}
+
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.page {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.mainArea {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.contentRow {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.middlePanel {
+  flex: 0 0 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-light);
+  background: var(--surface);
+}
+
+.middlePanelHeader {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.middlePanelLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.middlePanelActions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.iconBtnSm {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm, 4px);
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.15s,
+    background 0.15s;
+
+  &:hover {
+    color: var(--foreground);
+    background: var(--surface-tertiary);
+  }
+}
+
+.treeWrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-sm);
+  scrollbar-gutter: stable;
+}
+
+.rightPanel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.editorHeader {
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--surface);
+}
+
+.editorFileName {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editorBody {
+  flex: 1;
+  min-height: 0;
+}
+
+.middleOverlay {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+}
+
+.middleOverlayLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--muted);
+}
+
+.emptyBlock {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.createForm {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.deleteModalBody {
+  color: var(--foreground);
+}
+
+.deleteModalText {
+  margin: 0;
+  color: var(--foreground);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+}
+
+@media (max-width: 900px) {
+  .middlePanel {
+    flex-basis: 220px;
+  }
+}

@@ -11,6 +11,7 @@ import { ImageServicesMock } from '@/domains/Image/mock/ImageServices.mock';
 import { NoteServicesMock } from '@/domains/Note/mock/NoteServices.mock';
 import { QuotaServicesMock } from '@/domains/Quota/mock/QuotaServices.mock';
 import { ResourceServicesMock } from '@/domains/Resource/mock/ResourceServices.mock';
+import { SkillServicesMock } from '@/domains/Skill/mock/SkillServices.mock';
 import { TagServicesMock } from '@/domains/Tag/mock/TagServices.mock';
 import { UserServicesMock } from '@/domains/User/mock/UserServices.mock';
 import { WalletServicesMock } from '@/domains/Wallet/mock/WalletServices.mock';
@@ -34,6 +35,7 @@ const mockServicesValue: ServicesContextValue = {
   noteService: NoteServicesMock,
   quotaService: QuotaServicesMock,
   resourceService: ResourceServicesMock,
+  skillService: SkillServicesMock,
   tagService: TagServicesMock,
   userService: UserServicesMock,
   walletService: WalletServicesMock,
