@@ -27,5 +27,5 @@ export const WALLET_TOKEN_TRANSFER_TYPE = createEnum([
   { value: 2, key: 'TO_OWNER', label: '转回组长' },
 ] as const);
 
-/** Tab 内合并两类流水时，每类 listTransactions 的 size 上限（超出则分页可能不完整） */
-export const WALLET_TX_TAB_MERGE_FETCH_CAP = 500;
+/** Tab 内合并两类流水时，每类 listTransactions 的单次请求页大小 */
+export const WALLET_TX_TAB_MERGE_PAGE_SIZE = 200;

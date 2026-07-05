@@ -1,10 +1,12 @@
-import type { IResourceService } from '@/domains/Resource';
+import type { IResourceService, ResourceItem, ResourceListPage } from '@/domains/Resource';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
 import type { IUserService } from '@/domains/User';
 import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
 import { SkillApi } from '../apis/SkillApi';
 import { SkillServicesMap } from '../mapper/SkillServices.map';
 import type { ISkillService, UploadSkillAssetRequest } from './index.type';
+
+const SKILL_SUMMARY_PAGE_SIZE = 100;
 
 export interface SkillServicesDeps {
   resourceService: IResourceService;
@@ -19,18 +21,40 @@ function buildUploadBody(params: UploadSkillAssetRequest): Blob {
 export const createSkillServices = (deps: SkillServicesDeps): ISkillService => {
   const { resourceService, userService } = deps;
 
+  const fetchSkillSummaryPages = async (
+    requestPage: (page: number) => Promise<ResourceListPage>
+  ): Promise<ResourceItem[]> => {
+    const items: ResourceItem[] = [];
+    let page = 1;
+
+    while (true) {
+      const result = await requestPage(page);
+      items.push(...result.list);
+
+      const pageSize = result.size > 0 ? result.size : SKILL_SUMMARY_PAGE_SIZE;
+      const reachedKnownTotal = result.total > 0 && items.length >= result.total;
+      const reachedKnownLastPage = result.totalPage > 0 && page >= result.totalPage;
+      const reachedShortPage = result.list.length < pageSize;
+      if (reachedKnownTotal || reachedKnownLastPage || reachedShortPage) break;
+      page += 1;
+    }
+
+    return items;
+  };
+
   const getSkillSummaries = async (groupId?: string) => {
     const base = {
-      page: 1,
-      size: 100,
+      size: SKILL_SUMMARY_PAGE_SIZE,
       sortBy: RESOURCE_SORT_BY.UPDATE_TIME,
       sortDir: RESOURCE_SORT_DIR.DESC,
       resourceType: 'SKILL',
     };
-    const page = groupId
-      ? await resourceService.getGroupResources({ ...base, groupId })
-      : await resourceService.getUserResources(base);
-    return page.list.map(SkillServicesMap.mapSkillSummary).filter((item) => item.resourceId);
+    const items = await fetchSkillSummaryPages((page) =>
+      groupId
+        ? resourceService.getGroupResources({ ...base, page, groupId })
+        : resourceService.getUserResources({ ...base, page })
+    );
+    return items.map(SkillServicesMap.mapSkillSummary).filter((item) => item.resourceId);
   };
 
   const createSkill = async (title: string, name?: string, description?: string) => {

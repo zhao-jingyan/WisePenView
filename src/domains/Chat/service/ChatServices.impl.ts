@@ -1,4 +1,5 @@
-import type { Group } from '@/domains/Group';
+import type { FetchGroupListRequest, Group } from '@/domains/Group';
+import type { ResourceItem, ResourceListPage } from '@/domains/Resource';
 import { useCurrentChatSessionStore, useNewChatSessionStore, useNoteSelectionStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { ChatApi, ChatSessionApi } from '../apis/ChatApi';
@@ -37,47 +38,108 @@ import type {
   UploadAttachmentParams,
 } from './index.type';
 
+const WORKSPACE_GROUP_PAGE_SIZE = 100;
+const WORKSPACE_RESOURCE_PAGE_SIZE = 200;
+
+type WorkspaceResourceType = 'AGENT' | 'SKILL';
+
 const getModels = async (): Promise<ChatModel[]> => {
   const data = await ChatApi.listModels();
   return ChatServicesMap.mapGetModelsFromApi(data);
 };
 
+const fetchGroupRolePages = async (
+  deps: ChatServiceDeps,
+  groupRoleFilter: FetchGroupListRequest['groupRoleFilter']
+): Promise<Group[]> => {
+  const groups: Group[] = [];
+  let page = 1;
+
+  while (true) {
+    const result = await deps.groupService.fetchGroupList({
+      groupRoleFilter,
+      page,
+      size: WORKSPACE_GROUP_PAGE_SIZE,
+    });
+    groups.push(...result.list);
+
+    const reachedKnownTotal = result.total > 0 && groups.length >= result.total;
+    const reachedShortPage = result.list.length < WORKSPACE_GROUP_PAGE_SIZE;
+    if (reachedKnownTotal || reachedShortPage) break;
+    page += 1;
+  }
+
+  return groups;
+};
+
 const fetchAllGroups = async (deps: ChatServiceDeps): Promise<Group[]> => {
   const [joinedData, managedData] = await Promise.all([
-    deps.groupService.fetchGroupList({ groupRoleFilter: 'JOINED', page: 1, size: 100 }),
-    deps.groupService.fetchGroupList({ groupRoleFilter: 'MANAGED', page: 1, size: 100 }),
+    fetchGroupRolePages(deps, 'JOINED'),
+    fetchGroupRolePages(deps, 'MANAGED'),
   ]);
 
-  return mergeUniqueGroups(joinedData.list, managedData.list);
+  return mergeUniqueGroups(joinedData, managedData);
+};
+
+const fetchResourcePages = async (
+  requestPage: (page: number) => Promise<ResourceListPage>
+): Promise<ResourceItem[]> => {
+  const items: ResourceItem[] = [];
+  let page = 1;
+
+  while (true) {
+    const result = await requestPage(page);
+    items.push(...result.list);
+
+    const pageSize = result.size > 0 ? result.size : WORKSPACE_RESOURCE_PAGE_SIZE;
+    const reachedKnownTotal = result.total > 0 && items.length >= result.total;
+    const reachedKnownLastPage = result.totalPage > 0 && page >= result.totalPage;
+    const reachedShortPage = result.list.length < pageSize;
+    if (reachedKnownTotal || reachedKnownLastPage || reachedShortPage) break;
+    page += 1;
+  }
+
+  return items;
 };
 
 const fetchGroupResourceBatch = async (
   deps: ChatServiceDeps,
   group: Group,
-  resourceType: 'AGENT' | 'SKILL'
+  resourceType: WorkspaceResourceType
 ): Promise<GroupResourceBatch> => {
-  const result = await deps.resourceService.getGroupResources({
-    groupId: group.groupId,
-    page: 1,
-    size: 200,
-    sortBy: 'NAME',
-    sortDir: 'ASC',
-    resourceType,
-  });
-  return buildGroupResourceBatch(group, result.list);
+  const items = await fetchResourcePages((page) =>
+    deps.resourceService.getGroupResources({
+      groupId: group.groupId,
+      page,
+      size: WORKSPACE_RESOURCE_PAGE_SIZE,
+      sortBy: 'NAME',
+      sortDir: 'ASC',
+      resourceType,
+    })
+  );
+  return buildGroupResourceBatch(group, items);
+};
+
+const fetchPersonalResourceItems = async (
+  deps: ChatServiceDeps,
+  resourceType: WorkspaceResourceType
+): Promise<ResourceItem[]> => {
+  return fetchResourcePages((page) =>
+    deps.resourceService.getUserResources({
+      page,
+      size: WORKSPACE_RESOURCE_PAGE_SIZE,
+      sortBy: 'NAME',
+      sortDir: 'ASC',
+      resourceType,
+    })
+  );
 };
 
 const fetchAllSkills = async (
   deps: ChatServiceDeps,
   groups: Group[]
 ): Promise<ChatWorkspace['skills']> => {
-  const personalRequest = deps.resourceService.getUserResources({
-    page: 1,
-    size: 200,
-    sortBy: 'NAME',
-    sortDir: 'ASC',
-    resourceType: 'SKILL',
-  });
+  const personalRequest = fetchPersonalResourceItems(deps, 'SKILL');
   const groupRequests: Array<Promise<GroupResourceBatch>> = [];
   for (const group of groups) {
     groupRequests.push(fetchGroupResourceBatch(deps, group, 'SKILL'));
@@ -88,20 +150,14 @@ const fetchAllSkills = async (
     Promise.all(groupRequests),
   ]);
 
-  return buildWorkspaceSkills(personalResult.list, groupBatches);
+  return buildWorkspaceSkills(personalResult, groupBatches);
 };
 
 const fetchAllAgents = async (
   deps: ChatServiceDeps,
   groups: Group[]
 ): Promise<Pick<ChatWorkspace, 'personalAgents' | 'groupAgents'>> => {
-  const personalRequest = deps.resourceService.getUserResources({
-    page: 1,
-    size: 200,
-    sortBy: 'NAME',
-    sortDir: 'ASC',
-    resourceType: 'AGENT',
-  });
+  const personalRequest = fetchPersonalResourceItems(deps, 'AGENT');
   const groupRequests: Array<Promise<GroupResourceBatch>> = [];
   for (const group of groups) {
     groupRequests.push(fetchGroupResourceBatch(deps, group, 'AGENT'));
@@ -112,7 +168,7 @@ const fetchAllAgents = async (
     Promise.all(groupRequests),
   ]);
 
-  return buildWorkspaceAgents(personalResult.list, groupBatches);
+  return buildWorkspaceAgents(personalResult, groupBatches);
 };
 
 const getWorkspace = async (deps: ChatServiceDeps): Promise<ChatWorkspace> => {

@@ -38,7 +38,7 @@ export interface ListWalletTransactionsResponse {
 }
 
 /**
- * 并行拉两类流水、合并去重后按时间倒序再本地分页（每类先取 page=1、size 见 WALLET_TX_TAB_MERGE_FETCH_CAP）。
+ * 并行拉两类流水、合并去重后按时间倒序再本地分页。
  * typeA/typeB 与 WALLET_TOKEN_TX_TYPE 数值一致。
  */
 export interface ListMergedWalletTransactionsRequest {

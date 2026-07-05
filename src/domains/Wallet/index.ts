@@ -6,7 +6,7 @@ export {
   WALLET_TARGET_TYPE,
   WALLET_TOKEN_TRANSFER_TYPE,
   WALLET_TOKEN_TX_TYPE,
-  WALLET_TX_TAB_MERGE_FETCH_CAP,
+  WALLET_TX_TAB_MERGE_PAGE_SIZE,
 } from './enum';
 export type { WalletTargetType } from './enum';
 export type {

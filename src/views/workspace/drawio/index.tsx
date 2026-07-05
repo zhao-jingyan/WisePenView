@@ -3,6 +3,7 @@ import { Modal } from '@/components/Overlay';
 import { useNoteService, useResourceService, useUserService } from '@/domains';
 import type {
   DrawIoLatestSnapshotData,
+  INoteService,
   NoteInfoDisplayData,
   NoteVersionListPage,
 } from '@/domains/Note';
@@ -33,6 +34,7 @@ const WISEPEN_COLOR_SCHEMES = new Set([
   'forest',
   'minimal',
 ]);
+const NOTE_VERSION_PAGE_SIZE = 50;
 
 type SaveState = 'saved' | 'dirty' | 'saving' | 'failed';
 
@@ -130,6 +132,40 @@ function readWisePenColorScheme(): string {
   }
 
   return 'default';
+}
+
+async function listAllNoteVersions(
+  noteService: INoteService,
+  resourceId: string
+): Promise<NoteVersionListPage> {
+  const list: NoteVersionListPage['list'] = [];
+  let page = 1;
+  let latestPage: NoteVersionListPage | undefined;
+
+  while (true) {
+    const result = await noteService.listNoteVersions({
+      resourceId,
+      page,
+      size: NOTE_VERSION_PAGE_SIZE,
+    });
+    latestPage = result;
+    list.push(...result.list);
+
+    const pageSize = result.size > 0 ? result.size : NOTE_VERSION_PAGE_SIZE;
+    const reachedKnownTotal = result.total > 0 && list.length >= result.total;
+    const reachedKnownLastPage = result.totalPage > 0 && page >= result.totalPage;
+    const reachedShortPage = result.list.length < pageSize;
+    if (reachedKnownTotal || reachedKnownLastPage || reachedShortPage) break;
+    page += 1;
+  }
+
+  return {
+    list,
+    total: latestPage?.total ?? list.length,
+    page: 1,
+    size: NOTE_VERSION_PAGE_SIZE,
+    totalPage: latestPage?.totalPage ?? 1,
+  };
 }
 
 function buildDrawioUrl(canEdit: boolean): string {
@@ -477,7 +513,7 @@ function DrawioViewConnected({ resourceId, data }: DrawioViewConnectedProps) {
     error: versionsError,
     loading: versionsLoading,
     run: runLoadVersions,
-  } = useRequest(() => noteService.listNoteVersions({ resourceId, page: 1, size: 20 }), {
+  } = useRequest(() => listAllNoteVersions(noteService, resourceId), {
     manual: true,
   });
 

@@ -2,7 +2,7 @@
  * 钱包 Service：/user/wallet/*，成功码与全局一致 `code === 200`。
  */
 import { UserWalletApi } from '@/domains/User/apis/UserApi';
-import { WALLET_TX_TAB_MERGE_FETCH_CAP } from '@/domains/Wallet';
+import { WALLET_TX_TAB_MERGE_PAGE_SIZE } from '@/domains/Wallet';
 import { WalletServicesMap } from '../mapper/WalletServices.map';
 import { mergeWalletTransactionPages } from './WalletServices.helper';
 import type {
@@ -33,14 +33,40 @@ const listTransactions = async (
   return WalletServicesMap.mapListTransactionsFromApi(data);
 };
 
+const listTransactionsUntil = async (
+  params: Omit<ListWalletTransactionsRequest, 'page' | 'size'>,
+  targetCount: number
+): Promise<ListWalletTransactionsResponse> => {
+  const records: ListWalletTransactionsResponse['records'] = [];
+  let total = 0;
+  let page = 1;
+
+  while (records.length < targetCount) {
+    const result = await listTransactions({
+      ...params,
+      page,
+      size: WALLET_TX_TAB_MERGE_PAGE_SIZE,
+    });
+    total = result.total;
+    records.push(...result.records);
+
+    const reachedKnownTotal = total > 0 && records.length >= total;
+    const reachedShortPage = result.records.length < WALLET_TX_TAB_MERGE_PAGE_SIZE;
+    if (reachedKnownTotal || reachedShortPage) break;
+    page += 1;
+  }
+
+  return { total, records };
+};
+
 const listMergedTransactions = async (
   params: ListMergedWalletTransactionsRequest
 ): Promise<ListWalletTransactionsResponse> => {
   const { groupId, page = 1, size = 20, typeA, typeB } = params;
-  const cap = WALLET_TX_TAB_MERGE_FETCH_CAP;
+  const targetCount = page * size;
   const [ra, rb] = await Promise.all([
-    listTransactions({ groupId, page: 1, size: cap, type: typeA }),
-    listTransactions({ groupId, page: 1, size: cap, type: typeB }),
+    listTransactionsUntil({ groupId, type: typeA }, targetCount),
+    listTransactionsUntil({ groupId, type: typeB }, targetCount),
   ]);
   return mergeWalletTransactionPages(ra, rb, page, size);
 };
