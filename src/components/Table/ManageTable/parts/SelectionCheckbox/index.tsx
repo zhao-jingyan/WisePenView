@@ -7,10 +7,18 @@ export interface TableSelectionCheckboxProps {
 
 function TableSelectionCheckbox({ ariaLabel }: TableSelectionCheckboxProps) {
   return (
-    <Checkbox slot="selection" aria-label={ariaLabel} variant="primary" className={styles.checkbox}>
-      <Checkbox.Control className={styles.control}>
-        <Checkbox.Indicator className={styles.indicator} />
-      </Checkbox.Control>
+    <Checkbox
+      slot="selection"
+      aria-label={ariaLabel}
+      variant="primary"
+      className={styles.checkbox}
+      data-row-click-ignore="true"
+    >
+      <Checkbox.Content className={styles.content}>
+        <Checkbox.Control className={styles.control}>
+          <Checkbox.Indicator className={styles.indicator} />
+        </Checkbox.Control>
+      </Checkbox.Content>
     </Checkbox>
   );
 }

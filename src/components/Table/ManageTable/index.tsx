@@ -4,6 +4,7 @@ import {
   shouldStretchTableCellContent,
 } from '../shared/TableBase/cellAlign';
 import { resolveManageColumnWidthClass } from '../shared/TableBase/columnWidth';
+import { resolveSelectedCount } from '../shared/TableBase/tableSelection';
 import { sortTableRows } from '../shared/TableBase/tableSort';
 import TableBodyState from '../shared/TableBodyState';
 import TablePaginationFooter from '../shared/TablePaginationFooter';
@@ -28,16 +29,6 @@ import { Button, Spinner, Table, type Selection } from '@heroui/react';
 import { Check, X } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-
-function resolveSelectedCount(keys: Selection | undefined, total: number): number {
-  if (!keys) {
-    return 0;
-  }
-  if (keys === 'all') {
-    return total;
-  }
-  return keys.size;
-}
 
 function evaluateRowPredicate<T>(
   predicate: boolean | ((row: T) => boolean) | undefined,
@@ -217,6 +208,20 @@ function ManageTable<T extends object>({
     [columns, inlineEdit, items, rowKey, sortDescriptor]
   );
 
+  const handleBatchSelectionChange = useCallback(
+    (keys: Selection) => {
+      if (!batchSelection) {
+        return;
+      }
+      if (keys === 'all') {
+        batchSelection.onSelectionChange('all');
+        return;
+      }
+      batchSelection.onSelectionChange(keys);
+    },
+    [batchSelection]
+  );
+
   return (
     <div className={joinClassNames(styles.shell, className)}>
       {showEditErrorToast ? (
@@ -251,11 +256,7 @@ function ManageTable<T extends object>({
             data-has-selection={batchSelection ? 'true' : undefined}
             selectionMode={batchSelection ? 'multiple' : undefined}
             selectedKeys={batchSelection?.selectedKeys}
-            onSelectionChange={
-              batchSelection
-                ? (keys: Selection) => batchSelection.onSelectionChange(keys)
-                : undefined
-            }
+            onSelectionChange={batchSelection ? handleBatchSelectionChange : undefined}
             disabledKeys={disabledKeys}
             sortDescriptor={sortDescriptor}
             onSortChange={onSortChange}

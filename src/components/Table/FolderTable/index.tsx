@@ -1,5 +1,8 @@
+import TableBatchFooter from '../ManageTable/parts/BatchFooter';
+import TableSelectionCheckbox from '../ManageTable/parts/SelectionCheckbox';
 import TableCellAlign from '../shared/cells/CellAlign';
 import TableTextCell from '../shared/cells/TextCell';
+import { tableCellStyles, tableStyles } from '../shared/styles';
 import {
   joinClassNames,
   resolveColumnAlign,
@@ -10,6 +13,7 @@ import {
   isFolderEqLayout,
   resolveFolderColumnWidthClassForColumn,
 } from '../shared/TableBase/columnWidth';
+import { resolveSelectedCount } from '../shared/TableBase/tableSelection';
 import { sortFolderTreeRows } from '../shared/TableBase/tableSort';
 import TableBodyState from '../shared/TableBodyState';
 import TableRowActions from '../shared/TableRowActions';
@@ -30,6 +34,7 @@ import FolderTableNameCell from './parts/FolderNameCell';
 import FolderTableLoadingSkeleton from './parts/LoadingSkeleton';
 import styles from './style.module.less';
 
+import type { Selection } from '@heroui/react';
 import { Table } from '@heroui/react';
 import { Folder } from 'lucide-react';
 import {
@@ -42,6 +47,7 @@ import {
   type MouseEvent,
   type PointerEvent,
   type ReactNode,
+  type UIEvent,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -56,9 +62,13 @@ const INTERACTIVE_ROW_TARGET_SELECTOR = [
   'textarea',
   '[contenteditable="true"]',
   '[role="button"]',
+  '[role="checkbox"]',
   '[role="link"]',
   '[role="menuitem"]',
   '[data-row-click-ignore="true"]',
+  '[data-slot="selection"]',
+  '[slot="selection"]',
+  '.checkbox',
 ].join(',');
 
 function flattenFolderRows<T extends FolderTableRow>(
@@ -181,6 +191,7 @@ interface FolderTableBodyRowProps<T extends FolderTableRow> {
   columns: FolderTableColumn<T>[];
   isLoadMoreRow: boolean;
   isSelected: boolean;
+  showBatchSelection: boolean;
   renderCellContent: (
     column: FolderTableColumn<T>,
     row: FolderTableVisibleRow & T,
@@ -199,6 +210,7 @@ function areBodyRowPropsEqual<T extends FolderTableRow>(
     prev.columns === next.columns &&
     prev.isLoadMoreRow === next.isLoadMoreRow &&
     prev.isSelected === next.isSelected &&
+    prev.showBatchSelection === next.showBatchSelection &&
     prev.renderCellContent === next.renderCellContent &&
     prev.resolveBodyCellClass === next.resolveBodyCellClass
   );
@@ -208,10 +220,12 @@ function FolderTableBodyRowBase<T extends FolderTableRow>({
   columns,
   isLoadMoreRow,
   isSelected,
+  showBatchSelection,
   renderCellContent,
   resolveBodyCellClass,
   row,
 }: FolderTableBodyRowProps<T>) {
+  const { t } = useTranslation('table');
   const rowId = row.id;
   const ctx: FolderTableRowContext<T> = {
     row,
@@ -231,6 +245,18 @@ function FolderTableBodyRowBase<T extends FolderTableRow>({
         isLoadMoreRow ? styles.inlineLoadMoreRow : undefined
       )}
     >
+      {showBatchSelection ? (
+        <Table.Cell className={joinClassNames(styles.checkboxCell, tableStyles.colCheckbox)}>
+          <div
+            className={joinClassNames(
+              tableCellStyles.cellContentHostCenter,
+              styles.checkboxCellInner
+            )}
+          >
+            <TableSelectionCheckbox ariaLabel={t('aria.selectRow', { id: rowId })} />
+          </div>
+        </Table.Cell>
+      ) : null}
       {columns.map((column) => {
         const cellContent = renderCellContent(column, row, ctx);
         return (
@@ -283,6 +309,8 @@ function FolderTable<T extends FolderTableRow>({
   className,
   sortDescriptor,
   onSortChange,
+  batchSelection,
+  batchFooter,
 }: FolderTableProps<T>) {
   const { t } = useTranslation('table');
   const resolvedEmptyText = emptyText ?? t('empty.folderEmpty');
@@ -325,6 +353,29 @@ function FolderTable<T extends FolderTableRow>({
 
   const showSkeletonBody = loading && items.length === 0;
   const showEmptyState = !loading && visibleRows.length === 0;
+  const showBatchSelection = Boolean(batchSelection);
+  const selectableVisibleRowIds = useMemo(
+    () => visibleRows.filter((row) => row.entryType !== 'loading').map((row) => row.id),
+    [visibleRows]
+  );
+  const disabledKeys = useMemo(() => {
+    if (!batchSelection) {
+      return undefined;
+    }
+    const keys = new Set<string>();
+    if (batchSelection.disabledKeys) {
+      for (const key of batchSelection.disabledKeys) {
+        keys.add(String(key));
+      }
+    }
+    if (loadMore?.loading) {
+      keys.add('__load_more');
+    }
+    return keys.size > 0 ? keys : undefined;
+  }, [batchSelection, loadMore?.loading]);
+  const selectableRowCount = selectableVisibleRowIds.length;
+  const selectedCount = resolveSelectedCount(batchSelection?.selectedKeys, selectableRowCount);
+  const showBatchFooter = Boolean(batchSelection && batchFooter);
 
   const defaultSummary = useMemo(() => {
     if (summary !== undefined) {
@@ -334,34 +385,48 @@ function FolderTable<T extends FolderTableRow>({
     return count > 0 ? t('summary.totalItems', { count }) : t('summary.totalItemsZero');
   }, [summary, totalCount, items.length, t]);
 
-  const showFooter = !showSkeletonBody && Boolean(defaultSummary);
+  const showFooter = !showSkeletonBody && Boolean(defaultSummary) && !showBatchFooter;
 
-  const handleScroll = useCallback(() => {
-    if (!loadMore) {
-      return;
-    }
+  const handleBatchSelectionChange = useCallback(
+    (keys: Selection) => {
+      if (!batchSelection) {
+        return;
+      }
+      if (keys === 'all') {
+        batchSelection.onSelectionChange('all');
+        return;
+      }
+      batchSelection.onSelectionChange(keys);
+    },
+    [batchSelection]
+  );
 
-    if (!loadMore.loading) {
-      loadMoreLockRef.current = false;
-    }
+  const handleScroll = useCallback(
+    (event: UIEvent<HTMLElement>) => {
+      if (!loadMore) {
+        return;
+      }
 
-    if (loadMore.loading || !loadMore.hasMore || loadMoreLockRef.current) {
-      return;
-    }
+      if (!loadMore.loading) {
+        loadMoreLockRef.current = false;
+      }
 
-    const container = scrollRef.current;
-    if (!container) {
-      return;
-    }
+      if (loadMore.loading || !loadMore.hasMore || loadMoreLockRef.current) {
+        return;
+      }
 
-    const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-    if (distanceToBottom > LOAD_MORE_THRESHOLD_PX) {
-      return;
-    }
+      const container = event.currentTarget;
+      const distanceToBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (distanceToBottom > LOAD_MORE_THRESHOLD_PX) {
+        return;
+      }
 
-    loadMoreLockRef.current = true;
-    loadMore.onLoadMore();
-  }, [loadMore]);
+      loadMoreLockRef.current = true;
+      loadMore.onLoadMore();
+    },
+    [loadMore]
+  );
 
   const scrollContainerProps = useMemo(() => {
     if (!maxBodyHeight) {
@@ -396,13 +461,16 @@ function FolderTable<T extends FolderTableRow>({
 
   const handleRowPress = useCallback(
     (row: T) => {
+      if (batchSelection) {
+        return;
+      }
       if (onRowSelect) {
         onRowSelect(row);
         return;
       }
       onRowActivate?.(row);
     },
-    [onRowActivate, onRowSelect]
+    [batchSelection, onRowActivate, onRowSelect]
   );
 
   const handleDelegatedRowPress = useCallback(
@@ -421,6 +489,9 @@ function FolderTable<T extends FolderTableRow>({
       if (event.defaultPrevented) {
         return;
       }
+      if (batchSelection) {
+        return;
+      }
       const target = getDelegatedRowTarget(event);
       if (!target) {
         return;
@@ -430,12 +501,12 @@ function FolderTable<T extends FolderTableRow>({
       }
       handleDelegatedRowPress(target.rowId);
     },
-    [handleDelegatedRowPress, onRowSelect]
+    [batchSelection, handleDelegatedRowPress, onRowSelect]
   );
 
   const handleBodyPointerDown = useCallback(
     (event: PointerEvent<HTMLElement>) => {
-      if (!onRowSelect) {
+      if (!onRowSelect || batchSelection) {
         return;
       }
       const target = getDelegatedRowTarget(event);
@@ -444,12 +515,15 @@ function FolderTable<T extends FolderTableRow>({
       }
       markImmediateSelectedRow(event.currentTarget, target.row);
     },
-    [onRowSelect]
+    [batchSelection, onRowSelect]
   );
 
   const handleBodyKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
       if (event.defaultPrevented || (event.key !== 'Enter' && event.key !== ' ')) {
+        return;
+      }
+      if (batchSelection) {
         return;
       }
       const target = getDelegatedRowTarget(event);
@@ -462,7 +536,7 @@ function FolderTable<T extends FolderTableRow>({
       }
       handleDelegatedRowPress(target.rowId);
     },
-    [handleDelegatedRowPress, onRowSelect]
+    [batchSelection, handleDelegatedRowPress, onRowSelect]
   );
 
   const renderCellContent = useCallback(
@@ -554,20 +628,48 @@ function FolderTable<T extends FolderTableRow>({
         <Table.ScrollContainer
           ref={scrollRef}
           className={styles.scrollContainer}
-          onClick={handleBodyClick}
-          onKeyDown={handleBodyKeyDown}
-          onPointerDown={handleBodyPointerDown}
-          onScroll={handleScroll}
+          onClick={showBatchSelection ? undefined : handleBodyClick}
+          onKeyDown={showBatchSelection ? undefined : handleBodyKeyDown}
+          onPointerDown={showBatchSelection ? undefined : handleBodyPointerDown}
           {...scrollContainerProps}
         >
+          {showEmptyState ? (
+            <div className={styles.emptyStateOverlay}>
+              <TableBodyState
+                title={resolvedEmptyText}
+                description={resolvedEmptyDescription}
+                icon={emptyIcon ?? <Folder size={20} aria-hidden />}
+              />
+            </div>
+          ) : null}
           <Table.Content
             aria-label={ariaLabel}
             className={styles.tableContent}
             data-eq-count={eqColumnCount}
+            data-has-selection={batchSelection ? 'true' : undefined}
+            selectionMode={batchSelection ? 'multiple' : undefined}
+            selectedKeys={batchSelection?.selectedKeys}
+            onSelectionChange={batchSelection ? handleBatchSelectionChange : undefined}
+            disabledKeys={disabledKeys}
             sortDescriptor={sortDescriptor}
             onSortChange={onSortChange}
           >
             <Table.Header>
+              {batchSelection ? (
+                <Table.Column
+                  className={joinClassNames(styles.checkboxColumn, tableStyles.colCheckbox)}
+                  id="__selection"
+                >
+                  <div
+                    className={joinClassNames(
+                      tableCellStyles.cellContentHostCenter,
+                      styles.checkboxColumnInner
+                    )}
+                  >
+                    <TableSelectionCheckbox ariaLabel={t('aria.selectAll')} />
+                  </div>
+                </Table.Column>
+              ) : null}
               {columns.map((column) => (
                 <Table.Column
                   key={column.id}
@@ -588,17 +690,7 @@ function FolderTable<T extends FolderTableRow>({
               ))}
             </Table.Header>
 
-            <Table.Body
-              renderEmptyState={() =>
-                showEmptyState ? (
-                  <TableBodyState
-                    title={resolvedEmptyText}
-                    description={resolvedEmptyDescription}
-                    icon={emptyIcon ?? <Folder size={20} aria-hidden />}
-                  />
-                ) : null
-              }
-            >
+            <Table.Body onScroll={handleScroll}>
               {showSkeletonBody ? (
                 <FolderTableLoadingSkeleton
                   rowCount={skeletonRowCount}
@@ -618,6 +710,7 @@ function FolderTable<T extends FolderTableRow>({
                         columns={columns}
                         isLoadMoreRow={isLoadMoreRow}
                         isSelected={isSelected}
+                        showBatchSelection={showBatchSelection}
                         renderCellContent={renderCellContent}
                         resolveBodyCellClass={resolveBodyCellClass}
                         row={row as FolderTableVisibleRow & T}
@@ -631,7 +724,7 @@ function FolderTable<T extends FolderTableRow>({
                       className={styles.loadMoreTableRow}
                     >
                       <Table.Cell
-                        colSpan={columns.length}
+                        colSpan={columns.length + (showBatchSelection ? 1 : 0)}
                         className={joinClassNames(styles.loadMoreCell, styles.bodyCell)}
                       >
                         <TableLoadMoreRow />
@@ -644,7 +737,11 @@ function FolderTable<T extends FolderTableRow>({
           </Table.Content>
         </Table.ScrollContainer>
 
-        {showFooter ? (
+        {showBatchFooter ? (
+          <TableBatchFooter selectedCount={selectedCount} className={styles.tableFooter}>
+            {batchFooter}
+          </TableBatchFooter>
+        ) : showFooter ? (
           <TableSummaryFooter summary={defaultSummary} className={styles.tableFooter} />
         ) : null}
       </Table>

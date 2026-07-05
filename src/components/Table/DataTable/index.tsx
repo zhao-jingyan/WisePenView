@@ -20,7 +20,7 @@ import styles from './style.module.less';
 
 import { Table } from '@heroui/react';
 import { ArrowUpDown } from 'lucide-react';
-import { useCallback, useMemo, useRef, type CSSProperties } from 'react';
+import { useCallback, useMemo, useRef, type CSSProperties, type UIEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import DataTableLoadingSkeleton from './parts/LoadingSkeleton';
 
@@ -81,32 +81,32 @@ function DataTable<T extends object>({
 
   const showFooter = !showSkeletonBody && (Boolean(defaultSummary) || Boolean(pagination));
 
-  const handleScroll = useCallback(() => {
-    if (!loadMore) {
-      return;
-    }
+  const handleScroll = useCallback(
+    (event: UIEvent<HTMLElement>) => {
+      if (!loadMore) {
+        return;
+      }
 
-    if (!loadMore.loading) {
-      loadMoreLockRef.current = false;
-    }
+      if (!loadMore.loading) {
+        loadMoreLockRef.current = false;
+      }
 
-    if (loadMore.loading || !loadMore.hasMore || loadMoreLockRef.current) {
-      return;
-    }
+      if (loadMore.loading || !loadMore.hasMore || loadMoreLockRef.current) {
+        return;
+      }
 
-    const container = scrollRef.current;
-    if (!container) {
-      return;
-    }
+      const container = event.currentTarget;
+      const distanceToBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (distanceToBottom > LOAD_MORE_THRESHOLD_PX) {
+        return;
+      }
 
-    const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-    if (distanceToBottom > LOAD_MORE_THRESHOLD_PX) {
-      return;
-    }
-
-    loadMoreLockRef.current = true;
-    loadMore.onLoadMore();
-  }, [loadMore]);
+      loadMoreLockRef.current = true;
+      loadMore.onLoadMore();
+    },
+    [loadMore]
+  );
 
   const scrollContainerProps = useMemo(() => {
     if (!maxBodyHeight) {
@@ -157,7 +157,6 @@ function DataTable<T extends object>({
         <Table.ScrollContainer
           ref={scrollRef}
           className={styles.scrollContainer}
-          onScroll={handleScroll}
           {...scrollContainerProps}
         >
           <Table.Content
@@ -196,6 +195,7 @@ function DataTable<T extends object>({
             </Table.Header>
 
             <Table.Body
+              onScroll={handleScroll}
               renderEmptyState={() =>
                 showEmptyState ? (
                   <TableBodyState

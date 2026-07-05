@@ -194,6 +194,7 @@ export const createDriveServices = (
     if (decoded.kind !== 'folder') return [];
     const normalizedGroupId = resolveEffectiveGroupId(nodeId, groupId);
     const scope = buildDriveNodeScope(normalizedGroupId);
+    await readRawRoots(normalizedGroupId);
     const tag = tagService.getRawTagById(decoded.tagId, normalizedGroupId);
     const children = tag?.children ?? [];
     return children
@@ -282,6 +283,7 @@ export const createDriveServices = (
     tagId: string,
     groupId?: string
   ): Promise<Array<RootNode | FolderNode>> => {
+    await readRawRoots(groupId);
     const groupKey = resolveGroupKey(groupId);
     const root = await getRootNode({ groupId });
     const path: Array<RootNode | FolderNode> = [root];

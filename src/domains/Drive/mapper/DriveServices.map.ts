@@ -91,6 +91,7 @@ export const mapTagToFolderNode = (
     scope,
     tagId: tag.tagId,
     name: getFolderName(tag.tagName),
+    description: tag.tagDesc,
     childrenIds: [],
   };
 };
@@ -107,6 +108,7 @@ export const mapResourceItemToChildNode = (
     resourceId: item.resourceId,
     title: item.resourceName,
     resourceType: item.resourceType,
+    description: item.preview,
     resourceIconType:
       item.resourceIconType ??
       resolveResourceIconType({

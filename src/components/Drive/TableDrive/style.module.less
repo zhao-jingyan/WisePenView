@@ -6,72 +6,86 @@
   min-height: 0;
 }
 
-.tableLayout {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-md);
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-}
-
-.table {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-}
-
-.selectionPanel {
-  flex: 0 0 220px;
-  min-width: 180px;
-  padding: var(--space-md);
-  border-left: 1px solid var(--border-light);
-  background: var(--surface-secondary);
-  color: var(--foreground);
-}
-
-.selectionPanelTitle {
-  margin-bottom: var(--space-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: var(--line-height-md);
-}
-
-.selectionMeta {
+/* 单帧 Master–Detail：外框统一 border/radius，左右内部分栏 */
+.driveFrame {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  width: 100%;
+  flex: 0 0 auto;
   min-width: 0;
+  min-height: var(--table-drive-detail-layout-max-height, calc(100dvh - 240px));
+  height: var(--table-drive-detail-layout-max-height, calc(100dvh - 240px));
+  max-height: var(--table-drive-detail-layout-max-height, calc(100dvh - 240px));
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  border-radius: var(--table-shell-radius, var(--radius-xl));
+  background: var(--surface);
 }
 
-.selectionLabel {
-  color: var(--muted);
-  font-size: var(--font-size-xs);
-  line-height: var(--line-height-xs);
+.driveBody {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+
+  /* FolderTable 根节点（shell + table class）：去掉独立外框 */
+  > .table {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    align-self: stretch;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
 }
 
-.selectionValue {
-  min-width: 0;
-  color: var(--foreground);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-md);
-  overflow-wrap: anywhere;
+/* 详情列：全高贴右，无上方 header，仅左侧分隔线 */
+.detailPanel {
+  flex: 0 0 var(--table-drive-detail-panel-width, 280px);
+  width: var(--table-drive-detail-panel-width, 280px);
+  min-width: var(--table-drive-detail-panel-width, 280px);
+  max-width: var(--table-drive-detail-panel-width, 280px);
+  height: 100%;
+  min-height: 0;
+  align-self: stretch;
+  overflow: hidden;
+  border-left: 1px solid var(--border-light);
+  background: var(--surface);
 }
 
 .toolbarActions {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--space-xs);
 }
 
 @media (max-width: 960px) {
-  .tableLayout {
+  .driveFrame {
+    min-height: auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .driveBody {
     flex-direction: column;
   }
 
-  .selectionPanel {
-    flex-basis: auto;
+  .detailPanel {
+    flex: 0 0 auto;
+    width: 100%;
     min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: 200px;
     border-left: 0;
     border-top: 1px solid var(--border-light);
   }

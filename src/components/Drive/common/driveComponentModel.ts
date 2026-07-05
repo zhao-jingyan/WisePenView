@@ -1,3 +1,4 @@
+import type { IDocumentService } from '@/domains/Document';
 import {
   decodeRootNodeScope,
   DRIVE_ROOT_ID,
@@ -5,8 +6,11 @@ import {
   type DriveNodeScope,
   type LoadingNode,
 } from '@/domains/Drive';
+import { decodeNodeId, encodeNodeId } from '@/domains/Drive/mapper/DriveServices.map';
+import type { IResourceService, ResourceItem } from '@/domains/Resource';
 
 export const DEFAULT_DRIVE_ROOT_ID = DRIVE_ROOT_ID;
+export const TRASH_FOLDER_DISPLAY_NAME = '回收站';
 
 export type DriveScope = { type: 'personal' } | { type: 'group'; groupId: string };
 
@@ -51,6 +55,9 @@ export const getDriveNodeLabel = (node: DriveNode): string => {
     case 'root':
       return node.name || '云盘';
     case 'folder':
+      if (node.name === '.Trash') {
+        return TRASH_FOLDER_DISPLAY_NAME;
+      }
       return node.name || '未命名文件夹';
     case 'resource':
     case 'link':
@@ -62,6 +69,103 @@ export const getDriveNodeLabel = (node: DriveNode): string => {
 
 export const isDriveActionTarget = (node: DriveNode): node is DriveActionTarget =>
   node.type === 'folder' || node.type === 'resource' || node.type === 'link';
+
+export const getNodeDescription = (node: DriveNode): string | undefined => {
+  if (node.type === 'folder' || node.type === 'resource' || node.type === 'link') {
+    return node.description;
+  }
+  return undefined;
+};
+
+export const buildTrashFolderNodeId = (trashTagId: string): string => {
+  return encodeNodeId('folder', trashTagId);
+};
+
+/** 从当前目录 nodeId 解析可挂载资源的 tagId */
+export const resolveCurrentFolderTagId = (
+  currentNodeId: string,
+  pathNodes: DriveNode[]
+): string | undefined => {
+  const decoded = decodeNodeId(currentNodeId);
+  if (decoded.kind === 'folder') {
+    return decoded.tagId;
+  }
+  if (decoded.kind === 'root') {
+    const root = pathNodes.find((node) => node.type === 'root');
+    return root?.canMountResources ? root.tagId : undefined;
+  }
+  return undefined;
+};
+
+/** 解析资源在个人盘的主挂载 tagId */
+export const resolveResourcePrimaryTagId = (resource: ResourceItem): string | undefined => {
+  if (resource.mainTagId) {
+    return resource.mainTagId;
+  }
+  const personalBind =
+    resource.tagBinds?.find((bind) => bind.groupId?.startsWith('p_')) ?? resource.tagBinds?.[0];
+  if (personalBind?.primaryTagId) {
+    return personalBind.primaryTagId;
+  }
+  return Object.keys(resource.currentTags ?? {})[0];
+};
+
+/** 上传完成后挂载到目标文件夹：对齐 Drive moveResourceNode 的 tagIds 构造 */
+export const buildUploadedResourceMountTagIds = (
+  resource: ResourceItem,
+  targetTagId: string
+): string[] => {
+  const normalizedTargetTagId = targetTagId.trim();
+  const currentTags = Object.keys(resource.currentTags ?? {});
+  const folderTagId = resolveResourcePrimaryTagId(resource);
+
+  if (!folderTagId || folderTagId === normalizedTargetTagId) {
+    return [
+      normalizedTargetTagId,
+      ...currentTags.filter((tagId) => tagId !== normalizedTargetTagId),
+    ];
+  }
+
+  const linkTagIds = currentTags.filter(
+    (tagId) => tagId !== folderTagId && tagId !== normalizedTargetTagId
+  );
+  return [normalizedTargetTagId, ...linkTagIds];
+};
+
+/** 将资源挂载到指定文件夹 tag */
+export const mountResourceToFolderTag = async (params: {
+  resourceId: string;
+  targetTagId: string;
+  documentService: IDocumentService;
+  resourceService: IResourceService;
+  groupId?: string;
+}): Promise<void> => {
+  const tagId = params.targetTagId.trim();
+  if (!tagId) return;
+
+  const tagPayload = {
+    resourceId: params.resourceId,
+    ...(params.groupId ? { groupId: params.groupId } : {}),
+  };
+
+  try {
+    const { resourceInfo } = await params.documentService.getDocInfo(params.resourceId);
+    if (resolveResourcePrimaryTagId(resourceInfo) === tagId) {
+      return;
+    }
+    await params.resourceService.updateResourceTags({
+      ...tagPayload,
+      tagIds: buildUploadedResourceMountTagIds(resourceInfo, tagId),
+      primaryTagId: tagId,
+    });
+  } catch {
+    await params.resourceService.updateResourceTags({
+      ...tagPayload,
+      tagIds: [tagId],
+      primaryTagId: tagId,
+    });
+  }
+};
 
 export const toDriveSelectionItem = (node: DriveNode): DriveSelectionItem | null => {
   if (node.type === 'loading') return null;

@@ -1,0 +1,73 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+
+  &:not([data-disabled]):hover .menuDrop,
+  &:not([data-disabled]):focus-within .menuDrop {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.menuDrop {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  padding-top: var(--space-2xs);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.menuPanel {
+  min-width: 140px;
+  padding: var(--space-2xs);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--overlay);
+  box-shadow: var(--card-shadow);
+}
+
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menuItem {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-hover);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.menuIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}

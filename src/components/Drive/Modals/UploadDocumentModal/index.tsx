@@ -1,22 +1,21 @@
+import type { ApiErrorBody } from '@/apis/api.type';
+import {
+  buildUploadedResourceMountTagIds,
+  resolveResourcePrimaryTagId,
+} from '@/components/Drive/common/driveComponentModel';
+import { Modal } from '@/components/Overlay';
 import UploadZone from '@/components/UploadZone';
-import { useRequest } from 'ahooks';
-import { useState } from 'react';
-
-import { useDocumentService } from '@/domains';
+import { useDocumentService, useResourceService } from '@/domains';
 import { useDriveUploadQueueStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { parseExtension } from '@/utils/parser/extensionParser';
-import { Modal } from '@/components/Overlay';
 import { Button, toast } from '@heroui/react';
+import { useRequest } from 'ahooks';
+import type { AxiosError } from 'axios';
 import { CloudUpload, X } from 'lucide-react';
-
-import styles from './UploadDocumentModal.module.less';
-
-export interface UploadDocumentModalProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
-}
+import { useState } from 'react';
+import styles from './index.module.less';
+import type { UploadDocumentModalProps } from './index.type';
 
 const ACCEPT_DOCUMENT_TYPES = [
   '.pdf',
@@ -31,17 +30,33 @@ const ACCEPT_DOCUMENT_TYPES = [
 ].join(',');
 
 const UPLOAD_STATUS_SYNC_DELAY_MS = 3000;
+const FOLDER_MOUNT_RETRY_DELAY_MS = 2000;
+const FOLDER_MOUNT_MAX_ATTEMPTS = 15;
 const QUEUE_HASH_PROGRESS_WEIGHT = 0.15;
 const QUEUE_UPLOAD_PROGRESS_START = 15;
 const QUEUE_UPLOAD_PROGRESS_WEIGHT = 0.85;
+const RESOURCE_NOT_READY_CODES = new Set([5411, 6111, 8111]);
 
-/** 文档上传：MD5 -> init -> OSS PUT，成功后由调用方决定后续跳转。 */
-export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadDocumentModalProps) {
+interface SubmitUploadPayload {
+  files: File[];
+  mountTagId?: string;
+}
+
+/** 文档上传：MD5 -> init -> OSS PUT；可选挂载到当前文件夹 tag。 */
+function UploadDocumentModal({
+  isOpen,
+  onOpenChange,
+  onSuccess,
+  targetTagId,
+  groupId,
+}: UploadDocumentModalProps) {
   const documentService = useDocumentService();
+  const resourceService = useResourceService();
   const startUploads = useDriveUploadQueueStore((s) => s.startUploads);
   const updateQueuedUpload = useDriveUploadQueueStore((s) => s.updateUpload);
   const removeQueuedUpload = useDriveUploadQueueStore((s) => s.removeUpload);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const mountsToFolder = Boolean(targetTagId?.trim());
 
   const resetState = () => {
     setSelectedFiles([]);
@@ -68,9 +83,53 @@ export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadD
     }, UPLOAD_STATUS_SYNC_DELAY_MS);
   };
 
+  const scheduleFolderMount = (documentId: string, mountTagId: string) => {
+    const tagId = mountTagId.trim();
+    if (!tagId) return;
+
+    window.setTimeout(() => {
+      void (async () => {
+        await documentService.syncPendingDocStatus(documentId).catch(() => undefined);
+        const mounted = await mountToFolderWhenReady(documentId, tagId);
+        if (mounted) {
+          onSuccess?.();
+        }
+      })();
+    }, UPLOAD_STATUS_SYNC_DELAY_MS);
+  };
+
+  const mountToFolderWhenReady = async (resourceId: string, tagId: string): Promise<boolean> => {
+    for (let attempt = 1; attempt <= FOLDER_MOUNT_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        const { resourceInfo } = await documentService.getDocInfo(resourceId);
+        const primaryTagId = resolveResourcePrimaryTagId(resourceInfo);
+        if (primaryTagId === tagId) {
+          return true;
+        }
+        const tagIds = buildUploadedResourceMountTagIds(resourceInfo, tagId);
+        await resourceService.updateResourceTags({
+          resourceId,
+          tagIds,
+          primaryTagId: tagId,
+          ...(groupId ? { groupId } : {}),
+        });
+        return true;
+      } catch (err) {
+        const shouldRetry = isResourceNotReadyError(err) && attempt < FOLDER_MOUNT_MAX_ATTEMPTS;
+        if (!shouldRetry) {
+          toast.warning(`文件已上传，但未能放入当前文件夹：${parseErrorMessage(err)}`);
+          return false;
+        }
+        await delay(FOLDER_MOUNT_RETRY_DELAY_MS);
+      }
+    }
+    return false;
+  };
+
   const { run: submitUpload } = useRequest(
-    async (files: File[]) => {
+    async ({ files, mountTagId }: SubmitUploadPayload) => {
       if (files.length === 0) return 0;
+      const shouldMountToFolder = Boolean(mountTagId?.trim());
       const uploadIds = files.map(createUploadId);
 
       startUploads(
@@ -116,6 +175,9 @@ export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadD
                 documentId: result.documentId,
                 objectKey: result.objectKey,
               });
+              if (shouldMountToFolder && mountTagId) {
+                scheduleFolderMount(result.documentId, mountTagId);
+              }
             } else {
               updateQueuedUpload(uploadId, {
                 documentId: result.documentId,
@@ -124,6 +186,9 @@ export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadD
                 progress: 100,
               });
               scheduleUploadStatusSync(result.documentId, uploadId);
+              if (shouldMountToFolder && mountTagId) {
+                scheduleFolderMount(result.documentId, mountTagId);
+              }
             }
           } catch (err) {
             updateQueuedUpload(uploadId, {
@@ -147,9 +212,10 @@ export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadD
       manual: true,
       onSuccess: (count) => {
         if (count > 0) {
-          toast.success(`已完成 ${count} 个文件上传`);
+          toast.success(
+            mountsToFolder ? `已开始上传 ${count} 个文件到当前文件夹` : `已完成 ${count} 个文件上传`
+          );
         }
-        onSuccess?.();
       },
       onError: (err: unknown) => {
         toast.danger(parseErrorMessage(err));
@@ -176,8 +242,11 @@ export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadD
       return;
     }
     const filesToUpload = selectedFiles;
-    submitUpload(filesToUpload);
-    toast.success(`已添加 ${filesToUpload.length} 个文件到上传队列`);
+    const mountTagId = targetTagId?.trim();
+    submitUpload({ files: filesToUpload, mountTagId });
+    if (!mountsToFolder) {
+      toast.success(`已添加 ${filesToUpload.length} 个文件到上传队列`);
+    }
     resetState();
     onOpenChange(false);
   };
@@ -191,7 +260,11 @@ export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadD
               <div className={styles.titleRow}>
                 <div>
                   <Modal.Heading>上传文档</Modal.Heading>
-                  <div className={styles.subtitle}>上传完成后会同步刷新上传队列</div>
+                  <div className={styles.subtitle}>
+                    {mountsToFolder
+                      ? '文件将上传到当前文件夹，并同步显示在上传队列'
+                      : '上传完成后会同步刷新上传队列'}
+                  </div>
                 </div>
               </div>
             </Modal.Header>
@@ -220,7 +293,7 @@ export function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadD
               </Button>
               <Button variant="primary" isDisabled={selectedFiles.length === 0} onPress={handleOk}>
                 <CloudUpload size={15} strokeWidth={1.8} />
-                添加到上传队列
+                {mountsToFolder ? '开始上传' : '添加到上传队列'}
               </Button>
             </Modal.Footer>
           </Modal.Dialog>
@@ -248,3 +321,21 @@ function createUploadId(): string {
   }
   return `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
+
+function isResourceNotReadyError(err: unknown): boolean {
+  const axiosErr = err as AxiosError<ApiErrorBody>;
+  const code = axiosErr.response?.data?.code;
+  if (typeof code === 'number' && RESOURCE_NOT_READY_CODES.has(code)) {
+    return true;
+  }
+  const message = parseErrorMessage(err);
+  return message.includes('资源不存在') || message.includes('文档不存在');
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+export default UploadDocumentModal;

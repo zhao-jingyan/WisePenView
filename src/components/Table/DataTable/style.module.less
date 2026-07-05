@@ -79,9 +79,6 @@
   }
 
   :global(.table__header) {
-    position: sticky;
-    top: 0;
-    z-index: 2;
     border-bottom: 0;
     background: transparent;
   }
@@ -148,7 +145,7 @@
 
 .scrollContainer {
   width: 100%;
-  overflow: auto;
+  .tableSplitBodyScroll();
 }
 
 .generateReadonlyEqColumnCounts(@max, @i: 1) when (@i =< @max) {

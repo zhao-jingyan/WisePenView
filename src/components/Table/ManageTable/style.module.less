@@ -122,9 +122,6 @@
   }
 
   :global(.table__header) {
-    position: sticky;
-    top: 0;
-    z-index: 2;
     border-bottom: 0;
     background: transparent;
   }
@@ -217,8 +214,21 @@
 
 .scrollContainer {
   width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  .tableSplitBodyScroll();
+
+  :global(.table__content) {
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+  }
+
+  :global(.table__header) {
+    table-layout: auto;
+  }
+
+  :global(.table__body .table__row) {
+    table-layout: auto;
+  }
 }
 
 .tableContent {

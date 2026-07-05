@@ -3,6 +3,7 @@ import { LogOut, Pencil, Trash2 } from 'lucide-react';
  * 小组详情：展示/ Tab / 小组盘只读等由 getGroupDisplayConfig（如 showWalletTabs、driveReadOnlyMode）驱动。
  */
 import TableDrive from '@/components/Drive/TableDrive';
+import type { TableDriveHandle } from '@/components/Drive/TableDrive/index.type';
 import { Spin } from '@/components/Feedback';
 import type { SegmentedTabItem } from '@/components/SegmentedTabs';
 import SegmentedTabs from '@/components/SegmentedTabs';
@@ -84,7 +85,9 @@ function GroupDetail() {
   const [editGroupModalOpen, setEditGroupModalOpen] = useState(false);
   const [dissolveGroupModalOpen, setDissolveGroupModalOpen] = useState(false);
   const [exitGroupModalOpen, setExitGroupModalOpen] = useState(false);
+  const [isTrashView, setIsTrashView] = useState(false);
   const walletRef = useRef<ComputeWalletRef | null>(null);
+  const tableDriveRef = useRef<TableDriveHandle>(null);
 
   /** Tabs 受控，避免 items 更新时重置当前选中的 Tab */
   const [detailTabKey, setDetailTabKey] = useState<GroupDetailTabKey>('files');
@@ -106,11 +109,16 @@ function GroupDetail() {
         children: (
           <div className={layout.tabPane}>
             <TableDrive
+              ref={tableDriveRef}
               scope={{ type: 'group', groupId: gid }}
+              showToolbarTrash={false}
+              onTrashViewChange={setIsTrashView}
               actions={{
                 toolbar: {
                   canCreateFolder: groupDisplayConfig.canCreateTag,
-                  canUploadToGroup: true,
+                  canCreateNote: groupDisplayConfig.canCreateTag,
+                  canCreateDrawio: groupDisplayConfig.canCreateTag,
+                  canUploadDocument: groupDisplayConfig.canCreateTag,
                   canManageTagPermission: groupDisplayConfig.canManageTag,
                 },
               }}
@@ -216,17 +224,30 @@ function GroupDetail() {
 
   return (
     <div className={layout.pageContainer}>
-      <div className={layout.pageHeader}>
-        <h1 className={layout.pageTitle}>{groupName}</h1>
-        <div className={layout.headerMeta}>
-          {ownerInfo && (
-            <div className={layout.headerMetaItem}>
-              <span>创建者：</span>
-              <UserCapsule name={ownerName} avatar={ownerInfo.avatar} />
-            </div>
-          )}
-          <span>创建日期：{createTime ?? '暂无'}</span>
+      <div className={layout.pageHeaderWithActions}>
+        <div>
+          <h1 className={layout.pageTitle}>{groupName}</h1>
+          <div className={layout.headerMeta}>
+            {ownerInfo && (
+              <div className={layout.headerMetaItem}>
+                <span>创建者：</span>
+                <UserCapsule name={ownerName} avatar={ownerInfo.avatar} />
+              </div>
+            )}
+            <span>创建日期：{createTime ?? '暂无'}</span>
+          </div>
         </div>
+        {activeDetailTabKey === 'files' ? (
+          <Button
+            variant="primary"
+            className={layout.pageTrashButton}
+            isDisabled={isTrashView}
+            onPress={() => void tableDriveRef.current?.openTrash()}
+          >
+            <Trash2 size={16} aria-hidden="true" />
+            回收站
+          </Button>
+        ) : null}
       </div>
 
       <SegmentedTabs<GroupDetailTabKey>

@@ -242,6 +242,7 @@ const mapSearchResultPageFromApi = (data: GlobalSearchApiResponse): SearchResult
 export const ResourceServicesMap = {
   mapListResourceItemsRequest,
   mapResourceListPageFromApi,
+  mapResourceItemFromApi,
   mapChangeResourceActionPermissionRequest,
   mapLikeStatusFromApi,
   mapRateFromApi,

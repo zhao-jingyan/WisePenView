@@ -3,15 +3,34 @@ import {
   type FolderTableBreadcrumbItem,
   type FolderTableColumn,
 } from '@/components/Table';
+import { resolveSelectedCount } from '@/components/Table/shared/TableBase/tableSelection';
+import { useDriveService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
+import { useTrashTagStore } from '@/store';
+import { parseErrorMessage } from '@/utils/error';
 import { findTreeNodeById } from '@/utils/tree/findTreeNodeById';
-import { Button, type SortDescriptor } from '@heroui/react';
-import { useUnmount } from 'ahooks';
-import { CloudUpload } from 'lucide-react';
-import { startTransition, useCallback, useMemo, useRef, useState } from 'react';
-import { getDriveNodeLabel, resolveDriveScope } from '../common/driveComponentModel';
+import { Button, toast, type Selection, type SortDescriptor } from '@heroui/react';
+import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
+import { Trash2 } from 'lucide-react';
+import {
+  forwardRef,
+  startTransition,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {
+  buildTrashFolderNodeId,
+  getDriveNodeLabel,
+  resolveCurrentFolderTagId,
+  resolveDriveScope,
+} from '../common/driveComponentModel';
 import { useClickNode } from '../common/useClickNode';
-import type { DriveRow, DriveTableRow, TableDriveProps } from './index.type';
+import type { DriveRow, DriveTableRow, TableDriveHandle, TableDriveProps } from './index.type';
+import CreateMenu from './parts/CreateMenu';
+import TableDriveSelectionPanel from './parts/SelectionPanel';
 import styles from './style.module.less';
 import { useTableDrive } from './useTableDrive';
 import { useTableDriveActions } from './useTableDriveActions';
@@ -105,7 +124,11 @@ function buildDriveTableRowMap(rows: DriveTableRow[]): Map<string, DriveTableRow
   return map;
 }
 
-function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
+const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableDrive(
+  { groupId, rootId, scope, actions, onTrashViewChange, onUploadSuccess, showToolbarTrash = true },
+  ref
+) {
+  const driveService = useDriveService();
   const resolvedScope = useMemo(
     () => resolveDriveScope(scope, groupId, rootId),
     [scope, groupId, rootId]
@@ -123,6 +146,8 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
     refresh,
   } = useTableDrive({ rootId: finalRootId, groupId: finalGroupId, scope: resolvedScope.scope });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [batchEditMode, setBatchEditMode] = useState(false);
+  const [batchSelectedKeys, setBatchSelectedKeys] = useState<Selection>(new Set());
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor | undefined>();
   const selectedNodeIdRef = useRef<string | null>(null);
   const selectedCommitFrameRef = useRef<number | null>(null);
@@ -157,10 +182,17 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
 
   useUnmount(cancelSelectedNodeIdCommit);
 
+  const handleClearSelection = useCallback(() => {
+    selectedNodeIdRef.current = null;
+    scheduleSelectedNodeIdCommit(null);
+  }, [scheduleSelectedNodeIdCommit]);
+
   const handleEnterFolder = useCallback(
     (nodeId: string) => {
       selectedNodeIdRef.current = null;
       scheduleSelectedNodeIdCommit(null);
+      setBatchEditMode(false);
+      setBatchSelectedKeys(new Set());
       enterFolder(nodeId);
     },
     [enterFolder, scheduleSelectedNodeIdCommit]
@@ -179,13 +211,70 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
     () => rows.filter((row) => row.entryType !== 'loading').length,
     [rows]
   );
+  const batchDisabledKeys = useMemo(
+    () => rows.filter((row) => row.entryType === 'loading').map((row) => row.id),
+    [rows]
+  );
+  const batchSelectedCount = resolveSelectedCount(batchSelectedKeys, currentDirectoryItemCount);
+  const exitBatchEditMode = useCallback(() => {
+    setBatchEditMode(false);
+    setBatchSelectedKeys(new Set());
+  }, []);
+
+  const enterBatchEditMode = useCallback(() => {
+    handleClearSelection();
+    setBatchEditMode(true);
+    setBatchSelectedKeys(new Set());
+  }, [handleClearSelection]);
+
+  const trashTagId = useTrashTagStore((state) => state.getTrashTagId(finalGroupId));
+  const trashFolderNodeId = useMemo(
+    () => (trashTagId ? buildTrashFolderNodeId(trashTagId) : undefined),
+    [trashTagId]
+  );
+  const isTrashView = currentNodeId === trashFolderNodeId;
+
+  const openTrash = useCallback(async () => {
+    if (isTrashView) {
+      return;
+    }
+
+    try {
+      let resolvedTrashTagId = useTrashTagStore.getState().getTrashTagId(finalGroupId);
+      if (!resolvedTrashTagId) {
+        await driveService.getRootNode({ rootId: finalRootId, groupId: finalGroupId });
+        resolvedTrashTagId = useTrashTagStore.getState().getTrashTagId(finalGroupId);
+      }
+      if (!resolvedTrashTagId) {
+        toast.danger('未找到回收站');
+        return;
+      }
+      handleEnterFolder(buildTrashFolderNodeId(resolvedTrashTagId));
+    } catch (error) {
+      toast.danger(parseErrorMessage(error));
+    }
+  }, [driveService, finalGroupId, finalRootId, handleEnterFolder, isTrashView]);
+
+  useImperativeHandle(ref, () => ({ openTrash }), [openTrash]);
+
+  useMount(() => {
+    onTrashViewChange?.(isTrashView);
+  });
+
+  useUpdateEffect(() => {
+    onTrashViewChange?.(isTrashView);
+  }, [isTrashView, onTrashViewChange]);
+
+  const targetTagId = useMemo(
+    () => resolveCurrentFolderTagId(currentNodeId, pathNodes),
+    [currentNodeId, pathNodes]
+  );
   const breadcrumbItems = useMemo(() => toBreadcrumbItems(pathNodes), [pathNodes]);
   const {
-    showCreateFolder,
-    showUploadToGroup,
+    showCreateMenu,
     showManagePermission,
-    openNewFolder,
-    openUploadToGroup,
+    createMenuItems,
+    handleCreateMenuSelect,
     openTagPermission,
     ModalHost,
   } = useTableDriveActions({
@@ -194,6 +283,9 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
     groupId: finalGroupId,
     actions,
     refresh,
+    onUploadSuccess,
+    targetTagId,
+    isTrashView,
   });
   const breadcrumb = useMemo(
     () => <FolderTable.Breadcrumb items={breadcrumbItems} onJump={handleEnterFolder} />,
@@ -202,31 +294,48 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
   const toolbar = useMemo(
     () => (
       <div className={styles.toolbarActions}>
-        {showUploadToGroup ? (
-          <Button variant="secondary" size="sm" onPress={openUploadToGroup}>
-            <CloudUpload size={16} aria-hidden="true" />
-            上传文件
-          </Button>
+        {showCreateMenu ? (
+          <CreateMenu items={createMenuItems} onSelect={handleCreateMenuSelect} />
         ) : null}
         {showManagePermission ? (
           <Button variant="secondary" size="sm" onPress={openTagPermission}>
             标签权限管理
           </Button>
         ) : null}
-        {showCreateFolder ? (
-          <Button variant="secondary" size="sm" onPress={openNewFolder}>
-            新建文件夹
+        {showToolbarTrash ? (
+          <Button
+            variant={isTrashView ? 'ghost' : 'secondary'}
+            size="sm"
+            isDisabled={isTrashView}
+            onPress={openTrash}
+          >
+            <Trash2 size={16} aria-hidden="true" />
+            回收站
           </Button>
         ) : null}
+        {batchEditMode ? (
+          <Button variant="ghost" size="sm" onPress={exitBatchEditMode}>
+            取消
+          </Button>
+        ) : (
+          <Button variant="secondary" size="sm" onPress={enterBatchEditMode}>
+            全局编辑
+          </Button>
+        )}
       </div>
     ),
     [
-      openNewFolder,
+      batchEditMode,
+      createMenuItems,
+      enterBatchEditMode,
+      exitBatchEditMode,
+      handleCreateMenuSelect,
+      isTrashView,
       openTagPermission,
-      openUploadToGroup,
-      showCreateFolder,
+      openTrash,
+      showCreateMenu,
       showManagePermission,
-      showUploadToGroup,
+      showToolbarTrash,
     ]
   );
 
@@ -261,7 +370,7 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
 
   const handleRowSelect = useCallback(
     (row: DriveTableRow) => {
-      if (row.node.type === 'loading') return;
+      if (batchEditMode || row.node.type === 'loading') return;
       if (selectedNodeIdRef.current === row.node.id) {
         handleRowActivate(row);
         return;
@@ -269,40 +378,56 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
       selectedNodeIdRef.current = row.node.id;
       scheduleSelectedNodeIdCommit(row.node.id);
     },
-    [handleRowActivate, scheduleSelectedNodeIdCommit]
+    [batchEditMode, handleRowActivate, scheduleSelectedNodeIdCommit]
   );
 
   return (
     <main className={styles.listArea}>
-      <div className={styles.tableLayout}>
-        <FolderTable<DriveTableRow>
-          ariaLabel="云盘文件列表"
-          items={rows}
-          columns={DRIVE_TABLE_COLUMNS}
-          loading={loading}
-          breadcrumb={breadcrumb}
-          toolbar={toolbar}
-          expandedRowKeys={expandedRowKeys}
-          onExpandedChange={handleExpandedChange}
-          onRowSelect={handleRowSelect}
-          onRowActivate={handleRowActivate}
-          totalCount={currentDirectoryItemCount}
-          summary={`当前目录共 ${currentDirectoryItemCount} 项`}
-          className={styles.table}
-          sortDescriptor={sortDescriptor}
-          onSortChange={setSortDescriptor}
-        />
-        <aside className={styles.selectionPanel} aria-label="选中节点操作区域">
-          <div className={styles.selectionPanelTitle}>选中节点</div>
-          <div className={styles.selectionMeta}>
-            <span className={styles.selectionLabel}>节点 ID</span>
-            <span className={styles.selectionValue}>{selectedNode?.id ?? '未选中'}</span>
+      <div className={styles.driveFrame}>
+        <div className={styles.driveBody}>
+          <FolderTable<DriveTableRow>
+            ariaLabel="云盘文件列表"
+            items={rows}
+            columns={DRIVE_TABLE_COLUMNS}
+            loading={loading}
+            breadcrumb={breadcrumb}
+            toolbar={toolbar}
+            expandedRowKeys={expandedRowKeys}
+            onExpandedChange={handleExpandedChange}
+            onRowSelect={batchEditMode ? undefined : handleRowSelect}
+            onRowActivate={handleRowActivate}
+            totalCount={currentDirectoryItemCount}
+            summary={`当前目录共 ${currentDirectoryItemCount} 项`}
+            className={styles.table}
+            sortDescriptor={sortDescriptor}
+            onSortChange={setSortDescriptor}
+            batchSelection={
+              batchEditMode
+                ? {
+                    selectedKeys: batchSelectedKeys,
+                    disabledKeys: batchDisabledKeys,
+                    onSelectionChange: setBatchSelectedKeys,
+                  }
+                : undefined
+            }
+          />
+          <div className={styles.detailPanel}>
+            <TableDriveSelectionPanel
+              selectedRow={batchEditMode ? undefined : selectedNode}
+              batchEditMode={batchEditMode}
+              batchSelectedCount={batchSelectedCount}
+              groupId={finalGroupId}
+              onEnter={handleEnterFolder}
+              onOpen={handleClickNode}
+              onClear={handleClearSelection}
+              onRefresh={refresh}
+            />
           </div>
-        </aside>
+        </div>
       </div>
       {ModalHost}
     </main>
   );
-}
+});
 
 export default TableDrive;

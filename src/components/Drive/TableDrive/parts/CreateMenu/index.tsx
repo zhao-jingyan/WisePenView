@@ -1,0 +1,59 @@
+import EntryIcon from '@/components/Icons/EntryIcon';
+import { Button } from '@heroui/react';
+import { CloudUpload, Plus } from 'lucide-react';
+import styles from './index.module.less';
+import type { CreateMenuItem, CreateMenuProps } from './index.type';
+
+function CreateMenuIcon({ id }: { id: CreateMenuItem['id'] }) {
+  switch (id) {
+    case 'folder':
+      return <EntryIcon entryType="folder" size={16} />;
+    case 'drawio':
+      return <EntryIcon entryType="resource" resourceIconType="drawio" size={16} />;
+    case 'note':
+      return <EntryIcon entryType="resource" resourceIconType="note" size={16} />;
+    case 'upload':
+      return <CloudUpload size={16} aria-hidden="true" />;
+  }
+}
+
+function CreateMenu({ disabled = false, items, onSelect }: CreateMenuProps) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={styles.wrap} data-disabled={disabled || undefined}>
+      <Button variant="secondary" size="sm" isDisabled={disabled}>
+        <Plus size={16} aria-hidden="true" />
+        新建
+      </Button>
+      {!disabled ? (
+        <div className={styles.menuDrop}>
+          <div className={styles.menuPanel} role="menu" aria-label="新建菜单">
+            <ul className={styles.menuList}>
+              {items.map((item) => (
+                <li key={item.id} role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={styles.menuItem}
+                    disabled={item.disabled}
+                    onClick={() => onSelect(item.id)}
+                  >
+                    <span className={styles.menuIcon}>
+                      <CreateMenuIcon id={item.id} />
+                    </span>
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export default CreateMenu;

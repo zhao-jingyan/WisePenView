@@ -1,14 +1,14 @@
 import GlobalSearchBox from '@/components/Drive/GlobalSearchBox';
 import TableDrive from '@/components/Drive/TableDrive';
+import type { TableDriveHandle } from '@/components/Drive/TableDrive/index.type';
 import SegmentedTabs from '@/components/SegmentedTabs';
 import { useDrivePreferencesStore, type DriveViewMode } from '@/store';
 import { Button } from '@heroui/react';
-import { CloudUpload } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import type { UploadQueueTabRef } from '../_components/UploadQueueTab';
 import UploadQueueTab from '../_components/UploadQueueTab';
-import { UploadDocumentModal } from './UploadDocumentModal';
 import styles from './style.module.less';
 
 const VIEW_TABS: { key: DriveViewMode; label: string }[] = [
@@ -19,12 +19,14 @@ const VIEW_TABS: { key: DriveViewMode; label: string }[] = [
 function Drive() {
   const viewMode = useDrivePreferencesStore((s) => s.viewMode);
   const setViewMode = useDrivePreferencesStore((s) => s.setViewMode);
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const tableDriveRef = useRef<TableDriveHandle>(null);
   const uploadQueueRef = useRef<UploadQueueTabRef>(null);
+  const [isTrashView, setIsTrashView] = useState(false);
 
   const handleUploadSuccess = () => {
     uploadQueueRef.current?.refresh();
   };
+
   const activeViewMode: DriveViewMode = VIEW_TABS.some((tab) => tab.key === viewMode)
     ? viewMode
     : 'tableDrive';
@@ -38,10 +40,17 @@ function Drive() {
         </div>
         <div className={styles.actionsRow}>
           <GlobalSearchBox />
-          <Button variant="primary" onPress={() => setUploadModalOpen(true)}>
-            <CloudUpload size={16} aria-hidden="true" />
-            上传文件
-          </Button>
+          {activeViewMode === 'tableDrive' ? (
+            <Button
+              variant="primary"
+              className={styles.pageTrashButton}
+              isDisabled={isTrashView}
+              onPress={() => void tableDriveRef.current?.openTrash()}
+            >
+              <Trash2 size={16} aria-hidden="true" />
+              回收站
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -54,15 +63,16 @@ function Drive() {
       />
 
       <div className={styles.previewContent}>
-        {activeViewMode === 'tableDrive' && <TableDrive />}
+        {activeViewMode === 'tableDrive' && (
+          <TableDrive
+            ref={tableDriveRef}
+            showToolbarTrash={false}
+            onTrashViewChange={setIsTrashView}
+            onUploadSuccess={handleUploadSuccess}
+          />
+        )}
         {activeViewMode === 'uploadQueue' && <UploadQueueTab ref={uploadQueueRef} />}
       </div>
-
-      <UploadDocumentModal
-        isOpen={uploadModalOpen}
-        onOpenChange={setUploadModalOpen}
-        onSuccess={handleUploadSuccess}
-      />
     </div>
   );
 }

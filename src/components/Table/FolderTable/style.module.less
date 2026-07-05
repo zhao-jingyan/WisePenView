@@ -64,9 +64,6 @@
   }
 
   :global(.table__header) {
-    position: sticky;
-    top: 0;
-    z-index: 2;
     border-bottom: 0;
     background: transparent;
   }
@@ -79,8 +76,8 @@
     padding-block: 0;
     padding-inline: @header-cell-padding-inline;
     border-bottom: 1px solid var(--border-light);
-    background: var(--surface-secondary);
-    color: var(--surface-secondary-foreground);
+    background: var(--surface);
+    color: var(--foreground);
     font-family: @table-font-family;
     font-size: @table-font-size-header;
     font-weight: @table-font-weight-medium;
@@ -141,6 +138,31 @@
 .actionCell:global(.table__cell) {
   padding-inline: 0;
   text-align: center;
+}
+
+.checkboxColumn {
+  padding: 0;
+  overflow: hidden;
+  vertical-align: middle;
+
+  :global(.checkbox) {
+    flex-shrink: 0;
+  }
+}
+
+.checkboxColumnInner {
+  box-sizing: border-box;
+  height: @header-row-height;
+}
+
+.checkboxCell {
+  padding: 0;
+  vertical-align: middle;
+}
+
+.checkboxCellInner {
+  box-sizing: border-box;
+  height: @row-content-height;
 }
 
 .bodyRow {
@@ -216,9 +238,19 @@
 }
 
 .scrollContainer {
+  position: relative;
   width: 100%;
-  overflow-x: auto;
-  overflow-y: auto;
+  .tableSplitBodyScroll();
+}
+
+.emptyStateOverlay {
+  position: absolute;
+  z-index: 1;
+  inset: @table-header-row-height 0 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .generateReadonlyEqColumnCounts(@max, @i: 1) when (@i =< @max) {

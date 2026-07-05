@@ -57,6 +57,7 @@ export type {
 
 /** FolderTable — 文件夹列表 */
 export type {
+  FolderTableBatchSelection,
   FolderTableBreadcrumbItem,
   FolderTableBreadcrumbProps,
   FolderTableColumn,

@@ -102,7 +102,13 @@
   }
 }
 
-/* HeroUI secondary 表头/表体圆角：min(32px, var(--radius-2xl))，在 tableRoot 局部归零 */
+.tableDetailPanelHeaderHeight() {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  height: calc(@table-header-bar-min-height + @table-gap-compact + @table-header-row-height);
+  min-height: calc(@table-header-bar-min-height + @table-gap-compact + @table-header-row-height);
+}
+
 .tableRootFlatHeader() {
   --radius-2xl: 0;
 }
@@ -168,6 +174,95 @@
 
 .tableShellRadius() {
   border-radius: @table-shell-radius;
+}
+
+.tableSubtleScrollbar() {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--scrollbar) 72%, transparent) transparent;
+
+  &::-webkit-scrollbar {
+    width: var(--scrollbar-width, 8px);
+    height: var(--scrollbar-width, 8px);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--scrollbar) 72%, transparent);
+    border-radius: 999px;
+  }
+}
+
+/* 表头固定、垂直滚动仅在 tbody，滚动条不覆盖 column 行 */
+.tableSplitBodyScroll() {
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  :global(.table__content) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    table-layout: fixed;
+  }
+
+  :global(.table__header) {
+    position: static;
+    top: auto;
+    z-index: auto;
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  :global(.table__body) {
+    display: block;
+    width: 100%;
+    max-height: calc(100% - @table-header-row-height);
+    overflow-x: hidden;
+    overflow-y: auto;
+    .tableSubtleScrollbar();
+  }
+
+  :global(.table__body .table__row) {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  :global(.table__body[data-empty]) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    min-height: calc(100% - @table-header-row-height);
+    height: calc(100% - @table-header-row-height);
+    max-height: none;
+  }
+
+  :global(.table__body[data-empty] > tr),
+  :global(.table__body[data-empty] .table__row) {
+    display: block;
+    width: 100%;
+  }
+
+  :global(.table__body[data-empty] td),
+  :global(.table__body[data-empty] .table__cell) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    padding: 0;
+    border-bottom: 0;
+    background: transparent;
+  }
 }
 
 .tableShellStretch() {
