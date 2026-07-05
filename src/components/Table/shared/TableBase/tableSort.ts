@@ -108,7 +108,7 @@ export function sortTableRows<T extends object, C>(
   });
 }
 
-export function sortFolderTreeRows<T extends { children?: T[] } & object, C>(
+export function sortFolderTreeRows<T extends object, C>(
   rows: T[],
   columns: TableSortColumn<T, C>[],
   sortDescriptor: SortDescriptor | undefined,
@@ -123,6 +123,11 @@ export function sortFolderTreeRows<T extends { children?: T[] } & object, C>(
   const compare = buildValueComparator(column, sortDescriptor.direction, getContext);
   const pinnedLast = options?.isPinnedLast;
 
+  const readChildren = (row: T): T[] | undefined => {
+    const children = (row as { children?: T[] }).children;
+    return children?.length ? children : undefined;
+  };
+
   const sortLevel = (levelRows: T[]): T[] =>
     [...levelRows]
       .sort((a, b) => {
@@ -134,10 +139,13 @@ export function sortFolderTreeRows<T extends { children?: T[] } & object, C>(
         }
         return compare(a, b);
       })
-      .map((row) => ({
-        ...row,
-        children: row.children?.length ? sortLevel(row.children) : row.children,
-      }));
+      .map((row) => {
+        const children = readChildren(row);
+        return {
+          ...row,
+          children: children ? sortLevel(children) : children,
+        };
+      });
 
   return sortLevel(rows);
 }

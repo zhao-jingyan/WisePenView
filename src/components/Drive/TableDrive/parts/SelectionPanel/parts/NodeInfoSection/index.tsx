@@ -71,7 +71,7 @@ function NodeInfoSection({ selectedRow }: NodeInfoSectionProps) {
   if (isLoading) {
     return (
       <div className={styles.loading} aria-busy="true" aria-label="正在加载文档信息">
-        <Spin size="sm" />
+        <Spin size="small" />
       </div>
     );
   }
