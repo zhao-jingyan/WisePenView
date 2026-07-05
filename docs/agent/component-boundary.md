@@ -28,12 +28,15 @@ src/views/admin/<PageName>/
 
 仅当前页面使用的弹窗、表单块、列表块、配置文件和私有 hook，应放在页面目录内。只有出现明确跨页面复用需求时，再提升到 `src/components`。
 
+组件或页面需要把稳定业务结果转换为展示文本、标签、树节点、菜单 section 或表格行时，优先在同目录新增明确命名的 `*.viewmodel.ts`、`*.presenter.ts` 或 `*.display.ts`。
+
 ## 三、组件传参原则
 
 - 组件应尽可能少传参，避免 props drilling。
 - 业务容器组件需要数据时，通过 `useXxxService()` 或领域 hook 自己获取。
 - 真正通用的展示组件通过 Props 接收展示数据和回调，不隐式依赖业务 service。
 - 不要把 service 层 DTO 或后端 raw response 直接作为 Props 传递。
+- 不要要求 service 为单个组件返回 props 形状；这类转换放在组件同目录 viewmodel。
 
 判断方式：
 

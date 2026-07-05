@@ -6,6 +6,7 @@ import { useRequest } from 'ahooks';
 import { useResourceService } from '@/domains';
 import { formatReadCount } from '@/utils/format/formatNumber';
 import type { ResourceStatsBarProps } from './index.type';
+import { buildResourceStatsBarViewModel } from './resourceStatsBar.viewmodel';
 import styles from './style.module.less';
 
 function ResourceStatsBar({ resourceId }: ResourceStatsBarProps) {
@@ -18,7 +19,7 @@ function ResourceStatsBar({ resourceId }: ResourceStatsBarProps) {
 
   if (!data) return null;
 
-  const { readCount, likeCount, scoreAvgText } = data;
+  const { readCount, likeCount, scoreAvgText } = buildResourceStatsBarViewModel(data);
   const showReadCount = readCount !== undefined;
 
   return (

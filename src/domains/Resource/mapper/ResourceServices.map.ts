@@ -12,8 +12,10 @@ import {
   TAG_QUERY_LOGIC_MODE,
   type ResourceActionKey,
 } from '../enum';
+import { normalizeResourceItem } from '../normalizer/resourceItemNormalizer';
 import type {
   GetUserResourcesRequest,
+  ResourceInteractStats,
   ResourceListPage,
   SearchHitItem,
   SearchResultPage,
@@ -23,58 +25,8 @@ import { resolveResourceIconType } from '../utils/resolveResourceIconType';
 
 const PERSONAL_GROUP_PREFIX = 'p_';
 
-/** 后端 ResourceItemResponse 中的嵌套互动统计结构 */
-interface RawInteractionInfo {
-  readCount?: number | string | null;
-  likeCount?: number | string | null;
-  scoreCount?: number | string | null;
-  scoreTotal?: number | string | null;
-}
-
 interface MapResourceItemContext {
   groupId?: string;
-}
-
-/**
- * 将后端 ResourceItemResponse 原始数据归一化为前端 ResourceItem
- */
-export function normalizeResourceItem<T extends Partial<ResourceItem> | null | undefined>(
-  raw: T
-): T {
-  if (raw == null) return raw;
-  const next = Object.assign({}, raw) as Partial<ResourceItem>;
-  const rawCurrentTags = raw.currentTags;
-  // fallback：历史接口与 mock 可能返回数组或省略 currentTags，领域层统一为对象。
-  if (rawCurrentTags && typeof rawCurrentTags === 'object' && !Array.isArray(rawCurrentTags)) {
-    next.currentTags = rawCurrentTags;
-  } else {
-    next.currentTags = {};
-  }
-
-  const interactionInfo = (raw as unknown as { resourceInteractionInfo?: RawInteractionInfo })
-    .resourceInteractionInfo;
-
-  if (interactionInfo) {
-    if (interactionInfo.readCount != null) {
-      next.readCount = Number(interactionInfo.readCount);
-    } else {
-      next.readCount = undefined;
-    }
-    if (interactionInfo.likeCount != null) {
-      next.likeCount = Number(interactionInfo.likeCount);
-    } else {
-      next.likeCount = undefined;
-    }
-    const scoreCount = interactionInfo.scoreCount != null ? Number(interactionInfo.scoreCount) : 0;
-    const scoreTotal = interactionInfo.scoreTotal != null ? Number(interactionInfo.scoreTotal) : 0;
-    if (scoreCount > 0) {
-      next.scoreAvg = scoreTotal / scoreCount;
-    } else {
-      next.scoreAvg = null;
-    }
-  }
-
-  return next as T;
 }
 
 /** Service 入参 → GET /resource/item/listResources query */
@@ -247,22 +199,14 @@ const mapRateFromApi = (
   score: res?.score ?? 0,
 });
 
-/** 资源互动聚合统计（供互动统计组件展示） */
-export interface ResourceInteractStats {
-  readCount?: number | null;
-  likeCount?: number | null;
-  /** mapper 内已完成格式化：有评分则 "X.X 分"，无则 "暂无评分" */
-  scoreAvgText: string;
-}
-
-/** ResourceItem → 聚合互动统计，供互动统计组件展示 */
+/** ResourceItem → 聚合互动统计事实 */
 const mapInteractStatsFromApi = (resourceInfo: ResourceItem): ResourceInteractStats => {
   const normalized = normalizeResourceItem(resourceInfo);
   const scoreAvg = normalized.scoreAvg ?? null;
   return {
     readCount: normalized.readCount ?? null,
     likeCount: normalized.likeCount ?? null,
-    scoreAvgText: scoreAvg != null ? `${scoreAvg.toFixed(1)} 分` : '暂无评分',
+    scoreAvg,
   };
 };
 

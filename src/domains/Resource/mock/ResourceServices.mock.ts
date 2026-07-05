@@ -226,7 +226,7 @@ const interactRead = async (_resourceId: string): Promise<void> => {
 
 const getInteractStats = async (_resourceId: string) => {
   await delay(50);
-  return { readCount: 0, likeCount: 0, scoreAvgText: '暂无评分' };
+  return { readCount: 0, likeCount: 0, scoreAvg: null };
 };
 
 const globalSearch = async (params: SearchQueryRequest): Promise<SearchResultPage> => {

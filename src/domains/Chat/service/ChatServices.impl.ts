@@ -4,31 +4,23 @@ import { useCurrentChatSessionStore, useNewChatSessionStore, useNoteSelectionSto
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { ChatApi, ChatSessionApi } from '../apis/ChatApi';
 import { ChatServicesMap } from '../mapper/ChatServices.map';
+import { normalizeChatModelsFromApi } from '../normalizer/modelNormalizer';
 import type { ChatUploadedAttachmentContext } from '../session/index.type';
 import {
-  buildChatInputAgents,
-  buildDocumentPickerNodes,
-  buildDocumentPickerScopes,
   buildGroupResourceBatch,
-  buildSkillMenuOptions,
   buildWorkspaceAgents,
   buildWorkspaceSkills,
   mergeUniqueGroups,
   type GroupResourceBatch,
 } from './ChatServices.helper';
 import type {
-  ChatDocumentPickerNode,
-  ChatDocumentPickerScope,
-  ChatInputSkillMenuOptions,
   ChatModel,
   ChatServiceDeps,
   ChatSession,
   ChatWorkspace,
   CreateSessionRequest,
   DeleteSessionRequest,
-  GetChatInputSkillMenuOptionsParams,
   IChatService,
-  ListDocumentPickerChildrenRequest,
   ListHistoryMessagesRequest,
   ListSessionsRequest,
   MessageResponse,
@@ -45,7 +37,7 @@ type WorkspaceResourceType = 'AGENT' | 'SKILL';
 
 const getModels = async (): Promise<ChatModel[]> => {
   const data = await ChatApi.listModels();
-  return ChatServicesMap.mapGetModelsFromApi(data);
+  return normalizeChatModelsFromApi(data);
 };
 
 const fetchGroupRolePages = async (
@@ -185,50 +177,6 @@ const getWorkspace = async (deps: ChatServiceDeps): Promise<ChatWorkspace> => {
   };
 };
 
-const getChatInputAgents = async (
-  deps: ChatServiceDeps
-): Promise<ChatWorkspace['personalAgents']> => {
-  const workspace = await getWorkspace(deps);
-  return buildChatInputAgents(workspace);
-};
-
-const getChatInputSkillMenuOptions = async (
-  deps: ChatServiceDeps,
-  params: GetChatInputSkillMenuOptionsParams
-): Promise<ChatInputSkillMenuOptions> => {
-  const [workspace, tools] = await Promise.all([getWorkspace(deps), getTools()]);
-  return buildSkillMenuOptions(workspace, tools, params);
-};
-
-const getDocumentPickerScopes = async (
-  deps: ChatServiceDeps
-): Promise<ChatDocumentPickerScope[]> => {
-  const groups = await fetchAllGroups(deps);
-  return buildDocumentPickerScopes(groups);
-};
-
-const listDocumentPickerChildren = async (
-  deps: ChatServiceDeps,
-  params: ListDocumentPickerChildrenRequest
-): Promise<ChatDocumentPickerNode[]> => {
-  let parentNodeId = params.parentNodeId;
-  if (!parentNodeId) {
-    const rootNode = await deps.driveService.getRootNode({
-      rootId: params.rootId,
-      groupId: params.groupId,
-    });
-    parentNodeId = rootNode.id;
-  }
-  if (!parentNodeId) return [];
-
-  const children = await deps.driveService.listNodeChildren({
-    nodeId: parentNodeId,
-    groupId: params.groupId,
-  });
-
-  return buildDocumentPickerNodes(children);
-};
-
 const createSession = async (params?: CreateSessionRequest): Promise<ChatSession> => {
   const payload = ChatServicesMap.mapCreateSessionRequest(params);
   const data = await ChatSessionApi.createSession(payload);
@@ -295,12 +243,6 @@ export const createChatServices = (deps?: ChatServiceDeps): IChatService => {
   return {
     getModels,
     getWorkspace: async () => getWorkspace(getRequiredDeps()),
-    getChatInputAgents: async () => getChatInputAgents(getRequiredDeps()),
-    getChatInputSkillMenuOptions: async (params) =>
-      getChatInputSkillMenuOptions(getRequiredDeps(), params),
-    getDocumentPickerScopes: async () => getDocumentPickerScopes(getRequiredDeps()),
-    listDocumentPickerChildren: async (params) =>
-      listDocumentPickerChildren(getRequiredDeps(), params),
     createSession,
     renameSession,
     deleteSession,

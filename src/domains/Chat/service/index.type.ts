@@ -1,4 +1,3 @@
-import type { IDriveService } from '@/domains/Drive';
 import type { Group, IGroupService } from '@/domains/Group';
 import type { IResourceService, SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
@@ -7,11 +6,6 @@ import type { ChatUploadedAttachmentContext } from '../session/index.type';
 export interface ToolOption {
   toolId: string;
   label: string;
-}
-
-export interface ChatModelTag {
-  text: string;
-  type: string;
 }
 
 export interface ChatModelProviderOption {
@@ -41,8 +35,6 @@ export interface ChatModel {
   ratio: number;
   supportThinking: boolean;
   supportTools: boolean;
-  tags: ChatModelTag[];
-  multiplier: string | null;
   isDefault: boolean;
   vision: boolean;
   usageRank: number;
@@ -64,7 +56,6 @@ export interface UploadAttachmentResult {
 export interface ChatServiceDeps {
   groupService: IGroupService;
   resourceService: IResourceService;
-  driveService: IDriveService;
 }
 
 export interface ChatWorkspace {
@@ -74,73 +65,10 @@ export interface ChatWorkspace {
   groupAgents: ChatAgentOption[];
 }
 
-export interface SkillScopeTreeGroup {
-  key: string;
-  label: string;
-  skills: SkillSummary[];
-}
-
-export interface ChatInputSkillMenuOptions {
-  primarySkills: SkillSummary[];
-  otherSkillGroups: SkillScopeTreeGroup[];
-  tools: ToolOption[];
-}
-
-export interface GetChatInputSkillMenuOptionsParams {
-  agent: ChatAgentOption | null;
-}
-
-export type GetChatInputSkillMenuOptionsRequest = GetChatInputSkillMenuOptionsParams;
-
-export type ChatDocumentPickerScopeType = 'personal' | 'group';
-
-export interface ChatDocumentPickerScope {
-  scopeKey: string;
-  label: string;
-  rootId: string;
-  type: ChatDocumentPickerScopeType;
-  groupId?: string;
-}
-
-export type ChatDocumentPickerNodeType = 'root' | 'folder' | 'resource' | 'link';
-
-export interface ChatDocumentPickerNode {
-  nodeId: string;
-  title: string;
-  type: ChatDocumentPickerNodeType;
-  groupId: string | null;
-  resourceId: string | null;
-  resourceName: string | null;
-  resourceType: string | null;
-  isLeaf: boolean;
-  selectable: boolean;
-}
-
-export interface ChatDocumentPickerSelectedResource {
-  resourceId: string;
-  resourceName: string;
-  resourceType: string;
-  enabled: boolean;
-}
-
-export interface ListDocumentPickerChildrenRequest {
-  rootId: string;
-  groupId?: string;
-  parentNodeId?: string;
-}
-
 /** ChatService 接口 */
 export interface IChatService {
   getModels(): Promise<ChatModel[]>;
   getWorkspace(): Promise<ChatWorkspace>;
-  getChatInputAgents(): Promise<ChatAgentOption[]>;
-  getChatInputSkillMenuOptions(
-    params: GetChatInputSkillMenuOptionsParams
-  ): Promise<ChatInputSkillMenuOptions>;
-  getDocumentPickerScopes(): Promise<ChatDocumentPickerScope[]>;
-  listDocumentPickerChildren(
-    params: ListDocumentPickerChildrenRequest
-  ): Promise<ChatDocumentPickerNode[]>;
   createSession(params?: CreateSessionRequest): Promise<ChatSession>;
   renameSession(params: RenameSessionRequest): Promise<ChatSession>;
   deleteSession(params: DeleteSessionRequest): Promise<void>;

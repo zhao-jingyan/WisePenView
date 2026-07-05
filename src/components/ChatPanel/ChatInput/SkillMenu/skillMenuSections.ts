@@ -1,5 +1,5 @@
-import type { SkillScopeTreeGroup } from '@/domains/Chat';
 import type { SkillSummary } from '@/domains/Resource';
+import type { SkillScopeTreeGroup } from '../chatInput.viewmodel';
 import type { ChatInputSelectedSkill, ChatInputSelectedTool } from '../index.type';
 
 export type SkillMenuItemKind = 'primary-skill' | 'external-skill' | 'tool';

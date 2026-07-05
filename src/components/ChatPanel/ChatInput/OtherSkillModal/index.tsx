@@ -2,7 +2,6 @@ import { Modal } from '@/components/Overlay';
 import type { TreeDataNode } from '@/components/Tree';
 import Tree from '@/components/Tree';
 import { useChatService } from '@/domains';
-import type { SkillScopeTreeGroup } from '@/domains/Chat';
 import type { SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
@@ -13,6 +12,7 @@ import type { Key } from 'react';
 import { useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { DEFAULT_PERSONAL_AGENT, useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
+import { buildSkillMenuOptions, type SkillScopeTreeGroup } from '../chatInput.viewmodel';
 import styles from './style.module.less';
 
 interface OtherSkillTreeGroup extends SkillScopeTreeGroup {
@@ -71,7 +71,13 @@ function OtherSkillModalContent() {
     selectedSkills.filter((s) => s.external).map((s) => s.skillId)
   );
   const { data, loading } = useRequest(
-    () => chatService.getChatInputSkillMenuOptions({ agent: currentAgent }),
+    async () => {
+      const [workspace, tools] = await Promise.all([
+        chatService.getWorkspace(),
+        chatService.getTools(),
+      ]);
+      return buildSkillMenuOptions(workspace, tools, { agent: currentAgent });
+    },
     {
       refreshDeps: [currentAgent.agentId],
       onError: (error) => toast.danger(parseErrorMessage(error)),

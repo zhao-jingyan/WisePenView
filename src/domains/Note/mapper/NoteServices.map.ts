@@ -3,10 +3,10 @@ import type { SaveDrawIoSnapshotApiRequest } from '@/domains/Note/apis/NoteApi.t
 import {
   coerceResourceActions,
   maskNoteConfigurableResourceActions,
+  normalizeResourceItem,
   RESOURCE_ACTION,
   resourceActionsInclude,
 } from '@/domains/Resource';
-import { normalizeResourceItem } from '@/domains/Resource/mapper/ResourceServices.map';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import type {
   CreateNoteResponse,

@@ -2,8 +2,7 @@ import { EmptyState, LoadingState } from '@/components/Feedback';
 import { Modal } from '@/components/Overlay';
 import type { DataNode } from '@/components/Tree';
 import Tree from '@/components/Tree';
-import { useChatService } from '@/domains';
-import type { ChatDocumentPickerNode, ChatDocumentPickerScope } from '@/domains/Chat';
+import { useChatService, useDriveService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
@@ -11,6 +10,12 @@ import { Folder, Users } from 'lucide-react';
 import type { Key } from 'react';
 import { useRef, useState } from 'react';
 import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
+import {
+  buildDocumentPickerNodes,
+  buildDocumentPickerScopes,
+  type ChatDocumentPickerNode,
+  type ChatDocumentPickerScope,
+} from '../chatInput.viewmodel';
 import {
   buildDocumentPickerTreeNodes,
   isDocumentPickerScopeRootKey,
@@ -48,6 +53,7 @@ function buildScopeRootNode(scope: ChatDocumentPickerScope): DataNode {
 
 function DocumentPickerContent() {
   const chatService = useChatService();
+  const driveService = useDriveService();
   const { addDocRefs, setDocumentPickerOpen } = useChatInputStoreApi().getState();
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
@@ -69,11 +75,21 @@ function DocumentPickerContent() {
     parentNodeId?: string
   ): Promise<void> {
     try {
-      const children = await chatService.listDocumentPickerChildren({
-        rootId: scope.rootId,
+      let targetNodeId = parentNodeId;
+      if (!targetNodeId) {
+        const rootNode = await driveService.getRootNode({
+          rootId: scope.rootId,
+          groupId: scope.groupId,
+        });
+        targetNodeId = rootNode.id;
+      }
+      if (!targetNodeId) return;
+
+      const driveChildren = await driveService.listNodeChildren({
+        nodeId: targetNodeId,
         groupId: scope.groupId,
-        parentNodeId,
       });
+      const children = buildDocumentPickerNodes(driveChildren);
       setTreeData((prev) =>
         replaceDocumentPickerTreeNodeChildren(
           prev,
@@ -92,7 +108,8 @@ function DocumentPickerContent() {
     setCheckedKeys([]);
 
     try {
-      const scopes = await chatService.getDocumentPickerScopes();
+      const workspace = await chatService.getWorkspace();
+      const scopes = buildDocumentPickerScopes(workspace.groups);
       scopes.forEach((scope) => scopeMapRef.current.set(scope.scopeKey, scope));
       setTreeData(scopes.map(buildScopeRootNode));
     } catch (err) {

@@ -1,13 +1,13 @@
 # Domain Entity、Enum 与常量规范
 
-Entity 定义前端展示和业务编排会长期使用的复杂类型。Enum 和常量定义领域内稳定的状态、权限、类型和展示映射。
+Entity 定义前端业务编排会长期使用的稳定领域事实。Enum 和常量定义领域内稳定的状态、权限和类型；展示映射优先放在 display/viewmodel。
 
 ## 一、Entity 职责
 
 Entity 应定义：
 
-- 展示会用到的复杂业务类型，例如组、人、资源、笔记、钱包记录。
-- 已经过 mapper 归一化后的前端类型。
+- 多个业务流程会用到的复杂领域类型，例如组、人、资源、笔记、钱包记录。
+- 已经过 normalizer 归一化后的前端类型。
 - 多个 view/component/service 共享的领域类型。
 - 领域内稳定的 ID、scope、权限等小型 helper。
 
@@ -18,6 +18,7 @@ Entity 不应定义：
 - UI 组件私有 Props。
 - API request/response 类型。
 - 单个菜单、弹窗或树组件的临时展示结构。
+- 单个页面专属的展示文案、标签、表格行或 option。
 
 常见路径：
 
@@ -32,7 +33,7 @@ Enum 和常量应定义：
 - 领域状态值。
 - 权限动作。
 - 资源类型。
-- 后端枚举到前端展示文案或选项的稳定映射。
+- 后端枚举到领域语义的稳定映射。
 
 常见路径：
 
@@ -45,10 +46,10 @@ src/domains/<Domain>/enum/index.ts
 ## 三、类型来源边界
 
 - 后端协议类型手写在同域 `apis/*Api.type.ts`，属于 API 层输入。
-- mapper 输出的稳定展示类型放入 entity。
+- normalizer 输出的稳定领域事实放入 entity。
 - 组件 Props 只描述组件契约，不重复发明领域实体；组件私有展示结构留在组件目录。
 - service 的请求/响应类型放在 `service/index.type.ts`，表达业务能力语义。
-- 不新增泛泛的 domain `viewModel`/`model` 层；先判断它是稳定领域事实、service 成品返回，还是组件私有形状。
+- viewmodel/display 必须显式命名服务对象；先判断它是稳定领域事实、service 成品返回，还是组件私有形状。
 
 ## 四、命名与导出
 
@@ -59,7 +60,7 @@ src/domains/<Domain>/enum/index.ts
 
 ## 五、检查清单
 
-- [ ] Entity 是前端稳定展示类型，不是后端 raw DTO。
+- [ ] Entity 是前端稳定领域事实，不是后端 raw DTO 或页面展示形状。
 - [ ] API DTO 没有被组件直接消费。
 - [ ] 页面私有配置没有过度上提到 domain。
 - [ ] 领域公共类型通过 domain index 导出。

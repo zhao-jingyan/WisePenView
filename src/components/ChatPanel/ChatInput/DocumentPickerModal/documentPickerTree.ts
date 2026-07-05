@@ -1,4 +1,7 @@
-import type { ChatDocumentPickerNode, ChatDocumentPickerSelectedResource } from '@/domains/Chat';
+import type {
+  ChatDocumentPickerNode,
+  ChatDocumentPickerSelectedResource,
+} from '../chatInput.viewmodel';
 
 const DOCUMENT_PICKER_CHILD_KEY_SEPARATOR = '>';
 

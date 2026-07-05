@@ -1,4 +1,5 @@
 import type { Model } from '@/components/ChatPanel/index.type';
+import { getModelProviderText } from '@/components/ChatPanel/ModelSelector/modelSelector.viewmodel';
 import ProviderLogo from '@/components/Icons/ProviderLogo';
 import { Popover } from '@/components/Overlay';
 import { useChatService } from '@/domains';
@@ -48,13 +49,6 @@ function ModelPicker() {
       : undefined;
     return explicitModel ?? models.find((model) => model.isDefault) ?? models[0];
   }, [models, selectedModelId]);
-
-  const renderProviderText = (model: Model): string => {
-    if (model.providerName && model.providerModelName) {
-      return `${model.providerName} · ${model.providerModelName}`;
-    }
-    return model.providerModelName || model.providerName || model.provider;
-  };
 
   function handleModelChange(model: Model): void {
     const wasVision = selectedModel?.vision ?? false;
@@ -108,7 +102,7 @@ function ModelPicker() {
                           <ProviderLogo provider={model.provider} size={18} />
                           <span className={styles.modelInfo}>
                             <span className={styles.modelName}>{model.name}</span>
-                            <span className={styles.modelMeta}>{renderProviderText(model)}</span>
+                            <span className={styles.modelMeta}>{getModelProviderText(model)}</span>
                           </span>
                           {selectedModel?.id === model.id ? (
                             <Check size={14} className={styles.checkIcon} />

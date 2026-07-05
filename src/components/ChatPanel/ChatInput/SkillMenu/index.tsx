@@ -7,6 +7,7 @@ import { Check, Settings, Sparkles, Wrench } from 'lucide-react';
 import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
+import { buildSkillMenuOptions } from '../chatInput.viewmodel';
 import styles from '../style.module.less';
 import { buildSkillMenuSections } from './skillMenuSections';
 
@@ -24,7 +25,13 @@ function SkillMenu() {
   const { removeSkill, setOtherSkillModalOpen, setSkillMenuOpen, toggleSkill, toggleTool } =
     store.getState();
   const { data: skillMenuOptions } = useRequest(
-    () => chatService.getChatInputSkillMenuOptions({ agent: selectedAgent }),
+    async () => {
+      const [workspace, tools] = await Promise.all([
+        chatService.getWorkspace(),
+        chatService.getTools(),
+      ]);
+      return buildSkillMenuOptions(workspace, tools, { agent: selectedAgent });
+    },
     {
       refreshDeps: [selectedAgent.agentId],
       onError: (error) => toast.danger(parseErrorMessage(error)),

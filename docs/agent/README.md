@@ -14,7 +14,7 @@
 处理 `src/domains/**`、`src/apis/**` 或请求链路时阅读：
 
 - `domain-api.md`：API 薄层、手写 DTO、请求协议边界。
-- `domain-mapper.md`：字段转换、fallback、旧接口兼容、归一化。
+- `domain-mapper.md`：normalizer 与薄 mapper 的分工、字段兼容、归一化。
 - `fallback.md`：fallback 分层边界、允许场景和禁止场景。
 - `domain-service.md`：业务编排、依赖注入、错误处理。
 - `domain-entity.md`：展示实体、枚举、常量和类型边界。
@@ -36,7 +36,7 @@
 跨层任务按数据流阅读：
 
 ```text
-view/component -> service -> mapper -> api -> entity/enum
+api raw DTO -> normalizer -> service usecase -> viewmodel/display -> component/view
 ```
 
 常见组合：

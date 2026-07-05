@@ -18,11 +18,7 @@ import { WalletServicesMock } from '@/domains/Wallet/mock/WalletServices.mock';
 
 import type { ServicesContextValue } from './registry.types';
 
-const chatService = createChatServicesMock({
-  groupService: GroupServicesMock,
-  resourceService: ResourceServicesMock,
-  driveService: DriveServicesMock,
-});
+const chatService = createChatServicesMock();
 
 const mockServicesValue: ServicesContextValue = {
   adminService: AdminServicesMock,

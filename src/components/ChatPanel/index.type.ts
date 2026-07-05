@@ -1,6 +1,5 @@
-import type { ChatModel, ChatModelTag, ChatWorkspaceContext } from '@/domains/Chat';
+import type { ChatModel, ChatWorkspaceContext } from '@/domains/Chat';
 
-export type ModelTag = ChatModelTag;
 export type Model = ChatModel;
 
 export type MessageRole = 'user' | 'ai' | 'system';

@@ -54,7 +54,6 @@ const driveService = createDriveServices({
 const chatService = createChatServices({
   groupService: groupService,
   resourceService: resourceService,
-  driveService: driveService,
 });
 
 const servicesValue: ServicesContextValue = {

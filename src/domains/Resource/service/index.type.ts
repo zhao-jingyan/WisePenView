@@ -13,7 +13,6 @@ import type {
   SearchScope,
   TagQueryLogicMode,
 } from '@/domains/Resource';
-import type { ResourceInteractStats } from '../mapper/ResourceServices.map';
 
 /** 资源列表分页 */
 export interface ResourceListPage {
@@ -22,6 +21,13 @@ export interface ResourceListPage {
   page: number;
   size: number;
   totalPage: number;
+}
+
+/** 资源互动聚合统计事实；展示文案由 viewmodel/display 生成。 */
+export interface ResourceInteractStats {
+  readCount?: number | null;
+  likeCount?: number | null;
+  scoreAvg: number | null;
 }
 
 /** ResourceService 接口：供依赖注入使用 */

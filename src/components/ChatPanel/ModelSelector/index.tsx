@@ -10,6 +10,7 @@ import ProviderLogo from '@/components/Icons/ProviderLogo';
 import { useChatService } from '@/domains';
 import { useChatModelPreferenceStore } from '@/store/useChatModelPreferenceStore';
 import type { Model } from '../index.type';
+import { buildModelSelectorModelView } from './modelSelector.viewmodel';
 
 import styles from './style.module.less';
 
@@ -18,13 +19,6 @@ const SORT_OPTIONS = [
   { label: '按名字', value: 'name', icon: ArrowUpAZ },
   { label: '深度思考模型', value: 'thinking', icon: LayoutGrid },
 ];
-
-const renderProviderText = (model: Model): string => {
-  if (model.providerName && model.providerModelName) {
-    return `${model.providerName} · ${model.providerModelName}`;
-  }
-  return model.providerModelName || model.providerName || model.provider;
-};
 
 interface ModelSelectorProps {
   value: string;
@@ -156,56 +150,59 @@ function ModelSelector({ value, onChange }: ModelSelectorProps) {
             <EmptyState title="暂无模型" />
           </div>
         ) : (
-          processedModels.map((model, index) => (
-            <div
-              key={model.id}
-              className={clsx(styles.modelItem, model.id === value && styles.active)}
-              onClick={() => {
-                onChange(model);
-                setLastSelectedModelId(model.id);
-                setOpen(false);
-              }}
-            >
-              {currentSort === 'ratio' && <div className={styles.rankNum}>#{index + 1}</div>}
+          processedModels.map((model, index) => {
+            const modelView = buildModelSelectorModelView(model);
+            return (
+              <div
+                key={model.id}
+                className={clsx(styles.modelItem, model.id === value && styles.active)}
+                onClick={() => {
+                  onChange(model);
+                  setLastSelectedModelId(model.id);
+                  setOpen(false);
+                }}
+              >
+                {currentSort === 'ratio' && <div className={styles.rankNum}>#{index + 1}</div>}
 
-              <div className={styles.itemLeft}>
-                <span className={styles.modelTitle}>
-                  <span className={styles.modelTitleIcon} aria-hidden="true">
-                    <ProviderLogo provider={model.provider} size={20} />
+                <div className={styles.itemLeft}>
+                  <span className={styles.modelTitle}>
+                    <span className={styles.modelTitleIcon} aria-hidden="true">
+                      <ProviderLogo provider={model.provider} size={20} />
+                    </span>
+                    <span className={styles.modelName}>{model.name}</span>
                   </span>
-                  <span className={styles.modelName}>{model.name}</span>
-                </span>
 
-                {/* {model.vision && (
-                  <Tooltip title="支持视觉识别" classNames={{ container: styles.tooltipBody }}>
-                    <div className={styles.visionWrapper}>
-                      <Eye />
-                    </div>
-                  </Tooltip>
-                )} */}
+                  {/* {model.vision && (
+                    <Tooltip title="支持视觉识别" classNames={{ container: styles.tooltipBody }}>
+                      <div className={styles.visionWrapper}>
+                        <Eye />
+                      </div>
+                    </Tooltip>
+                  )} */}
 
-                <div className={styles.tagsRow}>
-                  <Chip size="sm" variant="soft" className={styles.miniTag}>
-                    <Chip.Label>{renderProviderText(model)}</Chip.Label>
-                  </Chip>
-                  {model.tags.map((tag, idx) => (
-                    <Chip key={idx} size="sm" variant="soft" className={styles.miniTag}>
-                      <Chip.Label>{tag.text}</Chip.Label>
+                  <div className={styles.tagsRow}>
+                    <Chip size="sm" variant="soft" className={styles.miniTag}>
+                      <Chip.Label>{modelView.providerText}</Chip.Label>
                     </Chip>
-                  ))}
+                    {modelView.tags.map((tag, idx) => (
+                      <Chip key={idx} size="sm" variant="soft" className={styles.miniTag}>
+                        <Chip.Label>{tag.text}</Chip.Label>
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.itemRight}>
+                  {modelView.multiplierText && (
+                    <Chip size="sm" variant="soft" className={styles.multiplierTag}>
+                      <Chip.Label>{modelView.multiplierText}</Chip.Label>
+                    </Chip>
+                  )}
+                  {model.id === value && <Check style={{ color: 'var(--accent)' }} />}
                 </div>
               </div>
-
-              <div className={styles.itemRight}>
-                {model.multiplier && (
-                  <Chip size="sm" variant="soft" className={styles.multiplierTag}>
-                    <Chip.Label>{model.multiplier}</Chip.Label>
-                  </Chip>
-                )}
-                {model.id === value && <Check style={{ color: 'var(--accent)' }} />}
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

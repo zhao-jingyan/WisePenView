@@ -21,14 +21,22 @@
 
 ## 三、分层边界
 
+统一数据线：
+
+```text
+api raw DTO -> normalizer -> service usecase -> viewmodel/display -> component/view
+```
+
 - API 层只表达后端协议：URL、method、query/body 和 raw DTO。它不做展示加工、fallback、缓存或 UI 提示。
-- Mapper/领域 normalizer 是“不稳定数据变稳定”的边界：字段别名、旧接口兼容、ID、时间、枚举、权限动作和展示文案归一化都放在这里。
-- Service 是业务编排入口：做参数组织、客户端业务校验、调用 API/其它 service、调用 mapper、写缓存/session、抛错。它不修补 response 字段，也不把 raw DTO 透传给组件。
-- Entity 是 mapper 输出后的稳定前端类型。组件、service 和 store 应消费 entity，而不是消费后端 raw DTO。
-- View/component 负责 UI 状态、交互和展示。它可以处理 loading、empty、请求尚未返回、受控/非受控 props 等 UI 默认值，但不修补业务实体字段。
-- Store 保存已归一化状态；跨页面复用的归一化逻辑回到 mapper 或领域 helper。
-- 不新增泛泛的 domain `viewModel`/`model` 层。组件长期依赖的业务数据进 entity 或 service 返回类型；只服务某个菜单、弹窗、树组件的展示结构放在组件同目录。
-- Mapper 不通过 domain index 对外导出。组件需要的成品数据由 service 返回；组件本地交互形状由组件自己命名。
+- Normalizer 是后端数据的稳定化边界：字段别名、旧接口兼容、ID、时间、枚举、权限动作和历史数据补齐都放在这里。文件名用 `normalizer/*Normalizer.ts` 或明确的 `normalizeXxx`。
+- Mapper 只是薄协议适配器：service request 到 API request、API 包装结构到分页/简单返回结构、字段改名等。需要兜底、推断、聚合、排序时优先抽到 normalizer 或 usecase，不让 mapper 变成第二个 service/viewmodel。
+- Service 是业务用例入口：做参数组织、客户端业务校验、调用 API/其它 service、调用 normalizer/mapper、写缓存/session、抛错，并返回稳定业务结果。它不修补 raw response 字段，也不生产某个组件专属的展示结构。
+- Entity 是稳定领域事实。组件、service 和 store 应消费 entity，而不是消费后端 raw DTO；不要把单个页面的按钮文案、菜单结构或树节点塞进 entity。
+- ViewModel/Display 是稳定业务结果到界面可消费形状的转换层：展示文案、标签、菜单 section、树节点、列表 option、空值占位等放在这里。优先放在组件或 view 同目录；多页面复用时再提升到 domain 的 `display/`、`presenter/` 或明确命名 helper。
+- View/component 负责 UI 状态、交互和展示。它可以处理 loading、empty、请求尚未返回、受控/非受控 props 等 UI 默认值，但不猜后端 raw 字段。
+- Store 保存已归一化状态；跨页面复用的归一化逻辑回到 normalizer 或领域 helper。
+- 不新增泛泛的 domain `model` 层。需要 viewmodel 时显式命名它服务的视图，例如 `skillMenu.viewmodel.ts`、`groupCard.presenter.ts`。
+- Mapper 不通过 domain index 对外导出。Normalizer 是否导出看复用范围；跨 domain 复用时必须通过 domain index 暴露明确名字。
 
 ## 四、表达方式选择
 
@@ -47,9 +55,11 @@
 
 `??`、`?.` 和默认值不是问题本身，问题是它们出现在哪个边界、掩盖了什么。
 
-- 后端字段兼容、旧数据补齐、大小写兼容和展示文案兜底，放在 mapper 或明确命名的领域 normalizer。
-- Service 默认消费稳定 entity；如果发现需要修字段，先回到 mapper 或类型契约。
-- Component/view 不对业务字段写 `user?.profile?.name ?? '-'` 这类兜底；需要占位时，让 entity 提供展示字段，或把字段显式建模为 nullable。
+- 后端字段兼容、旧数据补齐和大小写兼容，放在 normalizer。
+- 展示文案、占位文本和 UI 标签放在 viewmodel/display；不要为了让组件少写判断而把页面文案塞进 mapper。
+- Mapper 不写兜底；如果 mapper 里开始出现多层 `??`、类型守卫、枚举推断或排序分组，先抽 normalizer。
+- Service 默认消费稳定 entity；如果发现需要修字段，先回到 normalizer 或类型契约。
+- Component/view 不对后端 raw 字段写 `raw.foo ?? raw.bar ?? '-'`；需要业务占位时，建立明确 viewmodel，或把字段显式建模为 nullable 后在 display 层处理。
 - UI 默认值是允许的，例如空态文案、弹窗默认开关、分页默认页码、请求未返回时的稳定空列表常量。
 - 必填字段缺失不要静默转成空字符串、空数组或 `0`；应显式 nullable、抛业务错误，或推动接口契约修正。
 - 非显而易见的兼容 fallback 必须有中文注释说明兼容来源。

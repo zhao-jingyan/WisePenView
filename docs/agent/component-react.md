@@ -78,10 +78,10 @@
 
 ## 八、数据 fallback 边界
 
-- Component/view 不负责修补后端字段，业务字段 fallback 应回到 mapper 或领域 normalizer。
+- Component/view 不负责修补后端字段，业务字段 fallback 应回到 normalizer。
 - 允许组件为纯 UI props、空态文案、请求未返回状态、受控/非受控状态提供默认值。
-- 避免在 JSX 中写 `user?.profile?.name ?? '-'` 这类业务字段兜底；需要占位时优先让 entity 提供展示字段或显式 nullable 字段。
-- 遇到字段不确定时，不通过 `??`、`?.` 链条扩大保护范围，先确认接口或调整 mapper。
+- 避免在 JSX 中写 `user?.profile?.name ?? '-'` 这类业务字段兜底；需要占位时用 viewmodel/display，或把字段显式建模为 nullable。
+- 遇到字段不确定时，不通过 `??`、`?.` 链条扩大保护范围，先确认接口或调整 normalizer。
 - 清理或新增 fallback 前，先阅读 `docs/agent/fallback.md`。
 
 ## 九、注释

@@ -7,6 +7,7 @@ import { useRequest } from 'ahooks';
 import { Bot, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
+import { buildChatInputAgents } from '../chatInput.viewmodel';
 import styles from '../style.module.less';
 
 function buildDisplayAgents(
@@ -40,16 +41,19 @@ function AgentPicker() {
   const selectedAgent = useChatInputStore((state) => state.selectedAgent);
   const { setSelectedAgent } = store.getState();
   const [open, setOpen] = useState(false);
-  const { data: agents = [] } = useRequest(() => chatService.getChatInputAgents(), {
-    onSuccess: (nextAgents) => {
-      const currentAgent = store.getState().selectedAgent;
-      const nextAgent = resolveSelectedAgent(nextAgents, currentAgent);
-      if (nextAgent.agentId !== currentAgent.agentId) {
-        setSelectedAgent(nextAgent);
-      }
-    },
-    onError: (error) => toast.danger(parseErrorMessage(error)),
-  });
+  const { data: agents = [] } = useRequest(
+    async () => buildChatInputAgents(await chatService.getWorkspace()),
+    {
+      onSuccess: (nextAgents) => {
+        const currentAgent = store.getState().selectedAgent;
+        const nextAgent = resolveSelectedAgent(nextAgents, currentAgent);
+        if (nextAgent.agentId !== currentAgent.agentId) {
+          setSelectedAgent(nextAgent);
+        }
+      },
+      onError: (error) => toast.danger(parseErrorMessage(error)),
+    }
+  );
   const displayAgents = buildDisplayAgents(agents, selectedAgent);
 
   const handleSelect = (agent: ChatAgentOption) => {

@@ -1,4 +1,4 @@
-import { normalizeResourceItem } from '@/domains/Resource/mapper/ResourceServices.map';
+import { normalizeResourceItem } from '@/domains/Resource';
 import type {
   GetDocInfoApiResponse,
   ListPendingDocsApiResponse,

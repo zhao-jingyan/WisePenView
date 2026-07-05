@@ -31,6 +31,7 @@ export type {
   SearchScope,
   TagQueryLogicMode,
 } from './enum';
+export { normalizeResourceItem } from './normalizer/resourceItemNormalizer';
 export { groupSearchHits } from './service/groupSearchHits';
 export type { SearchHitGroup } from './service/groupSearchHits';
 export type {
@@ -42,6 +43,7 @@ export type {
   MountResourcesToGroupTagRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
+  ResourceInteractStats,
   ResourceListPage,
   SearchHitItem,
   SearchQueryRequest,

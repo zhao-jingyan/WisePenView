@@ -10,7 +10,6 @@ import { ResourceInteractApi } from '../apis/InteractApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
 import type { ResourceItem } from '../entity/resource';
-import type { ResourceInteractStats } from '../mapper/ResourceServices.map';
 import { ResourceServicesMap } from '../mapper/ResourceServices.map';
 import {
   buildGroupMountResourceRequest,
@@ -28,6 +27,7 @@ import type {
   MountResourcesToGroupTagRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
+  ResourceInteractStats,
   ResourceListPage,
   SearchQueryRequest,
   SearchResultPage,
