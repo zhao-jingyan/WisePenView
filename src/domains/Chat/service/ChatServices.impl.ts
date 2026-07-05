@@ -3,12 +3,13 @@ import { useCurrentChatSessionStore, useNewChatSessionStore, useNoteSelectionSto
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { ChatApi, ChatSessionApi } from '../apis/ChatApi';
 import { ChatServicesMap } from '../mapper/ChatServices.map';
-import { buildDocumentPickerScopes } from '../mapper/documentPicker.mapper';
+import type { ChatUploadedAttachmentContext } from '../session/index.type';
 import {
-  buildCapabilityOptions,
   buildChatInputAgents,
   buildDocumentPickerNodes,
+  buildDocumentPickerScopes,
   buildGroupResourceBatch,
+  buildSkillMenuOptions,
   buildWorkspaceAgents,
   buildWorkspaceSkills,
   mergeUniqueGroups,
@@ -17,14 +18,14 @@ import {
 import type {
   ChatDocumentPickerNode,
   ChatDocumentPickerScope,
-  ChatInputCapabilityOptions,
+  ChatInputSkillMenuOptions,
   ChatModel,
   ChatServiceDeps,
   ChatSession,
   ChatWorkspace,
   CreateSessionRequest,
   DeleteSessionRequest,
-  GetChatInputCapabilityOptionsParams,
+  GetChatInputSkillMenuOptionsParams,
   IChatService,
   ListDocumentPickerChildrenRequest,
   ListHistoryMessagesRequest,
@@ -34,7 +35,6 @@ import type {
   RenameSessionRequest,
   ToolOption,
   UploadAttachmentParams,
-  UploadAttachmentResult,
 } from './index.type';
 
 const getModels = async (): Promise<ChatModel[]> => {
@@ -136,12 +136,12 @@ const getChatInputAgents = async (
   return buildChatInputAgents(workspace);
 };
 
-const getChatInputCapabilityOptions = async (
+const getChatInputSkillMenuOptions = async (
   deps: ChatServiceDeps,
-  params: GetChatInputCapabilityOptionsParams
-): Promise<ChatInputCapabilityOptions> => {
+  params: GetChatInputSkillMenuOptionsParams
+): Promise<ChatInputSkillMenuOptions> => {
   const [workspace, tools] = await Promise.all([getWorkspace(deps), getTools()]);
-  return buildCapabilityOptions(workspace, tools, params);
+  return buildSkillMenuOptions(workspace, tools, params);
 };
 
 const getDocumentPickerScopes = async (
@@ -219,12 +219,13 @@ const getTools = async (): Promise<ToolOption[]> => {
 const uploadAttachment = async ({
   file,
   saveToLibrary,
-}: UploadAttachmentParams): Promise<UploadAttachmentResult> => {
+}: UploadAttachmentParams): Promise<ChatUploadedAttachmentContext> => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('save_to_library', String(Boolean(saveToLibrary)));
   const res = await ChatApi.uploadAttachment(formData);
-  return ChatServicesMap.mapUploadAttachmentFromApi(res, file.name);
+  const result = ChatServicesMap.mapUploadAttachmentFromApi(res, file.name);
+  return ChatServicesMap.mapUploadAttachmentResultToContext(result);
 };
 
 export const createChatServices = (deps?: ChatServiceDeps): IChatService => {
@@ -239,8 +240,8 @@ export const createChatServices = (deps?: ChatServiceDeps): IChatService => {
     getModels,
     getWorkspace: async () => getWorkspace(getRequiredDeps()),
     getChatInputAgents: async () => getChatInputAgents(getRequiredDeps()),
-    getChatInputCapabilityOptions: async (params) =>
-      getChatInputCapabilityOptions(getRequiredDeps(), params),
+    getChatInputSkillMenuOptions: async (params) =>
+      getChatInputSkillMenuOptions(getRequiredDeps(), params),
     getDocumentPickerScopes: async () => getDocumentPickerScopes(getRequiredDeps()),
     listDocumentPickerChildren: async (params) =>
       listDocumentPickerChildren(getRequiredDeps(), params),

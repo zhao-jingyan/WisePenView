@@ -1,5 +1,4 @@
 import { useChatService } from '@/domains';
-import { mapUploadAttachmentResultToContext } from '@/domains/Chat';
 import { parseErrorMessage } from '@/utils/error';
 import { base64ToFile, fileToBase64, generateThumbnail } from '@/utils/file/upload';
 import { toast } from '@heroui/react';
@@ -56,12 +55,11 @@ export function ChatInputFileProvider({ children }: { children: ReactNode }) {
     const id = crypto.randomUUID();
     addPendingAttachmentUpload({ id, filename: file.name, status: 'uploading' });
     try {
-      const result = await chatService.uploadAttachment({
+      const attachment = await chatService.uploadAttachment({
         file,
         saveToLibrary: false,
       });
       removePendingAttachmentUpload(id);
-      const attachment = mapUploadAttachmentResultToContext(result);
       addActiveAttachment(attachment);
       return attachment;
     } catch (err) {

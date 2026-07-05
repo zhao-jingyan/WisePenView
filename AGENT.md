@@ -27,6 +27,8 @@
 - Entity 是 mapper 输出后的稳定前端类型。组件、service 和 store 应消费 entity，而不是消费后端 raw DTO。
 - View/component 负责 UI 状态、交互和展示。它可以处理 loading、empty、请求尚未返回、受控/非受控 props 等 UI 默认值，但不修补业务实体字段。
 - Store 保存已归一化状态；跨页面复用的归一化逻辑回到 mapper 或领域 helper。
+- 不新增泛泛的 domain `viewModel`/`model` 层。组件长期依赖的业务数据进 entity 或 service 返回类型；只服务某个菜单、弹窗、树组件的展示结构放在组件同目录。
+- Mapper 不通过 domain index 对外导出。组件需要的成品数据由 service 返回；组件本地交互形状由组件自己命名。
 
 ## 四、表达方式选择
 
@@ -38,6 +40,7 @@
 - 校验、抛错和副作用不天然要求 `for...of`。关键是条件有名字、失败路径靠近触发点、副作用的顺序和原因可读。
 - 简单二选一可以用三元表达式；业务分支、多条件分支或嵌套分支用 `if/else`、提前 `return` 或命名变量。
 - 抽 helper 的理由是命名了业务概念、隔离了复杂规则或降低重复；不要为了“看起来规整”而抽空壳函数。
+- 命名使用业务词，不用宽泛词兜底。比如 Skill + Tool 菜单就叫 `SkillMenu`/`SelectedSkill`/`SelectedTool`，不要用 `Capability` 这类读者需要再解释的词。
 - 注释解释“为什么”和业务规则，不解释显而易见的语法。
 
 ## 五、Fallback 原则

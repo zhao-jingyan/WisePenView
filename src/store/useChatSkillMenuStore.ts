@@ -2,7 +2,7 @@ import type { SkillSummary } from '@/domains/Resource';
 import { create } from 'zustand';
 import type { ChatAgentOption } from './useChatAgentStore';
 
-export interface TemporarySkillSelection {
+export interface ChatSkillMenuSelectedSkill {
   skillId: string;
   displayName: string;
   currentVersionId?: string;
@@ -14,21 +14,21 @@ export interface TemporarySkillSelection {
   external?: boolean;
 }
 
-export interface TemporaryToolSelection {
+export interface ChatSkillMenuSelectedTool {
   toolId: string;
   label: string;
 }
 
-interface ChatCapabilityState {
-  selectedSkills: TemporarySkillSelection[];
-  selectedTools: TemporaryToolSelection[];
+interface ChatSkillMenuState {
+  selectedSkills: ChatSkillMenuSelectedSkill[];
+  selectedTools: ChatSkillMenuSelectedTool[];
   toggleSkill: (
     skill: SkillSummary,
     options?: { sourceAgent?: ChatAgentOption | null; external?: boolean }
   ) => void;
   removeSkill: (skillId: string) => void;
-  toggleTool: (tool: TemporaryToolSelection) => void;
-  clearCapabilities: () => void;
+  toggleTool: (tool: ChatSkillMenuSelectedTool) => void;
+  clearSkillMenuSelections: () => void;
 }
 
 const INITIAL_STATE = {
@@ -36,7 +36,7 @@ const INITIAL_STATE = {
   selectedTools: [],
 };
 
-export const useChatCapabilityStore = create<ChatCapabilityState>()((set) => ({
+export const useChatSkillMenuStore = create<ChatSkillMenuState>()((set) => ({
   ...INITIAL_STATE,
 
   toggleSkill: (skill, options) =>
@@ -90,9 +90,9 @@ export const useChatCapabilityStore = create<ChatCapabilityState>()((set) => ({
           };
     }),
 
-  clearCapabilities: () => set(INITIAL_STATE),
+  clearSkillMenuSelections: () => set(INITIAL_STATE),
 }));
 
-export const clearChatCapabilityStore = (): void => {
-  useChatCapabilityStore.setState(INITIAL_STATE);
+export const clearChatSkillMenuStore = (): void => {
+  useChatSkillMenuStore.setState(INITIAL_STATE);
 };

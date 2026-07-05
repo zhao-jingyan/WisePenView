@@ -1,17 +1,18 @@
-import type {
-  DriveNode,
-  DriveNodeScope,
-  FolderNode,
-  LinkNode,
-  ResourceNode,
-  RootNode,
-} from '@/domains/Drive';
 import type { GetUserResourcesRequest, ResourceItem } from '@/domains/Resource';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR, TAG_QUERY_LOGIC_MODE } from '@/domains/Resource';
 import type { TagTreeNode } from '@/domains/Tag';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
-import { encodeNodeId, mapTagToFolderNode } from '../mapper/DriveServices.map';
+import {
+  encodeNodeId,
+  type DriveNode,
+  type DriveNodeScope,
+  type FolderNode,
+  type LinkNode,
+  type ResourceNode,
+  type RootNode,
+} from '../entity/drive';
+import { mapTagToFolderNode } from '../mapper/DriveServices.map';
 
 export const DRIVE_CACHE_KEY_DEFAULT = '__default__';
 export const DRIVE_DEFAULT_PAGE_SIZE = 50;

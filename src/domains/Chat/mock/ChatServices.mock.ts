@@ -1,25 +1,23 @@
-import type {
-  ChatDocumentPickerNode,
-  ChatServiceDeps,
-  ChatSession,
-  IChatService,
-  ListHistoryMessagesRequest,
-  ListSessionsRequest,
-  MessageResponse,
-  PageResult,
-  ToolOption,
-  UploadAttachmentParams,
-  UploadAttachmentResult,
-} from '@/domains/Chat';
 import {
-  buildAdvancedSkillTreeGroups,
-  buildDefaultPersonalAgent,
-  buildDocumentPickerScopes,
-  getPrimarySkillsForAgent,
-  mapDriveNodeToDocumentPickerNode,
   MODEL_TYPE,
+  type ChatDocumentPickerNode,
+  type ChatDocumentPickerScope,
+  type ChatServiceDeps,
+  type ChatSession,
+  type ChatUploadedAttachmentContext,
+  type ChatWorkspace,
+  type IChatService,
+  type ListHistoryMessagesRequest,
+  type ListSessionsRequest,
+  type MessageResponse,
+  type PageResult,
+  type SkillScopeTreeGroup,
+  type ToolOption,
+  type UploadAttachmentParams,
 } from '@/domains/Chat';
+import { buildDriveNodeScope, type DriveNode } from '@/domains/Drive';
 import type { Group } from '@/domains/Group';
+import type { ChatAgentOption } from '@/store';
 
 type MockModelSeed = {
   name: string;
@@ -297,6 +295,154 @@ const listHistoryMessages: IChatService['listHistoryMessages'] = async (
   };
 };
 
+type MockSkill = ChatWorkspace['skills'][number];
+
+const buildDefaultPersonalAgent = (): ChatAgentOption => ({
+  agentId: 'agent-personal-default',
+  agentType: 'PERSONAL',
+  label: '默认Agent',
+  isDefault: true,
+});
+
+const isSkillInAgentScope = (
+  skill: MockSkill,
+  agent: ChatAgentOption | null | undefined
+): boolean => {
+  if (agent?.defaultSkillIds && agent.defaultSkillIds.length > 0) {
+    return agent.defaultSkillIds.includes(skill.skillId);
+  }
+  if (!agent || agent.agentType === 'PERSONAL') {
+    return skill.scopeType !== 'GROUP';
+  }
+  return skill.scopeType === 'GROUP' && skill.groupId === agent.groupId;
+};
+
+const getPrimarySkillsForAgent = (
+  skills: MockSkill[],
+  agent: ChatAgentOption | null | undefined
+): MockSkill[] => {
+  const primarySkills: MockSkill[] = [];
+  for (const skill of skills) {
+    if (!isSkillInAgentScope(skill, agent)) continue;
+    primarySkills.push(skill);
+  }
+  return primarySkills;
+};
+
+const buildAdvancedSkillTreeGroups = (
+  skills: MockSkill[],
+  groups: Group[]
+): SkillScopeTreeGroup[] => {
+  const personalSkills: MockSkill[] = [];
+  const groupSkillMap = new Map<string, MockSkill[]>();
+
+  for (const skill of skills) {
+    if (skill.scopeType !== 'GROUP') {
+      personalSkills.push(skill);
+      continue;
+    }
+    if (!skill.groupId) continue;
+    const groupSkills = groupSkillMap.get(skill.groupId) ?? [];
+    groupSkills.push(skill);
+    groupSkillMap.set(skill.groupId, groupSkills);
+  }
+
+  const result: SkillScopeTreeGroup[] = [];
+  const knownGroupIds = new Set<string>();
+  for (const group of groups) {
+    knownGroupIds.add(group.groupId);
+    const groupSkills = groupSkillMap.get(group.groupId) ?? [];
+    if (groupSkills.length === 0) continue;
+    result.push({
+      key: `group-${group.groupId}`,
+      label: group.groupName,
+      skills: groupSkills,
+    });
+  }
+
+  for (const [groupId, groupSkills] of groupSkillMap.entries()) {
+    if (knownGroupIds.has(groupId)) continue;
+    result.push({
+      key: `group-${groupId}`,
+      label: groupSkills[0]?.groupName || groupId,
+      skills: groupSkills,
+    });
+  }
+
+  if (personalSkills.length > 0) {
+    result.push({
+      key: 'personal',
+      label: '个人',
+      skills: personalSkills,
+    });
+  }
+  return result;
+};
+
+const buildDocumentPickerScopes = (groups: Group[]): ChatDocumentPickerScope[] => {
+  const personalScope = buildDriveNodeScope();
+  const scopes: ChatDocumentPickerScope[] = [
+    {
+      scopeKey: 'personal',
+      label: '个人文件',
+      rootId: personalScope.rootId,
+      type: 'personal',
+    },
+  ];
+
+  for (const group of groups) {
+    const groupScope = buildDriveNodeScope(group.groupId);
+    scopes.push({
+      scopeKey: `group:${group.groupId}`,
+      label: group.groupName,
+      rootId: groupScope.rootId,
+      type: 'group',
+      groupId: group.groupId,
+    });
+  }
+
+  return scopes;
+};
+
+const getDriveNodeTitle = (node: DriveNode): string => {
+  switch (node.type) {
+    case 'root':
+      return node.name || '云盘';
+    case 'folder':
+      return node.name || '未命名文件夹';
+    case 'resource':
+    case 'link':
+      return node.title || node.resourceId;
+    case 'loading':
+      return node.label || '';
+  }
+};
+
+const mapDriveNodeToDocumentPickerNode = (node: DriveNode): ChatDocumentPickerNode | null => {
+  if (node.type === 'loading') return null;
+
+  const isResourceNode = node.type === 'resource' || node.type === 'link';
+  const groupId = node.scope.type === 'group' ? node.scope.groupId : null;
+  const documentNode: ChatDocumentPickerNode = {
+    nodeId: node.id,
+    title: getDriveNodeTitle(node),
+    type: node.type,
+    groupId,
+    resourceId: null,
+    resourceName: null,
+    resourceType: null,
+    isLeaf: isResourceNode,
+    selectable: isResourceNode,
+  };
+
+  if (isResourceNode) {
+    documentNode.resourceId = node.resourceId;
+    documentNode.resourceName = node.title || node.resourceId;
+    documentNode.resourceType = node.resourceType ?? '';
+  }
+  return documentNode;
+};
+
 const getWorkspace: IChatService['getWorkspace'] = async () => {
   return {
     groups: [
@@ -421,18 +567,13 @@ const getTools = async (): Promise<ToolOption[]> => {
   ];
 };
 
-const getChatInputCapabilityOptions: IChatService['getChatInputCapabilityOptions'] = async ({
+const getChatInputSkillMenuOptions: IChatService['getChatInputSkillMenuOptions'] = async ({
   agent,
 }) => {
   const [workspace, tools] = await Promise.all([getWorkspace(), getTools()]);
   const primarySkills = getPrimarySkillsForAgent(workspace.skills, agent);
   const primaryIds = new Set(primarySkills.map((skill) => skill.skillId));
-  const otherSkillGroups = buildAdvancedSkillTreeGroups(
-    workspace.skills,
-    workspace.groups,
-    agent,
-    primarySkills
-  )
+  const otherSkillGroups = buildAdvancedSkillTreeGroups(workspace.skills, workspace.groups)
     .map((group) => ({
       ...group,
       skills: group.skills.filter((skill) => !primaryIds.has(skill.skillId)),
@@ -554,12 +695,13 @@ const createListDocumentPickerChildren =
 
 const uploadAttachment = async ({
   file,
-}: UploadAttachmentParams): Promise<UploadAttachmentResult> => {
+}: UploadAttachmentParams): Promise<ChatUploadedAttachmentContext> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
         attachmentId: 'mock-attachment-' + Date.now(),
         filename: file.name,
+        enabled: true,
       });
     }, 500);
   });
@@ -568,7 +710,7 @@ export const createChatServicesMock = (deps?: ChatServiceDeps): IChatService => 
   getWorkspace,
   getModels,
   getChatInputAgents,
-  getChatInputCapabilityOptions,
+  getChatInputSkillMenuOptions,
   getDocumentPickerScopes,
   listDocumentPickerChildren: createListDocumentPickerChildren(deps),
   createSession,

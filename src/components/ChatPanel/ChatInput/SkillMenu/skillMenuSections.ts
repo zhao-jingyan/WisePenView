@@ -1,51 +1,35 @@
-import type { SkillScopeTreeGroup } from '@/domains/Chat/mapper/skillScope.mapper';
+import type { SkillScopeTreeGroup } from '@/domains/Chat';
 import type { SkillSummary } from '@/domains/Resource';
+import type { ChatInputSelectedSkill, ChatInputSelectedTool } from '../index.type';
 
-export interface CapabilityToolOption {
-  toolId: string;
-  label: string;
-}
+export type SkillMenuItemKind = 'primary-skill' | 'external-skill' | 'tool';
 
-export type CapabilityPickerItemKind = 'primary-skill' | 'external-skill' | 'tool';
-
-export interface CapabilityPickerItem {
+export interface SkillMenuItem {
   key: string;
-  kind: CapabilityPickerItemKind;
+  kind: SkillMenuItemKind;
   label: string;
   checked?: boolean;
   sourceText?: string;
   skill?: SkillSummary;
-  tool?: CapabilityToolOption;
+  tool?: ChatInputSelectedTool;
 }
 
-export interface CapabilityPickerSection {
+export interface SkillMenuSection {
   key: string;
-  items: CapabilityPickerItem[];
+  items: SkillMenuItem[];
 }
 
-export interface CapabilitySkillSelection {
-  skillId: string;
-  displayName: string;
-  currentVersionId?: string;
-  scopeType?: 'PERSONAL' | 'GROUP';
-  groupId?: string;
-  groupName?: string;
-  sourceAgentId?: string;
-  sourceAgentLabel?: string;
-  external?: boolean;
-}
-
-interface BuildCapabilityPickerSectionsInput {
+interface BuildSkillMenuSectionsInput {
   primarySkills: SkillSummary[];
-  selectedSkills: CapabilitySkillSelection[];
-  selectedTools: CapabilityToolOption[];
-  toolOptions: CapabilityToolOption[];
+  selectedSkills: ChatInputSelectedSkill[];
+  selectedTools: ChatInputSelectedTool[];
+  toolOptions: ChatInputSelectedTool[];
   otherSkillGroups: SkillScopeTreeGroup[];
 }
 
-const mapPrimarySkillToPickerItem =
+const mapPrimarySkillToMenuItem =
   (selectedSkillIdSet: Set<string>) =>
-  (skill: SkillSummary): CapabilityPickerItem => ({
+  (skill: SkillSummary): SkillMenuItem => ({
     key: skill.skillId,
     kind: 'primary-skill',
     label: skill.displayName,
@@ -53,9 +37,9 @@ const mapPrimarySkillToPickerItem =
     skill,
   });
 
-const mapToolToPickerItem =
+const mapToolToMenuItem =
   (selectedToolIdSet: Set<string>) =>
-  (tool: CapabilityToolOption): CapabilityPickerItem => ({
+  (tool: ChatInputSelectedTool): SkillMenuItem => ({
     key: tool.toolId,
     kind: 'tool',
     label: tool.label,
@@ -63,7 +47,7 @@ const mapToolToPickerItem =
     tool,
   });
 
-const mapExternalSelectionToPickerItem = (item: CapabilitySkillSelection): CapabilityPickerItem => {
+const mapExternalSelectionToMenuItem = (item: ChatInputSelectedSkill): SkillMenuItem => {
   const sourceName = item.groupName || item.sourceAgentLabel;
   return {
     key: item.skillId,
@@ -74,20 +58,18 @@ const mapExternalSelectionToPickerItem = (item: CapabilitySkillSelection): Capab
   };
 };
 
-export function buildCapabilityPickerSections(
-  input: BuildCapabilityPickerSectionsInput
-): CapabilityPickerSection[] {
+export function buildSkillMenuSections(input: BuildSkillMenuSectionsInput): SkillMenuSection[] {
   const { primarySkills, selectedSkills, selectedTools, toolOptions, otherSkillGroups } = input;
 
   const selectedSkillIdSet = new Set(selectedSkills.map((skill) => skill.skillId));
   const selectedToolIdSet = new Set(selectedTools.map((tool) => tool.toolId));
 
-  const sections: CapabilityPickerSection[] = [];
+  const sections: SkillMenuSection[] = [];
 
   if (primarySkills.length > 0) {
     sections.push({
       key: 'primary-skills',
-      items: primarySkills.map(mapPrimarySkillToPickerItem(selectedSkillIdSet)),
+      items: primarySkills.map(mapPrimarySkillToMenuItem(selectedSkillIdSet)),
     });
   }
 
@@ -106,14 +88,14 @@ export function buildCapabilityPickerSections(
 
     sections.push({
       key: 'external-skills',
-      items: externalSelections.map(mapExternalSelectionToPickerItem),
+      items: externalSelections.map(mapExternalSelectionToMenuItem),
     });
   }
 
   if (toolOptions.length > 0) {
     sections.push({
       key: 'tools',
-      items: toolOptions.map(mapToolToPickerItem(selectedToolIdSet)),
+      items: toolOptions.map(mapToolToMenuItem(selectedToolIdSet)),
     });
   }
 

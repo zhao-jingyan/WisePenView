@@ -2,9 +2,9 @@ import { clearActiveDriveScopeStore } from './useActiveDriveScopeStore';
 import { clearAdvancedModeStore } from './useAdvancedModeStore';
 import { clearAiDiffDisplayStore } from './useAiDiffDisplayStore';
 import { clearChatAgentStore } from './useChatAgentStore';
-import { clearChatCapabilityStore } from './useChatCapabilityStore';
 import { clearChatModelPreferenceStore } from './useChatModelPreferenceStore';
 import { clearChatPanelStore } from './useChatPanelStore';
+import { clearChatSkillMenuStore } from './useChatSkillMenuStore';
 import { clearCurrentChatSessionStore } from './useCurrentChatSessionStore';
 import { clearDrivePreferencesStore } from './useDrivePreferencesStore';
 import { clearDriveUploadQueueStore } from './useDriveUploadQueueStore';
@@ -31,5 +31,5 @@ export function clearAllZustandStores(): void {
   clearNewChatSessionStore();
   clearChatAgentStore();
   clearAdvancedModeStore();
-  clearChatCapabilityStore();
+  clearChatSkillMenuStore();
 }

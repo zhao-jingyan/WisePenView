@@ -2,7 +2,7 @@ import { Modal } from '@/components/Overlay';
 import type { TreeDataNode } from '@/components/Tree';
 import Tree from '@/components/Tree';
 import { useChatService } from '@/domains';
-import { buildOtherSkillTreeGroups } from '@/domains/Chat';
+import type { SkillScopeTreeGroup } from '@/domains/Chat';
 import type { SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
@@ -12,8 +12,45 @@ import { ChevronDown, Folder } from 'lucide-react';
 import type { Key } from 'react';
 import { useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
+import { DEFAULT_PERSONAL_AGENT, useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
 import styles from './style.module.less';
+
+interface OtherSkillTreeGroup extends SkillScopeTreeGroup {
+  sourceAgent: ChatAgentOption | null;
+}
+
+function buildAgentFromSkillTreeGroup(
+  group: SkillScopeTreeGroup,
+  currentAgent: ChatAgentOption | null
+): ChatAgentOption | null {
+  if (group.key === 'personal') {
+    return DEFAULT_PERSONAL_AGENT;
+  }
+  const groupId = group.key.replace(/^group-/, '');
+  return {
+    agentId: currentAgent?.groupId === groupId ? currentAgent.agentId : `agent-group-${groupId}`,
+    agentType: 'GROUP',
+    label: group.label,
+    groupId,
+    groupName: group.label,
+  };
+}
+
+function buildOtherSkillTreeGroups(
+  groups: SkillScopeTreeGroup[],
+  currentAgent: ChatAgentOption | null
+): OtherSkillTreeGroup[] {
+  const result: OtherSkillTreeGroup[] = [];
+  for (const group of groups) {
+    result.push({
+      key: group.key,
+      label: group.label,
+      skills: group.skills,
+      sourceAgent: buildAgentFromSkillTreeGroup(group, currentAgent),
+    });
+  }
+  return result;
+}
 
 function OtherSkillModal() {
   const open = useChatInputStore((state) => state.otherSkillModalOpen);
@@ -34,7 +71,7 @@ function OtherSkillModalContent() {
     selectedSkills.filter((s) => s.external).map((s) => s.skillId)
   );
   const { data, loading } = useRequest(
-    () => chatService.getChatInputCapabilityOptions({ agent: currentAgent }),
+    () => chatService.getChatInputSkillMenuOptions({ agent: currentAgent }),
     {
       refreshDeps: [currentAgent.agentId],
       onError: (error) => toast.danger(parseErrorMessage(error)),

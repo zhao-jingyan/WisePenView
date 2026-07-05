@@ -5,8 +5,7 @@ import SkillFileTree from '@/components/Skill/SkillFileTree';
 import type { SkillPendingCreate } from '@/components/Skill/SkillFileTree/index.type';
 import SkillVersionDropdown from '@/components/Skill/SkillVersionDropdown';
 import { useResourceService, useSkillService } from '@/domains';
-import type { SkillFileNode } from '@/domains/Skill';
-import { SkillServicesMap } from '@/domains/Skill';
+import { formatSkillVersion, type SkillFileNode } from '@/domains/Skill';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import {
   useWorkspaceLayoutConfig,
@@ -611,7 +610,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
             <SkillVersionDropdown
               items={versionItems}
               disabledKeys={disabledVersionKeys}
-              formatVersion={SkillServicesMap.formatVersion}
+              formatVersion={formatSkillVersion}
               onSelect={(version) => runSwitchVersion(version)}
             />
           </div>

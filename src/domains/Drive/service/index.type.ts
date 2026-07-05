@@ -1,4 +1,5 @@
-import type { DriveNode, FolderNode, RootNode } from '../entity/drive';
+import type { TagTreeNode } from '@/domains/Tag';
+import type { DriveNode, DriveNodeScope, FolderNode, RootNode } from '../entity/drive';
 
 export interface IDriveService {
   /**
@@ -9,6 +10,8 @@ export interface IDriveService {
   getRootNode(params?: GetRootNodeParams): Promise<RootNode>;
   /** nodeId 可独立携带 scope 信息；并列展示多个 root 时不强依赖全局 groupId。 */
   listNodeChildren(params: ListNodeChildrenParams): Promise<DriveNode[]>;
+  buildLoadingNode(params: BuildLoadingNodeParams): DriveNode;
+  buildFolderNodeFromTag(params: BuildFolderNodeFromTagParams): FolderNode;
   getNodePath(params: GetNodePathParams): Promise<Array<RootNode | FolderNode>>;
   moveToFolder(params: MoveToFolderParams): Promise<void>;
   removeNode(params: RemoveNodeParams): Promise<void>;
@@ -39,6 +42,18 @@ export interface GetDriveTreeParams {
 export interface ListNodeChildrenParams {
   nodeId: string;
   groupId?: string;
+}
+
+export interface BuildLoadingNodeParams {
+  parentNodeId: string;
+  label?: string;
+  scope?: DriveNodeScope;
+}
+
+export interface BuildFolderNodeFromTagParams {
+  tag: TagTreeNode;
+  parentNodeId: string | null;
+  scope: DriveNodeScope;
 }
 
 export interface LoadNodeChildrenParams {

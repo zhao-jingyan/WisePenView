@@ -1,20 +1,26 @@
+export {
+  DRIVE_ROOT_ID,
+  buildDriveNodeScope,
+  decodeNodeId,
+  decodeRootNodeScope,
+  encodeNodeId,
+  encodeRootNodeId,
+} from './entity/drive';
 export type {
+  DecodedNodeId,
   DriveNode,
   DriveNodeScope,
   DriveNodeType,
+  EncodedNodeKind,
   FolderNode,
   LinkNode,
   LoadingNode,
   ResourceNode,
   RootNode,
 } from './entity/drive';
-export {
-  DRIVE_ROOT_ID,
-  buildDriveNodeScope,
-  decodeRootNodeScope,
-  encodeRootNodeId,
-} from './mapper/DriveServices.map';
 export type {
+  BuildFolderNodeFromTagParams,
+  BuildLoadingNodeParams,
   CreateDriveServiceOptions,
   CreateFolderParams,
   CreateNodeParams,

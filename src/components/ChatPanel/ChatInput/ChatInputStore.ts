@@ -1,27 +1,29 @@
 import type { Model } from '@/components/ChatPanel/index.type';
-import {
-  buildDefaultPersonalAgent,
-  type CapabilitySkillSelection,
-  type CapabilityToolOption,
-} from '@/domains/Chat';
 import type { SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
 import { createContext, useContext } from 'react';
 import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type {
+  ChatInputSelectedSkill,
+  ChatInputSelectedTool,
   LocalAttachmentPayload,
   LocalAttachmentUpload,
   LocalPendingImageMeta,
   LocalResourcePayload,
 } from './index.type';
 
-export const DEFAULT_PERSONAL_AGENT = buildDefaultPersonalAgent();
+export const DEFAULT_PERSONAL_AGENT: ChatAgentOption = {
+  agentId: 'agent-personal-default',
+  agentType: 'PERSONAL',
+  label: '默认Agent',
+  isDefault: true,
+};
 
 function buildSkillSelection(
   skill: SkillSummary,
   options?: { sourceAgent?: ChatAgentOption | null; external?: boolean }
-): CapabilitySkillSelection {
+): ChatInputSelectedSkill {
   const sourceAgent = options?.sourceAgent;
   const external =
     options?.external ??
@@ -47,8 +49,8 @@ export interface ChatInputCompletionState {
   value: string;
   selectedModelId: string | null;
   selectedAgent: ChatAgentOption;
-  selectedSkills: CapabilitySkillSelection[];
-  selectedTools: CapabilityToolOption[];
+  selectedSkills: ChatInputSelectedSkill[];
+  selectedTools: ChatInputSelectedTool[];
   activeDocRefs: LocalResourcePayload[];
   activeAttachments: LocalAttachmentPayload[];
   pendingImageMetas: LocalPendingImageMeta[];
@@ -68,8 +70,8 @@ interface ChatInputState {
   pendingImageMetas: LocalPendingImageMeta[];
   selectedAgent: ChatAgentOption;
   selectedModelId: string | null;
-  selectedSkills: CapabilitySkillSelection[];
-  selectedTools: CapabilityToolOption[];
+  selectedSkills: ChatInputSelectedSkill[];
+  selectedTools: ChatInputSelectedTool[];
   skillMenuOpen: boolean;
   value: string;
 }
@@ -80,7 +82,7 @@ interface ChatInputActions {
   addPendingAttachmentUpload: (upload: LocalAttachmentUpload) => void;
   addPendingImageMeta: (meta: LocalPendingImageMeta) => void;
   clearAfterSend: () => void;
-  clearCapabilities: () => void;
+  clearSkillMenuSelections: () => void;
   removeActiveAttachment: (attachmentId: string) => void;
   removeDocRef: (resourceId: string) => void;
   removePendingAttachmentUpload: (id: string) => void;
@@ -104,7 +106,7 @@ interface ChatInputActions {
   setSkillMenuOpen: (open: boolean) => void;
   setValue: (value: string) => void;
   toggleSkill: (skill: SkillSummary, sourceAgent: ChatAgentOption) => void;
-  toggleTool: (tool: CapabilityToolOption) => void;
+  toggleTool: (tool: ChatInputSelectedTool) => void;
 }
 
 export type ChatInputStoreState = ChatInputState & ChatInputActions;
@@ -173,7 +175,7 @@ export function createChatInputStore(): ChatInputStoreApi {
         value: '',
       }),
 
-    clearCapabilities: () =>
+    clearSkillMenuSelections: () =>
       set({
         selectedSkills: [],
         selectedTools: [],

@@ -1,56 +1,13 @@
 export type { Model } from './entity/model';
 export { MODEL_PROVIDER_ID, MODEL_TYPE } from './enum/model';
 export type { ModelProviderId, ModelType } from './enum/model';
-export {
-  buildAgentFromResourceItem,
-  buildAgentFromSkillTreeGroup,
-  buildChatInputAgentOptions,
-  buildDefaultPersonalAgent,
-  buildGroupAgent,
-  resolveChatInputSelectedAgent,
-} from './mapper/agent.mapper';
-export { mapUploadAttachmentResultToContext } from './mapper/attachment.mapper';
-export {
-  buildCapabilityPickerSections,
-  buildCapabilityPickerSections as buildSkillMenuSections,
-} from './mapper/capabilityPicker.mapper';
-export type {
-  CapabilityPickerItem,
-  CapabilityPickerItemKind,
-  CapabilityPickerSection,
-  CapabilitySkillSelection,
-  CapabilityToolOption,
-} from './mapper/capabilityPicker.mapper';
-export {
-  buildDocumentPickerScopedKey,
-  buildDocumentPickerScopes,
-  buildDocumentPickerTreeNodes,
-  isDocumentPickerScopeRootKey,
-  isExpandableDocumentPickerNode,
-  isSelectableDocumentPickerNode,
-  mapDocumentPickerNodesToSelectedResources,
-  mapDriveNodeToDocumentPickerNode,
-  parseDocumentPickerTreeKey,
-  replaceDocumentPickerTreeNodeChildren,
-} from './mapper/documentPicker.mapper';
-export type {
-  BuildDocumentPickerTreeNodesResult,
-  DocumentPickerTreeKey,
-  DocumentPickerTreeNode,
-} from './mapper/documentPicker.mapper';
-export {
-  buildAdvancedSkillTreeGroups,
-  buildOtherSkillTreeGroups,
-  getPrimarySkillsForAgent,
-} from './mapper/skillScope.mapper';
-export type { OtherSkillTreeGroup, SkillScopeTreeGroup } from './mapper/skillScope.mapper';
 export type {
   ChatDocumentPickerNode,
   ChatDocumentPickerNodeType,
   ChatDocumentPickerScope,
   ChatDocumentPickerScopeType,
   ChatDocumentPickerSelectedResource,
-  ChatInputCapabilityOptions,
+  ChatInputSkillMenuOptions,
   ChatModel,
   ChatModelProviderOption,
   ChatModelTag,
@@ -59,8 +16,8 @@ export type {
   ChatWorkspace,
   CreateSessionRequest,
   DeleteSessionRequest,
-  GetChatInputCapabilityOptionsParams,
-  GetChatInputCapabilityOptionsRequest,
+  GetChatInputSkillMenuOptionsParams,
+  GetChatInputSkillMenuOptionsRequest,
   IChatService,
   ListDocumentPickerChildrenRequest,
   ListHistoryMessagesRequest,
@@ -68,6 +25,7 @@ export type {
   MessageResponse,
   PageResult,
   RenameSessionRequest,
+  SkillScopeTreeGroup,
   ToolOption,
   UploadAttachmentParams,
   UploadAttachmentResult,

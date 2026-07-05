@@ -10,10 +10,6 @@ import { SKILL_VERSION_STATUS } from '../enum';
 
 const ROOT_PATH = '/';
 
-function formatVersion(version: number): string {
-  return `v${version}.0`;
-}
-
 function mapStatus(raw: string | undefined): SkillVersionStatus {
   if (raw === SKILL_VERSION_STATUS.PUBLISHED) return SKILL_VERSION_STATUS.PUBLISHED;
   return SKILL_VERSION_STATUS.DRAFT;
@@ -173,7 +169,6 @@ function resolveAssetResourceType(name: string): AssetResourceTypeEnum {
 }
 
 export const SkillServicesMap = {
-  formatVersion,
   mapSkillDetail,
   mapSkillSummary,
   mapSkillFilesFromApi,

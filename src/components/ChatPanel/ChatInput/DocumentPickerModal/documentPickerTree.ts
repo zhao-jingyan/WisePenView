@@ -1,12 +1,6 @@
-import { buildDriveNodeScope, type DriveNode } from '@/domains/Drive';
-import type { Group } from '@/domains/Group';
-import type {
-  ChatDocumentPickerNode,
-  ChatDocumentPickerScope,
-  ChatDocumentPickerSelectedResource,
-} from '../service/index.type';
+import type { ChatDocumentPickerNode, ChatDocumentPickerSelectedResource } from '@/domains/Chat';
 
-export const DOCUMENT_PICKER_CHILD_KEY_SEPARATOR = '>';
+const DOCUMENT_PICKER_CHILD_KEY_SEPARATOR = '>';
 
 export interface DocumentPickerTreeKey {
   scopeKey: string;
@@ -26,71 +20,7 @@ export interface BuildDocumentPickerTreeNodesResult {
   nodeEntries: Array<[string, ChatDocumentPickerNode]>;
 }
 
-export function buildDocumentPickerScopes(groups: Group[]): ChatDocumentPickerScope[] {
-  const personalScope = buildDriveNodeScope();
-  const scopes: ChatDocumentPickerScope[] = [
-    {
-      scopeKey: 'personal',
-      label: '个人文件',
-      rootId: personalScope.rootId,
-      type: 'personal',
-    },
-  ];
-
-  for (const group of groups) {
-    const groupScope = buildDriveNodeScope(group.groupId);
-    scopes.push({
-      scopeKey: `group:${group.groupId}`,
-      label: group.groupName,
-      rootId: groupScope.rootId,
-      type: 'group',
-      groupId: group.groupId,
-    });
-  }
-
-  return scopes;
-}
-
-function getDriveNodeTitle(node: DriveNode): string {
-  switch (node.type) {
-    case 'root':
-      return node.name || '云盘';
-    case 'folder':
-      return node.name || '未命名文件夹';
-    case 'resource':
-    case 'link':
-      return node.title || node.resourceId;
-    case 'loading':
-      return node.label || '';
-  }
-}
-
-export function mapDriveNodeToDocumentPickerNode(node: DriveNode): ChatDocumentPickerNode | null {
-  if (node.type === 'loading') return null;
-
-  const isResourceNode = node.type === 'resource' || node.type === 'link';
-  const groupId = node.scope.type === 'group' ? node.scope.groupId : null;
-  const base: ChatDocumentPickerNode = {
-    nodeId: node.id,
-    title: getDriveNodeTitle(node),
-    type: node.type,
-    groupId,
-    resourceId: null,
-    resourceName: null,
-    resourceType: null,
-    isLeaf: isResourceNode,
-    selectable: isResourceNode,
-  };
-
-  if (isResourceNode) {
-    base.resourceId = node.resourceId;
-    base.resourceName = node.title || node.resourceId;
-    base.resourceType = node.resourceType ?? '';
-  }
-  return base;
-}
-
-export function buildDocumentPickerScopedKey(scopeKey: string, nodeId: string): string {
+function buildDocumentPickerScopedKey(scopeKey: string, nodeId: string): string {
   return `${scopeKey}${DOCUMENT_PICKER_CHILD_KEY_SEPARATOR}${nodeId}`;
 }
 
@@ -166,7 +96,7 @@ export function replaceDocumentPickerTreeNodeChildren<T extends { key: unknown; 
   return result;
 }
 
-export function mapDocumentPickerNodeToSelectedResource(
+function mapDocumentPickerNodeToSelectedResource(
   node: ChatDocumentPickerNode | undefined
 ): ChatDocumentPickerSelectedResource | null {
   if (!node || !isSelectableDocumentPickerNode(node) || !node.resourceId) return null;

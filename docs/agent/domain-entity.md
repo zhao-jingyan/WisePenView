@@ -9,6 +9,7 @@ Entity 应定义：
 - 展示会用到的复杂业务类型，例如组、人、资源、笔记、钱包记录。
 - 已经过 mapper 归一化后的前端类型。
 - 多个 view/component/service 共享的领域类型。
+- 领域内稳定的 ID、scope、权限等小型 helper。
 
 Entity 不应定义：
 
@@ -16,6 +17,7 @@ Entity 不应定义：
 - 只在单个函数内部使用的临时类型。
 - UI 组件私有 Props。
 - API request/response 类型。
+- 单个菜单、弹窗或树组件的临时展示结构。
 
 常见路径：
 
@@ -44,8 +46,9 @@ src/domains/<Domain>/enum/index.ts
 
 - 后端协议类型手写在同域 `apis/*Api.type.ts`，属于 API 层输入。
 - mapper 输出的稳定展示类型放入 entity。
-- 组件 Props 只描述组件契约，不重复发明领域实体。
+- 组件 Props 只描述组件契约，不重复发明领域实体；组件私有展示结构留在组件目录。
 - service 的请求/响应类型放在 `service/index.type.ts`，表达业务能力语义。
+- 不新增泛泛的 domain `viewModel`/`model` 层；先判断它是稳定领域事实、service 成品返回，还是组件私有形状。
 
 ## 四、命名与导出
 

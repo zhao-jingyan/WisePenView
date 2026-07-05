@@ -35,3 +35,7 @@ export interface SkillDetail extends SkillSummary {
   files: SkillFileNode[];
   isOwner: boolean;
 }
+
+export function formatSkillVersion(version: number): string {
+  return `v${version}.0`;
+}

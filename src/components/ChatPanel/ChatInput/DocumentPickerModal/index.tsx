@@ -3,6 +3,14 @@ import { Modal } from '@/components/Overlay';
 import type { DataNode } from '@/components/Tree';
 import Tree from '@/components/Tree';
 import { useChatService } from '@/domains';
+import type { ChatDocumentPickerNode, ChatDocumentPickerScope } from '@/domains/Chat';
+import { parseErrorMessage } from '@/utils/error';
+import { Button, toast } from '@heroui/react';
+import { useRequest } from 'ahooks';
+import { Folder, Users } from 'lucide-react';
+import type { Key } from 'react';
+import { useRef, useState } from 'react';
+import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
 import {
   buildDocumentPickerTreeNodes,
   isDocumentPickerScopeRootKey,
@@ -11,16 +19,7 @@ import {
   mapDocumentPickerNodesToSelectedResources,
   parseDocumentPickerTreeKey,
   replaceDocumentPickerTreeNodeChildren,
-  type ChatDocumentPickerNode,
-  type ChatDocumentPickerScope,
-} from '@/domains/Chat';
-import { parseErrorMessage } from '@/utils/error';
-import { Button, toast } from '@heroui/react';
-import { useRequest } from 'ahooks';
-import { Folder, Users } from 'lucide-react';
-import type { Key } from 'react';
-import { useRef, useState } from 'react';
-import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
+} from './documentPickerTree';
 import styles from './style.module.less';
 
 function buildScopeRootNode(scope: ChatDocumentPickerScope): DataNode {

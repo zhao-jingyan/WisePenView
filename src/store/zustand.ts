@@ -43,8 +43,8 @@ export {
   type ChatAgentType,
 } from './useChatAgentStore';
 export {
-  clearChatCapabilityStore,
-  useChatCapabilityStore,
-  type TemporarySkillSelection,
-  type TemporaryToolSelection,
-} from './useChatCapabilityStore';
+  clearChatSkillMenuStore,
+  useChatSkillMenuStore,
+  type ChatSkillMenuSelectedSkill,
+  type ChatSkillMenuSelectedTool,
+} from './useChatSkillMenuStore';

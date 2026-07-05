@@ -1,9 +1,19 @@
 import type { Model } from '@/components/ChatPanel/index.type';
-import type {
-  CapabilitySkillSelection,
-  CapabilityToolOption,
-  ChatUploadedAttachmentContext,
-} from '@/domains/Chat';
+import type { ChatUploadedAttachmentContext, ToolOption } from '@/domains/Chat';
+
+export type ChatInputSelectedTool = ToolOption;
+
+export interface ChatInputSelectedSkill {
+  skillId: string;
+  displayName: string;
+  currentVersionId?: string;
+  scopeType?: 'PERSONAL' | 'GROUP';
+  groupId?: string;
+  groupName?: string;
+  sourceAgentId?: string;
+  sourceAgentLabel?: string;
+  external?: boolean;
+}
 
 export interface ChatInputProps {
   onSend: (text: string, opts?: SendOptions) => void | Promise<void>;
@@ -39,6 +49,6 @@ export interface SendOptions {
   model?: Model;
   activeDocRefs?: LocalResourcePayload[];
   activeAttachments?: LocalAttachmentPayload[];
-  selectedSkills?: CapabilitySkillSelection[];
-  selectedTools?: CapabilityToolOption[];
+  selectedSkills?: ChatInputSelectedSkill[];
+  selectedTools?: ChatInputSelectedTool[];
 }

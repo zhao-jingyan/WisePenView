@@ -1,7 +1,13 @@
 import { resolveResourceIconType } from '@/domains/Resource';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
-import type { DriveNode, FolderNode, RootNode } from '../entity/drive';
-import { buildDriveNodeScope, decodeRootNodeScope } from '../mapper/DriveServices.map';
+import {
+  buildDriveNodeScope,
+  decodeRootNodeScope,
+  type DriveNode,
+  type FolderNode,
+  type RootNode,
+} from '../entity/drive';
+import { buildLoadingNode, mapTagToFolderNode } from '../mapper/DriveServices.map';
 import type {
   CreateDriveServiceOptions,
   CreateFolderParams,
@@ -221,6 +227,15 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
       .filter((node): node is DriveNode => node != null && node.type !== 'loading');
   };
 
+  const createLoadingNode: IDriveService['buildLoadingNode'] = ({ parentNodeId, label, scope }) =>
+    buildLoadingNode(parentNodeId, label, scope);
+
+  const buildFolderNodeFromTag: IDriveService['buildFolderNodeFromTag'] = ({
+    tag,
+    parentNodeId,
+    scope,
+  }) => mapTagToFolderNode(tag, parentNodeId, scope);
+
   const getNodePath: IDriveService['getNodePath'] = async (params: GetNodePathParams) => {
     await delay(NETWORK_DELAY_MS);
     return buildPath(params.nodeId);
@@ -309,6 +324,8 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
   return {
     getRootNode,
     listNodeChildren,
+    buildLoadingNode: createLoadingNode,
+    buildFolderNodeFromTag,
     getNodePath,
     moveToFolder,
     removeNode,

@@ -4,7 +4,6 @@ import { Modal } from '@/components/Overlay';
 import SegmentedTabs from '@/components/SegmentedTabs';
 import { useDriveService, useGroupService, useTagService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
-import { mapTagToFolderNode } from '@/domains/Drive/mapper/DriveServices.map';
 import type { GroupMember } from '@/domains/Group';
 import {
   ACCESS_CONTROL_SCOPE,
@@ -76,9 +75,13 @@ const filterSelectableUserIds = (ids: string[] | undefined, selectableMemberIdSe
   return ids.filter((id) => selectableMemberIdSet.has(id));
 };
 
-const buildSelectionFromTag = (tag: TagTreeNode, groupId?: string): DriveSelectionItem => {
+const buildSelectionFromTag = (
+  tag: TagTreeNode,
+  driveService: ReturnType<typeof useDriveService>,
+  groupId?: string
+): DriveSelectionItem => {
   const scope = resolveDriveScope(groupId ? { type: 'group', groupId } : undefined).scope;
-  const node = mapTagToFolderNode(tag, null, scope);
+  const node = driveService.buildFolderNodeFromTag({ tag, parentNodeId: null, scope });
   const selection = toDriveSelectionItem(node);
   if (selection) return selection;
   return {
@@ -323,7 +326,7 @@ const TagPermissionModal = ({
         setInitialTagLoading(true);
         const cachedTag = resolveCachedTag(initialTagId);
         if (cachedTag) {
-          setSelectedTag(buildSelectionFromTag(cachedTag, groupId));
+          setSelectedTag(buildSelectionFromTag(cachedTag, driveService, groupId));
           applyTagToForm(cachedTag);
         }
         try {
@@ -334,7 +337,7 @@ const TagPermissionModal = ({
         try {
           const tag = await resolveTagById(initialTagId);
           if (tag) {
-            setSelectedTag(buildSelectionFromTag(tag, groupId));
+            setSelectedTag(buildSelectionFromTag(tag, driveService, groupId));
             applyTagToForm(tag);
           }
         } finally {

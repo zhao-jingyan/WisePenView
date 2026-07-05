@@ -2,8 +2,7 @@ import type { IDriveService } from '@/domains/Drive';
 import type { Group, IGroupService } from '@/domains/Group';
 import type { IResourceService, SkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '@/store';
-import type { CapabilityToolOption } from '../mapper/capabilityPicker.mapper';
-import type { SkillScopeTreeGroup } from '../mapper/skillScope.mapper';
+import type { ChatUploadedAttachmentContext } from '../session/index.type';
 
 export interface ToolOption {
   toolId: string;
@@ -75,17 +74,23 @@ export interface ChatWorkspace {
   groupAgents: ChatAgentOption[];
 }
 
-export interface ChatInputCapabilityOptions {
-  primarySkills: SkillSummary[];
-  otherSkillGroups: SkillScopeTreeGroup[];
-  tools: CapabilityToolOption[];
+export interface SkillScopeTreeGroup {
+  key: string;
+  label: string;
+  skills: SkillSummary[];
 }
 
-export interface GetChatInputCapabilityOptionsParams {
+export interface ChatInputSkillMenuOptions {
+  primarySkills: SkillSummary[];
+  otherSkillGroups: SkillScopeTreeGroup[];
+  tools: ToolOption[];
+}
+
+export interface GetChatInputSkillMenuOptionsParams {
   agent: ChatAgentOption | null;
 }
 
-export type GetChatInputCapabilityOptionsRequest = GetChatInputCapabilityOptionsParams;
+export type GetChatInputSkillMenuOptionsRequest = GetChatInputSkillMenuOptionsParams;
 
 export type ChatDocumentPickerScopeType = 'personal' | 'group';
 
@@ -129,9 +134,9 @@ export interface IChatService {
   getModels(): Promise<ChatModel[]>;
   getWorkspace(): Promise<ChatWorkspace>;
   getChatInputAgents(): Promise<ChatAgentOption[]>;
-  getChatInputCapabilityOptions(
-    params: GetChatInputCapabilityOptionsParams
-  ): Promise<ChatInputCapabilityOptions>;
+  getChatInputSkillMenuOptions(
+    params: GetChatInputSkillMenuOptionsParams
+  ): Promise<ChatInputSkillMenuOptions>;
   getDocumentPickerScopes(): Promise<ChatDocumentPickerScope[]>;
   listDocumentPickerChildren(
     params: ListDocumentPickerChildrenRequest
@@ -142,7 +147,7 @@ export interface IChatService {
   listSessions(params?: ListSessionsRequest): Promise<PageResult<ChatSession>>;
   listHistoryMessages(params: ListHistoryMessagesRequest): Promise<PageResult<MessageResponse>>;
   getTools(): Promise<ToolOption[]>;
-  uploadAttachment(params: UploadAttachmentParams): Promise<UploadAttachmentResult>;
+  uploadAttachment(params: UploadAttachmentParams): Promise<ChatUploadedAttachmentContext>;
 }
 
 /** `GET /chat/model/listAvailableModels` 的 data 字段结构 */

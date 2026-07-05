@@ -63,6 +63,18 @@ const domainApiFunctionImportPattern = {
     '领域 API 函数只能由 src/domains/<Domain>/service 调用；mapper、组件和页面只允许依赖领域类型或 API type。',
 };
 
+const domainMapperImportPattern = {
+  group: [
+    '@/domains/*/mapper/**',
+    '**/domains/*/mapper/**',
+    '../mapper/**',
+    './mapper/**',
+    '**/mapper/**',
+  ],
+  message:
+    'Mapper 是 domain 内部协议转换边界，只能由同 domain 的 service/mock/mapper 使用；组件、页面和公共出口请依赖 service 返回类型、entity 或组件本地 helper。',
+};
+
 const normalizeLintPath = (value) => value.replaceAll('\\', '/');
 
 const getServiceFileInfo = (filename) => {
@@ -135,6 +147,7 @@ const buildRestrictedImportsRule = ({
   allowApiRequest = false,
   allowDirectAxios = false,
   allowDomainApiFunction = false,
+  allowDomainMapper = false,
   allowReactUseEffect = false,
   allowServiceFactory = false,
 } = {}) => {
@@ -149,6 +162,7 @@ const buildRestrictedImportsRule = ({
     ...(allowServiceFactory ? [] : [serviceFactoryImportPattern]),
     ...(allowApiRequest ? [] : [apiRequestImportPattern]),
     ...(allowDomainApiFunction ? [] : [domainApiFunctionImportPattern]),
+    ...(allowDomainMapper ? [] : [domainMapperImportPattern]),
   ];
 
   return ['error', { paths, patterns }];
@@ -209,6 +223,16 @@ export default defineConfig([
           message:
             '禁止 re-export *Services.impl —— createXxxServices 工厂只能在 src/domains/_registry/registry.impl.ts 装配，index.ts 不得二次导出。',
         },
+        {
+          selector: 'ExportAllDeclaration[source.value=/\\/mapper\\//]',
+          message:
+            '禁止 re-export mapper —— mapper 只能在 domain 内部由 service/mock/mapper 使用，公共出口请暴露稳定 entity、service 类型或组件真正需要的领域 helper。',
+        },
+        {
+          selector: 'ExportNamedDeclaration[exportKind!="type"][source.value=/\\/mapper\\//]',
+          message:
+            '禁止 re-export mapper —— mapper 只能在 domain 内部由 service/mock/mapper 使用，公共出口请暴露稳定 entity、service 类型或组件真正需要的领域 helper。',
+        },
       ],
     },
   },
@@ -236,6 +260,16 @@ export default defineConfig([
     rules: {
       'no-restricted-imports': buildRestrictedImportsRule({
         allowDomainApiFunction: true,
+        allowDomainMapper: true,
+      }),
+    },
+  },
+  {
+    // Mapper 内部允许组合相邻 mapper，但 mapper 不应从公共出口暴露给组件或页面。
+    files: ['src/domains/*/mapper/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': buildRestrictedImportsRule({
+        allowDomainMapper: true,
       }),
     },
   },
@@ -259,6 +293,9 @@ export default defineConfig([
     files: ['src/domains/*/mock/**/*.{ts,tsx}'],
     rules: {
       'no-console': 'off',
+      'no-restricted-imports': buildRestrictedImportsRule({
+        allowDomainMapper: true,
+      }),
     },
   },
 ]);

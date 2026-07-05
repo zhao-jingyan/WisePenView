@@ -1,6 +1,5 @@
 import { Popover } from '@/components/Overlay';
 import { useChatService } from '@/domains';
-import { buildSkillMenuSections } from '@/domains/Chat';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, ListBox, ListBoxItem, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
@@ -9,6 +8,7 @@ import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
 import styles from '../style.module.less';
+import { buildSkillMenuSections } from './skillMenuSections';
 
 function SkillMenu() {
   const chatService = useChatService();
@@ -24,7 +24,7 @@ function SkillMenu() {
   const { removeSkill, setOtherSkillModalOpen, setSkillMenuOpen, toggleSkill, toggleTool } =
     store.getState();
   const { data: skillMenuOptions } = useRequest(
-    () => chatService.getChatInputCapabilityOptions({ agent: selectedAgent }),
+    () => chatService.getChatInputSkillMenuOptions({ agent: selectedAgent }),
     {
       refreshDeps: [selectedAgent.agentId],
       onError: (error) => toast.danger(parseErrorMessage(error)),

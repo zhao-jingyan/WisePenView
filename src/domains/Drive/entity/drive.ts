@@ -1,4 +1,5 @@
 import type { ResourceIconType } from '@/domains/Resource';
+import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
 
 export type DriveNodeType = 'root' | 'folder' | 'resource' | 'link' | 'loading';
 
@@ -68,3 +69,86 @@ interface LoadingNode extends DriveNodeBase {
 
 export type DriveNode = RootNode | FolderNode | ResourceNode | LinkNode | LoadingNode;
 export type { FolderNode, LinkNode, LoadingNode, ResourceNode, RootNode };
+
+export const DRIVE_ROOT_ID = 'drive-root';
+const DRIVE_GROUP_ROOT_PREFIX = 'drive-root:group:';
+
+export type EncodedNodeKind = 'folder' | 'resource' | 'link' | 'loading';
+
+export type DecodedNodeId =
+  | { kind: 'root'; groupId?: string }
+  | { kind: 'folder'; tagId: string }
+  | { kind: 'resource'; resourceId: string; parentTagId: string }
+  | { kind: 'link'; resourceId: string; parentTagId: string }
+  | { kind: 'loading'; parentNodeId: string }
+  | { kind: 'unknown'; raw: string };
+
+export const encodeNodeId = (
+  kind: EncodedNodeKind,
+  firstPart?: string,
+  secondPart?: string
+): string => {
+  const parts: string[] = [kind];
+  if (firstPart !== undefined) {
+    parts.push(firstPart);
+  }
+  if (secondPart !== undefined) {
+    parts.push(secondPart);
+  }
+  return parts.join(':');
+};
+
+export const encodeRootNodeId = (groupId?: string): string => {
+  const normalizedGroupId = normalizeTagGroupId(groupId);
+  if (normalizedGroupId) {
+    return `${DRIVE_GROUP_ROOT_PREFIX}${normalizedGroupId}`;
+  }
+  return DRIVE_ROOT_ID;
+};
+
+export const buildDriveNodeScope = (groupId?: string): DriveNodeScope => {
+  const normalizedGroupId = normalizeTagGroupId(groupId);
+  const rootId = encodeRootNodeId(normalizedGroupId);
+  if (normalizedGroupId) {
+    return {
+      type: 'group',
+      rootId,
+      groupId: normalizedGroupId,
+    };
+  }
+  return {
+    type: 'personal',
+    rootId,
+  };
+};
+
+export const decodeNodeId = (id: string): DecodedNodeId => {
+  if (id === DRIVE_ROOT_ID) return { kind: 'root' };
+  if (id.startsWith(DRIVE_GROUP_ROOT_PREFIX)) {
+    const groupId = id.slice(DRIVE_GROUP_ROOT_PREFIX.length);
+    if (groupId) return { kind: 'root', groupId };
+  }
+  const parts = id.split(':');
+  const kind = parts[0];
+  const firstPart = parts[1];
+  const secondPart = parts[2];
+  if (kind === 'folder' && firstPart) return { kind: 'folder', tagId: firstPart };
+  if (kind === 'resource' && firstPart && secondPart) {
+    return { kind: 'resource', resourceId: firstPart, parentTagId: secondPart };
+  }
+  if (kind === 'link' && firstPart && secondPart) {
+    return { kind: 'link', resourceId: firstPart, parentTagId: secondPart };
+  }
+  if (kind === 'loading' && firstPart) return { kind: 'loading', parentNodeId: firstPart };
+  return { kind: 'unknown', raw: id };
+};
+
+export const decodeRootNodeScope = (rootId?: string, fallbackGroupId?: string): DriveNodeScope => {
+  if (!rootId) return buildDriveNodeScope(fallbackGroupId);
+  const decoded = decodeNodeId(rootId);
+  let groupId = fallbackGroupId;
+  if (decoded.kind === 'root') {
+    groupId = decoded.groupId ?? fallbackGroupId;
+  }
+  return buildDriveNodeScope(groupId);
+};

@@ -24,6 +24,7 @@ import type {
   RenameSessionRequest,
   UploadAttachmentResult,
 } from '../service/index.type';
+import type { ChatUploadedAttachmentContext } from '../session/index.type';
 
 const PROVIDER_KEY_HINTS: Array<{ key: string; patterns: string[] }> = [
   { key: 'anthropic', patterns: ['anthropic', 'claude'] },
@@ -288,6 +289,14 @@ const mapUploadAttachmentFromApi = (
   filename: data.filename ?? fallbackFilename,
 });
 
+const mapUploadAttachmentResultToContext = (
+  result: UploadAttachmentResult
+): ChatUploadedAttachmentContext => ({
+  attachmentId: result.attachmentId,
+  filename: result.filename,
+  enabled: true,
+});
+
 export const ChatServicesMap = {
   mapGetModelsFromApi,
   mapCreateSessionRequest,
@@ -299,4 +308,5 @@ export const ChatServicesMap = {
   mapListHistoryMessagesRequest,
   mapListHistoryMessagesFromApi,
   mapUploadAttachmentFromApi,
+  mapUploadAttachmentResultToContext,
 };

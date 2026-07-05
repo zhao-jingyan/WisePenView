@@ -1,5 +1,4 @@
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
-import type { DriveNode, FolderNode, RootNode } from '@/domains/Drive';
 import type { GetGroupResourceRequest, IResourceService, ResourceItem } from '@/domains/Resource';
 import type { ITagService, TagTreeNode } from '@/domains/Tag';
 import { useTrashTagStore } from '@/store';
@@ -7,11 +6,17 @@ import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
 import {
   buildDriveNodeScope,
-  buildDriveRootNode,
   decodeNodeId,
   decodeRootNodeScope,
   DRIVE_ROOT_ID,
   encodeRootNodeId,
+  type DriveNode,
+  type FolderNode,
+  type RootNode,
+} from '../entity/drive';
+import {
+  buildDriveRootNode,
+  buildLoadingNode,
   isContainerNode,
   mapResourceItemToChildNode,
   mapTagToFolderNode,
@@ -253,6 +258,15 @@ export const createDriveServices = (
     return children;
   };
 
+  const createLoadingNode: IDriveService['buildLoadingNode'] = ({ parentNodeId, label, scope }) =>
+    buildLoadingNode(parentNodeId, label, scope);
+
+  const buildFolderNodeFromTag: IDriveService['buildFolderNodeFromTag'] = ({
+    tag,
+    parentNodeId,
+    scope,
+  }) => mapTagToFolderNode(tag, parentNodeId, scope);
+
   const ensureTrashTagId = async (groupId?: string): Promise<string> => {
     let trashTagId = useTrashTagStore.getState().getTrashTagId(groupId);
     if (trashTagId) return trashTagId;
@@ -452,6 +466,8 @@ export const createDriveServices = (
   return {
     getRootNode,
     listNodeChildren,
+    buildLoadingNode: createLoadingNode,
+    buildFolderNodeFromTag,
     getNodePath,
     moveToFolder,
     removeNode,
