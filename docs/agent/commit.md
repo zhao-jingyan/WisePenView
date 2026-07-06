@@ -4,10 +4,10 @@
 
 ## 一、分支命名
 
-Agent 自动创建分支时使用：
+Agent 自动创建分支时使用英文短横线命名：
 
 ```text
-codex/<content>
+agent-<content>
 ```
 
 人工开发分支如需按功能类型区分，可以使用：
@@ -20,7 +20,7 @@ refactor/<content>
 
 规则：
 
-- `content` 推荐英文短横线，例如 `codex/agent-docs`、`feat/group-role`、`fix/group-role`。
+- `content` 推荐英文短横线，例如 `agent-docs`、`feat/group-role`、`fix/group-role`。
 - 不使用空格和中文，避免远程分支、脚本和 CLI 兼容问题。
 - 文档类变更也可以使用 `feat/docs-agent` 或 `fix/docs-agent`，按实际意图选择。
 
@@ -80,7 +80,7 @@ refactor(domain): 收敛资源映射逻辑
 
 ## 七、检查清单
 
-- [ ] Agent 分支名符合 `codex/<content>`。
+- [ ] Agent 分支名符合 `agent-<content>`。
 - [ ] commit type 属于白名单。
 - [ ] subject 是中文。
 - [ ] 一次 commit 只表达一个意图。
