@@ -29,6 +29,7 @@ const COLOR_AI = 'var(--primary-light)';
 
 function renderResourceIcon(
   resourceType?: string,
+  resourceName?: string,
   resourceIconType?: EntryIconProps['resourceIconType'],
   size = 18,
   color?: string
@@ -37,6 +38,7 @@ function renderResourceIcon(
     resourceIconType ??
     resolveResourceIconType({
       resourceType,
+      resourceName,
     });
 
   switch (iconType) {
@@ -67,6 +69,7 @@ function renderResourceIcon(
 function EntryIcon({
   entryType,
   resourceType,
+  resourceName,
   resourceIconType,
   size = 18,
   color,
@@ -77,7 +80,7 @@ function EntryIcon({
     case 'folder':
       return <Folder size={size} color={color ?? COLOR_FOLDER} />;
     case 'resource':
-      return renderResourceIcon(resourceType, resourceIconType, size, color);
+      return renderResourceIcon(resourceType, resourceName, resourceIconType, size, color);
     case 'link':
       return <Link size={size} color={color ?? COLOR_SECONDARY} />;
     case 'loading':

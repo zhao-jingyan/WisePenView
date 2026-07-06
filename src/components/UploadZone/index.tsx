@@ -1,6 +1,17 @@
+import EntryIcon from '@/components/Icons/EntryIcon';
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentTitle,
+} from '@/components/_shadcn';
 import { formatFileSize } from '@/utils/format/formatFileSize';
 import { Button, ProgressBar } from '@heroui/react';
-import { FileText, UploadCloud, X } from 'lucide-react';
+import { UploadCloud, X } from 'lucide-react';
 import { useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from 'react';
 import type { UploadZoneProps } from './index.type';
 import styles from './style.module.less';
@@ -120,45 +131,55 @@ function UploadZone({
       </div>
 
       {selectedFiles.length > 0 && (
-        <div className={styles.fileList}>
+        <AttachmentGroup className={styles.fileList} role="group" aria-label="已选择文件">
           {selectedFiles.map((selectedFile, index) => {
             const fileProgress = getFileProgress?.(selectedFile, index);
+            const attachmentState =
+              typeof fileProgress === 'number' && fileProgress < 100 ? 'uploading' : 'done';
 
             return (
-              <div className={styles.fileItem} key={getFileKey(selectedFile)}>
-                <span className={styles.fileIcon} aria-hidden="true">
-                  <FileText size={18} strokeWidth={1.8} />
-                </span>
-                <div className={styles.fileInfo}>
+              <Attachment
+                className={styles.fileAttachment}
+                state={attachmentState}
+                size="sm"
+                key={getFileKey(selectedFile)}
+              >
+                <AttachmentMedia>
+                  <EntryIcon entryType="resource" resourceName={selectedFile.name} size={18} />
+                </AttachmentMedia>
+                <AttachmentContent className={styles.fileInfo}>
                   <div className={styles.fileTextRow}>
-                    <span className={styles.fileName} title={selectedFile.name}>
+                    <AttachmentTitle className={styles.fileName} title={selectedFile.name}>
                       {selectedFile.name}
-                    </span>
-                    <span className={styles.fileMeta}>{formatFileSize(selectedFile.size)}</span>
+                    </AttachmentTitle>
+                    <AttachmentDescription className={styles.fileMeta}>
+                      {formatFileSize(selectedFile.size)}
+                    </AttachmentDescription>
                   </div>
                   {typeof fileProgress === 'number' && (
-                    <ProgressBar
-                      aria-label={`${selectedFile.name} 上传进度`}
-                      value={fileProgress}
-                      size="sm"
-                    >
-                      <ProgressBar.Track className={styles.fileProgressTrack}>
-                        <ProgressBar.Fill className={styles.fileProgressFill} />
-                      </ProgressBar.Track>
-                    </ProgressBar>
+                    <div className={styles.fileProgress}>
+                      <ProgressBar
+                        aria-label={`${selectedFile.name} 上传进度`}
+                        value={fileProgress}
+                        size="sm"
+                      >
+                        <ProgressBar.Track className={styles.fileProgressTrack}>
+                          <ProgressBar.Fill className={styles.fileProgressFill} />
+                        </ProgressBar.Track>
+                      </ProgressBar>
+                    </div>
                   )}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  isDisabled={disabled}
-                  isIconOnly
-                  aria-label="移除文件"
-                  onPress={() => removeFileAt(index)}
-                >
-                  <X size={16} strokeWidth={1.8} />
-                </Button>
-              </div>
+                </AttachmentContent>
+                <AttachmentActions>
+                  <AttachmentAction
+                    isDisabled={disabled}
+                    aria-label="移除文件"
+                    onPress={() => removeFileAt(index)}
+                  >
+                    <X size={16} strokeWidth={1.8} />
+                  </AttachmentAction>
+                </AttachmentActions>
+              </Attachment>
             );
           })}
           {multiple && selectedFiles.length > 1 && (
@@ -168,7 +189,7 @@ function UploadZone({
               </Button>
             </div>
           )}
-        </div>
+        </AttachmentGroup>
       )}
     </div>
   );

@@ -14,7 +14,9 @@
   border-radius: var(--radius-xl);
   background: var(--surface);
   box-shadow: var(--card-shadow);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 
   &:focus-within {
     border-color: var(--accent);
@@ -24,77 +26,14 @@
 
 .attachmentArea {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-xs);
-  max-height: 86px;
-  overflow-y: auto;
-  padding-bottom: 2px;
+  overflow-x: auto;
+  padding-block: 2px;
 }
 
-.contextChip,
-.fileChip,
-.imageChip,
-.uploadChip {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  min-width: 0;
-  border-radius: var(--radius);
-}
-
-.contextChip {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--foreground);
-}
-
-.fileChip,
-.imageChip {
-  background: var(--surface-secondary);
-  color: var(--foreground);
-}
-
-.uploadChip {
-  background: color-mix(in srgb, var(--warning) 12%, var(--surface));
-  color: var(--foreground);
-}
-
-.failedUploadChip {
-  background: color-mix(in srgb, var(--error) 12%, var(--surface));
-  color: var(--error);
-}
-
-.chipRemoveButton {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 2px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: currentColor;
-  cursor: pointer;
-  opacity: 0.68;
-  transition: background 0.2s, opacity 0.2s;
-
-  &:hover,
-  &:focus-visible {
-    opacity: 1;
-    background: color-mix(in srgb, currentColor 12%, transparent);
-    outline: none;
-  }
-}
-
-.imageThumb {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  object-fit: cover;
-  border-radius: 4px;
+.chatAttachment {
+  max-width: min(260px, 78vw);
 }
 
 .textarea {
@@ -315,7 +254,9 @@
   color: var(--text-tertiary);
   font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 
   span {
     min-width: 0;

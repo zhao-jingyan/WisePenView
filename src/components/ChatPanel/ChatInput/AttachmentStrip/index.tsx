@@ -1,13 +1,19 @@
-import { Chip } from '@heroui/react';
-import clsx from 'clsx';
-import { Image, LoaderCircle, Paperclip, TriangleAlert, X } from 'lucide-react';
-import { useShallow } from 'zustand/react/shallow';
+import EntryIcon from '@/components/Icons/EntryIcon';
 import {
-  useChatInputStore,
-  useChatInputStoreApi,
-} from '../ChatInputStore';
-import type { AttachmentStripProps } from './index.type';
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentTitle,
+} from '@/components/_shadcn';
+import { Image, TextQuote, X } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
+import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
 import styles from '../style.module.less';
+import type { AttachmentStripProps } from './index.type';
 
 function AttachmentStrip({
   selectedContextText,
@@ -41,99 +47,122 @@ function AttachmentStrip({
   if (!hasAny) return null;
 
   return (
-    <div className={styles.attachmentArea} aria-label="输入上下文">
+    <AttachmentGroup className={styles.attachmentArea} aria-label="输入上下文">
       {hasSelectedContext ? (
-        <Chip size="sm" variant="soft" className={styles.contextChip}>
-          <Chip.Label title={selectedContextText}>选中内容：{selectedPreview}</Chip.Label>
-          <button
-            type="button"
-            className={styles.chipRemoveButton}
-            onClick={onClearSelectedContext}
-            aria-label="清除已选内容"
-          >
-            <X size={12} />
-          </button>
-        </Chip>
+        <Attachment size="xs" className={styles.chatAttachment}>
+          <AttachmentMedia>
+            <TextQuote size={13} />
+          </AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>选中内容</AttachmentTitle>
+            <AttachmentDescription title={selectedContextText}>
+              {selectedPreview}
+            </AttachmentDescription>
+          </AttachmentContent>
+          <AttachmentActions>
+            <AttachmentAction aria-label="清除已选内容" onPress={onClearSelectedContext}>
+              <X size={12} />
+            </AttachmentAction>
+          </AttachmentActions>
+        </Attachment>
       ) : null}
 
       {resources.map((resource) => (
-        <Chip key={resource.resourceId} size="sm" variant="soft" className={styles.fileChip}>
-          <Paperclip size={13} />
-          <Chip.Label>{resource.resourceName}</Chip.Label>
-          <button
-            type="button"
-            className={styles.chipRemoveButton}
-            onClick={() => removeDocRef(resource.resourceId)}
-            aria-label={`移除文档 ${resource.resourceName}`}
-          >
-            <X size={12} />
-          </button>
-        </Chip>
+        <Attachment key={resource.resourceId} size="xs" className={styles.chatAttachment}>
+          <AttachmentMedia>
+            <EntryIcon
+              entryType="resource"
+              resourceName={resource.resourceName}
+              resourceType={resource.resourceType}
+              size={14}
+            />
+          </AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle title={resource.resourceName}>{resource.resourceName}</AttachmentTitle>
+            <AttachmentDescription>文档引用</AttachmentDescription>
+          </AttachmentContent>
+          <AttachmentActions>
+            <AttachmentAction
+              aria-label={`移除文档 ${resource.resourceName}`}
+              onPress={() => removeDocRef(resource.resourceId)}
+            >
+              <X size={12} />
+            </AttachmentAction>
+          </AttachmentActions>
+        </Attachment>
       ))}
 
       {attachments.map((attachment) => (
-        <Chip
-          key={attachment.attachmentId}
-          size="sm"
-          variant="soft"
-          className={styles.fileChip}
-        >
-          <Paperclip size={13} />
-          <Chip.Label>{attachment.filename}</Chip.Label>
-          <button
-            type="button"
-            className={styles.chipRemoveButton}
-            onClick={() => removeActiveAttachment(attachment.attachmentId)}
-            aria-label={`移除附件 ${attachment.filename}`}
-          >
-            <X size={12} />
-          </button>
-        </Chip>
+        <Attachment key={attachment.attachmentId} size="xs" className={styles.chatAttachment}>
+          <AttachmentMedia>
+            <EntryIcon entryType="resource" resourceName={attachment.filename} size={14} />
+          </AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle title={attachment.filename}>{attachment.filename}</AttachmentTitle>
+            <AttachmentDescription>附件</AttachmentDescription>
+          </AttachmentContent>
+          <AttachmentActions>
+            <AttachmentAction
+              aria-label={`移除附件 ${attachment.filename}`}
+              onPress={() => removeActiveAttachment(attachment.attachmentId)}
+            >
+              <X size={12} />
+            </AttachmentAction>
+          </AttachmentActions>
+        </Attachment>
       ))}
 
       {images.map((imageMeta) => (
-        <Chip key={imageMeta.id} size="sm" variant="soft" className={styles.imageChip}>
-          {imageMeta.thumbnailUrl ? (
-            <img src={imageMeta.thumbnailUrl} alt="" className={styles.imageThumb} />
-          ) : (
-            <Image size={13} />
-          )}
-          <Chip.Label>{imageMeta.filename}</Chip.Label>
-          <button
-            type="button"
-            className={styles.chipRemoveButton}
-            onClick={() => removePendingImageMeta(imageMeta.id)}
-            aria-label={`移除图片 ${imageMeta.filename}`}
-          >
-            <X size={12} />
-          </button>
-        </Chip>
+        <Attachment key={imageMeta.id} size="xs" state="idle" className={styles.chatAttachment}>
+          <AttachmentMedia variant={imageMeta.thumbnailUrl ? 'image' : 'icon'}>
+            {imageMeta.thumbnailUrl ? (
+              <img src={imageMeta.thumbnailUrl} alt="" />
+            ) : (
+              <Image size={13} />
+            )}
+          </AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle title={imageMeta.filename}>{imageMeta.filename}</AttachmentTitle>
+            <AttachmentDescription>图片待发送</AttachmentDescription>
+          </AttachmentContent>
+          <AttachmentActions>
+            <AttachmentAction
+              aria-label={`移除图片 ${imageMeta.filename}`}
+              onPress={() => removePendingImageMeta(imageMeta.id)}
+            >
+              <X size={12} />
+            </AttachmentAction>
+          </AttachmentActions>
+        </Attachment>
       ))}
 
       {uploads.map((upload) => (
-        <Chip
+        <Attachment
           key={upload.id}
-          size="sm"
-          variant="soft"
-          className={clsx(styles.uploadChip, upload.status === 'failed' && styles.failedUploadChip)}
+          size="xs"
+          state={upload.status === 'uploading' ? 'uploading' : 'error'}
+          className={styles.chatAttachment}
         >
-          {upload.status === 'uploading' ? (
-            <LoaderCircle size={13} className={styles.spinIcon} />
-          ) : (
-            <TriangleAlert size={13} />
-          )}
-          <Chip.Label>{upload.filename}</Chip.Label>
-          <button
-            type="button"
-            className={styles.chipRemoveButton}
-            onClick={() => removePendingAttachmentUpload(upload.id)}
-            aria-label={`移除上传项 ${upload.filename}`}
-          >
-            <X size={12} />
-          </button>
-        </Chip>
+          <AttachmentMedia>
+            <EntryIcon entryType="resource" resourceName={upload.filename} size={14} />
+          </AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle title={upload.filename}>{upload.filename}</AttachmentTitle>
+            <AttachmentDescription>
+              {upload.status === 'uploading' ? '上传中' : '上传失败'}
+            </AttachmentDescription>
+          </AttachmentContent>
+          <AttachmentActions>
+            <AttachmentAction
+              aria-label={`移除上传项 ${upload.filename}`}
+              onPress={() => removePendingAttachmentUpload(upload.id)}
+            >
+              <X size={12} />
+            </AttachmentAction>
+          </AttachmentActions>
+        </Attachment>
       ))}
-    </div>
+    </AttachmentGroup>
   );
 }
 

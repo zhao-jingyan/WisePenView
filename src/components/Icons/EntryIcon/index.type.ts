@@ -7,6 +7,8 @@ export interface EntryIconProps {
   entryType: EntryType;
   /** 业务资源类型：保留给跳转语义兼容 */
   resourceType?: string;
+  /** 资源名称：用于从扩展名推断 pdf/doc/ppt/xls/md 等展示图标 */
+  resourceName?: string;
   /** 图标展示用资源细分类型 */
   resourceIconType?: ResourceIconType;
   size?: number;
