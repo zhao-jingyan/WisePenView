@@ -18,10 +18,29 @@ const reactFcImportRule = {
   message: '项目约定组件使用普通函数声明，请不要使用 React.FC / FC。',
 };
 
-const antdMessageImportRule = {
-  name: 'antd',
-  importNames: ['message'],
-  message: '项目已移除 Ant Design，请不要从 antd 导入 message。',
+const heroUiOverlayPrimitiveImportRule = {
+  name: '@heroui/react',
+  importNames: ['Modal', 'AlertDialog'],
+  message:
+    '业务浮层请使用 src/components/Overlay 下的 AppAlertDialog、AppFormDialog、AppDisplayDialog 或 AppModal；底层 Modal / AlertDialog 只允许 Overlay 封装内部使用。',
+};
+
+const projectOverlayModalImportRule = {
+  name: '@/components/Overlay',
+  importNames: ['Modal'],
+  message:
+    '业务浮层请使用 AppAlertDialog、AppFormDialog、AppDisplayDialog 或 AppModal；直接使用底层 Modal 需要在 eslint 白名单中记录特殊原因。',
+};
+
+const projectOverlayModalImportPattern = {
+  group: [
+    '@/components/Overlay/Modal',
+    '@/components/Overlay/Modal.*',
+    '**/components/Overlay/Modal',
+    '**/components/Overlay/Modal.*',
+  ],
+  message:
+    '业务浮层请使用 AppAlertDialog、AppFormDialog、AppDisplayDialog 或 AppModal；不要直接导入底层 Modal。',
 };
 
 const directAxiosImportRule = {
@@ -51,6 +70,17 @@ const serviceFactoryImportPattern = {
     '项目保留命名约定：createXxxServices 是 Service 工厂的专属符号，仅允许在装配入口 src/domains/_registry/registry.impl.ts 中 import；其它位置禁止直接导入或调用，业务代码请通过 useXxxService() 获取实例。',
 };
 
+const serviceMockImportPattern = {
+  group: [
+    '@/domains/*/mock/*Services.mock',
+    '@/domains/*/mock/*Services.mock.*',
+    '**/domains/*/mock/*Services.mock',
+    '**/domains/*/mock/*Services.mock.*',
+  ],
+  message:
+    'Mock Service 只能在 src/domains/_registry/registry.mock.ts 装配；业务代码请通过 useXxxService() 获取实例。',
+};
+
 const apiRequestImportPattern = {
   group: ['@/apis/request', '**/apis/request'],
   message:
@@ -67,18 +97,24 @@ const buildRestrictedImportsRule = ({
   allowApiRequest = false,
   allowDirectAxios = false,
   allowDomainApiFunction = false,
+  allowOverlayPrimitive = false,
   allowReactUseEffect = false,
   allowServiceFactory = false,
+  allowServiceMock = false,
 } = {}) => {
   const paths = [
     ...(allowReactUseEffect ? [] : [reactUseEffectImportRule]),
     reactFcImportRule,
-    antdMessageImportRule,
+    ...(allowOverlayPrimitive
+      ? []
+      : [heroUiOverlayPrimitiveImportRule, projectOverlayModalImportRule]),
     ...(allowDirectAxios ? [] : [directAxiosImportRule]),
   ];
   const patterns = [
+    ...(allowOverlayPrimitive ? [] : [projectOverlayModalImportPattern]),
     ...(allowDirectAxios ? [] : [directAxiosImportPattern]),
     ...(allowServiceFactory ? [] : [serviceFactoryImportPattern]),
+    ...(allowServiceMock ? [] : [serviceMockImportPattern]),
     ...(allowApiRequest ? [] : [apiRequestImportPattern]),
     ...(allowDomainApiFunction ? [] : [domainApiFunctionImportPattern]),
   ];
@@ -139,12 +175,33 @@ export default defineConfig([
     },
   },
   {
+    // Overlay 封装内部允许直连 HeroUI 浮层原语。
+    files: ['src/components/Overlay/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': buildRestrictedImportsRule({ allowOverlayPrimitive: true }),
+    },
+  },
+  {
+    // 全局搜索是 command palette 形态，允许直接使用底层 Modal。
+    files: ['src/components/Drive/GlobalSearchBox/SearchModal/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': buildRestrictedImportsRule({ allowOverlayPrimitive: true }),
+    },
+  },
+  {
     // 全局禁止 useEffect，只有统一封装入口允许直接调用原生 useEffect。
     // 请勿删除此白名单，否则 useEffectForce 无法工作。
     files: ['src/hooks/useEffectForce.ts'],
     rules: {
       'no-restricted-imports': buildRestrictedImportsRule({ allowReactUseEffect: true }),
       'no-restricted-properties': 'off',
+    },
+  },
+  {
+    // Mock Service 的唯一合法装配入口。
+    files: ['src/domains/_registry/registry.mock.ts'],
+    rules: {
+      'no-restricted-imports': buildRestrictedImportsRule({ allowServiceMock: true }),
     },
   },
   {

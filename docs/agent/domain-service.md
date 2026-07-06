@@ -50,7 +50,7 @@ export const createXxxServices = (deps?: XxxServiceDeps): IXxxService => ({
 
 - Service 只抛错，不做 UI 提示。
 - 客户端业务校验错误优先使用 `createClientError(code?, message?)`。
-- UI 层 catch 后使用 `useAppMessage()` 和 `parseErrorMessage(err)`。
+- UI 层 catch 后使用 HeroUI `toast` 和 `parseErrorMessage(err)`。
 - `parseErrorMessage` 只接收一个 `unknown` 参数，不传 fallback 文案。
 
 ## 四、请求触发

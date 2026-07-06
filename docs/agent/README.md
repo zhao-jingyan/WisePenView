@@ -4,7 +4,7 @@
 
 ## 一、入口
 
-- 主入口：`AGENT.md`
+- 主入口：`AGENTS.md`
 - 提交规范：`docs/agent/commit.md`
 
 ## 二、Domain 任务
@@ -12,7 +12,7 @@
 处理 `src/domains/**`、`src/apis/**` 或请求链路时阅读：
 
 - `domain-api.md`：API 薄层、手写 DTO、请求协议边界。
-- `domain-mapper.md`：字段转换、fallback、旧接口兼容、归一化。
+- `domain-mapper.md`：字段转换、fallback、协议兼容、归一化。
 - `domain-service.md`：业务编排、依赖注入、错误处理。
 - `domain-entity.md`：展示实体、枚举、常量和类型边界。
 
@@ -22,7 +22,7 @@
 
 处理 `src/components/**`、`src/views/**`、布局、样式或页面交互时阅读：
 
-- `component-boundary.md`：组件放置位置、复用边界、迁移方向。
+- `component-boundary.md`：组件放置位置、复用边界、归属判断。
 - `component-react.md`：React、Hooks、JSX、TypeScript 编码规范。
 - `component-style.md`：Less、CSS Modules、HeroUI 与样式规则。
 
@@ -46,4 +46,4 @@ view/component -> service -> mapper -> api -> entity/enum
 
 ## 五、收敛约定
 
-新增代码必须遵循本目录描述的最终形态；修改旧代码时，只收敛与当前任务相关的部分，不做无关大重构。
+新增和修改代码都应遵循本目录规则；只收敛与当前任务相关的部分，不做无关大重构。

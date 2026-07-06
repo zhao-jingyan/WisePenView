@@ -62,9 +62,9 @@ Modal
 
 ### AppModal
 
-`AppModal` 是可定制的复杂业务浮层起点，不再内置具体任务语义。
+`AppModal` 是可定制的复杂业务浮层起点，只提供通用浮层结构。
 
-它不再提供：
+它不提供：
 
 - `type="confirm"` / `type="danger"` 等业务类型。
 - 内置确认、取消按钮。
@@ -79,7 +79,7 @@ Modal
 - `children`：业务内容。
 - `AppModal.Body` / `AppModal.Footer`：复杂结构时的显式组合。
 
-## 当前仍保留 AppModal 的业务
+## AppModal 使用场景
 
 这些场景没有归到 `AppAlertDialog`、`AppFormDialog`、`AppDisplayDialog`，因为它们承载复杂业务流程、复杂选择器、上传队列或组合内容。
 
@@ -100,7 +100,7 @@ Modal
 | `src/components/Drive/Modals/Node/MoveNodeModal/index.tsx`                  | 移动文件/文件夹，目标目录选择。              |
 | `src/components/Drive/Modals/UploadFileToGroupModal/index.tsx`              | 上传个人文件到小组，选择文件和目标小组目录。 |
 
-## 当前直接使用底层 Modal 的业务
+## 底层 Modal 例外
 
 | 文件                                                         | 业务                       | 原因                                                                                   |
 | ------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------------------------- |

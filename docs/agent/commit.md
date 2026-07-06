@@ -1,10 +1,16 @@
 # Commit 与分支规范
 
-本项目沿用现有 commitlint 配置，使用 Conventional Commits 的 type 白名单，并要求中文说明。
+本项目使用现有 commitlint 配置、Conventional Commits 的 type 白名单，并要求中文说明。
 
 ## 一、分支命名
 
-开发分支使用：
+Agent 自动创建分支时使用：
+
+```text
+codex/<content>
+```
+
+人工开发分支如需按功能类型区分，可以使用：
 
 ```text
 feat/<content>
@@ -14,7 +20,7 @@ refactor/<content>
 
 规则：
 
-- `content` 推荐英文短横线，例如 `feat/agent-docs`、`fix/group-role`、`refactor/group-role`。
+- `content` 推荐英文短横线，例如 `codex/agent-docs`、`feat/group-role`、`fix/group-role`。
 - 不使用空格和中文，避免远程分支、脚本和 CLI 兼容问题。
 - 文档类变更也可以使用 `feat/docs-agent` 或 `fix/docs-agent`，按实际意图选择。
 
@@ -69,12 +75,12 @@ refactor(domain): 收敛资源映射逻辑
 - 提交前查看 `git status --short`。
 - 不要把用户未要求的无关文件加入提交。
 - 不要擅自回滚用户已有改动。
-- 需要运行 lint、compile、build 时，优先给出建议命令让用户运行。
+- 按改动范围运行 lint、typecheck 或 build，并在交付说明中报告结果。
 - 如果用户要求 agent commit，commit message 必须中文，并符合本文件格式。
 
 ## 七、检查清单
 
-- [ ] 分支名符合 `feat/<content>` 或 `fix/<content>`。
+- [ ] Agent 分支名符合 `codex/<content>`。
 - [ ] commit type 属于白名单。
 - [ ] subject 是中文。
 - [ ] 一次 commit 只表达一个意图。

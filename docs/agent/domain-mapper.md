@@ -8,10 +8,10 @@ Mapper 应处理：
 
 - 后端 DTO 到 entity/view model 的转换。
 - service 请求参数到 API request 的转换。
-- fallback 和旧接口兼容。
+- fallback 和协议兼容。
 - ID 归一化，例如使用 `normalizeId` 处理数字 ID 或大整数 ID。
 - 时间、枚举、权限动作、状态值等展示前归一化。
-- 后端大小写不一致、字段缺失、旧字段名兼容等问题。
+- 后端大小写不一致、字段缺失、字段别名兼容等问题。
 
 Mapper 不应处理：
 
@@ -23,7 +23,7 @@ Mapper 不应处理：
 
 ## 二、fallback 原则
 
-- fallback 必须有明确原因，通常是旧接口兼容、后端过渡字段或历史数据。
+- fallback 必须有明确原因，通常是协议兼容、灰度字段或历史数据。
 - fallback 逻辑集中写在 mapper，不要散落在 JSX、service 或组件内部。
 - 对非显而易见的 fallback 写中文注释，说明兼容哪个后端形态。
 - 不要为了掩盖边界不清楚而写大量 `?.`、默认值或类型守卫。边界不清楚时先问。

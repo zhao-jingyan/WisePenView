@@ -1,0 +1,61 @@
+# WisePenView Agent 规约
+
+本文件是 WisePenView 的 agent 主入口。开始代码修改前先读这里；只在任务涉及对应领域时，再阅读 `docs/agent` 下的专题文档。
+
+## 项目事实
+
+- 技术栈：Vite、React 19、TypeScript strict、Less CSS Modules、HeroUI、ahooks、zustand。
+- 包管理和脚本使用 `pnpm`：`pnpm lint`、`pnpm typecheck`、`pnpm build`、`pnpm dev`、`pnpm mock`。
+- 注释使用中文，commit message 使用中文。
+- UI 基础控件使用 HeroUI 或项目已有封装。
+
+## 工作方式
+
+- 修改前查看 `git status --short`，不要回滚或覆盖用户已有改动。
+- 先用 `rg` 查找同域、同类型实现，复用当前代码模式。
+- 保持改动范围贴近任务，不做无关重构、格式化或依赖升级。
+- 不确定业务接口、字段含义、权限边界或后端契约时先确认，不用兜底代码掩盖不确定性。
+- 第三方 API 不确定时优先看官方文档或项目内既有用法，不盲扫 `node_modules`。
+
+## 代码边界
+
+- 领域链路保持 `component/view -> useXxxService -> service -> mapper -> api -> request`。
+- API DTO 只放在 `src/domains/<Domain>/apis/*Api.type.ts`，不直接泄漏到组件 props。
+- 字段映射、协议兼容、ID/时间/枚举归一化集中在 mapper。
+- service 负责编排和抛错，不做 UI 提示，不直接 import Axios，不直接 import 其它 service 实现。
+- 真实 service 只在 `src/domains/_registry/registry.impl.ts` 装配；mock service 只在 `registry.mock.ts` 装配。
+- 组件通过 `useXxxService()` 获取领域能力；跨 service 依赖通过 registry 显式注入。
+
+## React 与样式
+
+- 只写函数组件和 Hooks，不使用 `React.FC` / `FC`，不新增 `any`。
+- 默认不直接使用 `useEffect`；请求用 `useRequest`，交互逻辑放事件处理函数，生命周期语义优先用已有 hook。
+- 必须使用 effect 时，走 `useEffectForce`，并用中文 JSDoc 说明执行时机、不可替代原因和 cleanup。
+- 不滥用 `useMemo`、`useCallback`、`React.memo`；只有计算昂贵或引用稳定有实际收益时再使用。
+- 样式使用 Less CSS Modules，类名用 camelCase，避免非必要内联样式。
+- 业务弹窗优先使用 `AppAlertDialog`、`AppFormDialog`、`AppDisplayDialog`、`AppModal`；普通业务代码不直接使用底层 `Modal` / `AlertDialog`。
+
+## 按需阅读
+
+- 领域 API、请求类型：`docs/agent/domain-api.md`
+- 字段映射、fallback、协议兼容：`docs/agent/domain-mapper.md`
+- Service 编排、依赖注入、错误处理：`docs/agent/domain-service.md`
+- Entity、Enum、常量：`docs/agent/domain-entity.md`
+- 组件放置位置、components 与 views 边界：`docs/agent/component-boundary.md`
+- React、Hooks、JSX、TypeScript：`docs/agent/component-react.md`
+- 样式、UI 组件库、Overlay：`docs/agent/component-style.md`、`docs/agent/overlay.md`
+- 分支与 commit：`docs/agent/commit.md`
+
+跨层任务按数据流补读：`view/component -> service -> mapper -> api -> entity/enum`。
+
+## 验证与交付
+
+- 默认至少运行 `pnpm lint`；涉及类型、构建或跨层链路时运行 `pnpm typecheck` 或 `pnpm build`。
+- 如果某项验证未运行，交付说明里明确原因和建议命令。
+- 最终说明包含：改了什么、为什么这样改、跑了哪些验证、仍需确认的风险。
+
+## Codex 加载建议
+
+- 仓库级持久规则放在根目录 `AGENTS.md`，保持短而准；专题细则放在 `docs/agent`。
+- 个人表达偏好、默认审批/沙箱、MCP 等放在 `~/.codex/config.toml` 或 `~/.codex/AGENTS.md`，不要写进仓库规约。
+- 若必须继续使用其它文件名，在 Codex 配置里设置 `project_doc_fallback_filenames`；本仓库优先使用标准 `AGENTS.md`。

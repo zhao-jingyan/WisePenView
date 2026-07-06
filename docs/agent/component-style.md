@@ -21,8 +21,8 @@ ComponentName/
 
 ## 二、HeroUI 使用
 
-- Modal、Button、Input、Select、Checkbox 等基础交互控件使用 HeroUI 或项目已有封装。
-- 组件 API 遵循 HeroUI 语义，例如 `footer` 数组、`destroyOnHidden`、`onCancel`。
+- Button、Input、Select、Checkbox 等基础交互控件使用 HeroUI 或项目已有封装。
+- Modal 类业务浮层使用项目 `Overlay` 封装；只有封装组件本身和明确记录过的特殊浮层可以直接使用底层 `Modal` / `AlertDialog`。
 
 ## 三、Modal 约定
 
@@ -37,7 +37,7 @@ ComponentName/
 - 业务弹窗不要自行给 modal header/footer 添加 divider、`border-top` 或 `border-bottom`。
 - 操作成功后通常先调用 `onSuccess?.()`，再关闭弹窗。
 - 异步提交使用 `useRequest(fn, { manual: true })`。
-- 错误提示使用 `useAppMessage()` 和 `parseErrorMessage(err)`。
+- 错误提示使用 HeroUI `toast` 和 `parseErrorMessage(err)`。
 
 ## 四、布局与可读性
 
@@ -60,6 +60,5 @@ ComponentName/
 - [ ] 样式使用 Less + CSS Modules。
 - [ ] 没有非必要内联样式。
 - [ ] 交互控件使用 HeroUI 或项目已有封装。
-- [ ] 没有新增 antd 依赖、API 形态或 `.ant-xxx` 样式覆盖。
 - [ ] 文本和控件在常见宽度下不会重叠或溢出。
 - [ ] 没有无意义装饰和卡片套卡片。
