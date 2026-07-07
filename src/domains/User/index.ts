@@ -4,6 +4,7 @@ export type {
   UserAccountProfile,
   UserDisplayBase,
   UserProfileInfo,
+  UserSearchUser,
 } from './entity/user';
 export {
   DEGREE,
@@ -20,6 +21,8 @@ export type {
   FudanUISVerifyStatusData,
   IUserService,
   InitiateUISVerifyRequest,
+  ListUserSearchSuggestionsRequest,
+  SearchUsersRequest,
   SendEmailVerifyRequest,
   UpdateUserInfoRequest,
 } from './service/index.type';

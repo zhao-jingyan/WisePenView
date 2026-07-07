@@ -13,7 +13,7 @@ import {
   NOTE_OUTLINE_TITLE_ID,
   type NoteOutlineItem,
 } from '@/components/Note/NoteOutline/index.type';
-import { useNoteService, useResourceService, useUserService } from '@/domains';
+import { useNoteService, useResourceService } from '@/domains';
 import type { AiDiffDisplayMode, NoteInfoDisplayData } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, AI_DIFF_DISPLAY_MODE_LABELS, useNoteSession } from '@/domains/Note';
 import { RESOURCE_TYPE } from '@/domains/Resource';
@@ -22,9 +22,10 @@ import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useWorkspaceLayoutConfig } from '@/layouts/Workspace/WorkspaceOutletContext';
 import { useAiDiffDisplayStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
+import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
 import { Alert, Button, Dropdown, toast } from '@heroui/react';
+import ResourcePermissionControl from '../_components/ResourcePermissionControl';
 import NoteInfoBar from './_components/NoteInfoBar';
-import NotePermissionModal from './_components/NotePermissionModal';
 import NoteTitle from './_components/NoteTitle';
 import type { NoteTitleHandle } from './_components/NoteTitle/index.type';
 import styles from './style.module.less';
@@ -89,7 +90,6 @@ function NoteViewConnected({
   const reconnectTimerRef = useRef<number | null>(null);
   const [isReconnectLoading, setIsReconnectLoading] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(true);
-  const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
   const [outlineItems, setOutlineItems] = useState<NoteOutlineItem[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | undefined>(undefined);
   const [pdfExportLoading, setPdfExportLoading] = useState(false);
@@ -111,12 +111,7 @@ function NoteViewConnected({
   const showFullPageSpin = status === 'connecting';
   const fallbackNoteTitle = noteInfoDisplay.noteTitle;
 
-  const userService = useUserService();
   const resourceService = useResourceService();
-  const { data: currentUser } = useRequest(() => userService.getUserInfo(), {
-    ready: Boolean(noteInfoDisplay.ownerId),
-    refreshDeps: [noteInfoDisplay.ownerId],
-  });
 
   // 进入页面时上报阅读
   useRequest(() => resourceService.interactRead(resourceId), {
@@ -197,15 +192,9 @@ function NoteViewConnected({
   }, [fallbackNoteTitle]);
 
   const headerMorePending = pdfExportLoading || isDownloadingMarkdown;
-  const canManageNotePermission =
-    Boolean(noteInfoDisplay.ownerId) && currentUser?.id === noteInfoDisplay.ownerId;
 
   const handleMoreAction = useCallback(
     (key: React.Key) => {
-      if (key === 'permission') {
-        setIsPermissionModalOpen(true);
-        return;
-      }
       if (key === 'print-pdf') {
         void handlePrintPdf();
         return;
@@ -239,6 +228,13 @@ function NoteViewConnected({
                 onSelectionChange={setAiDiffDisplayMode}
               />
             ) : null}
+            <ResourcePermissionControl
+              resourceId={resourceId}
+              resourceType={WORKSPACE_RESOURCE_TYPE.NOTE}
+              ownerId={noteInfoDisplay.ownerId}
+              isDisabled={showFullPageSpin}
+              onSuccess={onRefreshNoteInfo}
+            />
             <div className={styles.headerMoreWrap}>
               <Dropdown>
                 <Dropdown.Trigger>
@@ -254,11 +250,6 @@ function NoteViewConnected({
                 </Dropdown.Trigger>
                 <Dropdown.Popover placement="bottom end">
                   <Dropdown.Menu aria-label="笔记更多操作" onAction={handleMoreAction}>
-                    {canManageNotePermission ? (
-                      <Dropdown.Item id="permission" textValue="权限配置">
-                        权限配置
-                      </Dropdown.Item>
-                    ) : null}
                     <Dropdown.Item id="print-pdf" textValue="打印为pdf">
                       打印为pdf
                     </Dropdown.Item>
@@ -275,10 +266,11 @@ function NoteViewConnected({
     }),
     [
       aiDiffDisplayMode,
-      canManageNotePermission,
       handleMoreAction,
       headerMorePending,
       noteInfoDisplay?.noteTitle,
+      noteInfoDisplay.ownerId,
+      onRefreshNoteInfo,
       resourceId,
       setAiDiffDisplayMode,
       showAiDiffDisplayModeSwitch,
@@ -406,12 +398,6 @@ function NoteViewConnected({
           </div>
         </div>
       ) : null}
-      <NotePermissionModal
-        isOpen={isPermissionModalOpen}
-        resourceId={resourceId}
-        onOpenChange={setIsPermissionModalOpen}
-        onSuccess={onRefreshNoteInfo}
-      />
     </>
   );
 }

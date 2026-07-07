@@ -1,8 +1,8 @@
 export type { ResourceIconType, ResourceItem, ResourceTagBind } from './entity/resource';
 export type { SkillScopeType, SkillSummary } from './entity/skill';
 export {
-  NOTE_CONFIGURABLE_RESOURCE_ACTION_OPTIONS,
   RESOURCE_ACTION,
+  RESOURCE_PERMISSION_ACTION_ORDER,
   RESOURCE_SORT_BY,
   RESOURCE_SORT_DIR,
   RESOURCE_TYPE,
@@ -10,12 +10,13 @@ export {
   SEARCH_SCOPE,
   TAG_QUERY_LOGIC_MODE,
   actionsToPermissionCode,
+  areResourcePermissionActionsEqual,
   coerceResourceActions,
+  filterSupportedResourcePermissionActions,
   getResourceActionImpliedActions,
   getResourceActionImpliedMask,
+  getSupportedResourcePermissionActions,
   hasResourceAction,
-  isNoteConfigurableResourceAction,
-  maskNoteConfigurableResourceActions,
   normalizeResourceActions,
   normalizeSearchResourceType,
   permissionCodeToActions,
@@ -35,6 +36,7 @@ export { groupSearchHits } from './service/groupSearchHits';
 export type { SearchHitGroup } from './service/groupSearchHits';
 export type {
   GetGroupResourceRequest,
+  GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
   IResourceService,
   InteractRateRequest,
@@ -43,10 +45,17 @@ export type {
   RemoveResourcesRequest,
   RenameResourceRequest,
   ResourceListPage,
+  ResourcePermissionActionOption,
+  ResourcePermissionOverview,
+  ResourcePermissionResourceType,
+  ResourcePermissionSource,
+  ResourcePermissionSubject,
+  ResourcePermissionSubjectKind,
   SearchHitItem,
   SearchQueryRequest,
   SearchResultPage,
   UpdateResourceActionPermissionRequest,
+  UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,
 } from './service/index.type';
 export { resolveResourceIconType } from './utils/resolveResourceIconType';

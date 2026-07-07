@@ -3,6 +3,7 @@ import type {
   IUserService,
   User,
   UserAccountProfile,
+  UserSearchUser,
 } from '@/domains/User';
 import type { GetUserInfoApiResponse } from '../apis/UserApi.type';
 import { UserServicesMap } from '../mapper/UserServices.map';
@@ -12,6 +13,32 @@ import mockdata from './mockdata.json';
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const fullUserInfo = mockdata as GetUserInfoApiResponse;
+const mockSearchUsers: UserSearchUser[] = [
+  {
+    userId: '10086',
+    username: 'xiaoming',
+    nickname: '小明',
+    realName: '王明',
+    avatar: '',
+    identityType: 1,
+  },
+  {
+    userId: '10087',
+    username: 'ruojin',
+    nickname: '若瑾',
+    realName: '李若瑾',
+    avatar: '',
+    identityType: 2,
+  },
+  {
+    userId: '10088',
+    username: 'agentic.sig',
+    nickname: 'SIG 助手',
+    realName: '陈思齐',
+    avatar: '',
+    identityType: 3,
+  },
+];
 
 const getUserInfo = async (_options?: { forceRefresh?: boolean }): Promise<User> => {
   await delay(200);
@@ -28,6 +55,25 @@ const getUserInfo = async (_options?: { forceRefresh?: boolean }): Promise<User>
 const getFullUserInfo = async (): Promise<UserAccountProfile> => {
   await delay(200);
   return UserServicesMap.mapAccountProfileFromApi(fullUserInfo);
+};
+
+const searchUsers = async (params: Parameters<IUserService['searchUsers']>[0]) => {
+  await delay(160);
+  const keyword = params.keyword.trim().toLowerCase();
+  if (!keyword) return [];
+  return mockSearchUsers.filter((user) => user.username.toLowerCase() === keyword);
+};
+
+const listUserSearchSuggestions = async (
+  params: Parameters<IUserService['listUserSearchSuggestions']>[0]
+) => {
+  await delay(160);
+  const keyword = params.keyword.trim().toLowerCase();
+  if (keyword.length < 2) return [];
+  const size = params.size ?? 10;
+  return mockSearchUsers
+    .filter((user) => user.username.toLowerCase().startsWith(keyword))
+    .slice(0, size);
 };
 
 const sendEmailVerify = async (): Promise<void> => {
@@ -119,6 +165,8 @@ const clearUserCache = (): void => {};
 export const UserServicesMock: IUserService = {
   getFullUserInfo,
   getUserInfo,
+  searchUsers,
+  listUserSearchSuggestions,
   updateUserInfo,
   sendEmailVerify,
   initiateUISVerify,

@@ -1,5 +1,6 @@
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import { useChatService, useNoteService } from '@/domains';
+import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import {
   clearNewChatSessionStore,
   useChatPanelStore,
@@ -8,10 +9,7 @@ import {
   useNewNoteStore,
 } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
-import {
-  buildWorkspaceResourcePath,
-  RESOURCE_EDITOR_TYPE,
-} from '@/utils/navigation/workspaceRoute';
+import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
 import { Input, ListBox, ListBoxItem, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
@@ -23,6 +21,7 @@ import styles from './style.module.less';
 
 function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
   const navigate = useNavigate();
+  const openInWorkspace = useOpenInWorkspace();
   const location = useLocation();
   const chatService = useChatService();
   const noteService = useNoteService();
@@ -93,7 +92,10 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
       manual: true,
       onSuccess: ({ resourceId }) => {
         useNewNoteStore.getState().setNewNoteResourceId(resourceId);
-        navigate(buildWorkspaceResourcePath(RESOURCE_EDITOR_TYPE.NOTE, resourceId));
+        openInWorkspace({
+          resourceId,
+          resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
+        });
       },
       onError: (err) => {
         toast.danger(parseErrorMessage(err));
@@ -105,7 +107,10 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
     if (creatingNote) return;
     const pendingNewNoteId = useNewNoteStore.getState().newNoteResourceId;
     if (pendingNewNoteId != null && pendingNewNoteId !== '') {
-      navigate(buildWorkspaceResourcePath(RESOURCE_EDITOR_TYPE.NOTE, pendingNewNoteId));
+      openInWorkspace({
+        resourceId: pendingNewNoteId,
+        resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
+      });
       return;
     }
     runCreateNote();
@@ -131,7 +136,10 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
       manual: true,
       onSuccess: ({ resourceId }) => {
         setDrawioModalOpen(false);
-        navigate(buildWorkspaceResourcePath(RESOURCE_EDITOR_TYPE.DRAWIO, resourceId));
+        openInWorkspace({
+          resourceId,
+          resourceType: WORKSPACE_RESOURCE_TYPE.DRAWIO,
+        });
       },
       onError: (err) => {
         toast.danger(parseErrorMessage(err));

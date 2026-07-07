@@ -6,7 +6,9 @@ export interface ChatFrontendState {
 
 export interface ChatWorkspaceContext {
   resourceId: string;
-  editorType: string;
+  resourceType: string;
+  viewer?: string;
+  editorType?: string;
 }
 
 export interface ChatSelectedResourceContext {

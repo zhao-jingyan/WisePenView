@@ -2,9 +2,8 @@ import { getDriveNodeLabel } from '@/components/Drive/common/driveComponentModel
 import { Spin } from '@/components/Feedback';
 import { useDocumentService, useNoteService } from '@/domains';
 import {
-  isDocumentEditorType,
-  resolveResourceEditorType,
-  RESOURCE_EDITOR_TYPE,
+  WORKSPACE_RESOURCE_TYPE,
+  resolveWorkspaceResourceType,
 } from '@/utils/navigation/workspaceRoute';
 import { useRequest } from 'ahooks';
 import { useMemo } from 'react';
@@ -20,11 +19,11 @@ function NodeInfoSection({ selectedRow }: NodeInfoSectionProps) {
   const resourceId = node.type === 'resource' || node.type === 'link' ? node.resourceId : undefined;
   const resourceName = getDriveNodeLabel(node);
 
-  const editorType = useMemo(() => {
+  const workspaceResourceType = useMemo(() => {
     if (!resourceId) {
       return null;
     }
-    return resolveResourceEditorType({
+    return resolveWorkspaceResourceType({
       resourceType:
         node.type === 'resource' || node.type === 'link' ? node.resourceType : undefined,
       resourceName,
@@ -33,8 +32,10 @@ function NodeInfoSection({ selectedRow }: NodeInfoSectionProps) {
 
   const shouldFetchNoteInfo =
     Boolean(resourceId) &&
-    (editorType === RESOURCE_EDITOR_TYPE.NOTE || editorType === RESOURCE_EDITOR_TYPE.DRAWIO);
-  const shouldFetchDocInfo = Boolean(resourceId) && isDocumentEditorType(editorType ?? undefined);
+    (workspaceResourceType === WORKSPACE_RESOURCE_TYPE.NOTE ||
+      workspaceResourceType === WORKSPACE_RESOURCE_TYPE.DRAWIO);
+  const shouldFetchDocInfo =
+    Boolean(resourceId) && workspaceResourceType === WORKSPACE_RESOURCE_TYPE.FILE;
 
   const { data: noteInfo, loading: isNoteInfoLoading } = useRequest(
     () => noteService.getNoteInfoDisplay({ resourceId: resourceId as string }),

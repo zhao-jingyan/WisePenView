@@ -5,6 +5,7 @@
       "parentId": "",
       "tagName": "工作",
       "tagDesc": "工作相关",
+      "grantedActions": ["DISCOVER", "VIEW", "EDIT"],
       "children": [
         {
           "tagId": "tag-work-project-a",

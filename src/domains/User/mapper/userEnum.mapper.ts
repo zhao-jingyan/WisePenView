@@ -1,5 +1,6 @@
 import type {
   UserDegreeLevelApiValue,
+  UserDisplayBaseApiResponse,
   UserIdentityTypeApiValue,
   UserSexApiValue,
   UserStatusApiValue,
@@ -40,14 +41,13 @@ export const mapDegreeLevelToApi = (value: number | undefined): string | undefin
   value == null ? undefined : DEGREE.getKey(value);
 
 export const normalizeUserDisplayBaseFromApi = (
-  value:
-    | (Omit<UserDisplayBase, 'identityType'> & { identityType?: UserIdentityTypeApiValue })
-    | null
-    | undefined
+  value: UserDisplayBaseApiResponse | null | undefined
 ): UserDisplayBase | undefined => {
   if (value == null) return undefined;
   return {
-    ...value,
+    nickname: value.nickname ?? undefined,
+    realName: value.realName ?? undefined,
+    avatar: value.avatar ?? undefined,
     identityType:
       value.identityType == null ? undefined : normalizeIdentityTypeFromApi(value.identityType),
   };

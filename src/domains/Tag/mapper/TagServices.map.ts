@@ -5,10 +5,13 @@ import type {
   GetTagTreeApiResponse,
 } from '@/domains/Resource/apis/ResourceApi.type';
 import {
+  ACCESS_CONTROL_SCOPE,
+  coerceResourceActions,
   normalizeResourceActions,
+  permissionCodeToActions,
   resourceActionsToApiKeys,
-  TAG_RESOURCE_ACTION,
   TAG_VISIBILITY_MODE,
+  type AccessControlScope,
   type TagResourceAction,
   type TagVisibilityModeString,
 } from '@/domains/Tag';
@@ -27,12 +30,38 @@ const mapGetTagTreeRequest = (groupId?: string): GetTagTreeApiRequest | undefine
 const isTagVisibilityModeString = (value: unknown): value is TagVisibilityModeString =>
   typeof value === 'string' && TAG_VISIBILITY_MODE.getKey(value) != null;
 
-const mapGrantedActionsFromApi = (actions: unknown): TagResourceAction[] | undefined => {
-  if (!Array.isArray(actions)) return undefined;
-  const normalized = actions
-    .map((item) => Number(item))
-    .filter((item): item is TagResourceAction => TAG_RESOURCE_ACTION.getKey(item) != null);
-  return normalizeResourceActions(normalized);
+const coerceAccessControlScope = (value: unknown): AccessControlScope | undefined => {
+  if (typeof value === 'number' && value in ACCESS_CONTROL_SCOPE.configs) {
+    return value as AccessControlScope;
+  }
+  if (typeof value !== 'string') return undefined;
+  const byKey = (ACCESS_CONTROL_SCOPE.values as Record<string, number>)[value];
+  if (byKey !== undefined) return byKey as AccessControlScope;
+  const asNumber = Number(value);
+  if (!Number.isNaN(asNumber) && asNumber in ACCESS_CONTROL_SCOPE.configs) {
+    return asNumber as AccessControlScope;
+  }
+  return undefined;
+};
+
+const coercePermissionMask = (mask: unknown): number | undefined => {
+  if (typeof mask === 'number' && Number.isFinite(mask)) return mask;
+  if (typeof mask !== 'string') return undefined;
+  const parsed = Number(mask);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const mapGrantedActionsFromApi = (
+  actions: unknown,
+  grantedActionsMask: unknown
+): TagResourceAction[] | undefined => {
+  const mask = coercePermissionMask(grantedActionsMask);
+  if (Array.isArray(actions)) {
+    const resolvedActions = coerceResourceActions(actions);
+    if (resolvedActions.length > 0 || !mask) return resolvedActions;
+  }
+  if (mask === undefined) return undefined;
+  return normalizeResourceActions(permissionCodeToActions(mask));
 };
 
 const mapTagTreeNodeFromApi = (node: GetTagTreeApiResponse[number]): TagTreeNode => {
@@ -45,8 +74,13 @@ const mapTagTreeNodeFromApi = (node: GetTagTreeApiResponse[number]): TagTreeNode
     ...node,
     // fallback：兼容后端返回未约束的 visibilityMode 字符串
     visibilityMode: normalizedVisibilityMode,
-    // fallback：兼容后端返回 number[] 类型的 grantedActions
-    grantedActions: mapGrantedActionsFromApi(node.grantedActions),
+    taggedResourceAclGrantScope: coerceAccessControlScope(node.taggedResourceAclGrantScope),
+    tagMountPermissionScope: coerceAccessControlScope(node.tagMountPermissionScope),
+    // fallback：兼容后端返回枚举名字符串、历史 number[] 或仅返回 mask 的 grantedActions
+    grantedActions: mapGrantedActionsFromApi(
+      node.grantedActions,
+      node.taggedResourceGrantedActionsMask
+    ),
     children: node.children?.map(mapTagTreeNodeFromApi),
   };
 };

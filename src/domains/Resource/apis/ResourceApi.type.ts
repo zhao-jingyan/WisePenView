@@ -1,7 +1,9 @@
 import type { ResourceActionKey, ResourceItem } from '@/domains/Resource';
 import type { AccessControlScope, TagResourceActionKey } from '@/domains/Tag';
-import type { UserDisplayBase } from '@/domains/User';
-import type { UserIdentityTypeApiValue } from '@/domains/User/apis/UserApi.type';
+import type { UserDisplayBaseApiResponse } from '@/domains/User/apis/UserApi.type';
+
+export type ResourceActionApiValue = ResourceActionKey | number | `${number}`;
+export type ResourceActionApiList = ResourceActionApiValue[];
 
 export interface ResourceInteractionInfoApiResponse {
   readCount?: number;
@@ -27,6 +29,27 @@ export interface ResourceTagBindApiResponse {
   tags?: Record<string, ResourceTagInfoApiResponse | null | undefined>;
 }
 
+export type ResourceGroupTypeApiValue = 1 | 2 | 3 | '1' | '2' | '3';
+
+export interface ResourceGroupDisplayBaseApiResponse {
+  groupName?: string | null;
+  groupDesc?: string | null;
+  groupCoverUrl?: string | null;
+  groupType?: ResourceGroupTypeApiValue | null;
+}
+
+export interface ResourceGroupGrantedActionsApiResponse {
+  groupId: string;
+  groupInfo?: ResourceGroupDisplayBaseApiResponse | null;
+  grantedActions?: ResourceActionApiList | null;
+}
+
+export interface ResourceSpecifiedUserGrantedActionsApiResponse {
+  userId: string;
+  userInfo?: UserDisplayBaseApiResponse | null;
+  grantedActions?: ResourceActionApiList | null;
+}
+
 export interface ResourceItemApiResponse extends Omit<
   ResourceItem,
   | 'size'
@@ -39,11 +62,17 @@ export interface ResourceItemApiResponse extends Omit<
   | 'resourceIconType'
   | 'mainTagId'
   | 'linkTagIds'
+  | 'currentActions'
+  | 'overrideGrantedActions'
+  | 'specifiedUsersGrantedActions'
 > {
   size?: number;
-  ownerInfo: Omit<UserDisplayBase, 'identityType'> & { identityType?: UserIdentityTypeApiValue };
+  ownerInfo: UserDisplayBaseApiResponse;
   resourceInteractionInfo?: ResourceInteractionInfoApiResponse;
   tagBinds?: ResourceTagBindApiResponse[];
+  currentActions?: ResourceActionApiList | null;
+  overrideGrantedActions?: ResourceGroupGrantedActionsApiResponse[] | null;
+  specifiedUsersGrantedActions?: ResourceSpecifiedUserGrantedActionsApiResponse[] | null;
 }
 
 export interface ResourceListPageApiResponse {
@@ -79,7 +108,7 @@ export interface ChangeResourceTagsApiRequest {
 
 export interface ChangeResourceActionPermissionApiRequest {
   resourceId: string;
-  overrideGrantedActions?: ResourceActionKey[] | null;
+  overrideGrantedActions?: Record<string, ResourceActionKey[] | null> | null;
   specifiedUsersGrantedActions?: Record<string, ResourceActionKey[]> | null;
 }
 
@@ -172,7 +201,7 @@ export interface TagTreeResponse {
   taggedResourceGrantedActionsMask?: number;
   tagMountPermissionScope?: AccessControlScope;
   tagMountSpecifiedUsers?: string[];
-  grantedActions?: number[];
+  grantedActions?: ResourceActionApiList;
   parentId?: string;
   children?: TagTreeResponse[];
 }

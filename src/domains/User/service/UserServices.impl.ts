@@ -7,6 +7,8 @@ import type {
   FudanUISVerifyStatusData,
   InitiateUISVerifyRequest,
   IUserService,
+  ListUserSearchSuggestionsRequest,
+  SearchUsersRequest,
   SendEmailVerifyRequest,
   UpdateUserInfoRequest,
 } from './index.type';
@@ -17,6 +19,20 @@ type CachedUserSafe = Pick<User, 'id' | 'username' | 'nickname' | 'avatar' | 'id
 const getFullUserInfo = async (): Promise<UserAccountProfile> => {
   const data = await UserApi.getUserInfo();
   return UserServicesMap.mapAccountProfileFromApi(data);
+};
+
+const searchUsers = async (params: SearchUsersRequest) => {
+  const query = UserServicesMap.mapSearchUsersRequest(params);
+  if (!query.keyword) return [];
+  const data = await UserApi.searchUser(query);
+  return UserServicesMap.mapSearchUsersFromApi(data);
+};
+
+const listUserSearchSuggestions = async (params: ListUserSearchSuggestionsRequest) => {
+  const query = UserServicesMap.mapListUserSearchSuggestionsRequest(params);
+  if (query.keyword.length < 2) return [];
+  const data = await UserApi.listUserSearchSuggestions(query);
+  return UserServicesMap.mapSearchUsersFromApi(data);
 };
 
 const sendEmailVerify = async (params: SendEmailVerifyRequest): Promise<void> => {
@@ -82,6 +98,8 @@ export const createUserServices = (): IUserService => {
   return {
     getFullUserInfo,
     getUserInfo,
+    searchUsers,
+    listUserSearchSuggestions,
     updateUserInfo,
     sendEmailVerify,
     initiateUISVerify,

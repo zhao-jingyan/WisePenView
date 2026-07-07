@@ -34,7 +34,9 @@ const buildFrontendStates = ({
       key: 'workspace_open_resource',
       value: {
         resource_id: workspaceContext.resourceId,
-        editor_type: workspaceContext.editorType,
+        resource_type: workspaceContext.resourceType,
+        viewer: workspaceContext.viewer,
+        editor_type: workspaceContext.editorType ?? workspaceContext.viewer,
       },
     });
   }

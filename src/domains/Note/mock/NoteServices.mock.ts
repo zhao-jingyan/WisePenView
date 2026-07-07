@@ -63,11 +63,6 @@ export const NoteServicesMock: INoteService = {
   createNote,
   deleteNote,
   getNoteInfoDisplay,
-  getNotePermissionConfig: async () => ({
-    resourceId: '123',
-    overrideGrantedActions: null,
-    specifiedUsersGrantedActions: null,
-  }),
   getDrawIoLatestSnapshot,
   saveDrawIoSnapshot,
   forkNote,

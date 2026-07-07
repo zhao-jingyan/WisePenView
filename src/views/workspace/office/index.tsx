@@ -9,12 +9,14 @@ import {
   type WorkspaceLayoutConfig,
 } from '@/layouts/Workspace/WorkspaceOutletContext';
 import { parseErrorMessage } from '@/utils/error';
+import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
 import { Button } from '@heroui/react';
 import type { Config } from '@onlyoffice/doceditor-types';
 import { DocumentEditor } from '@onlyoffice/document-editor-react';
 import { useRequest } from 'ahooks';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import ResourcePermissionControl from '../_components/ResourcePermissionControl';
 import styles from './style.module.less';
 
 interface OfficeToolbarTitleProps {
@@ -24,8 +26,11 @@ interface OfficeToolbarTitleProps {
 
 interface OfficeLayoutConfigProps {
   children: ReactNode;
+  resourceId?: string;
   resourceName?: string;
   resourceType?: string;
+  ownerId?: string | null;
+  onPermissionSuccess?: () => void;
 }
 
 interface OfficeEditorHostProps {
@@ -93,7 +98,14 @@ function OfficeToolbarTitle({ resourceName, resourceType }: OfficeToolbarTitlePr
   );
 }
 
-function OfficeLayoutConfig({ children, resourceName, resourceType }: OfficeLayoutConfigProps) {
+function OfficeLayoutConfig({
+  children,
+  resourceId,
+  resourceName,
+  resourceType,
+  ownerId,
+  onPermissionSuccess,
+}: OfficeLayoutConfigProps) {
   const frameConfig = useMemo<WorkspaceLayoutConfig>(
     () => ({
       className: styles.container,
@@ -102,10 +114,18 @@ function OfficeLayoutConfig({ children, resourceName, resourceType }: OfficeLayo
             inlineTitle: (
               <OfficeToolbarTitle resourceName={resourceName} resourceType={resourceType} />
             ),
+            extra: resourceId ? (
+              <ResourcePermissionControl
+                resourceId={resourceId}
+                resourceType={WORKSPACE_RESOURCE_TYPE.FILE}
+                ownerId={ownerId}
+                onSuccess={onPermissionSuccess}
+              />
+            ) : undefined,
           }
         : {},
     }),
-    [resourceName, resourceType]
+    [onPermissionSuccess, ownerId, resourceId, resourceName, resourceType]
   );
   useWorkspaceLayoutConfig(frameConfig);
 
@@ -154,6 +174,7 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
     data,
     error,
     loading: isConfigLoading,
+    refresh: refreshOfficeData,
   } = useRequest(
     async () => {
       const [docInfo, editorConfig] = await Promise.all([
@@ -258,7 +279,13 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
   const documentServerUrl = resolveDocumentServerUrl(data.editorConfig);
 
   return (
-    <OfficeLayoutConfig resourceName={resourceName} resourceType={resourceType}>
+    <OfficeLayoutConfig
+      resourceId={data.docInfo.resourceInfo.resourceId || resourceId}
+      resourceName={resourceName}
+      resourceType={resourceType}
+      ownerId={data.docInfo.resourceInfo.ownerId}
+      onPermissionSuccess={refreshOfficeData}
+    >
       <div className={styles.content}>
         <OfficeEditorHost
           key={`${resourceId}-${data.editorConfig.sessionId ?? 'session'}`}

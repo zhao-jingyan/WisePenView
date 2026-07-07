@@ -34,4 +34,5 @@ export interface SkillDetail extends SkillSummary {
   fileCount: number;
   files: SkillFileNode[];
   isOwner: boolean;
+  ownerId?: string;
 }

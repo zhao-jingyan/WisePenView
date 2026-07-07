@@ -1,5 +1,6 @@
 import { DocumentApi } from '@/domains/Document/apis/DocumentApi';
 import { NoteApi } from '@/domains/Note/apis/NoteApi';
+import { SkillApi } from '@/domains/Skill/apis/SkillApi';
 import {
   useNewNoteStore,
   useNoteSelectionStore,
@@ -15,6 +16,7 @@ import type { ResourceInteractStats } from '../mapper/ResourceServices.map';
 import { ResourceServicesMap } from '../mapper/ResourceServices.map';
 import type {
   GetGroupResourceRequest,
+  GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
   InteractRateRequest,
   InteractToggleLikeRequest,
@@ -26,6 +28,7 @@ import type {
   SearchQueryRequest,
   SearchResultPage,
   UpdateResourceActionPermissionRequest,
+  UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,
 } from './index.type';
 
@@ -150,6 +153,43 @@ const updateResourceActionPermission = async (
   await ResourceItemApi.changeResourceActionPermission(request);
 };
 
+const updateResourcePermissionSubjects = async (
+  params: UpdateResourcePermissionSubjectsRequest
+): Promise<void> => {
+  const request = ResourceServicesMap.mapChangeResourceActionPermissionRequestFromSubjects(params);
+  await ResourceItemApi.changeResourceActionPermission(request);
+};
+
+const getPermissionResourceInfo = async (params: GetResourcePermissionOverviewRequest) => {
+  switch (params.resourceType) {
+    case 'note':
+    case 'drawio': {
+      const data = await NoteApi.getNoteInfo({ resourceId: params.resourceId });
+      return data.resourceInfo;
+    }
+    case 'file': {
+      const data = await DocumentApi.getDocInfo({ resourceId: params.resourceId });
+      return data.resourceInfo;
+    }
+    case 'skill': {
+      const data = await SkillApi.getSkillInfo({ resourceId: params.resourceId });
+      return (
+        data?.resourceInfo ?? { resourceId: params.resourceId, resourceName: '', ownerInfo: {} }
+      );
+    }
+    case 'agent':
+      throw new Error('暂不支持配置 Agent 资源权限');
+  }
+};
+
+const getResourcePermissionOverview = async (params: GetResourcePermissionOverviewRequest) => {
+  const resourceInfo = await getPermissionResourceInfo(params);
+  return ResourceServicesMap.mapResourcePermissionOverviewFromResourceItem(
+    resourceInfo,
+    params.resourceId
+  );
+};
+
 /** 获取当前用户点赞状态，供点赞组件薄层调用 */
 const getLikeStatus = async (resourceId: string): Promise<{ liked: boolean }> => {
   const res = await ResourceInteractApi.getUserInteractionRecord({ resourceId });
@@ -201,6 +241,8 @@ export const createResourceServices = (): IResourceService => ({
   updateResourceTags,
   mountResourcesToGroupTag,
   updateResourceActionPermission,
+  updateResourcePermissionSubjects,
+  getResourcePermissionOverview,
   getLikeStatus,
   getRate,
   interactToggleLike,

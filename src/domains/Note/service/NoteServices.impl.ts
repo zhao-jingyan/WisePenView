@@ -11,11 +11,9 @@ import type {
   ForkNoteResponse,
   GetDrawIoLatestSnapshotRequest,
   GetNoteInfoRequest,
-  GetNotePermissionConfigRequest,
   INoteService,
   ListNoteVersionsRequest,
   NoteInfoDisplayData,
-  NotePermissionConfig,
   NoteVersionListPage,
   SaveDrawIoSnapshotRequest,
   SyncTitleRequest,
@@ -36,16 +34,6 @@ const getNoteInfoDisplay = async (params: GetNoteInfoRequest): Promise<NoteInfoD
     throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_NOT_FOUND);
   }
   return NoteServicesMap.mapNoteInfoDisplayFromApi(noteInfoData);
-};
-
-const getNotePermissionConfig = async (
-  params: GetNotePermissionConfigRequest
-): Promise<NotePermissionConfig> => {
-  const noteInfoData = await NoteApi.getNoteInfo(params);
-  if (!noteInfoData?.resourceInfo) {
-    throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_NOT_FOUND);
-  }
-  return NoteServicesMap.mapNotePermissionConfigFromApi(noteInfoData, params.resourceId);
 };
 
 const getDrawIoLatestSnapshot = async (
@@ -87,7 +75,6 @@ export const createNoteServices = (deps: NoteServicesDeps): INoteService => {
     createNote,
     deleteNote,
     getNoteInfoDisplay,
-    getNotePermissionConfig,
     getDrawIoLatestSnapshot,
     saveDrawIoSnapshot,
     forkNote,

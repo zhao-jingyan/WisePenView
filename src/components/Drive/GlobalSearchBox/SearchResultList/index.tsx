@@ -3,7 +3,7 @@ import EntryIcon from '@/components/Icons/EntryIcon';
 import { useResourceService } from '@/domains';
 import type { SearchHitItem, SearchResultPage } from '@/domains/Resource';
 import { SEARCH_SCOPE } from '@/domains/Resource';
-import { useNavigateResource } from '@/hooks/useNavigateResource';
+import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useActiveDriveScopeStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
@@ -66,7 +66,7 @@ function SearchResultList({ keyword, onClose }: SearchResultListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   // 继承当前 Drive 的 groupId，避免搜索跳转后把侧边栏上下文切回个人空间
   const groupId = useActiveDriveScopeStore((state) => state.groupId);
-  const navigateResource = useNavigateResource(groupId);
+  const openInWorkspace = useOpenInWorkspace(groupId);
   const resourceService = useResourceService();
   const trimmed = keyword.trim();
 
@@ -116,7 +116,11 @@ function SearchResultList({ keyword, onClose }: SearchResultListProps) {
 
   const handleOpenHit = (item: SearchHitItem) => {
     onClose();
-    navigateResource(item.resourceId, { resourceType: item.resourceType });
+    openInWorkspace({
+      resourceId: item.resourceId,
+      resourceType: item.resourceType,
+      resourceName: item.resourceName,
+    });
   };
 
   useKeyPress(

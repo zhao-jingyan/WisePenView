@@ -4,6 +4,7 @@ export {
   TAG_RESOURCE_ACTION,
   TAG_VISIBILITY_MODE,
   actionsToPermissionCode,
+  coerceResourceActions,
   getResourceActionImpliedActions,
   getResourceActionImpliedMask,
   hasResourceAction,

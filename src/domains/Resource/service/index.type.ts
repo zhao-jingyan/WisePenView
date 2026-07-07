@@ -33,6 +33,11 @@ export interface IResourceService {
   updateResourceTags(params: UpdateResourceTagsRequest): Promise<void>;
   mountResourcesToGroupTag(params: MountResourcesToGroupTagRequest): Promise<void>;
   updateResourceActionPermission(params: UpdateResourceActionPermissionRequest): Promise<void>;
+  updateResourcePermissionSubjects(params: UpdateResourcePermissionSubjectsRequest): Promise<void>;
+  /** 获取 View 直接消费的资源权限概览 */
+  getResourcePermissionOverview(
+    params: GetResourcePermissionOverviewRequest
+  ): Promise<ResourcePermissionOverview>;
   /** 获取当前用户点赞状态，供点赞组件薄层调用 */
   getLikeStatus(resourceId: string): Promise<{ liked: boolean }>;
   /** 获取当前用户评分，供评分组件薄层调用 */
@@ -106,8 +111,55 @@ export interface MountResourcesToGroupTagRequest {
 /** 更新单个资源的动作权限配置 */
 export interface UpdateResourceActionPermissionRequest {
   resourceId: string;
-  overrideGrantedActions?: ResourceAction[] | null;
+  overrideGrantedActions?: Record<string, ResourceAction[] | null> | null;
   specifiedUsersGrantedActions?: Record<string, ResourceAction[]> | null;
+}
+
+export interface UpdateResourcePermissionSubjectsRequest {
+  resourceId: string;
+  subjects: ResourcePermissionSubject[];
+}
+
+export type ResourcePermissionResourceType = 'note' | 'drawio' | 'file' | 'skill' | 'agent';
+
+export interface GetResourcePermissionOverviewRequest {
+  resourceId: string;
+  resourceType: ResourcePermissionResourceType;
+}
+
+export type ResourcePermissionSubjectKind = 'owner' | 'group' | 'user';
+export type ResourcePermissionSource = 'owner' | 'tag' | 'resourceOverride' | 'specifiedUser';
+
+export interface ResourcePermissionActionOption {
+  action: ResourceAction;
+  key: string;
+  label: string;
+  supported: boolean;
+}
+
+export interface ResourcePermissionSubject {
+  id: string;
+  kind: ResourcePermissionSubjectKind;
+  source: ResourcePermissionSource;
+  name: string;
+  description?: string;
+  avatar?: string;
+  groupId?: string;
+  primaryTagId?: string;
+  userId?: string;
+  effectiveActions: ResourceAction[];
+  editableActions: ResourceAction[];
+  inheritedActions?: ResourceAction[];
+  readonly?: boolean;
+}
+
+export interface ResourcePermissionOverview {
+  resourceId: string;
+  resourceType?: string;
+  owner?: ResourcePermissionSubject;
+  subjects: ResourcePermissionSubject[];
+  supportedActions: ResourceAction[];
+  actionOptions: ResourcePermissionActionOption[];
 }
 
 /**

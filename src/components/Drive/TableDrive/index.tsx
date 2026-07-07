@@ -1,7 +1,9 @@
+import { DeleteNodeModal, MoveNodeModal, RenameNodeModal } from '@/components/Drive/Modals';
 import {
   FolderTable,
   type FolderTableBreadcrumbItem,
   type FolderTableColumn,
+  type FolderTableRowAction,
 } from '@/components/Table';
 import { resolveSelectedCount } from '@/components/Table/shared/TableBase/tableSelection';
 import { useDriveService } from '@/domains';
@@ -24,8 +26,10 @@ import {
 import {
   buildTrashFolderNodeId,
   getDriveNodeLabel,
+  isDriveActionTarget,
   resolveCurrentFolderTagId,
   resolveDriveScope,
+  type DriveActionTarget,
 } from '../common/driveComponentModel';
 import { useClickNode } from '../common/useClickNode';
 import type { DriveRow, DriveTableRow, TableDriveHandle, TableDriveProps } from './index.type';
@@ -60,6 +64,12 @@ const DRIVE_TABLE_COLUMNS: FolderTableColumn<DriveTableRow>[] = [
     allowsSorting: true,
     getSortValue: (row) => row.typeLabel,
     renderCell: (row) => (row.entryType === 'loading' ? '' : row.typeLabel),
+  },
+  {
+    id: 'actions',
+    label: '操作',
+    width: 'folderAction',
+    isActionColumn: true,
   },
 ];
 
@@ -124,6 +134,10 @@ function buildDriveTableRowMap(rows: DriveTableRow[]): Map<string, DriveTableRow
   return map;
 }
 
+function toDriveActionTarget(node: DriveNode): DriveActionTarget | null {
+  return isDriveActionTarget(node) ? node : null;
+}
+
 const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableDrive(
   { groupId, rootId, scope, actions, onTrashViewChange, onUploadSuccess, showToolbarTrash = true },
   ref
@@ -149,6 +163,9 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   const [batchEditMode, setBatchEditMode] = useState(false);
   const [batchSelectedKeys, setBatchSelectedKeys] = useState<Selection>(new Set());
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor | undefined>();
+  const [renameTarget, setRenameTarget] = useState<DriveActionTarget | null>(null);
+  const [moveTarget, setMoveTarget] = useState<DriveActionTarget | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DriveActionTarget | null>(null);
   const selectedNodeIdRef = useRef<string | null>(null);
   const selectedCommitFrameRef = useRef<number | null>(null);
   const selectedCommitTimerRef = useRef<number | null>(null);
@@ -186,6 +203,10 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     selectedNodeIdRef.current = null;
     scheduleSelectedNodeIdCommit(null);
   }, [scheduleSelectedNodeIdCommit]);
+
+  const refreshDrive = useCallback(() => {
+    refresh();
+  }, [refresh]);
 
   const handleEnterFolder = useCallback(
     (nodeId: string) => {
@@ -226,6 +247,23 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     setBatchEditMode(true);
     setBatchSelectedKeys(new Set());
   }, [handleClearSelection]);
+
+  const handleNodeActionSuccess = useCallback(() => {
+    handleClearSelection();
+    refreshDrive();
+  }, [handleClearSelection, refreshDrive]);
+
+  const handleOpenRename = useCallback((node: DriveActionTarget) => {
+    setRenameTarget(node);
+  }, []);
+
+  const handleOpenMove = useCallback((node: DriveActionTarget) => {
+    setMoveTarget(node);
+  }, []);
+
+  const handleOpenDelete = useCallback((node: DriveActionTarget) => {
+    setDeleteTarget(node);
+  }, []);
 
   const trashTagId = useTrashTagStore((state) => state.getTrashTagId(finalGroupId));
   const trashFolderNodeId = useMemo(
@@ -272,17 +310,22 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   const breadcrumbItems = useMemo(() => toBreadcrumbItems(pathNodes), [pathNodes]);
   const {
     showCreateMenu,
+    showUploadToGroup,
     showManagePermission,
     createMenuItems,
     handleCreateMenuSelect,
+    openUploadToGroup,
     openTagPermission,
+    openResourcePermission,
+    tagPermissionRefreshToken,
+    resourcePermissionRefreshToken,
     ModalHost,
   } = useTableDriveActions({
     currentNodeId,
     currentRows: rows,
     groupId: finalGroupId,
     actions,
-    refresh,
+    refresh: refreshDrive,
     onUploadSuccess,
     targetTagId,
     isTrashView,
@@ -298,8 +341,13 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
           <CreateMenu items={createMenuItems} onSelect={handleCreateMenuSelect} />
         ) : null}
         {showManagePermission ? (
-          <Button variant="secondary" size="sm" onPress={openTagPermission}>
+          <Button variant="secondary" size="sm" onPress={() => openTagPermission()}>
             标签权限管理
+          </Button>
+        ) : null}
+        {showUploadToGroup ? (
+          <Button variant="secondary" size="sm" onPress={openUploadToGroup}>
+            上传到小组
           </Button>
         ) : null}
         {showToolbarTrash ? (
@@ -332,9 +380,11 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       handleCreateMenuSelect,
       isTrashView,
       openTagPermission,
+      openUploadToGroup,
       openTrash,
       showCreateMenu,
       showManagePermission,
+      showUploadToGroup,
       showToolbarTrash,
     ]
   );
@@ -366,6 +416,53 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       handleClickNode(row.node);
     },
     [handleClickNode]
+  );
+
+  const resolveRowActions = useCallback(
+    (row: DriveTableRow): FolderTableRowAction<DriveTableRow>[] => {
+      const actionTarget = toDriveActionTarget(row.node);
+      if (!actionTarget) return [];
+
+      const openAction: FolderTableRowAction<DriveTableRow> =
+        row.node.type === 'folder'
+          ? {
+              key: 'enter',
+              label: '进入',
+              onPress: () => handleEnterFolder(row.node.id),
+            }
+          : {
+              key: 'open',
+              label: '打开',
+              onPress: () => handleClickNode(row.node),
+            };
+
+      const actions: FolderTableRowAction<DriveTableRow>[] = [openAction];
+
+      if (actionTarget.type !== 'link') {
+        actions.push({
+          key: 'rename',
+          label: '重命名',
+          onPress: () => handleOpenRename(actionTarget),
+        });
+      }
+
+      actions.push(
+        {
+          key: 'move',
+          label: '移动',
+          onPress: () => handleOpenMove(actionTarget),
+        },
+        {
+          key: 'delete',
+          label: '删除',
+          variant: 'danger',
+          onPress: () => handleOpenDelete(actionTarget),
+        }
+      );
+
+      return actions;
+    },
+    [handleClickNode, handleEnterFolder, handleOpenDelete, handleOpenMove, handleOpenRename]
   );
 
   const handleRowSelect = useCallback(
@@ -401,6 +498,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
             className={styles.table}
             sortDescriptor={sortDescriptor}
             onSortChange={setSortDescriptor}
+            rowActions={resolveRowActions}
             batchSelection={
               batchEditMode
                 ? {
@@ -417,15 +515,50 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
               batchEditMode={batchEditMode}
               batchSelectedCount={batchSelectedCount}
               groupId={finalGroupId}
+              canManageTagPermission={showManagePermission && !isTrashView}
+              tagPermissionRefreshToken={tagPermissionRefreshToken}
+              resourcePermissionRefreshToken={resourcePermissionRefreshToken}
               onEnter={handleEnterFolder}
               onOpen={handleClickNode}
-              onClear={handleClearSelection}
-              onRefresh={refresh}
+              onRename={handleOpenRename}
+              onMove={handleOpenMove}
+              onDelete={handleOpenDelete}
+              onManageTagPermission={openTagPermission}
+              onManageResourcePermission={openResourcePermission}
+              onTagPermissionChange={refreshDrive}
             />
           </div>
         </div>
       </div>
       {ModalHost}
+      <RenameNodeModal
+        isOpen={Boolean(renameTarget)}
+        node={renameTarget}
+        groupId={finalGroupId}
+        onOpenChange={(open) => {
+          if (!open) setRenameTarget(null);
+        }}
+        onSuccess={refreshDrive}
+      />
+      <MoveNodeModal
+        isOpen={Boolean(moveTarget)}
+        node={moveTarget}
+        rootId={finalRootId}
+        groupId={finalGroupId}
+        onOpenChange={(open) => {
+          if (!open) setMoveTarget(null);
+        }}
+        onSuccess={handleNodeActionSuccess}
+      />
+      <DeleteNodeModal
+        isOpen={Boolean(deleteTarget)}
+        node={deleteTarget}
+        groupId={finalGroupId}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onSuccess={handleNodeActionSuccess}
+      />
     </main>
   );
 });

@@ -1,20 +1,20 @@
 import DriveNav from '@/components/Drive/DriveNav';
+import {
+  getTagPermissionPresetValues,
+  resolveTagPermissionPresetKey,
+  TAG_PERMISSION_ACTION_ROWS,
+  TAG_PERMISSION_PRESETS,
+  TAG_PERMISSION_RESOURCE_STRATEGIES,
+  type TagPermissionPresetKey,
+} from '@/components/Drive/common/tagPermissionPreset';
 import { Empty, Spin } from '@/components/Feedback';
 import AppModal from '@/components/Overlay/AppModal';
-import SegmentedTabs from '@/components/SegmentedTabs';
-import { useDriveService, useGroupService, useTagService } from '@/domains';
-import type { DriveNode } from '@/domains/Drive';
+import { useTagService } from '@/domains';
 import { mapTagToFolderNode } from '@/domains/Drive/mapper/DriveServices.map';
-import type { GroupMember } from '@/domains/Group';
 import {
   ACCESS_CONTROL_SCOPE,
-  actionsToPermissionCode,
   getResourceActionImpliedActions,
-  getResourceActionImpliedMask,
-  hasResourceAction,
   normalizeResourceActions,
-  permissionCodeToActions,
-  TAG_RESOURCE_ACTION,
   type AccessControlScope,
   type TagResourceAction,
   type TagTreeNode,
@@ -23,6 +23,7 @@ import { useEffectForce } from '@/hooks/useEffectForce';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { Button, Checkbox, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
+import { Check } from 'lucide-react';
 import { useState } from 'react';
 import {
   resolveDriveScope,
@@ -33,48 +34,27 @@ import type { TagPermissionModalProps } from './index.type';
 import styles from './style.module.less';
 
 type TagPermissionFormValues = {
-  taggedResourceAclGrantScope?: AccessControlScope;
-  taggedResourceAclGrantSpecifiedUsers?: string[];
-  grantedActions?: TagResourceAction[];
-  tagMountPermissionScope?: AccessControlScope;
-  tagMountSpecifiedUsers?: string[];
+  taggedResourceAclGrantScope: AccessControlScope;
+  taggedResourceAclGrantSpecifiedUsers: string[];
+  tagMountPermissionScope: AccessControlScope;
+  tagMountSpecifiedUsers: string[];
+  grantedActions: TagResourceAction[];
 };
 
-const MEMBER_PAGE_SIZE = 200;
-
-const DEFAULT_FORM_VALUES: Required<TagPermissionFormValues> = {
+const DEFAULT_FORM_VALUES: TagPermissionFormValues = {
   taggedResourceAclGrantScope: ACCESS_CONTROL_SCOPE.ALL,
   taggedResourceAclGrantSpecifiedUsers: [],
-  grantedActions: [],
   tagMountPermissionScope: ACCESS_CONTROL_SCOPE.ALL,
   tagMountSpecifiedUsers: [],
+  grantedActions: [],
 };
 
-const isAclUserListMode = (mode?: AccessControlScope) =>
-  mode === ACCESS_CONTROL_SCOPE.WHITELIST || mode === ACCESS_CONTROL_SCOPE.BLACKLIST;
-
-const isMountUserListMode = (mode?: AccessControlScope) =>
-  mode === ACCESS_CONTROL_SCOPE.WHITELIST || mode === ACCESS_CONTROL_SCOPE.BLACKLIST;
-
-const getSelectableMembers = (members?: GroupMember[]) =>
-  (members ?? []).filter((m) => m.role !== 'ADMIN' && m.role !== 'OWNER');
-
-const buildSelectableMemberIdSet = (members: GroupMember[]) =>
-  new Set(members.map((m) => m.userId));
-
-const buildMemberOptions = (members: GroupMember[]) =>
-  members.map((member) => {
-    const nickname = member.nickname?.trim();
-    const realname = member.realname?.trim();
-    const label = nickname && realname ? `${nickname} (${realname})` : nickname || realname || '-';
-    return { label, value: member.userId };
-  });
-
-const filterSelectableUserIds = (ids: string[] | undefined, selectableMemberIdSet: Set<string>) => {
-  if (!ids || ids.length === 0) return [];
-  if (selectableMemberIdSet.size === 0) return ids;
-  return ids.filter((id) => selectableMemberIdSet.has(id));
-};
+const PRESET_SEGMENT_ITEMS = TAG_PERMISSION_PRESETS.filter((preset) => preset.values).map(
+  (preset) => ({
+    key: preset.key,
+    label: preset.label,
+  })
+) as Array<{ key: Exclude<TagPermissionPresetKey, 'custom'>; label: string }>;
 
 const buildSelectionFromTag = (tag: TagTreeNode, groupId?: string): DriveSelectionItem => {
   const scope = resolveDriveScope(groupId ? { type: 'group', groupId } : undefined).scope;
@@ -93,75 +73,32 @@ const buildSelectionFromTag = (tag: TagTreeNode, groupId?: string): DriveSelecti
   };
 };
 
-async function findFolderNodeIdByTagId(params: {
-  rootId: string;
-  groupId?: string;
-  tagId: string;
-  listNodeChildren: (nodeId: string, groupId?: string) => Promise<DriveNode[]>;
-}): Promise<string | undefined> {
-  const { rootId, groupId, tagId, listNodeChildren } = params;
-  const queue: string[] = [rootId];
-  const visited = new Set<string>();
+const buildFormFromTag = (tag: TagTreeNode): TagPermissionFormValues => ({
+  taggedResourceAclGrantScope: tag.taggedResourceAclGrantScope ?? ACCESS_CONTROL_SCOPE.ALL,
+  taggedResourceAclGrantSpecifiedUsers: tag.taggedResourceAclGrantSpecifiedUsers ?? [],
+  tagMountPermissionScope: tag.tagMountPermissionScope ?? ACCESS_CONTROL_SCOPE.ALL,
+  tagMountSpecifiedUsers: tag.tagMountSpecifiedUsers ?? [],
+  grantedActions: normalizeResourceActions(tag.grantedActions),
+});
 
-  while (queue.length > 0) {
-    const currentId = queue.shift();
-    if (!currentId || visited.has(currentId)) continue;
-    visited.add(currentId);
-
-    const children = await listNodeChildren(currentId, groupId);
-    for (const child of children) {
-      if (child.type !== 'folder') continue;
-      if (child.tagId === tagId) return child.id;
-      queue.push(child.id);
-    }
+const updateGrantedActions = (
+  currentActions: TagResourceAction[],
+  action: TagResourceAction,
+  checked: boolean
+): TagResourceAction[] => {
+  if (checked) {
+    return normalizeResourceActions([
+      ...currentActions,
+      ...getResourceActionImpliedActions(action),
+      action,
+    ]);
   }
-
-  return undefined;
-}
-
-type UserSelectionListProps = {
-  label: string;
-  loading: boolean;
-  options: Array<{ label: string; value: string }>;
-  value: string[];
-  onToggle: (userId: string, isSelected: boolean) => void;
-};
-
-function UserSelectionList({ label, loading, options, value, onToggle }: UserSelectionListProps) {
-  const selectedIdSet = new Set(value);
-
-  return (
-    <div className={styles.userSelectBlock}>
-      <div className={styles.selectHint}>{label}</div>
-      <div className={styles.userSelectList}>
-        {loading ? (
-          <div className={styles.userSelectLoading}>
-            <Spin size="small" />
-          </div>
-        ) : options.length === 0 ? (
-          <div className={styles.userSelectEmpty}>暂无可选用户</div>
-        ) : (
-          options.map((option) => (
-            <Checkbox
-              key={option.value}
-              isSelected={selectedIdSet.has(option.value)}
-              onChange={(isSelected) => onToggle(option.value, isSelected)}
-              variant="secondary"
-              className={styles.userSelectItem}
-            >
-              <Checkbox.Control>
-                <Checkbox.Indicator />
-              </Checkbox.Control>
-              <Checkbox.Content>
-                <span data-slot="label">{option.label}</span>
-              </Checkbox.Content>
-            </Checkbox>
-          ))
-        )}
-      </div>
-    </div>
+  return normalizeResourceActions(
+    currentActions.filter(
+      (item) => item !== action && !getResourceActionImpliedActions(item).includes(action)
+    )
   );
-}
+};
 
 const TagPermissionModal = ({
   isOpen,
@@ -171,135 +108,44 @@ const TagPermissionModal = ({
   onSuccess,
 }: TagPermissionModalProps) => {
   const tagService = useTagService();
-  const driveService = useDriveService();
-  const groupService = useGroupService();
   const [permissionForm, setPermissionForm] =
-    useState<Required<TagPermissionFormValues>>(DEFAULT_FORM_VALUES);
+    useState<TagPermissionFormValues>(DEFAULT_FORM_VALUES);
   const [selectedTag, setSelectedTag] = useState<DriveSelectionItem | null>(null);
   const [tagRefreshSeed, setTagRefreshSeed] = useState(0);
-  const [tagInitialIds, setTagInitialIds] = useState<string[] | undefined>(undefined);
-  const [hoveredAction, setHoveredAction] = useState<TagResourceAction | null>(null);
   const [initialTagLoading, setInitialTagLoading] = useState(false);
-
-  const { run: runResolveInitialNode } = useRequest(
-    async (tagId: string): Promise<string[] | undefined> => {
-      const nodeId = await findFolderNodeIdByTagId({
-        rootId: resolveDriveScope(groupId ? { type: 'group', groupId } : undefined).rootId,
-        groupId,
-        tagId,
-        listNodeChildren: (nodeId, currentGroupId) =>
-          driveService.listNodeChildren({ nodeId, groupId: currentGroupId }),
-      });
-      return nodeId ? [nodeId] : undefined;
-    },
-    {
-      manual: true,
-      onSuccess: (ids) => {
-        setTagInitialIds(ids);
-      },
-      onError: (err) => {
-        toast.danger(parseErrorMessage(err));
-        setTagInitialIds(undefined);
-      },
-    }
-  );
-
-  const {
-    data: members,
-    loading: membersLoading,
-    run: runFetchMembers,
-  } = useRequest(
-    async (): Promise<GroupMember[]> => {
-      if (!groupId) return [];
-      const allMembers: GroupMember[] = [];
-      let page = 1;
-      let total = 0;
-      do {
-        const { members: pageMembers, total: nextTotal } = await groupService.fetchGroupMembers(
-          groupId,
-          page,
-          MEMBER_PAGE_SIZE
-        );
-        allMembers.push(...pageMembers);
-        total = nextTotal;
-        page += 1;
-      } while (allMembers.length < total);
-      return allMembers;
-    },
-    {
-      manual: true,
-      onSuccess: (list) => {
-        const nextSelectableMemberIdSet = buildSelectableMemberIdSet(getSelectableMembers(list));
-        if (nextSelectableMemberIdSet.size === 0) return;
-        setPermissionForm((prev) => ({
-          ...prev,
-          taggedResourceAclGrantSpecifiedUsers: filterSelectableUserIds(
-            prev.taggedResourceAclGrantSpecifiedUsers,
-            nextSelectableMemberIdSet
-          ),
-          tagMountSpecifiedUsers: filterSelectableUserIds(
-            prev.tagMountSpecifiedUsers,
-            nextSelectableMemberIdSet
-          ),
-        }));
-      },
-      onError: (err) => {
-        toast.danger(parseErrorMessage(err));
-      },
-    }
-  );
-
-  const selectableMembers = getSelectableMembers(members);
-  const selectableMemberIdSet = buildSelectableMemberIdSet(selectableMembers);
-  const memberOptions = buildMemberOptions(selectableMembers);
-  const actionHighlightSet = hoveredAction
-    ? new Set([hoveredAction, ...getResourceActionImpliedActions(hoveredAction)])
-    : null;
   const showTagTree = !initialTagId;
+  const selectedPresetKey = resolveTagPermissionPresetKey({
+    taggedResourceAclGrantScope: permissionForm.taggedResourceAclGrantScope,
+    tagMountPermissionScope: permissionForm.tagMountPermissionScope,
+    grantedActions: permissionForm.grantedActions,
+  });
 
   const resetPermissionForm = () => {
     setPermissionForm(DEFAULT_FORM_VALUES);
   };
 
-  const updatePermissionForm = <K extends keyof Required<TagPermissionFormValues>>(
-    key: K,
-    value: Required<TagPermissionFormValues>[K]
-  ) => {
-    setPermissionForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const toggleUserSelection = (
-    key: 'taggedResourceAclGrantSpecifiedUsers' | 'tagMountSpecifiedUsers',
-    userId: string,
-    isSelected: boolean
-  ) => {
-    setPermissionForm((prev) => {
-      const current = prev[key];
-      return {
-        ...prev,
-        [key]: isSelected ? [...current, userId] : current.filter((id) => id !== userId),
-      };
+  const applyPresetToForm = (presetKey: TagPermissionPresetKey) => {
+    const presetValues = getTagPermissionPresetValues(presetKey);
+    if (!presetValues) return;
+    setPermissionForm({
+      taggedResourceAclGrantScope: presetValues.taggedResourceAclGrantScope,
+      taggedResourceAclGrantSpecifiedUsers: [],
+      tagMountPermissionScope: presetValues.tagMountPermissionScope,
+      tagMountSpecifiedUsers: [],
+      grantedActions: presetValues.grantedActions,
     });
   };
 
   const applyTagToForm = (tag: TagTreeNode) => {
-    setPermissionForm({
-      taggedResourceAclGrantScope: tag.taggedResourceAclGrantScope ?? ACCESS_CONTROL_SCOPE.ALL,
-      taggedResourceAclGrantSpecifiedUsers: filterSelectableUserIds(
-        tag.taggedResourceAclGrantSpecifiedUsers,
-        selectableMemberIdSet
-      ),
-      grantedActions: normalizeResourceActions(tag.grantedActions),
-      tagMountPermissionScope: tag.tagMountPermissionScope ?? ACCESS_CONTROL_SCOPE.ALL,
-      tagMountSpecifiedUsers: filterSelectableUserIds(
-        tag.tagMountSpecifiedUsers,
-        selectableMemberIdSet
-      ),
-    });
+    setPermissionForm(buildFormFromTag(tag));
   };
 
   const resolveTagById = async (tagId: string): Promise<TagTreeNode | undefined> => {
-    let nextTag = tagService.getTagById(tagId, groupId);
+    let nextTag = tagService.getRawTagById(tagId, groupId) ?? tagService.getTagById(tagId, groupId);
+    if (!nextTag) {
+      await tagService.getRawTagTree(groupId);
+      nextTag = tagService.getRawTagById(tagId, groupId);
+    }
     if (!nextTag) {
       await tagService.getTagTree(groupId);
       nextTag = tagService.getTagById(tagId, groupId);
@@ -308,18 +154,14 @@ const TagPermissionModal = ({
   };
 
   const resolveCachedTag = (tagId: string): TagTreeNode | undefined =>
-    tagService.getTagById(tagId, groupId);
+    tagService.getRawTagById(tagId, groupId) ?? tagService.getTagById(tagId, groupId);
 
   const handleModalShow = () => {
     setSelectedTag(null);
     resetPermissionForm();
     setTagRefreshSeed((prev) => prev + 1);
-    setTagInitialIds(undefined);
     void (async () => {
       if (initialTagId) {
-        if (showTagTree) {
-          runResolveInitialNode(initialTagId);
-        }
         setInitialTagLoading(true);
         const cachedTag = resolveCachedTag(initialTagId);
         if (cachedTag) {
@@ -327,16 +169,14 @@ const TagPermissionModal = ({
           applyTagToForm(cachedTag);
         }
         try {
-          await tagService.getTagTree(groupId);
-        } catch (err) {
-          toast.danger(parseErrorMessage(err));
-        }
-        try {
+          await tagService.getRawTagTree(groupId);
           const tag = await resolveTagById(initialTagId);
           if (tag) {
             setSelectedTag(buildSelectionFromTag(tag, groupId));
             applyTagToForm(tag);
           }
+        } catch (err) {
+          toast.danger(parseErrorMessage(err));
         } finally {
           setInitialTagLoading(false);
         }
@@ -344,32 +184,23 @@ const TagPermissionModal = ({
       }
 
       try {
-        await tagService.getTagTree(groupId);
+        await tagService.getRawTagTree(groupId);
       } catch (err) {
         toast.danger(parseErrorMessage(err));
       }
     })();
-    if (groupId) {
-      runFetchMembers();
-    }
   };
 
   const handleTagChange = (nodes: DriveSelectionItem[]) => {
     const nextFolder = nodes.find((node) => node.kind === 'folder');
-    if (!nextFolder) {
+    if (!nextFolder?.tagId) {
       setSelectedTag(null);
       resetPermissionForm();
       return;
     }
-    if (!nextFolder.tagId) {
-      setSelectedTag(null);
-      resetPermissionForm();
-      return;
-    }
-    const selectedTagId = nextFolder.tagId;
     setSelectedTag(nextFolder);
     const fillFormByTag = async () => {
-      const nextTag = await resolveTagById(selectedTagId);
+      const nextTag = await resolveTagById(nextFolder.tagId!);
       if (!nextTag) {
         resetPermissionForm();
         return;
@@ -383,29 +214,19 @@ const TagPermissionModal = ({
     async (values: TagPermissionFormValues) => {
       if (!selectedTag?.tagId) return;
       if (!groupId) throw createClientError(FRONTEND_CLIENT_ERROR.GROUP_ID_REQUIRED);
-      const taggedResourceAclGrantScope =
-        values.taggedResourceAclGrantScope ?? ACCESS_CONTROL_SCOPE.ALL;
-      const tagMountPermissionScope = values.tagMountPermissionScope ?? ACCESS_CONTROL_SCOPE.ALL;
       await tagService.updateTag({
         groupId,
         targetTagId: selectedTag.tagId,
-        taggedResourceAclGrantScope,
-        taggedResourceAclGrantSpecifiedUsers: filterSelectableUserIds(
-          values.taggedResourceAclGrantSpecifiedUsers,
-          selectableMemberIdSet
-        ),
-        grantedActions: normalizeResourceActions(values.grantedActions),
-        tagMountPermissionScope,
-        tagMountSpecifiedUsers: filterSelectableUserIds(
-          values.tagMountSpecifiedUsers,
-          selectableMemberIdSet
-        ),
+        taggedResourceAclGrantScope: values.taggedResourceAclGrantScope,
+        taggedResourceAclGrantSpecifiedUsers: values.taggedResourceAclGrantSpecifiedUsers,
+        grantedActions: values.grantedActions,
+        tagMountPermissionScope: values.tagMountPermissionScope,
+        tagMountSpecifiedUsers: values.tagMountSpecifiedUsers,
       });
     },
     {
       manual: true,
       onSuccess: () => {
-        toast.success('标签权限已更新');
         onSuccess?.();
         onOpenChange(false);
       },
@@ -415,54 +236,112 @@ const TagPermissionModal = ({
     }
   );
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedTag?.tagId) {
-      toast.warning('请先选择标签');
       return;
     }
     runSavePermission(permissionForm);
   };
 
-  // TODO: refactor
-  useEffectForce(() => {
-    if (!isOpen) return;
-    handleModalShow();
-  }, [isOpen]);
-
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       if (saving) return;
       setSelectedTag(null);
-      setTagInitialIds(undefined);
       setInitialTagLoading(false);
       resetPermissionForm();
       onOpenChange(false);
     }
   };
 
-  const selectedActions = normalizeResourceActions(permissionForm.grantedActions);
-  const selectedActionSet = new Set(selectedActions);
-
   const handleActionToggle = (action: TagResourceAction, checked: boolean) => {
-    const current = permissionForm.grantedActions;
-    if (checked) {
-      const nextCode = actionsToPermissionCode([...current, action]);
-      updatePermissionForm('grantedActions', permissionCodeToActions(nextCode));
-      return;
-    }
-    const next = normalizeResourceActions(
-      current.filter((item) => !hasResourceAction(getResourceActionImpliedMask(item), action))
+    setPermissionForm((prev) => ({
+      ...prev,
+      grantedActions: updateGrantedActions(prev.grantedActions, action, checked),
+    }));
+  };
+
+  /**
+   * 弹窗每次打开都需要重新读取目标标签权限；这里依赖 Overlay 打开时机，
+   * 不能改成事件回调之外的请求，否则顶部入口选择标签与右栏直达标签会不同步。
+   */
+  useEffectForce(() => {
+    if (!isOpen) return;
+    handleModalShow();
+  }, [isOpen]);
+
+  const renderPermissionTable = () => {
+    const actionSet = new Set(permissionForm.grantedActions);
+    return (
+      <div className={styles.permissionTableShell}>
+        <table className={styles.permissionTable}>
+          <thead>
+            <tr>
+              <th className={styles.actionHeader}>权限动作</th>
+              <th className={styles.toggleHeader}>开启</th>
+              {TAG_PERMISSION_RESOURCE_STRATEGIES.map((strategy) => (
+                <th key={strategy.key} className={styles.resourceApplicabilityHeader}>
+                  {strategy.label}适用
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {TAG_PERMISSION_ACTION_ROWS.map((row) => {
+              const selected = actionSet.has(row.action);
+              return (
+                <tr key={row.key}>
+                  <th className={styles.actionCell}>{row.label}</th>
+                  <td
+                    className={styles.permissionToggleCell}
+                    onClick={() => handleActionToggle(row.action, !selected)}
+                  >
+                    <Checkbox
+                      aria-label={row.label}
+                      isSelected={selected}
+                      onChange={(checked) => handleActionToggle(row.action, checked)}
+                      variant="secondary"
+                      className={styles.permissionCheckbox}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <Checkbox.Content className={styles.permissionCheckboxContent}>
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                      </Checkbox.Content>
+                    </Checkbox>
+                  </td>
+                  {TAG_PERMISSION_RESOURCE_STRATEGIES.map((strategy) => {
+                    const supported = row.supportedStrategyKeys.includes(strategy.key);
+                    return (
+                      <td
+                        key={strategy.key}
+                        className={supported ? styles.supportedCell : styles.unsupportedCell}
+                      >
+                        {supported ? (
+                          <Check size={14} aria-hidden="true" className={styles.supportedIcon} />
+                        ) : (
+                          <span aria-hidden="true">-</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     );
-    updatePermissionForm('grantedActions', next);
   };
 
   return (
     <AppModal
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
-      title="标签权限管理"
+      title="标签权限表格"
       size="lg"
       containerClassName={styles.modalContainer}
+      dialogClassName={styles.modalDialog}
       isDismissable={!saving}
       actions={
         <>
@@ -491,7 +370,6 @@ const TagPermissionModal = ({
                 selectableTypes={['folder']}
                 multiple={false}
                 refreshTrigger={tagRefreshSeed}
-                initialSelectedIds={tagInitialIds}
                 onChange={handleTagChange}
               />
             </div>
@@ -508,122 +386,33 @@ const TagPermissionModal = ({
               </div>
             ) : (
               <>
-                <div className={styles.sectionCard}>
-                  <div className={styles.sectionTitle}>访问权限下发模式</div>
-                  <SegmentedTabs
-                    ariaLabel="访问权限下发模式"
-                    className={styles.modeRow}
-                    items={ACCESS_CONTROL_SCOPE.options.map((item) => ({
-                      key: item.value,
-                      label: item.label,
-                    }))}
-                    selectedKey={permissionForm.taggedResourceAclGrantScope}
-                    onSelectionChange={(taggedResourceAclGrantScope) =>
-                      setPermissionForm((prev) => ({
-                        ...prev,
-                        taggedResourceAclGrantScope,
-                        taggedResourceAclGrantSpecifiedUsers: isAclUserListMode(
-                          taggedResourceAclGrantScope
-                        )
-                          ? filterSelectableUserIds(
-                              prev.taggedResourceAclGrantSpecifiedUsers,
-                              selectableMemberIdSet
-                            )
-                          : [],
-                      }))
-                    }
-                  />
-
-                  {isAclUserListMode(permissionForm.taggedResourceAclGrantScope) ? (
-                    <UserSelectionList
-                      label="选择用户（不含管理员）"
-                      loading={membersLoading}
-                      options={memberOptions}
-                      value={permissionForm.taggedResourceAclGrantSpecifiedUsers}
-                      onToggle={(userId, isSelected) =>
-                        toggleUserSelection(
-                          'taggedResourceAclGrantSpecifiedUsers',
-                          userId,
-                          isSelected
-                        )
-                      }
-                    />
-                  ) : null}
-
-                  <div className={styles.actionGroup}>
-                    <div className={styles.selectHint}>访问权限</div>
-                    <div className={styles.actionList}>
-                      {TAG_RESOURCE_ACTION.options.map((item) => {
-                        const action = item.value as TagResourceAction;
-                        const isHighlighted = actionHighlightSet?.has(action);
-                        return (
-                          <div
-                            key={item.key}
-                            className={
-                              isHighlighted
-                                ? `${styles.actionItem} ${styles.actionItemHighlight}`
-                                : styles.actionItem
-                            }
-                            onMouseEnter={() => setHoveredAction(action)}
-                            onMouseLeave={() => setHoveredAction(null)}
-                          >
-                            <Checkbox
-                              isSelected={selectedActionSet.has(action)}
-                              onChange={(isSelected) => handleActionToggle(action, isSelected)}
-                              variant="secondary"
-                            >
-                              <Checkbox.Control>
-                                <Checkbox.Indicator />
-                              </Checkbox.Control>
-                              <Checkbox.Content>
-                                <span data-slot="label" className={styles.actionLabel}>
-                                  {item.label}
-                                </span>
-                              </Checkbox.Content>
-                            </Checkbox>
-                          </div>
-                        );
-                      })}
-                    </div>
+                <div className={styles.presetBar}>
+                  <span className={styles.presetLabel}>基于预设</span>
+                  <div className={styles.presetButtons} role="group" aria-label="基于预设">
+                    {PRESET_SEGMENT_ITEMS.map((preset) => (
+                      <Button
+                        key={preset.key}
+                        variant={selectedPresetKey === preset.key ? 'primary' : 'secondary'}
+                        size="sm"
+                        onPress={() => applyPresetToForm(preset.key)}
+                      >
+                        {preset.label}
+                      </Button>
+                    ))}
                   </div>
+                  <span className={styles.currentPreset}>
+                    当前：
+                    {TAG_PERMISSION_PRESETS.find((preset) => preset.key === selectedPresetKey)
+                      ?.label ?? '自定义'}
+                  </span>
                 </div>
-
-                <div className={styles.sectionCard}>
-                  <div className={styles.sectionTitle}>资源挂载权限</div>
-                  <SegmentedTabs
-                    ariaLabel="资源挂载权限"
-                    className={styles.modeRow}
-                    items={ACCESS_CONTROL_SCOPE.options.map((item) => ({
-                      key: item.value,
-                      label: item.label,
-                    }))}
-                    selectedKey={permissionForm.tagMountPermissionScope}
-                    onSelectionChange={(tagMountPermissionScope) =>
-                      setPermissionForm((prev) => ({
-                        ...prev,
-                        tagMountPermissionScope,
-                        tagMountSpecifiedUsers: isMountUserListMode(tagMountPermissionScope)
-                          ? filterSelectableUserIds(
-                              prev.tagMountSpecifiedUsers,
-                              selectableMemberIdSet
-                            )
-                          : [],
-                      }))
-                    }
-                  />
-
-                  {isMountUserListMode(permissionForm.tagMountPermissionScope) ? (
-                    <UserSelectionList
-                      label="选择用户（不含管理员）"
-                      loading={membersLoading}
-                      options={memberOptions}
-                      value={permissionForm.tagMountSpecifiedUsers}
-                      onToggle={(userId, isSelected) =>
-                        toggleUserSelection('tagMountSpecifiedUsers', userId, isSelected)
-                      }
-                    />
-                  ) : null}
-                </div>
+                {initialTagLoading ? (
+                  <div className={styles.emptyState}>
+                    <Spin size="large" tip="加载标签权限中" />
+                  </div>
+                ) : (
+                  renderPermissionTable()
+                )}
               </>
             )}
           </div>

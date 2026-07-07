@@ -1,5 +1,6 @@
 import {
   actionsToPermissionCode,
+  coerceResourceActions,
   getResourceActionImpliedActions,
   getResourceActionImpliedMask,
   hasResourceAction,
@@ -35,7 +36,7 @@ export const ACCESS_CONTROL_SCOPE = createEnum([
 export type AccessControlScope = EnumValue<typeof ACCESS_CONTROL_SCOPE>;
 export type AccessControlScopeKey = EnumKey<typeof ACCESS_CONTROL_SCOPE>;
 
-/** 资源访问权限（兼容旧 Tag 导出名，根定义位于 Resource domain） */
+/** 标签资源策略复用 Resource 领域的动作枚举，避免维护第二套权限位定义。 */
 export const TAG_RESOURCE_ACTION = RESOURCE_ACTION;
 
 export type TagResourceAction = ResourceAction;
@@ -43,6 +44,7 @@ export type TagResourceActionKey = EnumKey<typeof TAG_RESOURCE_ACTION>;
 
 export {
   actionsToPermissionCode,
+  coerceResourceActions,
   getResourceActionImpliedActions,
   getResourceActionImpliedMask,
   hasResourceAction,

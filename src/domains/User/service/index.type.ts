@@ -1,4 +1,4 @@
-import type { User, UserAccountProfile } from '../entity/user';
+import type { User, UserAccountProfile, UserSearchUser } from '../entity/user';
 import type { DegreeLevel } from '../enum';
 
 /** UserService 接口：供依赖注入使用 */
@@ -7,6 +7,10 @@ export interface IUserService {
   getFullUserInfo(): Promise<UserAccountProfile>;
   /** 展示用精简用户信息，带缓存，供侧栏等展示 */
   getUserInfo(options?: { forceRefresh?: boolean }): Promise<User>;
+  /** 精确搜索可见用户：完整用户名或邮箱 */
+  searchUsers(params: SearchUsersRequest): Promise<UserSearchUser[]>;
+  /** 当前用户小组范围内的用户搜索补全 */
+  listUserSearchSuggestions(params: ListUserSearchSuggestionsRequest): Promise<UserSearchUser[]>;
   /** 更新用户信息（内部两次 PUT：userInfo + userProfile）；不拉 GET，需全量时由调用方自行 getFullUserInfo */
   updateUserInfo(params: UpdateUserInfoRequest): Promise<void>;
   sendEmailVerify(params: SendEmailVerifyRequest): Promise<void>;
@@ -27,6 +31,15 @@ export interface ConfirmEmailVerifyRequest {
 /** 发起邮箱验证请求参数（后端接受完整邮箱字符串） */
 export interface SendEmailVerifyRequest {
   email: string;
+}
+
+export interface SearchUsersRequest {
+  keyword: string;
+}
+
+export interface ListUserSearchSuggestionsRequest {
+  keyword: string;
+  size?: number;
 }
 
 /** 发起复旦 UIS 认证请求参数（OpenAPI：query uisAccount、uisPassword） */

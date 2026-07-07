@@ -161,11 +161,11 @@ const router = createBrowserRouter([
         element: <WorkspaceLayout />,
         children: [
           {
-            path: 'workspace/:editorType',
+            path: 'workspace/:resourceType',
             element: <WorkspaceResourceView />,
           },
           {
-            path: 'workspace/:editorType/:id',
+            path: 'workspace/:resourceType/:resourceId',
             element: <WorkspaceResourceView />,
           },
         ],

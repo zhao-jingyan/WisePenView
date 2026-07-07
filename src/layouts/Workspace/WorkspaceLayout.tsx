@@ -2,12 +2,16 @@ import ChatPanel from '@/components/ChatPanel';
 import DriveSidebar from '@/layouts/_common/Sidebar/DriveSidebar';
 import { useChatPanelResize } from '@/layouts/_common/useChatPanelResize';
 import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
-import { normalizeResourceEditorType } from '@/utils/navigation/workspaceRoute';
+import {
+  normalizeWorkspaceResourceType,
+  resolveLegacyEditorTypeForWorkspace,
+  resolveWorkspaceViewer,
+} from '@/utils/navigation/workspaceRoute';
 import { useUpdateEffect } from 'ahooks';
 import clsx from 'clsx';
 import { Bot } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
-import { Outlet, useMatch } from 'react-router-dom';
+import { Outlet, useLocation, useMatch } from 'react-router-dom';
 import WorkspaceFrame from './_common/WorkspaceFrame';
 import WorkspaceHeader from './_common/WorkspaceHeader';
 import styles from './WorkspaceLayout.module.less';
@@ -24,15 +28,42 @@ function WorkspaceLayout() {
   const hasSessionId = Boolean(currentSessionId);
   const shouldRenderChatPanel = hasSessionId || chatPanelDraftOpen;
   const safeChatPanelCollapsed = !shouldRenderChatPanel || chatPanelCollapsed;
-  const resourceRouteMatch = useMatch('/app/workspace/:editorType/:id');
+  const location = useLocation();
+  const resourceRouteMatch = useMatch('/app/workspace/:resourceType/:resourceId');
+  const resourceListRouteMatch = useMatch('/app/workspace/:resourceType');
   const { rootRef, chatResizeGuideRef, chatPanelWidth, chatResizing, onResizeStart } =
     useChatPanelResize();
+  const routeContext = useMemo(() => {
+    const rawResourceType =
+      resourceRouteMatch?.params.resourceType ?? resourceListRouteMatch?.params.resourceType;
+    const resourceId = resourceRouteMatch?.params.resourceId;
+    const resourceType = normalizeWorkspaceResourceType(rawResourceType);
+    const viewer = resolveWorkspaceViewer({
+      resourceType: rawResourceType,
+      viewer: new URLSearchParams(location.search).get('viewer') ?? undefined,
+    });
+
+    return {
+      resourceId,
+      resourceType,
+      viewer,
+    };
+  }, [
+    location.search,
+    resourceListRouteMatch?.params.resourceType,
+    resourceRouteMatch?.params.resourceId,
+    resourceRouteMatch?.params.resourceType,
+  ]);
   const routeChatContext = useMemo(() => {
-    const resourceId = resourceRouteMatch?.params.id;
-    const editorType = normalizeResourceEditorType(resourceRouteMatch?.params.editorType);
-    if (!resourceId || !editorType) return undefined;
-    return { resourceId, editorType };
-  }, [resourceRouteMatch?.params.editorType, resourceRouteMatch?.params.id]);
+    const { resourceId, resourceType, viewer } = routeContext;
+    if (!resourceId || !resourceType) return undefined;
+    return {
+      resourceId,
+      resourceType,
+      viewer,
+      editorType: resolveLegacyEditorTypeForWorkspace(resourceType, viewer),
+    };
+  }, [routeContext]);
   const chatWorkspaceContext = layoutConfig.chatContext ?? routeChatContext;
 
   useUpdateEffect(() => {
@@ -68,10 +99,11 @@ function WorkspaceLayout() {
 
   const outletContext = useMemo<WorkspaceOutletContextValue>(
     () => ({
+      routeContext,
       setLayoutConfig,
       resetLayoutConfig,
     }),
-    [resetLayoutConfig, setLayoutConfig]
+    [resetLayoutConfig, routeContext, setLayoutConfig]
   );
 
   const renderHeader = () => {
@@ -91,10 +123,7 @@ function WorkspaceLayout() {
         className={clsx(styles.leftSider, sidebarCollapsed && styles.leftSiderCollapsed)}
         aria-label="资源侧边栏"
       >
-        <DriveSidebar
-          collapsed={sidebarCollapsed}
-          onToggle={handleSidebarToggle}
-        />
+        <DriveSidebar collapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
       </aside>
 
       <div className={styles.middleLayout}>

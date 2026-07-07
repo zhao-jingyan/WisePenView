@@ -1,10 +1,9 @@
 import type { Group, GroupMemberList, GroupResConfig } from '@/domains/Group';
 import { GROUP_FILE_ORG_LOGIC, ROLE } from '@/domains/Group';
 import {
+  coerceResourceActions,
   resourceActionsToApiKeys,
-  TAG_RESOURCE_ACTION,
   type TagResourceAction,
-  type TagResourceActionKey,
 } from '@/domains/Tag';
 import { normalizeUserDisplayBaseFromApi } from '@/domains/User/mapper/userEnum.mapper';
 import type { EnumKey } from '@/utils/enum';
@@ -76,13 +75,8 @@ const mapGroupFromApi = (raw: GroupApiResponse): Group => {
   };
 };
 
-const mapTagResourceActionFromApi = (value: TagResourceActionKey): TagResourceAction | undefined =>
-  TAG_RESOURCE_ACTION.options.find((item) => item.key === value)?.value;
-
-const mapDefaultMemberActionsFromApi = (actions?: TagResourceActionKey[]): TagResourceAction[] =>
-  (actions ?? [])
-    .map(mapTagResourceActionFromApi)
-    .filter((value): value is TagResourceAction => value != null);
+const mapDefaultMemberActionsFromApi = (actions?: unknown[]): TagResourceAction[] =>
+  coerceResourceActions(actions);
 
 const mapFetchGroupListRequest = (params: FetchGroupListRequest): ListGroupApiRequest => ({
   groupRoleFilter: params.groupRoleFilter,

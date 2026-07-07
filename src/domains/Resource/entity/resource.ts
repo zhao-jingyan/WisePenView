@@ -47,8 +47,8 @@ export interface ResourceItem {
   /** 当前用户对该资源已生效的权限动作（详情接口返回） */
   currentActions?: ResourceAction[] | null;
   // ---- 权限配置字段 ----
-  /** 资源级覆盖权限，仅 owner 查询资源详情时返回 */
-  overrideGrantedActions?: ResourceAction[] | null;
+  /** 资源级组覆盖权限，key 为 groupId，仅 owner 查询资源详情时返回 */
+  overrideGrantedActions?: Record<string, ResourceAction[]> | null;
   /** 指定用户资源权限，key 为 userId，仅 owner 查询资源详情时返回 */
   specifiedUsersGrantedActions?: Record<string, ResourceAction[]> | null;
   // ---- 互动字段 ----

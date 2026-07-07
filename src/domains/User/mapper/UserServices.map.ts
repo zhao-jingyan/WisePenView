@@ -1,4 +1,4 @@
-import type { User, UserAccountProfile } from '@/domains/User';
+import type { User, UserAccountProfile, UserSearchUser } from '@/domains/User';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import type {
   ChangeUserInfoApiRequest,
@@ -7,11 +7,16 @@ import type {
   GetUserInfoApiResponse,
   InitiateEmailVerifyApiRequest,
   InitiateFudanUISVerifyApiRequest,
+  ListUserSearchSuggestionsApiRequest,
+  SearchUserApiRequest,
+  UserSearchUserApiResponse,
 } from '../apis/UserApi.type';
 import type {
   ConfirmEmailVerifyRequest,
   FudanUISVerifyStatusData,
   InitiateUISVerifyRequest,
+  ListUserSearchSuggestionsRequest,
+  SearchUsersRequest,
   SendEmailVerifyRequest,
   UpdateUserInfoRequest,
 } from '../service/index.type';
@@ -21,6 +26,7 @@ import {
   normalizeDegreeLevelFromApi,
   normalizeIdentityTypeFromApi,
   normalizeSexFromApi,
+  normalizeUserDisplayBaseFromApi,
   normalizeUserStatusFromApi,
 } from './userEnum.mapper';
 
@@ -64,6 +70,32 @@ const mapUserSafeFromAccountProfile = (data: UserAccountProfile): CachedUserSafe
   avatar: data.userInfo.avatar,
   identityType: data.userInfo.identityType,
 });
+
+const mapSearchUsersRequest = (params: SearchUsersRequest): SearchUserApiRequest => ({
+  keyword: params.keyword.trim(),
+});
+
+const mapListUserSearchSuggestionsRequest = (
+  params: ListUserSearchSuggestionsRequest
+): ListUserSearchSuggestionsApiRequest => ({
+  keyword: params.keyword.trim(),
+  ...(params.size == null ? {} : { size: params.size }),
+});
+
+const mapSearchUserFromApi = (data: UserSearchUserApiResponse): UserSearchUser => {
+  const displayInfo = normalizeUserDisplayBaseFromApi(data);
+  return {
+    userId: normalizeId(data.userId),
+    username: data.username,
+    nickname: displayInfo?.nickname,
+    realName: displayInfo?.realName,
+    avatar: displayInfo?.avatar,
+    identityType: displayInfo?.identityType,
+  };
+};
+
+const mapSearchUsersFromApi = (data: UserSearchUserApiResponse[]): UserSearchUser[] =>
+  data.map(mapSearchUserFromApi);
 
 const mapSendEmailVerifyRequest = (
   params: SendEmailVerifyRequest
@@ -136,6 +168,9 @@ const mapUpdateUserInfoRequests = (
 export const UserServicesMap = {
   mapAccountProfileFromApi,
   mapUserSafeFromAccountProfile,
+  mapSearchUsersRequest,
+  mapListUserSearchSuggestionsRequest,
+  mapSearchUsersFromApi,
   mapSendEmailVerifyRequest,
   mapInitiateUISVerifyRequest,
   mapFudanUISVerifyStatusFromApi,

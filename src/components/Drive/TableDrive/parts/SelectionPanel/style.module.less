@@ -102,6 +102,95 @@
   .tableSubtleScrollbar();
 }
 
+.permissionSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-light);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.sectionTitleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-width: 0;
+  color: var(--foreground);
+}
+
+.sectionTitle {
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.permissionSummary {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  overflow-wrap: anywhere;
+}
+
+.permissionWarning {
+  padding: var(--space-xs);
+  border: 1px solid color-mix(in srgb, var(--warning) 34%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  color: var(--foreground);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  overflow-wrap: anywhere;
+}
+
+.permissionPresetList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+  padding: var(--space-2xs);
+  border: 1px solid var(--border-light);
+  border-radius: var(--table-inner-radius, var(--radius-lg));
+  background: var(--surface);
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.presetContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.presetTitle {
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-sm);
+}
+
+.presetDescription {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 .fieldLabel {
   color: var(--muted);
   font-size: var(--font-size-xs);

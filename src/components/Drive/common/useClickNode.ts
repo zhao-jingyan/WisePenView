@@ -1,5 +1,5 @@
 import type { DriveNode } from '@/domains/Drive';
-import { useNavigateResource } from '@/hooks/useNavigateResource';
+import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useCallback } from 'react';
 
 export interface UseClickNodeParams {
@@ -15,20 +15,24 @@ export interface UseClickNodeParams {
  * - resource / link：交由 navigateResource 处理跳转与 scope 写入
  */
 export const useClickNode = ({ enterFolder, groupId }: UseClickNodeParams) => {
-  const navigateResource = useNavigateResource(groupId);
+  const openInWorkspace = useOpenInWorkspace(groupId);
 
-  return useCallback((node: DriveNode) => {
-    if (node.type === 'root' || node.type === 'folder') {
-      enterFolder(node.id);
-      return;
-    }
-    if (node.type === 'loading') {
-      return;
-    }
-    if (!node.resourceId) return;
-    navigateResource(node.resourceId, {
-      resourceType: node.resourceType,
-      resourceName: node.title,
-    });
-  }, [enterFolder, navigateResource]);
+  return useCallback(
+    (node: DriveNode) => {
+      if (node.type === 'root' || node.type === 'folder') {
+        enterFolder(node.id);
+        return;
+      }
+      if (node.type === 'loading') {
+        return;
+      }
+      if (!node.resourceId) return;
+      openInWorkspace({
+        resourceId: node.resourceId,
+        resourceType: node.resourceType,
+        resourceName: node.title,
+      });
+    },
+    [enterFolder, openInWorkspace]
+  );
 };

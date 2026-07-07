@@ -7,14 +7,27 @@ import type {
   InitiateEmailVerifyApiRequest,
   InitiateFudanUISVerifyApiRequest,
   ListTransactionsApiRequest,
+  ListUserSearchSuggestionsApiRequest,
   RedeemVoucherApiRequest,
+  SearchUserApiRequest,
   TransferTokenBetweenGroupAndUserApiRequest,
+  UserSearchUserApiResponse,
 } from './UserApi.type';
 
 /** User API: /user/* */
 
 function getUserInfo(): Promise<GetUserInfoApiResponse> {
   return apiGet('/user/getUserInfo');
+}
+
+function searchUser(req: SearchUserApiRequest): Promise<UserSearchUserApiResponse[]> {
+  return apiGet('/user/searchUser', { params: req });
+}
+
+function listUserSearchSuggestions(
+  req: ListUserSearchSuggestionsApiRequest
+): Promise<UserSearchUserApiResponse[]> {
+  return apiGet('/user/listUserSearchSuggestions', { params: req });
 }
 
 function initiateEmailVerify(req: InitiateEmailVerifyApiRequest): Promise<void> {
@@ -43,6 +56,8 @@ function changeUserProfile(req: ChangeUserProfileApiRequest): Promise<void> {
 
 export const UserApi = {
   getUserInfo,
+  searchUser,
+  listUserSearchSuggestions,
   initiateEmailVerify,
   initiateFudanUISVerify,
   checkFudanUISVerify,

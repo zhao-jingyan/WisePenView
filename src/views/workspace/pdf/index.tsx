@@ -5,10 +5,12 @@ import { useDocumentService, useResourceService } from '@/domains';
 import { RESOURCE_TYPE } from '@/domains/Resource';
 import { useWorkspaceLayoutConfig } from '@/layouts/Workspace/WorkspaceOutletContext';
 import { parseErrorMessage } from '@/utils/error';
+import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
 import { Button } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import ResourcePermissionControl from '../_components/ResourcePermissionControl';
 import styles from './style.module.less';
 
 interface PdfToolbarTitleProps {
@@ -29,11 +31,21 @@ function PdfToolbarTitle({ resourceName, resourceType }: PdfToolbarTitleProps) {
 
 interface PdfLayoutConfigProps {
   children: ReactNode;
+  resourceId?: string;
   resourceName?: string;
   resourceType?: string;
+  ownerId?: string | null;
+  onPermissionSuccess?: () => void;
 }
 
-function PdfLayoutConfig({ children, resourceName, resourceType }: PdfLayoutConfigProps) {
+function PdfLayoutConfig({
+  children,
+  resourceId,
+  resourceName,
+  resourceType,
+  ownerId,
+  onPermissionSuccess,
+}: PdfLayoutConfigProps) {
   const frameConfig = useMemo(
     () => ({
       className: styles.container,
@@ -42,10 +54,18 @@ function PdfLayoutConfig({ children, resourceName, resourceType }: PdfLayoutConf
             inlineTitle: (
               <PdfToolbarTitle resourceName={resourceName} resourceType={resourceType} />
             ),
+            extra: resourceId ? (
+              <ResourcePermissionControl
+                resourceId={resourceId}
+                resourceType={WORKSPACE_RESOURCE_TYPE.FILE}
+                ownerId={ownerId}
+                onSuccess={onPermissionSuccess}
+              />
+            ) : undefined,
           }
         : {},
     }),
-    [resourceName, resourceType]
+    [onPermissionSuccess, ownerId, resourceId, resourceName, resourceType]
   );
   useWorkspaceLayoutConfig(frameConfig);
 
@@ -64,6 +84,7 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
     data: docInfo,
     error: docInfoError,
     loading: isDocInfoLoading,
+    refresh: refreshDocInfo,
   } = useRequest(
     async () => {
       return await documentService.getDocInfo(resourceId as string);
@@ -171,8 +192,11 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
   if (viewerError) {
     return (
       <PdfLayoutConfig
+        resourceId={docInfo.resourceInfo.resourceId || resourceId}
         resourceName={docInfo.resourceInfo.resourceName}
         resourceType={docInfo.resourceInfo.resourceType}
+        ownerId={docInfo.resourceInfo.ownerId}
+        onPermissionSuccess={refreshDocInfo}
       >
         <div className={styles.middleOverlay}>
           <div className={styles.middleOverlayInner}>
@@ -194,8 +218,11 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
 
   return (
     <PdfLayoutConfig
+      resourceId={docInfo.resourceInfo.resourceId || resourceId}
       resourceName={docInfo.resourceInfo.resourceName}
       resourceType={docInfo.resourceInfo.resourceType}
+      ownerId={docInfo.resourceInfo.ownerId}
+      onPermissionSuccess={refreshDocInfo}
     >
       <div className={styles.content}>
         <div className={styles.root}>

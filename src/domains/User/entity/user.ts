@@ -19,6 +19,12 @@ export interface UserDisplayBase {
   identityType?: number;
 }
 
+/** 用户搜索结果：用于选择接收人、协作者等轻量用户选择场景。 */
+export interface UserSearchUser extends UserDisplayBase {
+  userId: string;
+  username: string;
+}
+
 export interface UserAccountInfo {
   nickname?: string;
   realName?: string;

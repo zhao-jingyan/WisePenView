@@ -133,6 +133,7 @@ function mapSkillDetail(params: {
     status: mapStatus(params.bundle?.status),
     updatedAt: '',
     creatorId: ownerId,
+    ownerId,
     fileCount: files.length,
     files,
     isOwner: Boolean(params.currentUserId && ownerId === params.currentUserId),
