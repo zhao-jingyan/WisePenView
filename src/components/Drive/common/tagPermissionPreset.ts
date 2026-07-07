@@ -1,6 +1,5 @@
 import {
   ACCESS_CONTROL_SCOPE,
-  actionsToPermissionCode,
   normalizeResourceActions,
   TAG_RESOURCE_ACTION,
   type AccessControlScope,
@@ -149,8 +148,26 @@ const PRESET_VALUES_BY_KEY = Object.fromEntries(
   ])
 ) as Partial<Record<TagPermissionPresetKey, TagPermissionPresetValues>>;
 
-const normalizeCode = (actions: TagResourceAction[] | undefined): number =>
-  actionsToPermissionCode(normalizeResourceActions(actions));
+const createActionSet = (actions: TagResourceAction[] | undefined): Set<TagResourceAction> =>
+  new Set(normalizeResourceActions(actions));
+
+const isSameActionSet = (
+  left: TagResourceAction[] | undefined,
+  right: TagResourceAction[] | undefined
+): boolean => {
+  const leftSet = createActionSet(left);
+  const rightSet = createActionSet(right);
+  if (leftSet.size !== rightSet.size) return false;
+  return [...leftSet].every((action) => rightSet.has(action));
+};
+
+const isPresetValuesMatched = (
+  presetValues: TagPermissionPresetValues,
+  values: Partial<TagPermissionPresetValues>
+): boolean =>
+  presetValues.taggedResourceAclGrantScope === values.taggedResourceAclGrantScope &&
+  presetValues.tagMountPermissionScope === values.tagMountPermissionScope &&
+  isSameActionSet(presetValues.grantedActions, values.grantedActions);
 
 export const getTagPermissionPresetValues = (
   key: TagPermissionPresetKey
@@ -163,14 +180,9 @@ export const getTagPermissionPresetOption = (
 export const resolveTagPermissionPresetKey = (
   values: Partial<TagPermissionPresetValues>
 ): TagPermissionPresetKey => {
-  const actionCode = normalizeCode(values.grantedActions);
   const matchedPreset = TAG_PERMISSION_PRESETS.find((preset) => {
     if (!preset.values) return false;
-    return (
-      preset.values.taggedResourceAclGrantScope === values.taggedResourceAclGrantScope &&
-      preset.values.tagMountPermissionScope === values.tagMountPermissionScope &&
-      normalizeCode(preset.values.grantedActions) === actionCode
-    );
+    return isPresetValuesMatched(preset.values, values);
   });
   return matchedPreset?.key ?? 'custom';
 };

@@ -119,6 +119,7 @@ function GroupDetail() {
                   canCreateNote: groupDisplayConfig.canCreateTag,
                   canCreateDrawio: groupDisplayConfig.canCreateTag,
                   canUploadDocument: groupDisplayConfig.canCreateTag,
+                  canUploadToGroup: groupDisplayConfig.canCreateTag,
                   canManageTagPermission: groupDisplayConfig.canManageTag,
                 },
               }}

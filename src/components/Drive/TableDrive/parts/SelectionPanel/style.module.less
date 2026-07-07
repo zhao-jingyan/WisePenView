@@ -137,13 +137,19 @@
   white-space: nowrap;
 }
 
-.sectionAction {
-  flex-shrink: 0;
-  min-height: 28px;
-}
-
 .permissionSummary {
   color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  overflow-wrap: anywhere;
+}
+
+.permissionWarning {
+  padding: var(--space-xs);
+  border: 1px solid color-mix(in srgb, var(--warning) 34%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  color: var(--foreground);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-xs);
   overflow-wrap: anywhere;
@@ -154,6 +160,13 @@
   flex-direction: column;
   gap: var(--space-2xs);
   min-width: 0;
+  padding: var(--space-2xs);
+  border: 1px solid var(--border-light);
+  border-radius: var(--table-inner-radius, var(--radius-lg));
+  background: var(--surface);
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease;
 }
 
 .presetContent {

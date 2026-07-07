@@ -17,9 +17,12 @@ import type {
 } from '../apis/ResourceApi.type';
 import {
   coerceResourceActions,
+  filterSupportedResourcePermissionActions,
+  getSupportedResourcePermissionActions,
   normalizeResourceActions,
   normalizeSearchResourceType,
   RESOURCE_ACTION,
+  RESOURCE_PERMISSION_ACTION_ORDER,
   resourceActionsToApiKeys,
   TAG_QUERY_LOGIC_MODE,
   type ResourceAction,
@@ -40,11 +43,6 @@ import type {
 import { resolveResourceIconType } from '../utils/resolveResourceIconType';
 
 const PERSONAL_GROUP_PREFIX = 'p_';
-const NOTE_LIKE_RESOURCE_TYPES = new Set(['note', 'drawio']);
-const AI_ASSET_RESOURCE_TYPES = new Set(['skill', 'agent']);
-const RESOURCE_PERMISSION_ACTION_ORDER = RESOURCE_ACTION.options.map(
-  (item) => item.value as ResourceAction
-);
 const isPersonalGroupId = (groupId?: string): boolean =>
   groupId?.startsWith(PERSONAL_GROUP_PREFIX) ?? false;
 
@@ -414,28 +412,6 @@ const mapResourcePermissionConfigFromResourceItem = (
   };
 };
 
-const getSupportedPermissionActions = (resourceType?: string): ResourceAction[] => {
-  const normalizedType = resourceType?.trim().toLowerCase();
-  const unsupportedActions = new Set<ResourceAction>();
-
-  if (NOTE_LIKE_RESOURCE_TYPES.has(normalizedType ?? '')) {
-    unsupportedActions.add(RESOURCE_ACTION.LOAD);
-    unsupportedActions.add(RESOURCE_ACTION.DOWNLOAD_WATERMARK);
-    unsupportedActions.add(RESOURCE_ACTION.DOWNLOAD_ORIGINAL);
-  }
-
-  if (normalizedType === 'drawio') {
-    unsupportedActions.add(RESOURCE_ACTION.COMMENT);
-    unsupportedActions.add(RESOURCE_ACTION.INLINE_COMMENT);
-  }
-
-  if (!AI_ASSET_RESOURCE_TYPES.has(normalizedType ?? '')) {
-    unsupportedActions.add(RESOURCE_ACTION.LOAD);
-  }
-
-  return RESOURCE_PERMISSION_ACTION_ORDER.filter((action) => !unsupportedActions.has(action));
-};
-
 const mapPermissionActionOptions = (
   supportedActions: ResourceAction[]
 ): ResourcePermissionActionOption[] => {
@@ -445,16 +421,6 @@ const mapPermissionActionOptions = (
     label: RESOURCE_ACTION.labels[action] ?? String(action),
     supported: true,
   }));
-};
-
-const filterSupportedActions = (
-  actions: ResourceAction[] | null | undefined,
-  supportedActions: ResourceAction[]
-): ResourceAction[] => {
-  const supportedSet = new Set(supportedActions);
-  return normalizeResourceActions(actions ?? undefined).filter((action) =>
-    supportedSet.has(action)
-  );
 };
 
 const resolveOwnerName = (ownerInfo: UserDisplayBase | undefined, ownerId?: string): string =>
@@ -469,9 +435,12 @@ const mapResourcePermissionOverviewFromResourceItem = (
   const resourceInfo = normalizeResourceItem(raw);
   const ownerInfo = normalizeOwnerInfo(resourceInfo.ownerInfo);
   const resourceId = resourceInfo.resourceId || fallbackResourceId;
-  const supportedActions = getSupportedPermissionActions(resourceInfo.resourceType);
+  const supportedActions = getSupportedResourcePermissionActions(resourceInfo.resourceType);
   const actionOptions = mapPermissionActionOptions(supportedActions);
-  const ownerActions = filterSupportedActions(RESOURCE_PERMISSION_ACTION_ORDER, supportedActions);
+  const ownerActions = filterSupportedResourcePermissionActions(
+    RESOURCE_PERMISSION_ACTION_ORDER,
+    supportedActions
+  );
   const subjects: ResourcePermissionSubject[] = [];
   const owner: ResourcePermissionSubject = {
     id: `owner:${resourceInfo.ownerId || resourceId}`,
@@ -530,7 +499,7 @@ const mapResourcePermissionOverviewFromResourceItem = (
   }
 
   for (const [groupId, actions] of Object.entries(visibleOverrideGrantedActions)) {
-    const filteredActions = filterSupportedActions(actions, supportedActions);
+    const filteredActions = filterSupportedResourcePermissionActions(actions, supportedActions);
     const primaryTag = primaryTagByGroupId.get(groupId);
     const groupInfo = overrideGroupInfoById[groupId];
     subjects.push({
@@ -552,7 +521,7 @@ const mapResourcePermissionOverviewFromResourceItem = (
   }
 
   for (const [userId, actions] of Object.entries(specifiedUsersGrantedActions ?? {})) {
-    const filteredActions = filterSupportedActions(actions, supportedActions);
+    const filteredActions = filterSupportedResourcePermissionActions(actions, supportedActions);
     const userInfo = specifiedUserInfoById[userId];
     subjects.push({
       id: `user:${userId}:specified`,

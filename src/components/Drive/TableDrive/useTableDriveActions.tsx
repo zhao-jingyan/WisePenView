@@ -1,8 +1,10 @@
 import {
   NewFolderNodeModal,
+  ResourcePermissionModal,
   TagPermissionModal,
   UploadDocumentModal,
   UploadFileToGroupModal,
+  type ResourcePermissionModalTarget,
 } from '@/components/Drive/Modals';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import { useDocumentService, useNoteService, useResourceService } from '@/domains';
@@ -36,7 +38,9 @@ export interface UseTableDriveActionsReturn {
   handleCreateMenuSelect: (id: CreateMenuItem['id']) => void;
   openUploadToGroup: () => void;
   openTagPermission: (tagId?: string) => void;
+  openResourcePermission: (target: ResourcePermissionModalTarget) => void;
   tagPermissionRefreshToken: number;
+  resourcePermissionRefreshToken: number;
   ModalHost: ReactElement;
 }
 
@@ -72,6 +76,9 @@ export function useTableDriveActions({
   const [tagPermissionOpen, setTagPermissionOpen] = useState(false);
   const [tagPermissionTagId, setTagPermissionTagId] = useState<string>();
   const [tagPermissionRefreshToken, setTagPermissionRefreshToken] = useState(0);
+  const [resourcePermissionTarget, setResourcePermissionTarget] =
+    useState<ResourcePermissionModalTarget | null>(null);
+  const [resourcePermissionRefreshToken, setResourcePermissionRefreshToken] = useState(0);
   const [drawioModalOpen, setDrawioModalOpen] = useState(false);
   const [drawioName, setDrawioName] = useState('未命名图表');
 
@@ -205,6 +212,19 @@ export function useTableDriveActions({
             onSuccess={() => setTagPermissionRefreshToken((prev) => prev + 1)}
           />
         ) : null}
+        {groupId && resourcePermissionTarget ? (
+          <ResourcePermissionModal
+            isOpen={Boolean(resourcePermissionTarget)}
+            groupId={groupId}
+            target={resourcePermissionTarget}
+            onOpenChange={(open) => {
+              if (!open) {
+                setResourcePermissionTarget(null);
+              }
+            }}
+            onSuccess={() => setResourcePermissionRefreshToken((prev) => prev + 1)}
+          />
+        ) : null}
         <AppFormDialog
           isOpen={drawioModalOpen}
           onOpenChange={setDrawioModalOpen}
@@ -231,6 +251,7 @@ export function useTableDriveActions({
       handleUploadSuccess,
       newFolderOpen,
       refresh,
+      resourcePermissionTarget,
       runCreateDrawio,
       targetTagId,
       tagPermissionOpen,
@@ -260,6 +281,10 @@ export function useTableDriveActions({
   const openTagPermission = useCallback((tagId?: string) => {
     setTagPermissionTagId(tagId);
     setTagPermissionOpen(true);
+  }, []);
+
+  const openResourcePermission = useCallback((target: ResourcePermissionModalTarget) => {
+    setResourcePermissionTarget(target);
   }, []);
 
   const handleCreateNote = useCallback(() => {
@@ -349,7 +374,9 @@ export function useTableDriveActions({
     handleCreateMenuSelect,
     openUploadToGroup,
     openTagPermission,
+    openResourcePermission,
     tagPermissionRefreshToken,
+    resourcePermissionRefreshToken,
     ModalHost,
   };
 }

@@ -112,7 +112,12 @@ const RESOURCE_ACTION_IMPLIED_MASK: Record<ResourceAction, number> = {
     RESOURCE_ACTION.COMMENT | RESOURCE_ACTION.VIEW | RESOURCE_ACTION.DISCOVER,
 };
 
-const RESOURCE_ACTION_ORDER = RESOURCE_ACTION.options.map((item) => item.value as ResourceAction);
+export const RESOURCE_PERMISSION_ACTION_ORDER = RESOURCE_ACTION.options.map(
+  (item) => item.value as ResourceAction
+);
+
+const NOTE_LIKE_RESOURCE_TYPES = new Set(['note', 'drawio']);
+const AI_ASSET_RESOURCE_TYPES = new Set(['skill', 'agent']);
 
 export const getResourceActionImpliedMask = (action: ResourceAction): number =>
   RESOURCE_ACTION_IMPLIED_MASK[action] ?? action;
@@ -160,7 +165,55 @@ export const coerceResourceActions = (raw?: unknown[] | null): ResourceAction[] 
 
 export const normalizeResourceActions = (actions?: ResourceAction[]): ResourceAction[] => {
   const normalized = permissionCodeToActions(actionsToPermissionCode(actions));
-  return RESOURCE_ACTION_ORDER.filter((value) => normalized.includes(value));
+  return RESOURCE_PERMISSION_ACTION_ORDER.filter((value) => normalized.includes(value));
+};
+
+/** 按资源类型过滤配置面板可展示和可写入的权限动作。 */
+export const getSupportedResourcePermissionActions = (resourceType?: string): ResourceAction[] => {
+  const normalizedType = resourceType?.trim().toLowerCase();
+  const unsupportedActions = new Set<ResourceAction>();
+
+  if (NOTE_LIKE_RESOURCE_TYPES.has(normalizedType ?? '')) {
+    unsupportedActions.add(RESOURCE_ACTION.LOAD);
+    unsupportedActions.add(RESOURCE_ACTION.DOWNLOAD_WATERMARK);
+    unsupportedActions.add(RESOURCE_ACTION.DOWNLOAD_ORIGINAL);
+  }
+
+  if (normalizedType === 'drawio') {
+    unsupportedActions.add(RESOURCE_ACTION.COMMENT);
+    unsupportedActions.add(RESOURCE_ACTION.INLINE_COMMENT);
+  }
+
+  if (!AI_ASSET_RESOURCE_TYPES.has(normalizedType ?? '')) {
+    unsupportedActions.add(RESOURCE_ACTION.LOAD);
+  }
+
+  return RESOURCE_PERMISSION_ACTION_ORDER.filter((action) => !unsupportedActions.has(action));
+};
+
+export const filterSupportedResourcePermissionActions = (
+  actions: ResourceAction[] | null | undefined,
+  supportedActions: ResourceAction[]
+): ResourceAction[] => {
+  const supportedActionSet = new Set(supportedActions);
+  return normalizeResourceActions(actions ?? undefined).filter((action) =>
+    supportedActionSet.has(action)
+  );
+};
+
+export const areResourcePermissionActionsEqual = (
+  left: ResourceAction[] | null | undefined,
+  right: ResourceAction[] | null | undefined,
+  supportedActions?: ResourceAction[]
+): boolean => {
+  const normalize = (actions: ResourceAction[] | null | undefined): ResourceAction[] =>
+    supportedActions
+      ? filterSupportedResourcePermissionActions(actions, supportedActions)
+      : normalizeResourceActions(actions ?? undefined);
+  const leftActions = normalize(left);
+  const rightActions = normalize(right);
+  if (leftActions.length !== rightActions.length) return false;
+  return leftActions.every((action) => rightActions.includes(action));
 };
 
 export const resourceActionsInclude = (

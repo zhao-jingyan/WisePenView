@@ -92,6 +92,9 @@ export const mapTagToFolderNode = (
     tagId: tag.tagId,
     name: getFolderName(tag.tagName),
     description: tag.tagDesc,
+    taggedResourceAclGrantScope: tag.taggedResourceAclGrantScope,
+    tagMountPermissionScope: tag.tagMountPermissionScope,
+    grantedActions: tag.grantedActions,
     childrenIds: [],
   };
 };

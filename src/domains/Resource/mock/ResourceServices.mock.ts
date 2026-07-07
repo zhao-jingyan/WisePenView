@@ -7,7 +7,6 @@ import type {
   IResourceService,
   RemoveResourcesRequest,
   RenameResourceRequest,
-  ResourceAction,
   ResourceItem,
   ResourceListPage,
   ResourcePermissionConfig,
@@ -16,7 +15,12 @@ import type {
   SearchResultPage,
   UpdateResourcePermissionSubjectsRequest,
 } from '@/domains/Resource';
-import { resolveResourceIconType, RESOURCE_ACTION } from '@/domains/Resource';
+import {
+  filterSupportedResourcePermissionActions,
+  getSupportedResourcePermissionActions,
+  resolveResourceIconType,
+  RESOURCE_ACTION,
+} from '@/domains/Resource';
 import {
   useNewNoteStore,
   useNoteSelectionStore,
@@ -27,41 +31,6 @@ import mockdata from './mockdata.json';
 import { simulateGlobalSearch } from './searchMockData';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const NOTE_LIKE_RESOURCE_TYPES = new Set(['note', 'drawio']);
-const AI_ASSET_RESOURCE_TYPES = new Set(['skill', 'agent']);
-const RESOURCE_PERMISSION_ACTION_ORDER = RESOURCE_ACTION.options.map(
-  (item) => item.value as ResourceAction
-);
-
-const getSupportedPermissionActions = (resourceType?: string): ResourceAction[] => {
-  const normalizedType = resourceType?.trim().toLowerCase();
-  const unsupportedActions = new Set<ResourceAction>();
-
-  if (NOTE_LIKE_RESOURCE_TYPES.has(normalizedType ?? '')) {
-    unsupportedActions.add(RESOURCE_ACTION.LOAD);
-    unsupportedActions.add(RESOURCE_ACTION.DOWNLOAD_WATERMARK);
-    unsupportedActions.add(RESOURCE_ACTION.DOWNLOAD_ORIGINAL);
-  }
-
-  if (normalizedType === 'drawio') {
-    unsupportedActions.add(RESOURCE_ACTION.COMMENT);
-    unsupportedActions.add(RESOURCE_ACTION.INLINE_COMMENT);
-  }
-
-  if (!AI_ASSET_RESOURCE_TYPES.has(normalizedType ?? '')) {
-    unsupportedActions.add(RESOURCE_ACTION.LOAD);
-  }
-
-  return RESOURCE_PERMISSION_ACTION_ORDER.filter((action) => !unsupportedActions.has(action));
-};
-
-const filterSupportedActions = (
-  actions: ResourceAction[],
-  supportedActions: ResourceAction[]
-): ResourceAction[] => {
-  const supportedActionSet = new Set(supportedActions);
-  return actions.filter((action) => supportedActionSet.has(action));
-};
 
 const toResourceItem = (
   item: Omit<ResourceItem, 'ownerInfo'> & { ownerInfo?: ResourceItem['ownerInfo'] }
@@ -271,16 +240,16 @@ const getResourcePermissionOverview = async (
   );
   const resourceId = params.resourceId;
   const resourceType = params.resourceType;
-  const supportedActions = getSupportedPermissionActions(resourceType);
-  const tagActions = filterSupportedActions(
+  const supportedActions = getSupportedResourcePermissionActions(resourceType);
+  const tagActions = filterSupportedResourcePermissionActions(
     [RESOURCE_ACTION.DISCOVER, RESOURCE_ACTION.VIEW, RESOURCE_ACTION.EDIT],
     supportedActions
   );
-  const overrideActions = filterSupportedActions(
+  const overrideActions = filterSupportedResourcePermissionActions(
     [RESOURCE_ACTION.DISCOVER, RESOURCE_ACTION.VIEW],
     supportedActions
   );
-  const specifiedUserActions = filterSupportedActions(
+  const specifiedUserActions = filterSupportedResourcePermissionActions(
     [
       RESOURCE_ACTION.DISCOVER,
       RESOURCE_ACTION.VIEW,

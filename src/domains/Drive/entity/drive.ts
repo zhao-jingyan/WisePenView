@@ -1,4 +1,5 @@
 import type { ResourceIconType } from '@/domains/Resource';
+import type { AccessControlScope, TagResourceAction } from '@/domains/Tag';
 
 export type DriveNodeType = 'root' | 'folder' | 'resource' | 'link' | 'loading';
 
@@ -38,6 +39,9 @@ interface FolderNode extends DriveNodeBase {
   tagId: string;
   name: string;
   description?: string;
+  taggedResourceAclGrantScope?: AccessControlScope;
+  tagMountPermissionScope?: AccessControlScope;
+  grantedActions?: TagResourceAction[];
   childrenIds: string[];
 }
 
