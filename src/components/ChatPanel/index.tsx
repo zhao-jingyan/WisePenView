@@ -11,7 +11,6 @@ import {
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
-import { IndentIncrease } from 'lucide-react';
 import { memo, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatInput from './ChatInput';
@@ -31,11 +30,9 @@ import styles from './style.module.less';
 function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }: ChatPanelProps) {
   const navigate = useNavigate();
   const chatService = useChatService();
-  const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
   const chatPanelDraftOpen = useChatPanelStore((state) => state.chatPanelDraftOpen);
   const setChatPanelDraftOpen = useChatPanelStore((state) => state.setChatPanelDraftOpen);
   const currentSessionId = useCurrentChatSessionStore((state) => state.currentSessionId);
-  const currentSessionTitle = useCurrentChatSessionStore((state) => state.currentSessionTitle);
   const setCurrentSession = useCurrentChatSessionStore((state) => state.setCurrentSession);
   const clearCurrentSession = useCurrentChatSessionStore((state) => state.clearCurrentSession);
   const enableSelectedText = useNoteSelectionStore((state) =>
@@ -121,7 +118,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
 
   const sending = status === 'submitted' || status === 'streaming';
   const hasSelectedContext = enableSelectedText && Boolean(selectedContextText.trim());
-  const panelTitle = currentSessionTitle || '新对话';
 
   const ensureChatSession = async (): Promise<string> => {
     const existingSessionId =
@@ -226,13 +222,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
     clearSelectedText(currentSessionId);
   };
 
-  const handleCollapsePanel = () => {
-    setChatPanelCollapsed(true);
-    if (!currentSessionId) {
-      setChatPanelDraftOpen(false);
-    }
-  };
-
   useMount(() => {
     if (!currentSessionId) return;
     setHistoryMessages([]);
@@ -269,26 +258,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
 
   return (
     <div className={`${styles.panel} ${fullWidth ? styles.fullWidth : ''}`}>
-      <div className={`${styles.header} ${collapsed ? styles.collapsedHeader : ''}`}>
-        <div className={styles.headerLeft}>
-          {!collapsed && !fullWidth && (
-            <button
-              type="button"
-              onClick={handleCollapsePanel}
-              className={styles.triggerBtn}
-              aria-label="收起聊天面板"
-            >
-              <IndentIncrease size={18} />
-            </button>
-          )}
-          {!collapsed && (
-            <div className={styles.titleWrap}>
-              <div className={styles.title}>{panelTitle}</div>
-            </div>
-          )}
-        </div>
-      </div>
-
       {!collapsed && (
         <>
           <div className={styles.content}>

@@ -36,4 +36,7 @@ docs/*
 !docs/agent/
 !docs/agent/*.md
 
+# 本地开发演示页（mock 路由用，不入库）
+src/views/app/dev/
+
 .env.development
