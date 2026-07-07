@@ -1,17 +1,20 @@
-import type { User, UserAccountProfile } from '@/domains/User';
+import type { User,UserAccountProfile } from '@/domains/User';
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import { UserApi } from '../apis/UserApi';
 import { UserServicesMap } from '../mapper/UserServices.map';
 import type {
-  ConfirmEmailVerifyRequest,
-  FudanUISVerifyStatusData,
-  InitiateUISVerifyRequest,
-  IUserService,
-  ListUserSearchSuggestionsRequest,
-  QueryUserSearchCandidatesRequest,
-  SearchUsersRequest,
-  SendEmailVerifyRequest,
-  UpdateUserInfoRequest,
+ConfirmEmailVerifyRequest,
+FudanUISVerifyStatusData,
+InitiateUISVerifyRequest,
+IUserService,
+ListUserSearchSuggestionsRequest,
+QueryUserSearchCandidatesRequest,
+SearchUsersRequest,
+ListAdminMessagesRequest,
+ListAdminMessagesResponse,
+PublishMessageRequest,
+SendEmailVerifyRequest,
+UpdateUserInfoRequest,
 } from './index.type';
 
 type CachedUserSafe = Pick<User, 'id' | 'username' | 'nickname' | 'avatar' | 'identityType'>;
@@ -73,6 +76,19 @@ const confirmEmailVerify = async (params: ConfirmEmailVerifyRequest): Promise<vo
   await UserApi.checkEmailVerify(query);
 };
 
+const listAdminMessages = async (
+  params: ListAdminMessagesRequest
+): Promise<ListAdminMessagesResponse> => {
+  const query = UserServicesMap.mapListAdminMessagesRequest(params);
+  const data = await UserApi.listAdminMessages(query);
+  return UserServicesMap.mapListAdminMessagesFromApi(data);
+};
+
+const publishMessage = async (params: PublishMessageRequest): Promise<void> => {
+  const payload = UserServicesMap.mapPublishMessageRequest(params);
+  await UserApi.publishMessage(payload);
+};
+
 export const createUserServices = (): IUserService => {
   /** 闭包级缓存，仅存非敏感展示字段，退出登录时通过 clearUserCache 清理 */
   let cachedUserInfo: CachedUserSafe | null = null;
@@ -124,6 +140,8 @@ export const createUserServices = (): IUserService => {
     initiateUISVerify,
     checkFudanUISVerify,
     confirmEmailVerify,
+    listAdminMessages,
+    publishMessage,
     clearUserCache,
   };
 };

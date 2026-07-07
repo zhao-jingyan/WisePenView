@@ -1,17 +1,20 @@
-import { apiGet, apiPost, apiPut } from '@/apis/request';
+import { apiGet,apiPost,apiPut } from '@/apis/request';
 import type {
-  ChangeUserInfoApiRequest,
-  ChangeUserProfileApiRequest,
-  CheckEmailVerifyApiRequest,
-  GetUserInfoApiResponse,
-  InitiateEmailVerifyApiRequest,
-  InitiateFudanUISVerifyApiRequest,
-  ListTransactionsApiRequest,
-  ListUserSearchSuggestionsApiRequest,
-  RedeemVoucherApiRequest,
-  SearchUserApiRequest,
-  TransferTokenBetweenGroupAndUserApiRequest,
-  UserSearchUserApiResponse,
+ChangeUserInfoApiRequest,
+ChangeUserProfileApiRequest,
+CheckEmailVerifyApiRequest,
+GetUserInfoApiResponse,
+InitiateEmailVerifyApiRequest,
+InitiateFudanUISVerifyApiRequest,
+ListAdminMessagesApiRequest,
+ListAdminMessagesApiResponse,
+ListTransactionsApiRequest,
+ListUserSearchSuggestionsApiRequest,
+PublishMessageApiRequest,
+RedeemVoucherApiRequest,
+SearchUserApiRequest,
+TransferTokenBetweenGroupAndUserApiRequest,
+UserSearchUserApiResponse,
 } from './UserApi.type';
 
 /** User API: /user/* */
@@ -54,6 +57,16 @@ function changeUserProfile(req: ChangeUserProfileApiRequest): Promise<void> {
   return apiPut('/user/changeUserProfile', req);
 }
 
+function listAdminMessages(
+  req: ListAdminMessagesApiRequest
+): Promise<ListAdminMessagesApiResponse> {
+  return apiGet('/admin/message/listMessages', { params: req });
+}
+
+function publishMessage(req: PublishMessageApiRequest): Promise<void> {
+  return apiPost('/admin/message/publishMessage', req);
+}
+
 export const UserApi = {
   getUserInfo,
   searchUser,
@@ -64,6 +77,8 @@ export const UserApi = {
   checkEmailVerify,
   changeUserInfo,
   changeUserProfile,
+  listAdminMessages,
+  publishMessage,
 };
 
 /** User Wallet API: /user/wallet/* */

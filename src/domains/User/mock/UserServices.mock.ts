@@ -1,9 +1,11 @@
 import type {
-  FudanUISVerifyStatusData,
-  IUserService,
-  User,
-  UserAccountProfile,
-  UserSearchUser,
+FudanUISVerifyStatusData,
+IUserService,
+ListAdminMessagesResponse,
+PublishMessageRequest,
+User,
+UserAccountProfile,
+UserSearchUser,
 } from '@/domains/User';
 import type { GetUserInfoApiResponse } from '../apis/UserApi.type';
 import { UserServicesMap } from '../mapper/UserServices.map';
@@ -145,6 +147,32 @@ const confirmEmailVerify = async (): Promise<void> => {
   await delay(200);
 };
 
+const listAdminMessages = async (): Promise<ListAdminMessagesResponse> => {
+  await delay(200);
+  return {
+    messages: [
+      {
+        messageId: 'mock-message-1',
+        deliveryScope: 'ALL_USERS',
+        messageType: 'SYSTEM',
+        title: 'Mock 系统公告',
+        content: '这是一条用于 mock 环境展示的站内信。',
+        jumpUrl: '',
+        readCount: 3,
+        createTime: new Date().toISOString(),
+      },
+    ],
+    total: 1,
+    page: 1,
+    size: 20,
+    totalPage: 1,
+  };
+};
+
+const publishMessage = async (_params: PublishMessageRequest): Promise<void> => {
+  await delay(200);
+};
+
 const updateUserInfo = async (
   params: Parameters<IUserService['updateUserInfo']>[0]
 ): Promise<void> => {
@@ -192,5 +220,7 @@ export const UserServicesMock: IUserService = {
   initiateUISVerify,
   checkFudanUISVerify,
   confirmEmailVerify,
+  listAdminMessages,
+  publishMessage,
   clearUserCache,
 };
