@@ -5,6 +5,8 @@ import { useOutletContext } from 'react-router-dom';
 export interface WorkspaceHeaderConfig {
   fallbackTo?: string;
   backLabel?: string;
+  /** 隐藏返回按钮，此时 inlineTitle 自动左移 */
+  hideBack?: boolean;
   inlineTitle?: ReactNode;
   extra?: ReactNode;
   titleBlock?: ReactNode;

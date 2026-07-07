@@ -7,6 +7,7 @@
 }
 
 .list {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -17,8 +18,22 @@
   background: var(--surface-muted, var(--surface-tertiary));
 }
 
+.indicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  border-radius: calc(var(--radius-md, 8px) - 3px);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .tab {
   position: relative;
+  z-index: 2;
   min-height: 30px;
   padding: 0 12px;
   border: 0;
@@ -28,10 +43,7 @@
   font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
-  transition:
-    background-color 0.16s ease,
-    color 0.16s ease,
-    box-shadow 0.16s ease;
+  transition: color 0.2s ease;
 }
 
 .sm .tab {
@@ -48,9 +60,7 @@
 }
 
 .tabSelected {
-  background: var(--surface);
   color: var(--foreground);
-  box-shadow: var(--shadow-sm);
 }
 
 .tabDisabled {

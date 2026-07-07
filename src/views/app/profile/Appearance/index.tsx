@@ -13,15 +13,16 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
-  useTheme,
 } from '@heroui/react';
 import { ChevronDown } from 'lucide-react';
+import React from 'react';
 
 import {
   COLOR_SCHEME_OPTIONS,
   THEME_FORM_RADIUS_OPTIONS,
   THEME_MODE_OPTIONS,
   THEME_RADIUS_OPTIONS,
+  useAppTheme,
   useColorScheme,
   useThemeShape,
   type ColorScheme,
@@ -175,9 +176,17 @@ type SchemeOptionProps = {
 };
 
 function SchemeOption({ option }: SchemeOptionProps) {
+  const ref = React.useRef<HTMLButtonElement | null>(null);
+
   return (
-    <ToggleButton id={option.id} data-scheme-preview={option.id} className={styles.schemeOption}>
+    <ToggleButton
+      ref={ref}
+      id={option.id}
+      data-scheme-preview={option.id}
+      className={styles.schemeOption}
+    >
       <span className={styles.schemePreview}>
+        <span className={styles.schemeSwatch} />
         <span className={styles.schemeSwatch} />
         <span className={styles.schemeSwatch} />
       </span>
@@ -277,7 +286,7 @@ function AppearanceHeader() {
 }
 
 function Appearance() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useAppTheme();
   const { colorScheme, setColorScheme } = useColorScheme();
   const { radius, formRadius, setRadius, setFormRadius } = useThemeShape();
 

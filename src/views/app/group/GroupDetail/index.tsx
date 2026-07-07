@@ -113,6 +113,7 @@ function GroupDetail() {
               scope={{ type: 'group', groupId: gid }}
               showToolbarTrash={false}
               onTrashViewChange={setIsTrashView}
+              disableListPadding
               actions={{
                 toolbar: {
                   canCreateFolder: groupDisplayConfig.canCreateTag,

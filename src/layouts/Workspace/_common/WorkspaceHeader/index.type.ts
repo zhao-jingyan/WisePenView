@@ -5,6 +5,8 @@ export interface WorkspaceHeaderProps {
   fallbackTo?: string;
   /** 返回控件文案 */
   backLabel?: string;
+  /** 隐藏返回按钮，此时 inlineTitle 自动左移 */
+  hideBack?: boolean;
   /** 工具条中间区：如 PDF 图标 + 文件名 */
   inlineTitle?: ReactNode;
   /** 右侧操作区（分享等） */

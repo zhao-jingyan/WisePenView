@@ -1,10 +1,23 @@
 @import '../../../shared/styles/table.module.less';
 
 .tabList {
+  position: relative;
   display: flex;
   align-items: flex-start;
   padding: var(--space-xs) @table-shell-padding-inline 0;
   border-bottom: 1px solid var(--border-light);
+}
+
+.indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .tabItem,
@@ -22,19 +35,10 @@
   line-height: @table-line-height-body;
   text-align: center;
   cursor: pointer;
+  transition: color 0.2s ease;
 }
 
 .tabActive {
   color: var(--accent);
   font-weight: @table-font-weight-medium;
-
-  &::after {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 2px;
-    background: var(--accent);
-    content: '';
-  }
 }

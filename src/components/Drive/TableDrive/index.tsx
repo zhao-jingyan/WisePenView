@@ -11,6 +11,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { findTreeNodeById } from '@/utils/tree/findTreeNodeById';
 import { Button, toast, type Selection, type SortDescriptor } from '@heroui/react';
 import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
+import clsx from 'clsx';
 import { Trash2 } from 'lucide-react';
 import {
   forwardRef,
@@ -125,7 +126,16 @@ function buildDriveTableRowMap(rows: DriveTableRow[]): Map<string, DriveTableRow
 }
 
 const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableDrive(
-  { groupId, rootId, scope, actions, onTrashViewChange, onUploadSuccess, showToolbarTrash = true },
+  {
+    groupId,
+    rootId,
+    scope,
+    actions,
+    onTrashViewChange,
+    onUploadSuccess,
+    showToolbarTrash = true,
+    disableListPadding,
+  },
   ref
 ) {
   const driveService = useDriveService();
@@ -382,7 +392,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   );
 
   return (
-    <main className={styles.listArea}>
+    <main className={clsx(styles.listArea, disableListPadding && styles.listAreaNoPadding)}>
       <div className={styles.driveFrame}>
         <div className={styles.driveBody}>
           <FolderTable<DriveTableRow>

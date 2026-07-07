@@ -43,7 +43,7 @@
   &[data-hovered],
   &[data-focused] {
     color: var(--foreground);
-    background: var(--surface-tertiary);
+    background: color-mix(in srgb, var(--accent-secondary, var(--contrast)) 10%, var(--surface));
   }
 
   &[data-selected] {

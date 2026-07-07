@@ -134,18 +134,6 @@ function Register() {
           {formErrors.password ? <p className={auth.fieldError}>{formErrors.password}</p> : null}
         </TextField>
 
-        <div className={auth.agreementRow}>
-          <Checkbox isSelected={agreement} onChange={(isSelected) => setAgreement(isSelected)}>
-            <Checkbox.Control>
-              <Checkbox.Indicator />
-            </Checkbox.Control>
-            <Checkbox.Content>{t('register.agreementCheckedPrefix')}</Checkbox.Content>
-          </Checkbox>
-          <Link to="#" onClick={() => setContractOpen(true)}>
-            {t('register.agreementLink')}
-          </Link>
-        </div>
-
         <div className={auth.formActions}>
           <Button
             variant="primary"
@@ -164,6 +152,21 @@ function Register() {
           </div>
         </div>
       </Form>
+
+      <div className={auth.leftBottomLinks}>
+        <Checkbox isSelected={agreement} onChange={(isSelected) => setAgreement(isSelected)}>
+          <Checkbox.Content>
+            <Checkbox.Control>
+              <Checkbox.Indicator />
+            </Checkbox.Control>
+            {t('register.agreementCheckedPrefix')}
+          </Checkbox.Content>
+        </Checkbox>
+        <Link to="#" onClick={() => setContractOpen(true)}>
+          {t('register.agreementLink')}
+        </Link>
+      </div>
+
       <ServiceAgreement isOpen={contractOpen} onOpenChange={setContractOpen} />
       <AppDisplayDialog
         isOpen={successModalOpen}

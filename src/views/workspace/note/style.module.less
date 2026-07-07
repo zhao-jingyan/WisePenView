@@ -111,6 +111,24 @@
   flex-direction: column;
 }
 
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.infoRowMore {
+  margin-left: auto;
+  margin-right: calc(var(--space-lg) * 2);
+}
+
+.noteToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: var(--space-sm);
+}
+
 .body {
   flex: 1;
   min-height: 0;
@@ -121,11 +139,11 @@
 
 .outlineAside {
   flex: 0 0 auto;
-  /* 目录侧栏：跟随主题尺寸 token 缩放，目标落在 240~280 观感区间 */
+  /* 目录侧栏：缩窄至原来的二分之一 */
   width: clamp(
-    calc(6 * var(--control-height-lg)),
-    calc(7 * var(--control-height-lg)),
-    calc(8 * var(--control-height-lg))
+    calc(3 * var(--control-height-lg)),
+    calc(3.5 * var(--control-height-lg)),
+    calc(4 * var(--control-height-lg))
   );
   min-height: 0;
   padding: 0;

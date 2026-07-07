@@ -57,8 +57,8 @@ function SearchModal({ isOpen, onOpenChange }: SearchModalProps) {
                       placeholder="搜索文档、笔记和标签..."
                       className={styles.inputControl}
                     />
-                    {rawKeyword ? (
-                      <InputGroup.Suffix>
+                    <InputGroup.Suffix>
+                      {rawKeyword ? (
                         <button
                           type="button"
                           className={styles.clearButton}
@@ -67,11 +67,12 @@ function SearchModal({ isOpen, onOpenChange }: SearchModalProps) {
                         >
                           <X size={14} />
                         </button>
-                      </InputGroup.Suffix>
-                    ) : null}
+                      ) : (
+                        <Kbd onClick={handleClose}>Esc</Kbd>
+                      )}
+                    </InputGroup.Suffix>
                   </InputGroup>
                 </TextField>
-                <Kbd onClick={handleClose}>Esc</Kbd>
               </div>
 
               <Modal.DeferredContent fallback={<div className={styles.resultPlaceholder} />}>
