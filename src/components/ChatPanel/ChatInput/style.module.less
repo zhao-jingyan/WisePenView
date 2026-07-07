@@ -87,11 +87,11 @@
 
 .toolbarPopover {
   padding: 0;
-  overflow: hidden;
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-xl);
+  border-radius: var(--app-radius-popover, min(32px, var(--radius-3xl)));
   background: var(--overlay);
   box-shadow: var(--card-shadow);
+  overflow: clip;
 }
 
 .popoverPanel,
@@ -99,7 +99,7 @@
 .modelMenu {
   min-width: 220px;
   max-width: 340px;
-  padding: var(--space-xs);
+  padding: var(--app-popover-content-padding, var(--space-xs));
   background: var(--surface);
 }
 
@@ -116,7 +116,7 @@
 .deferredPopoverPanel {
   min-width: 220px;
   min-height: 72px;
-  padding: var(--space-xs);
+  padding: var(--app-popover-content-padding, var(--space-xs));
   background: var(--surface);
 }
 
@@ -139,6 +139,10 @@
 
 .listBox {
   background: transparent;
+
+  :global(.list-box-item) {
+    border-radius: var(--app-radius-popover-item, var(--radius-xl));
+  }
 }
 
 .listItemContent,
@@ -178,6 +182,7 @@
   min-height: 34px;
   padding: 6px var(--space-sm);
   border-top: 1px solid var(--border-light);
+  border-radius: var(--app-radius-popover-control, var(--radius-xl));
   color: var(--muted);
   font-size: var(--font-size-sm);
   cursor: pointer;
@@ -249,7 +254,7 @@
   height: 32px;
   padding: 0 var(--space-xs);
   border: 0;
-  border-radius: var(--radius);
+  border-radius: var(--app-radius-popover-control, var(--radius-xl));
   background: transparent;
   color: var(--text-tertiary);
   font-size: var(--font-size-sm);

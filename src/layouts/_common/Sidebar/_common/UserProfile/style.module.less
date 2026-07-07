@@ -36,7 +36,7 @@
   min-height: 36px;
   padding: 0 12px;
   color: var(--muted);
-  border-radius: 8px;
+  border-radius: var(--app-radius-interactive, var(--radius-2xl));
   outline: none;
   cursor: pointer;
 
@@ -48,8 +48,8 @@
 
 .profileMenuItem[data-hovered],
 .profileMenuItem[data-focused],
-.profileMenu :global([data-slot='menu-item'][data-hovered]),
-.profileMenu :global([data-slot='menu-item'][data-focused]) {
+.profileMenu :global(.menu-item[data-hovered]),
+.profileMenu :global(.menu-item[data-focused]) {
   color: var(--foreground);
   background: var(--surface-tertiary) !important;
 }

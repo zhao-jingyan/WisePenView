@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { DEFAULT_COLOR_SCHEME, DEFAULT_HEROUI_THEME } from './constants';
 import { useColorScheme } from './useColorScheme';
+import { useThemeShape } from './useThemeShape';
 
 type ThemeApplierProps = {
   children: ReactNode;
@@ -13,6 +14,7 @@ type ThemeApplierProps = {
 export function ThemeApplier({ children, defaultTheme = DEFAULT_HEROUI_THEME }: ThemeApplierProps) {
   useTheme(defaultTheme);
   useColorScheme(DEFAULT_COLOR_SCHEME);
+  useThemeShape();
 
   return <>{children}</>;
 }

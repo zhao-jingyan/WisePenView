@@ -5,6 +5,18 @@
   [data-theme='light'],
   [data-theme='default'] {
     /* 默认 · 学术 light */
+    color-scheme: light;
+    --white: oklch(100% 0 0);
+    --black: oklch(0% 0 0);
+    --snow: oklch(0.9911 0 0);
+    --eclipse: oklch(0.2103 0.0059 285.89);
+    --spacing: 0.25rem;
+    --border-width: 1px;
+    --field-border-width: 0px;
+    --disabled-opacity: 0.5;
+    --ring-offset-width: 2px;
+    --cursor-interactive: pointer;
+    --cursor-disabled: not-allowed;
     --accent: #1e6f9f;
     --accent-foreground: #ffffff;
     --background: #f7f9fb;
@@ -22,7 +34,12 @@
     --muted: #6b7280;
     --overlay: #ffffff;
     --overlay-foreground: #111827;
-    --scrollbar: #e4e7ec;
+    --scrollbar: var(--scrollbar-thumb);
+    --scrollbar-thumb: color-mix(in oklch, var(--foreground) 15%, transparent);
+    --scrollbar-track: transparent;
+    --scrollbar-gutter: auto;
+    --scrollbar-width: thin;
+    --scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
     --segment: #ffffff;
     --segment-foreground: #111827;
     --separator: #e9ecef;
@@ -61,6 +78,16 @@
     --card-glow: 0 0 0 2px rgba(30, 111, 159, 0.15);
     --radius: 0.5rem;
     --field-radius: 0.75rem;
+    --surface-shadow:
+      0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 0 1px 0 rgba(0, 0, 0, 0.06);
+    --overlay-shadow:
+      0 2px 8px 0 rgba(0, 0, 0, 0.06), 0 -6px 12px 0 rgba(0, 0, 0, 0.03),
+      0 14px 28px 0 rgba(0, 0, 0, 0.08);
+    --field-shadow:
+      0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 0 1px 0 rgba(0, 0, 0, 0.06);
+    --backdrop: rgba(0, 0, 0, 0.5);
     --font-sans: var(--app-font-family);
   }
 
@@ -85,7 +112,12 @@
     --muted: #d1d5db;
     --overlay: #111827;
     --overlay-foreground: #f9fafb;
-    --scrollbar: #374151;
+    --scrollbar: var(--scrollbar-thumb);
+    --scrollbar-thumb: color-mix(in oklch, var(--foreground) 15%, transparent);
+    --scrollbar-track: transparent;
+    --scrollbar-gutter: auto;
+    --scrollbar-width: thin;
+    --scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
     --segment: #1f2937;
     --segment-foreground: #f9fafb;
     --separator: #2d3748;
@@ -122,6 +154,56 @@
     --card-surface: #111827;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     --card-glow: 0 0 0 2px rgba(78, 168, 222, 0.3);
+    --surface-shadow: 0 0 0 0 transparent inset;
+    --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    --field-shadow: 0 0 0 0 transparent inset;
+    --backdrop: rgba(0, 0, 0, 0.6);
+  }
+
+  /* HeroUI 主题页 Radius */
+  html[data-theme-radius='none'] {
+    --radius: 0;
+  }
+
+  html[data-theme-radius='extra-small'] {
+    --radius: 0.125rem;
+  }
+
+  html[data-theme-radius='small'] {
+    --radius: 0.25rem;
+  }
+
+  html[data-theme-radius='medium'] {
+    --radius: 0.5rem;
+  }
+
+  html[data-theme-radius='large'] {
+    --radius: 0.75rem;
+  }
+
+  /* HeroUI 主题页 Radius Form */
+  html[data-theme-form-radius='none'] {
+    --field-radius: 0;
+  }
+
+  html[data-theme-form-radius='extra-small'] {
+    --field-radius: 0.125rem;
+  }
+
+  html[data-theme-form-radius='small'] {
+    --field-radius: 0.25rem;
+  }
+
+  html[data-theme-form-radius='medium'] {
+    --field-radius: 0.5rem;
+  }
+
+  html[data-theme-form-radius='large'] {
+    --field-radius: 0.75rem;
+  }
+
+  html[data-theme-form-radius='extra-large'] {
+    --field-radius: 1rem;
   }
 
   /* warm */
@@ -586,7 +668,7 @@
     --line-height-xs: 18px;
     --line-height-2xs: 16px;
     --font-sans: var(--app-font-family);
-    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    --font-mono: var(--app-font-mono);
     --space-2xs: 4px;
     --space-xs: 8px;
     --space-sm: 12px;
@@ -594,14 +676,32 @@
     --space-lg: 24px;
     --space-xl: 32px;
     --space-2xl: 40px;
-    --radius-sm: 4px;
-    --radius-md: var(--radius);
-    --radius-lg: 8px;
+    --radius-xs: calc(var(--radius) * 0.25);
+    --radius-sm: calc(var(--radius) * 0.5);
+    --radius-md: calc(var(--radius) * 0.75);
+    --radius-lg: calc(var(--radius) * 1);
+    --radius-xl: calc(var(--radius) * 1.5);
+    --radius-2xl: calc(var(--radius) * 2);
+    --radius-3xl: calc(var(--radius) * 3);
+    --radius-4xl: calc(var(--radius) * 4);
     --radius-field: var(--field-radius);
+    --app-popover-content-padding: var(--space-xs);
+    --app-popover-item-inset: calc(var(--app-popover-content-padding) + var(--space-2xs));
+    --app-radius-sidebar-item: var(--radius-2xl);
+    --app-radius-popover: min(32px, var(--radius-3xl));
+    --app-radius-popover-item: min(
+      18px,
+      max(0px, calc(var(--app-radius-popover) - var(--app-popover-item-inset)))
+    );
+    --app-radius-popover-control: min(
+      16px,
+      max(0px, calc(var(--app-radius-popover) - var(--app-popover-content-padding)))
+    );
+    --app-radius-interactive: var(--app-radius-sidebar-item);
+    --app-radius-scrollbar: var(--radius-xs);
     --table-row-height: 52px;
     --row-height-comfortable: var(--table-row-height);
     --row-height-compact: var(--table-row-height);
-    --radius-xl: 12px;
 
     /* Table 布局 / 列宽（Less @table-* 经 table.module.less 引用） */
     --table-header-row-height: var(--table-row-height);
@@ -660,26 +760,56 @@
     --table-row-hover-bg: var(--surface-hover);
     --surface-muted: var(--surface-tertiary);
     --accent-hover: var(--primary-hover);
+    --background-secondary: color-mix(in oklab, var(--background) 96%, var(--foreground) 4%);
+    --background-tertiary: color-mix(in oklab, var(--background) 92%, var(--foreground) 8%);
+    --background-inverse: var(--foreground);
+    --default-hover: color-mix(in oklab, var(--default) 96%, var(--default-foreground) 4%);
+    --field-hover: color-mix(
+      in oklab,
+      var(--field-background, var(--default)) 90%,
+      var(--field-foreground, var(--foreground)) 2%
+    );
+    --field-focus: var(--field-background, var(--default));
+    --field-border-hover: color-mix(
+      in oklab,
+      var(--field-border, var(--border)) 88%,
+      var(--field-foreground, var(--foreground)) 10%
+    );
+    --field-border-focus: color-mix(
+      in oklab,
+      var(--field-border, var(--border)) 74%,
+      var(--field-foreground, var(--foreground)) 22%
+    );
+    --separator-secondary: color-mix(in oklab, var(--surface) 85%, var(--surface-foreground) 15%);
+    --separator-tertiary: color-mix(in oklab, var(--surface) 81%, var(--surface-foreground) 19%);
+    --border-secondary: color-mix(in oklab, var(--surface) 78%, var(--surface-foreground) 22%);
+    --border-tertiary: color-mix(in oklab, var(--surface) 66%, var(--surface-foreground) 34%);
     --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-soft-foreground: color-mix(in oklab, var(--accent) 70%, var(--foreground) 30%);
+    --accent-soft-hover: color-mix(in oklab, var(--accent) 20%, transparent);
     --accent-softer: color-mix(in srgb, var(--accent) 8%, transparent);
     --accent-border: color-mix(in srgb, var(--accent) 32%, var(--border));
     --info-soft: color-mix(in srgb, var(--info) 12%, transparent);
     --warning-soft: color-mix(in srgb, var(--warning) 14%, transparent);
+    --warning-soft-foreground: color-mix(in oklab, var(--warning) 80%, var(--foreground) 70%);
+    --warning-soft-hover: color-mix(in oklab, var(--warning) 20%, transparent);
     --warning-border: color-mix(in srgb, var(--warning) 36%, var(--border));
     --error-soft: color-mix(in srgb, var(--error) 12%, transparent);
     --error-hover: color-mix(in srgb, var(--error) 88%, #000 12%);
     --error-border: color-mix(in srgb, var(--error) 36%, var(--border));
     --danger-soft: color-mix(in srgb, var(--danger) 12%, transparent);
+    --danger-soft-foreground: color-mix(in oklab, var(--danger) 70%, var(--foreground) 40%);
+    --danger-soft-hover: color-mix(in oklab, var(--danger) 20%, transparent);
     --danger-border: color-mix(in srgb, var(--danger) 36%, var(--border));
     --danger-hover: var(--error-hover);
     --success-soft: color-mix(in srgb, var(--success) 12%, transparent);
+    --success-soft-foreground: color-mix(in oklab, var(--success) 80%, var(--foreground) 60%);
+    --success-soft-hover: color-mix(in oklab, var(--success) 20%, transparent);
     --success-hover: color-mix(in srgb, var(--success) 88%, #000 12%);
     --success-active: color-mix(in srgb, var(--success) 78%, #000 22%);
     --success-border: color-mix(in srgb, var(--success) 36%, var(--border));
-    --color-primary: var(--accent);
-    --color-warning: var(--warning);
-    --color-muted: var(--text-tertiary);
-    --color-muted-foreground: var(--muted);
-    --color-border: var(--border);
+    --default-soft: color-mix(in oklab, var(--default) 50%, transparent);
+    --default-soft-foreground: var(--default-foreground);
+    --default-soft-hover: color-mix(in oklab, var(--default) 60%, transparent);
   }
 }

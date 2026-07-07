@@ -4,15 +4,16 @@
 ﻿// src/components/ChatPanel/popupSurface.module.less
 
 .surface {
-  border-radius: var(--radius-xl);
+  --app-popover-item-inset: var(--app-popover-content-padding, var(--space-xs));
+  border-radius: var(--app-radius-popover, min(32px, var(--radius-3xl)));
   box-shadow: var(--card-shadow);
   background: var(--surface);
-  overflow: hidden;
+  overflow: clip;
 }
 
 .menu {
   background: var(--surface);
-  padding: var(--space-xs);
+  padding: var(--app-popover-content-padding, var(--space-xs));
   font-size: var(--font-size-sm);
   font-weight: 400;
 }
@@ -26,7 +27,7 @@
   margin: 0 0 2px;
   padding: 4px var(--space-sm);
   border: 0;
-  border-radius: var(--radius);
+  border-radius: var(--app-radius-popover-item, var(--radius-xl));
   background: transparent;
   color: var(--foreground);
   font: inherit;
