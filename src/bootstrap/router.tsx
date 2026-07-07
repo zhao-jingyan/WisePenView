@@ -8,6 +8,7 @@ import AuthLayout from '@/layouts/Auth/AuthLayout';
 import HomeLayout from '@/layouts/Home/HomeLayout';
 import WorkspaceLayout from '@/layouts/Workspace/WorkspaceLayout';
 import AdminRouteGuard from '@/views/admin/guard/AdminRouteGuard';
+import AppRouteGuard from '@/views/app/guard/AppRouteGuard';
 
 // 页面使用 lazy load，按路由切分 chunk
 const UserManagement = lazy(() => import('@/views/admin/UserManagement'));
@@ -115,58 +116,63 @@ const router = createBrowserRouter([
     errorElement: <AppError />,
     children: [
       {
-        element: <AppLayout />, // 承载：普通 app 页面导航 + 右侧助手 + 中间内容
-        children: [
-          // 默认重定向到文档列表
-          {
-            index: true,
-            element: <Navigate to="/app/drive" replace />,
-          },
-          {
-            path: 'chat',
-            element: <ChatPage />,
-          },
-          {
-            path: 'chat/:sessionId',
-            element: <ChatPage />,
-          },
-          // 文档与云盘页
-          {
-            path: 'drive',
-            element: <Drive />,
-          },
-          {
-            path: 'my-group',
-            element: <MyGroup />,
-          },
-          {
-            path: 'my-group/:id',
-            element: <GroupDetail />,
-          },
-          {
-            path: 'profile/usage',
-            element: <Usage />,
-          },
-          {
-            path: 'profile/account',
-            element: <Account />,
-          },
-          {
-            path: 'profile/appearance',
-            element: <Appearance />,
-          },
-        ],
-      },
-      {
-        element: <WorkspaceLayout />,
+        element: <AppRouteGuard />,
         children: [
           {
-            path: 'workspace/:editorType',
-            element: <WorkspaceResourceView />,
+            element: <AppLayout />, // 承载：普通 app 页面导航 + 右侧助手 + 中间内容
+            children: [
+              // 默认重定向到文档列表
+              {
+                index: true,
+                element: <Navigate to="/app/drive" replace />,
+              },
+              {
+                path: 'chat',
+                element: <ChatPage />,
+              },
+              {
+                path: 'chat/:sessionId',
+                element: <ChatPage />,
+              },
+              // 文档与云盘页
+              {
+                path: 'drive',
+                element: <Drive />,
+              },
+              {
+                path: 'my-group',
+                element: <MyGroup />,
+              },
+              {
+                path: 'my-group/:id',
+                element: <GroupDetail />,
+              },
+              {
+                path: 'profile/usage',
+                element: <Usage />,
+              },
+              {
+                path: 'profile/account',
+                element: <Account />,
+              },
+              {
+                path: 'profile/appearance',
+                element: <Appearance />,
+              },
+            ],
           },
           {
-            path: 'workspace/:editorType/:id',
-            element: <WorkspaceResourceView />,
+            element: <WorkspaceLayout />,
+            children: [
+              {
+                path: 'workspace/:editorType',
+                element: <WorkspaceResourceView />,
+              },
+              {
+                path: 'workspace/:editorType/:id',
+                element: <WorkspaceResourceView />,
+              },
+            ],
           },
         ],
       },

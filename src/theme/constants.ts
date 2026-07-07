@@ -14,11 +14,12 @@ export type ThemeMode = (typeof THEME_MODE)[keyof typeof THEME_MODE];
 /** 主题配色 */
 export const COLOR_SCHEME = {
   DEFAULT: 'default',
-  WARM: 'warm',
-  ACADEMIC: 'academic',
-  VIOLET: 'violet',
-  FOREST: 'forest',
-  MINIMAL: 'minimal',
+  FLORAL: 'floral',
+  AQUA: 'aqua',
+  SUNSET: 'sunset',
+  EMERALD: 'emerald',
+  LAVENDER: 'lavender',
+  VANILLA: 'vanilla',
 } as const;
 
 export type ColorScheme = (typeof COLOR_SCHEME)[keyof typeof COLOR_SCHEME];
@@ -32,36 +33,13 @@ export interface ColorSchemeOption {
 }
 
 export const COLOR_SCHEME_OPTIONS: ColorSchemeOption[] = [
-  {
-    id: COLOR_SCHEME.DEFAULT,
-    label: '默认',
-    description: '蓝灰主题',
-  },
-  {
-    id: COLOR_SCHEME.WARM,
-    label: '温暖',
-    description: '柔和主题',
-  },
-  {
-    id: COLOR_SCHEME.ACADEMIC,
-    label: '学术',
-    description: '严谨主题',
-  },
-  {
-    id: COLOR_SCHEME.VIOLET,
-    label: '紫色',
-    description: '紫色主题',
-  },
-  {
-    id: COLOR_SCHEME.FOREST,
-    label: '森绿',
-    description: '沉静主题',
-  },
-  {
-    id: COLOR_SCHEME.MINIMAL,
-    label: '极简',
-    description: '经典蓝紫',
-  },
+  { id: COLOR_SCHEME.DEFAULT, label: '烟蓝', description: '蓝灰色系' },
+  { id: COLOR_SCHEME.FLORAL, label: '樱粉', description: '柔粉色系' },
+  { id: COLOR_SCHEME.AQUA, label: '青碧', description: '青蓝色系' },
+  { id: COLOR_SCHEME.SUNSET, label: '暮橘', description: '暖橘色系' },
+  { id: COLOR_SCHEME.EMERALD, label: '翠微', description: '翠绿色系' },
+  { id: COLOR_SCHEME.LAVENDER, label: '紫烟', description: '薰衣草紫' },
+  { id: COLOR_SCHEME.VANILLA, label: '暖杏', description: '暖金色系' },
 ];
 
 export const THEME_MODE_OPTIONS: Array<{ id: ThemeMode; label: string; description: string }> = [

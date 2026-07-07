@@ -25,4 +25,5 @@ export interface TableDriveProps {
   rootId?: string;
   scope?: DriveScope;
   actions?: TableDriveActionConfig;
+  disableListPadding?: boolean;
 }

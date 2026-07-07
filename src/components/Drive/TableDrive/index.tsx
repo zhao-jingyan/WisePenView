@@ -7,6 +7,7 @@ import type { DriveNode } from '@/domains/Drive';
 import { findTreeNodeById } from '@/utils/tree/findTreeNodeById';
 import { Button } from '@heroui/react';
 import { useUnmount } from 'ahooks';
+import clsx from 'clsx';
 import { CloudUpload } from 'lucide-react';
 import { startTransition, useCallback, useMemo, useRef, useState } from 'react';
 import { getDriveNodeLabel, resolveDriveScope } from '../common/driveComponentModel';
@@ -100,7 +101,7 @@ function buildDriveTableRowMap(rows: DriveTableRow[]): Map<string, DriveTableRow
   return map;
 }
 
-function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
+function TableDrive({ groupId, rootId, scope, actions, disableListPadding }: TableDriveProps) {
   const resolvedScope = useMemo(
     () => resolveDriveScope(scope, groupId, rootId),
     [scope, groupId, rootId]
@@ -267,7 +268,7 @@ function TableDrive({ groupId, rootId, scope, actions }: TableDriveProps) {
   );
 
   return (
-    <main className={styles.listArea}>
+    <main className={clsx(styles.listArea, disableListPadding && styles.listAreaNoPadding)}>
       <div className={styles.tableLayout}>
         <FolderTable<DriveTableRow>
           ariaLabel="云盘文件列表"

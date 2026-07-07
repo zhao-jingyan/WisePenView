@@ -7,12 +7,13 @@ import {
   Separator,
   ToggleButton,
   ToggleButtonGroup,
-  useTheme,
 } from '@heroui/react';
+import React from 'react';
 
 import {
   COLOR_SCHEME_OPTIONS,
   THEME_MODE_OPTIONS,
+  useAppTheme,
   useColorScheme,
   type ColorScheme,
   type ColorSchemeOption,
@@ -100,9 +101,17 @@ type SchemeOptionProps = {
 };
 
 function SchemeOption({ option }: SchemeOptionProps) {
+  const ref = React.useRef<HTMLButtonElement | null>(null);
+
   return (
-    <ToggleButton id={option.id} data-scheme-preview={option.id} className={styles.schemeOption}>
+    <ToggleButton
+      ref={ref}
+      id={option.id}
+      data-scheme-preview={option.id}
+      className={styles.schemeOption}
+    >
       <span className={styles.schemePreview}>
+        <span className={styles.schemeSwatch} />
         <span className={styles.schemeSwatch} />
         <span className={styles.schemeSwatch} />
       </span>
@@ -126,7 +135,7 @@ function AppearanceHeader() {
 }
 
 function Appearance() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useAppTheme();
   const { colorScheme, setColorScheme } = useColorScheme();
 
   return (

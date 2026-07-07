@@ -11,6 +11,7 @@ const DEFAULT_BACK_LABEL = '返回';
 function WorkspaceHeader({
   fallbackTo = DEFAULT_FALLBACK_TO,
   backLabel = DEFAULT_BACK_LABEL,
+  hideBack = false,
   inlineTitle,
   extra,
   titleBlock,
@@ -31,10 +32,12 @@ function WorkspaceHeader({
     <header className={clsx(styles.root, className)}>
       <div className={styles.bar}>
         <div className={styles.toolbar}>
-          <button type="button" className={styles.backLink} onClick={handleBack}>
-            <ArrowLeft size={18} aria-hidden="true" />
-            {backLabel}
-          </button>
+          {!hideBack && (
+            <button type="button" className={styles.backLink} onClick={handleBack}>
+              <ArrowLeft size={18} aria-hidden="true" />
+              {backLabel}
+            </button>
+          )}
           <div className={styles.toolbarMiddle}>
             {inlineTitle ? <div className={styles.inlineTitle}>{inlineTitle}</div> : null}
           </div>

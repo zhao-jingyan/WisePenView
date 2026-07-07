@@ -1,7 +1,7 @@
-import { useTheme } from '@heroui/react';
 import type { ReactNode } from 'react';
 
-import { DEFAULT_COLOR_SCHEME, DEFAULT_HEROUI_THEME } from './constants';
+import { DEFAULT_COLOR_SCHEME, DEFAULT_HEROUI_THEME, type ColorScheme } from './constants';
+import { ThemeContextProvider } from './ThemeContext';
 import { useColorScheme } from './useColorScheme';
 
 type ThemeApplierProps = {
@@ -11,8 +11,20 @@ type ThemeApplierProps = {
 
 /** 根节点同步明暗与配色到 documentElement */
 export function ThemeApplier({ children, defaultTheme = DEFAULT_HEROUI_THEME }: ThemeApplierProps) {
-  useTheme(defaultTheme);
-  useColorScheme(DEFAULT_COLOR_SCHEME);
+  return (
+    <ThemeContextProvider defaultTheme={defaultTheme}>
+      <ColorSchemeApplier defaultScheme={DEFAULT_COLOR_SCHEME}>{children}</ColorSchemeApplier>
+    </ThemeContextProvider>
+  );
+}
 
+function ColorSchemeApplier({
+  children,
+  defaultScheme,
+}: {
+  children: ReactNode;
+  defaultScheme: string;
+}) {
+  useColorScheme(defaultScheme as ColorScheme);
   return <>{children}</>;
 }

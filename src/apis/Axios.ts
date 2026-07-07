@@ -122,7 +122,9 @@ Axios.interceptors.response.use(
       clearAllServiceCaches();
       clearAllZustandStores();
       emitAuthChangeEvent();
-      window.location.href = '/login';
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(mapAxiosErrorToWisePenError(error));
   }

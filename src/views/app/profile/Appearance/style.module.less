@@ -57,6 +57,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
   gap: var(--space-sm, 12px);
+  align-items: stretch;
 }
 
 .schemeGroup {
@@ -64,18 +65,24 @@
 }
 
 .schemeOption:global(.toggle-button) {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   gap: var(--space-xs, 8px);
   align-items: stretch;
-  width: 100%;
+  width: 100% !important;
   height: auto;
+  min-height: 100%;
   padding: var(--space-xs, 8px);
   border: 1px solid var(--border);
   border-radius: var(--radius, 8px);
   background: var(--surface);
   text-align: left;
   white-space: normal;
+  cursor: pointer;
+
+  > * {
+    pointer-events: none;
+  }
 
   &[data-selected='true'],
   &[aria-pressed='true'] {
@@ -92,20 +99,39 @@
   flex: 1;
   height: 1.25rem;
   border-radius: var(--radius, 4px);
-
-  &:first-child {
-    background: var(--preview-primary);
-  }
-
-  &:last-child {
-    background: var(--preview-accent);
-  }
 }
 
-.schemeLabel {
-  font-size: var(--font-size-sm, 13px);
-  font-weight: 500;
-  color: var(--foreground);
+.schemeSwatch:nth-child(1) {
+  background: var(--preview-color-1);
+}
+
+.schemeSwatch:nth-child(2) {
+  background: var(--preview-color-2);
+}
+
+.schemeSwatch:nth-child(3) {
+  background: var(--preview-color-3);
+}
+
+.schemeOption:global(.toggle-button)[data-selected='true'],
+.schemeOption:global(.toggle-button)[aria-pressed='true'] {
+  border-color: var(--contrast, var(--preview-color-3));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--contrast, var(--preview-color-3)) 6%, transparent);
+}
+
+.schemeOption:global(.toggle-button)[data-selected='true'] .schemePreview,
+.schemeOption:global(.toggle-button)[aria-pressed='true'] .schemePreview {
+  box-shadow: inset 0 -6px 12px color-mix(in srgb, var(--preview-color-2) 8%, transparent);
+  border-radius: 6px;
+}
+
+.schemeOption:global(.toggle-button):focus-visible {
+  outline: 2px solid var(--contrast, var(--accent));
+  outline-offset: 2px;
+}
+
+.schemeOption:global(.toggle-button):hover {
+  border-color: color-mix(in srgb, var(--contrast, var(--accent)) 40%, var(--border));
 }
 
 .schemeDescription {

@@ -1,4 +1,4 @@
-import type { Key } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, type Key } from 'react';
 import type { SegmentedTabsProps } from './index.type';
 import styles from './style.module.less';
 
@@ -17,14 +17,68 @@ function SegmentedTabs<T extends Key = string>({
   block = false,
   size = 'md',
 }: SegmentedTabsProps<T>) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({
+    left: 0,
+    width: 0,
+  });
+
+  const updateIndicator = useCallback(() => {
+    const selectedEl = tabRefs.current.get(String(selectedKey));
+    const listEl = listRef.current;
+    if (!selectedEl || !listEl) return;
+    const listRect = listEl.getBoundingClientRect();
+    const tabRect = selectedEl.getBoundingClientRect();
+    setIndicatorStyle({
+      left: tabRect.left - listRect.left - listEl.clientLeft,
+      width: tabRect.width,
+    });
+  }, [selectedKey]);
+
+  useLayoutEffect(() => {
+    updateIndicator();
+  }, [updateIndicator, items]);
+
+  // Also update on resize
+  useLayoutEffect(() => {
+    const handleResize = () => updateIndicator();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateIndicator]);
+
+  const setTabRef = useCallback(
+    (key: string) => (el: HTMLButtonElement | null) => {
+      if (el) {
+        tabRefs.current.set(key, el);
+      } else {
+        tabRefs.current.delete(key);
+      }
+    },
+    []
+  );
+
   return (
     <div className={cx(styles.root, block && styles.block, styles[size], className)}>
-      <div className={cx(styles.list, listClassName)} role="tablist" aria-label={ariaLabel}>
+      <div
+        className={cx(styles.list, listClassName)}
+        role="tablist"
+        aria-label={ariaLabel}
+        ref={listRef}
+      >
+        <div
+          className={styles.indicator}
+          style={{
+            transform: `translateX(${indicatorStyle.left}px)`,
+            width: `${indicatorStyle.width}px`,
+          }}
+        />
         {items.map((item) => {
           const selected = item.key === selectedKey;
           return (
             <button
               key={String(item.key)}
+              ref={setTabRef(String(item.key))}
               type="button"
               role="tab"
               aria-selected={selected}

@@ -107,6 +107,7 @@ function GroupDetail() {
           <div className={layout.tabPane}>
             <TableDrive
               scope={{ type: 'group', groupId: gid }}
+              disableListPadding
               actions={{
                 toolbar: {
                   canCreateFolder: groupDisplayConfig.canCreateTag,

@@ -220,70 +220,9 @@ function NoteViewConnected({
   const workspaceFrameConfig = useMemo(
     () => ({
       className: styles.pageWrap,
-      header: {
-        inlineTitle: (
-          <NoteToolbarTitle resourceId={resourceId} fallbackTitle={noteInfoDisplay?.noteTitle} />
-        ),
-        extra: (
-          <div className={styles.headerToolbarExtra}>
-            {showAiDiffDisplayModeSwitch ? (
-              <SegmentedTabs<AiDiffDisplayMode>
-                ariaLabel="AI 差异展示模式"
-                selectedKey={aiDiffDisplayMode}
-                className={styles.aiDiffDisplayModeSwitch}
-                items={AI_DIFF_DISPLAY_OPTIONS.map((option) => ({
-                  key: option.value,
-                  label: option.label,
-                  disabled: showFullPageSpin,
-                }))}
-                onSelectionChange={setAiDiffDisplayMode}
-              />
-            ) : null}
-            <div className={styles.headerMoreWrap}>
-              <Dropdown>
-                <Dropdown.Trigger>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    isPending={headerMorePending}
-                    isDisabled={showFullPageSpin}
-                    aria-label="更多"
-                  >
-                    更多
-                  </Button>
-                </Dropdown.Trigger>
-                <Dropdown.Popover placement="bottom end">
-                  <Dropdown.Menu aria-label="笔记更多操作" onAction={handleMoreAction}>
-                    {canManageNotePermission ? (
-                      <Dropdown.Item id="permission" textValue="权限配置">
-                        权限配置
-                      </Dropdown.Item>
-                    ) : null}
-                    <Dropdown.Item id="print-pdf" textValue="打印为pdf">
-                      打印为pdf
-                    </Dropdown.Item>
-                    <Dropdown.Item id="download-md" textValue="下载为md">
-                      下载为md
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown.Popover>
-              </Dropdown>
-            </div>
-          </div>
-        ),
-      },
+      header: false,
     }),
-    [
-      aiDiffDisplayMode,
-      canManageNotePermission,
-      handleMoreAction,
-      headerMorePending,
-      noteInfoDisplay?.noteTitle,
-      resourceId,
-      setAiDiffDisplayMode,
-      showAiDiffDisplayModeSwitch,
-      showFullPageSpin,
-    ]
+    []
   );
   useWorkspaceLayoutConfig(workspaceFrameConfig);
 
@@ -377,7 +316,54 @@ function NoteViewConnected({
                   onEnterKey={focusBody}
                 />
               </div>
-              <NoteInfoBar noteInfoDisplay={noteInfoDisplay} />
+              <div className={styles.infoRow}>
+                <NoteInfoBar noteInfoDisplay={noteInfoDisplay} />
+                <div className={styles.infoRowMore}>
+                  <Dropdown>
+                    <Dropdown.Trigger>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        isPending={headerMorePending}
+                        isDisabled={showFullPageSpin}
+                        aria-label="更多"
+                      >
+                        更多
+                      </Button>
+                    </Dropdown.Trigger>
+                    <Dropdown.Popover placement="bottom end">
+                      <Dropdown.Menu aria-label="笔记更多操作" onAction={handleMoreAction}>
+                        {canManageNotePermission ? (
+                          <Dropdown.Item id="permission" textValue="权限配置">
+                            权限配置
+                          </Dropdown.Item>
+                        ) : null}
+                        <Dropdown.Item id="print-pdf" textValue="打印为pdf">
+                          打印为pdf
+                        </Dropdown.Item>
+                        <Dropdown.Item id="download-md" textValue="下载为md">
+                          下载为md
+                        </Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown.Popover>
+                  </Dropdown>
+                </div>
+              </div>
+              {showAiDiffDisplayModeSwitch ? (
+                <div className={styles.noteToolbar}>
+                  <SegmentedTabs<AiDiffDisplayMode>
+                    ariaLabel="AI 差异展示模式"
+                    selectedKey={aiDiffDisplayMode}
+                    className={styles.aiDiffDisplayModeSwitch}
+                    items={AI_DIFF_DISPLAY_OPTIONS.map((option) => ({
+                      key: option.value,
+                      label: option.label,
+                      disabled: showFullPageSpin,
+                    }))}
+                    onSelectionChange={setAiDiffDisplayMode}
+                  />
+                </div>
+              ) : null}
               <div className={styles.body}>
                 <CustomBlockNote
                   key={`${resourceId}-${noteInfoDisplay.canCollaborativeEdit}`}

@@ -11,4 +11,5 @@ export {
   type ThemeMode,
 } from './constants';
 export { ThemeApplier } from './ThemeApplier';
+export { useAppTheme } from './useAppTheme';
 export { useColorScheme } from './useColorScheme';

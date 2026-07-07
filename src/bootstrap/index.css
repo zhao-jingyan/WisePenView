@@ -94,6 +94,11 @@ html {
 }
 
 @layer utilities {
+  /* HeroUI Tabs indicator — smooth sliding */
+  [data-slot='tabs-indicator'] {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
   .scrollbar-thin {
     scrollbar-color: var(--scrollbar) transparent;
     scrollbar-width: thin;

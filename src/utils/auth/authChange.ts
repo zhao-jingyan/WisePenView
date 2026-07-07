@@ -40,7 +40,7 @@ export const subscribeAuthChangeEvent = (): (() => void) => {
 export const handleAuthChangeEvent = (): void => {
   clearAllServiceCaches();
   clearAllZustandStores();
-  if (window.location.pathname !== '/login') {
+  if (!window.location.pathname.startsWith('/login')) {
     window.location.href = '/login';
   }
 };

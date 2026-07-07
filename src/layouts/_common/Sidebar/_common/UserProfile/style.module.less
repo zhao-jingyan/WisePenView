@@ -60,11 +60,16 @@
 
 .avatar {
   flex-shrink: 0;
-  background-color: var(--surface-tertiary);
+  background-color: color-mix(in srgb, var(--accent-secondary, var(--contrast)) 12%, var(--surface)) !important;
   color: var(--foreground);
   font-weight: @font-weight-semibold;
   font-size: var(--font-size-sm, 12px);
   border: 1px solid var(--border-light);
+
+  /** HeroUI fallback 内部有 bg-default 会覆盖外层背景 */
+  :global(.avatar__fallback) {
+    background-color: color-mix(in srgb, var(--accent-secondary, var(--contrast)) 12%, var(--surface)) !important;
+  }
 }
 
 .avatarTrigger,
