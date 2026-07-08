@@ -9,7 +9,7 @@ import type {
 } from '@/components/Skill/SkillFileTree/index.type';
 import SkillVersionDropdown from '@/components/Skill/SkillVersionDropdown';
 import { useResourceService, useSkillService } from '@/domains';
-import type { SkillFileNode } from '@/domains/Skill';
+import type { SkillFileNode, UploadSkillAssetResult } from '@/domains/Skill';
 import { SkillServicesMap } from '@/domains/Skill';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import {
@@ -28,8 +28,16 @@ import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom';
 
 import CreateSkillModal from './_components/CreateSkillModal';
+import SkillSaveQueueDock from './_components/SkillSaveQueueDock';
+import type { SkillSaveQueueItem } from './_components/SkillSaveQueueDock/index.type';
 import UnsavedSkillChangesModal from './_components/UnsavedSkillChangesModal';
 import styles from './style.module.less';
+import {
+  clearSkillDraftCache,
+  loadSkillDraftCache,
+  saveSkillDraftCache,
+} from './utils/skillDraftCache';
+import { parseSkillZip } from './utils/skillZip';
 
 interface SkillViewProps {
   resourceId?: string;
@@ -52,6 +60,11 @@ interface SaveAssetOptions {
   showToast?: boolean;
 }
 
+interface SaveSkillFileTarget {
+  file: SkillFileNode;
+  content: string | Blob;
+}
+
 interface MoveTreeNodeResult {
   files: SkillFileNode[];
   idMap: Map<string, string>;
@@ -63,8 +76,38 @@ interface MoveTreeNodeResult {
 
 const ROOT_PATH = '/';
 const MAIN_SKILL_FILE_NAME = 'SKILL.md';
-const ACCEPTED_SKILL_FILE_EXTENSIONS = new Set(['md', 'py', 'txt', 'json', 'yaml', 'yml', 'toml']);
-
+const LOCAL_FILE_ID_PREFIX = 'local-file:';
+const LOCAL_FOLDER_ID_PREFIX = 'folder:';
+const EDITABLE_SKILL_FILE_EXTENSIONS = new Set([
+  'md',
+  'py',
+  'txt',
+  'json',
+  'yaml',
+  'yml',
+  'toml',
+  'js',
+  'jsx',
+  'ts',
+  'tsx',
+  'css',
+  'less',
+  'html',
+  'xml',
+  'sh',
+  'bash',
+  'zsh',
+  'ps1',
+  'bat',
+  'cmd',
+  'ini',
+  'env',
+  'java',
+  'go',
+  'rs',
+  'rb',
+  'pl',
+]);
 function findFile(nodes: SkillFileNode[], id: string): SkillFileNode | null {
   for (const node of nodes) {
     if (node.id === id) return node;
@@ -148,19 +191,74 @@ function collectNodeIds(node: SkillFileNode | null): string[] {
   return [node.id, ...(node.children ?? []).flatMap(collectNodeIds)];
 }
 
-function isPersistedAssetId(id: string): boolean {
+function isLocalAssetId(id: string): boolean {
+  return id.startsWith(LOCAL_FILE_ID_PREFIX);
+}
+
+function isRemoteAssetId(id: string): boolean {
   return Boolean(
     id &&
-    !id.startsWith('local-file:') &&
-    !id.startsWith('folder:') &&
+    !id.startsWith(LOCAL_FILE_ID_PREFIX) &&
+    !id.startsWith(LOCAL_FOLDER_ID_PREFIX) &&
     !id.includes(ROOT_PATH) &&
     !id.includes(':')
   );
 }
 
-function isAcceptedSkillFile(file: File): boolean {
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  return Boolean(ext && ACCEPTED_SKILL_FILE_EXTENSIONS.has(ext));
+function isLocalAssetNode(node: SkillFileNode): boolean {
+  return node.kind === 'file' && isLocalAssetId(node.id);
+}
+
+function collectFileNodes(nodes: SkillFileNode[]): SkillFileNode[] {
+  const result: SkillFileNode[] = [];
+  function walk(items: SkillFileNode[]) {
+    for (const item of items) {
+      if (item.kind === 'file') result.push(item);
+      if (item.children) walk(item.children);
+    }
+  }
+  walk(nodes);
+  return result;
+}
+
+function collectLocalAssetNodes(nodes: SkillFileNode[]): SkillFileNode[] {
+  return collectFileNodes(nodes).filter(isLocalAssetNode);
+}
+
+function recoverInterruptedSaveQueueItems(items: SkillSaveQueueItem[]): SkillSaveQueueItem[] {
+  return items.map((item) =>
+    item.phase === 'preparing' || item.phase === 'uploading'
+      ? { ...item, phase: 'failed', errorMessage: '上次保存被中断，请重新保存' }
+      : item
+  );
+}
+
+function findFileByPathAndName(
+  nodes: SkillFileNode[],
+  path: string,
+  name: string
+): SkillFileNode | null {
+  const normalizedPath = normalizeDirectoryPath(path);
+  return (
+    collectFileNodes(nodes).find(
+      (node) => normalizeDirectoryPath(node.path) === normalizedPath && node.name === name
+    ) ?? null
+  );
+}
+
+function isSkillZipFile(file: File): boolean {
+  return file.name.toLowerCase().endsWith('.zip');
+}
+
+function isEditableSkillFileName(name: string): boolean {
+  const normalizedName = name.toLowerCase();
+  if (normalizedName === 'dockerfile') return true;
+  const ext = normalizedName.split('.').pop();
+  return Boolean(ext && EDITABLE_SKILL_FILE_EXTENSIONS.has(ext));
+}
+
+function canPreviewSkillFile(file: SkillFileNode): boolean {
+  return typeof file.content === 'string' || isEditableSkillFileName(file.name);
 }
 
 function removeTreeNode(nodes: SkillFileNode[], idSet: Set<string>): SkillFileNode[] {
@@ -181,6 +279,28 @@ function updateTreeFileContent(
     if (node.id === id) return { ...node, id: nextId ?? node.id, content };
     if (node.children) {
       return { ...node, children: updateTreeFileContent(node.children, id, content, nextId) };
+    }
+    return node;
+  });
+}
+
+function updateSavedTreeFile(
+  nodes: SkillFileNode[],
+  id: string,
+  content: string | Blob,
+  nextId?: string
+): SkillFileNode[] {
+  return nodes.map((node) => {
+    if (node.id === id) {
+      return {
+        ...node,
+        id: nextId ?? node.id,
+        content: typeof content === 'string' ? content : node.content,
+        contentBlob: undefined,
+      };
+    }
+    if (node.children) {
+      return { ...node, children: updateSavedTreeFile(node.children, id, content, nextId) };
     }
     return node;
   });
@@ -211,6 +331,50 @@ function appendTreeNode(
     }
     return node;
   });
+}
+
+function appendFileNodeByPath(nodes: SkillFileNode[], fileNode: SkillFileNode): SkillFileNode[] {
+  const normalizedPath = normalizeDirectoryPath(fileNode.path);
+  if (normalizedPath === ROOT_PATH) return appendTreeNode(nodes, undefined, fileNode);
+  const folderNames = normalizedPath.split(ROOT_PATH).filter(Boolean);
+  return appendFileNodeIntoFolderPath(nodes, folderNames, fileNode, ROOT_PATH);
+}
+
+function appendFileNodeIntoFolderPath(
+  nodes: SkillFileNode[],
+  folderNames: string[],
+  fileNode: SkillFileNode,
+  parentPath: string
+): SkillFileNode[] {
+  if (folderNames.length === 0) return [...nodes, fileNode];
+
+  const [folderName, ...restFolderNames] = folderNames;
+  const folderPath = joinDirectoryPath(parentPath, folderName);
+  let folderFound = false;
+  const nextNodes = nodes.map((node) => {
+    if (node.kind !== 'folder' || normalizeDirectoryPath(node.path) !== folderPath) return node;
+    folderFound = true;
+    return {
+      ...node,
+      children: appendFileNodeIntoFolderPath(
+        node.children ?? [],
+        restFolderNames,
+        fileNode,
+        folderPath
+      ),
+    };
+  });
+
+  if (folderFound) return nextNodes;
+
+  const folder = createLocalFolderNode(folderName, parentPath);
+  return [
+    ...nextNodes,
+    {
+      ...folder,
+      children: appendFileNodeIntoFolderPath([], restFolderNames, fileNode, folderPath),
+    },
+  ];
 }
 
 function removeTreeNodeWithResult(
@@ -449,6 +613,12 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const skillService = useSkillService();
   const resourceService = useResourceService();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const draftCacheWriteVersionRef = useRef(0);
+  const restoredEditorDraftRef = useRef<{
+    fileId: string;
+    editorContent: string;
+    savedContent: string;
+  } | null>(null);
   const [localFiles, setLocalFiles] = useState<SkillFileNode[]>([]);
   const [selectedFileId, setSelectedFileId] = useState('');
   const [selectedTreeNodeId, setSelectedTreeNodeId] = useState('');
@@ -461,7 +631,22 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const [createModalOpen, setCreateModalOpen] = useState(!resourceId);
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
   const [pendingFileSwitchId, setPendingFileSwitchId] = useState('');
+  const [pendingVersionSwitch, setPendingVersionSwitch] = useState<number | null>(null);
   const [isTreeDragOver, setIsTreeDragOver] = useState(false);
+  const [saveQueueItems, setSaveQueueItems] = useState<SkillSaveQueueItem[]>([]);
+  const [draftCacheReady, setDraftCacheReady] = useState(false);
+
+  const invalidateDraftCacheWrites = useCallback(() => {
+    draftCacheWriteVersionRef.current += 1;
+  }, []);
+
+  const clearDraftCache = useCallback(
+    (targetResourceId: string) => {
+      invalidateDraftCacheWrites();
+      void clearSkillDraftCache(targetResourceId);
+    },
+    [invalidateDraftCacheWrites]
+  );
 
   const {
     data: skill,
@@ -478,17 +663,76 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     refreshDeps: [resourceId],
   });
 
+  const { loading: contentLoading, run: runLoadFileContent } = useRequest(
+    async (file: SkillFileNode) => {
+      if (!skill?.resourceId || !file.objectKey) return null;
+      const content = await skillService.loadAssetContent(
+        skill.resourceId,
+        file.objectKey,
+        viewingVersion ?? undefined
+      );
+      return { fileId: file.id, content };
+    },
+    {
+      manual: true,
+      onSuccess: (result) => {
+        if (!result) return;
+        setLocalFiles((prev) => updateTreeFileContent(prev, result.fileId, result.content));
+      },
+      onError: (err) => {
+        toast.danger(parseErrorMessage(err));
+      },
+    }
+  );
+
   /**
    * skill 详情刷新后重置本地文件树；文件树是用户编辑草稿的临时视图，不能只靠渲染派生。
    */
   useEffectForce(() => {
     if (!skill) return;
+    let disposed = false;
+
+    invalidateDraftCacheWrites();
+    setDraftCacheReady(false);
     setLocalFiles(skill.files);
     setViewingVersion(skill.draftVersion);
     setPendingCreate(null);
     setSelectedTreeNodeId('');
     setEditing(false);
-  }, [skill]);
+    setPendingVersionSwitch(null);
+    setSaveQueueItems([]);
+
+    void loadSkillDraftCache(skill.resourceId)
+      .then((snapshot) => {
+        if (disposed) return;
+        if (!snapshot || snapshot.draftVersion !== skill.draftVersion) {
+          setDraftCacheReady(true);
+          return;
+        }
+        restoredEditorDraftRef.current = snapshot.selectedFileId
+          ? {
+              fileId: snapshot.selectedFileId,
+              editorContent: snapshot.editorContent,
+              savedContent: snapshot.savedContent,
+            }
+          : null;
+        setLocalFiles(snapshot.files);
+        setViewingVersion(snapshot.viewingVersion ?? skill.draftVersion);
+        setSelectedFileId(snapshot.selectedFileId);
+        setSelectedTreeNodeId(snapshot.selectedTreeNodeId);
+        setSaveQueueItems(recoverInterruptedSaveQueueItems(snapshot.saveQueueItems));
+        setEditing(true);
+        setDraftCacheReady(true);
+        toast.warning('已恢复上次未保存的 Skill 草稿');
+      })
+      .catch(() => {
+        if (!disposed) setDraftCacheReady(true);
+      });
+
+    return () => {
+      disposed = true;
+    };
+  }, [invalidateDraftCacheWrites, skill]);
 
   const activeFiles = localFiles;
   const selectedFile = useMemo(() => {
@@ -501,14 +745,35 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   );
 
   /**
-   * 文件树或选中文件变化时同步 Monaco 内容；这是第三方编辑器受控值的边界同步。
+   * 文件树或选中文件变化时同步 Monaco 内容；后端只返回 objectKey，缺少 content 时按需从 OSS 加载。
    */
   useEffectForce(() => {
+    const canPreviewSelectedFile = selectedFile ? canPreviewSkillFile(selectedFile) : true;
     const content = selectedFile?.content ?? '';
     if (selectedFileId && !selectedFile) setSelectedFileId('');
-    setEditorContent(content);
-    setSavedContent(content);
-  }, [selectedFile, selectedFileId]);
+    const restoredEditorDraft = restoredEditorDraftRef.current;
+    if (
+      restoredEditorDraft &&
+      selectedFile &&
+      selectedFile.id === restoredEditorDraft.fileId &&
+      canPreviewSelectedFile
+    ) {
+      setEditorContent(restoredEditorDraft.editorContent);
+      setSavedContent(restoredEditorDraft.savedContent);
+      restoredEditorDraftRef.current = null;
+    } else {
+      setEditorContent(canPreviewSelectedFile ? content : '');
+      setSavedContent(canPreviewSelectedFile ? content : '');
+    }
+    if (
+      selectedFile &&
+      canPreviewSelectedFile &&
+      selectedFile.content === undefined &&
+      selectedFile.objectKey
+    ) {
+      runLoadFileContent(selectedFile);
+    }
+  }, [runLoadFileContent, selectedFile, selectedFileId, viewingVersion]);
 
   /**
    * 进入无 resourceId 的兼容路由时自动打开创建弹窗；关闭时回到云盘。
@@ -521,19 +786,110 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const isViewingDraft = skill ? viewingVersion === skill.draftVersion : false;
   const canEdit = Boolean(skill?.isOwner && isViewingDraft);
   const isDirty = canEdit && editorContent !== savedContent;
-  const navigationBlocker = useBlocker(isDirty);
+  const localAssetNodes = useMemo(() => collectLocalAssetNodes(activeFiles), [activeFiles]);
+  const canPreviewSelectedFile = selectedFile ? canPreviewSkillFile(selectedFile) : false;
+  const hasUnsavedLocalAssets = canEdit && localAssetNodes.length > 0;
+  const hasFailedSaveItems = saveQueueItems.some((item) => item.phase === 'failed');
+  const hasSaveableChanges = isDirty || hasUnsavedLocalAssets || hasFailedSaveItems;
+  const isSaveQueueActive = saveQueueItems.some(
+    (item) => item.phase === 'preparing' || item.phase === 'uploading'
+  );
+  const pendingLocalSaveQueueItems = useMemo<SkillSaveQueueItem[]>(
+    () =>
+      localAssetNodes.map((file) => ({
+        id: file.id,
+        name: file.name,
+        path: file.path,
+        size: file.size,
+        phase: 'pending',
+        progress: 0,
+      })),
+    [localAssetNodes]
+  );
+  const visibleSaveQueueItems =
+    saveQueueItems.length > 0 ? saveQueueItems : pendingLocalSaveQueueItems;
+  const hasUnsavedSkillChanges =
+    canEdit && (isDirty || hasUnsavedLocalAssets || hasFailedSaveItems);
+  const hasUnsafeNavigation = hasUnsavedSkillChanges || isSaveQueueActive;
+  const navigationBlocker = useBlocker(hasUnsafeNavigation);
 
   useBeforeUnload(
     useCallback(
       (event) => {
-        if (!isDirty) return;
+        if (!hasUnsafeNavigation) return;
         event.preventDefault();
         event.returnValue = '';
       },
-      [isDirty]
+      [hasUnsafeNavigation]
     ),
     { capture: true }
   );
+
+  /**
+   * 未保存的 Skill 草稿包含本地文件与 Blob，必须用 IndexedDB 才能在强制刷新后恢复。
+   */
+  useEffectForce(() => {
+    if (!skill || !draftCacheReady || !canEdit || !hasUnsavedSkillChanges) return;
+    const cacheWriteVersion = draftCacheWriteVersionRef.current;
+    const timer = window.setTimeout(() => {
+      if (draftCacheWriteVersionRef.current !== cacheWriteVersion) return;
+      const filesForCache =
+        selectedFile && canPreviewSkillFile(selectedFile)
+          ? updateTreeFileContent(localFiles, selectedFile.id, editorContent)
+          : localFiles;
+      const cacheToken = `${skill.resourceId}:${cacheWriteVersion}:${Date.now()}`;
+      const snapshot = {
+        resourceId: skill.resourceId,
+        draftVersion: skill.draftVersion,
+        cacheToken,
+        files: filesForCache,
+        selectedFileId,
+        selectedTreeNodeId,
+        editorContent,
+        savedContent,
+        viewingVersion,
+        saveQueueItems,
+        updatedAt: Date.now(),
+      };
+      void saveSkillDraftCache(snapshot)
+        .then(() => {
+          if (draftCacheWriteVersionRef.current === cacheWriteVersion) return;
+          void loadSkillDraftCache(snapshot.resourceId)
+            .then((cachedSnapshot) => {
+              if (cachedSnapshot?.cacheToken === cacheToken) {
+                void clearSkillDraftCache(snapshot.resourceId);
+              }
+            })
+            .catch(() => undefined);
+        })
+        .catch(() => {
+          // IndexedDB 失败不阻断页面编辑，只是不提供本地草稿恢复。
+        });
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    canEdit,
+    draftCacheReady,
+    editorContent,
+    hasUnsavedSkillChanges,
+    localFiles,
+    saveQueueItems,
+    savedContent,
+    selectedFile,
+    selectedFileId,
+    selectedTreeNodeId,
+    skill,
+    viewingVersion,
+  ]);
+
+  /**
+   * 草稿已回到干净状态时清理恢复缓存，避免下次进入页面恢复过期内容。
+   */
+  useEffectForce(() => {
+    if (!skill || !draftCacheReady || hasUnsavedSkillChanges) return;
+    clearDraftCache(skill.resourceId);
+  }, [clearDraftCache, draftCacheReady, hasUnsavedSkillChanges, skill]);
 
   const versionItems = useMemo(() => {
     if (!skill) return [];
@@ -595,6 +951,10 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   );
 
   const handleTreeSelect = (nodeId: string) => {
+    if (isSaveQueueActive) {
+      toast.warning('正在保存 Skill，请稍后再切换文件');
+      return;
+    }
     const node = findFile(activeFiles, nodeId);
     if (!node) return;
     if (node.kind === 'file' && node.id !== selectedFileId && isDirty) {
@@ -609,35 +969,169 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     setPendingCreate({ kind, parentFolderId });
   };
 
-  const {
-    loading: saveLoading,
-    run: runSave,
-    runAsync: runSaveAsync,
-  } = useRequest(
-    async (file: SkillFileNode, content: string, options?: SaveAssetOptions) => {
-      if (!skill) return;
-      const assetId = await skillService.saveAsset(skill.resourceId, skill.draftVersion, {
-        name: file.name,
-        path: file.path,
-        content,
+  const buildAllSaveTargets = useCallback((): SaveSkillFileTarget[] => {
+    if (!canEdit) return [];
+    const targetMap = new Map<string, SaveSkillFileTarget>();
+
+    localAssetNodes.forEach((file) => {
+      targetMap.set(file.id, {
+        file,
+        content: file.contentBlob ?? file.content ?? '',
       });
-      return { file, content, options, assetId };
+    });
+
+    if (selectedFile && isDirty) {
+      targetMap.set(selectedFile.id, {
+        file: selectedFile,
+        content: editorContent,
+      });
+    }
+
+    return [...targetMap.values()];
+  }, [canEdit, editorContent, isDirty, localAssetNodes, selectedFile]);
+
+  const buildCurrentSaveTarget = useCallback((): SaveSkillFileTarget[] => {
+    if (!selectedFile || !canEdit) return [];
+    if (!isDirty && !isLocalAssetNode(selectedFile)) return [];
+    if (!canPreviewSkillFile(selectedFile)) {
+      if (!isLocalAssetNode(selectedFile) || !selectedFile.contentBlob) return [];
+      return [
+        {
+          file: selectedFile,
+          content: selectedFile.contentBlob,
+        },
+      ];
+    }
+    return [
+      {
+        file: selectedFile,
+        content: editorContent,
+      },
+    ];
+  }, [canEdit, editorContent, isDirty, selectedFile]);
+
+  const { loading: saveLoading, runAsync: runSaveTargetsAsync } = useRequest(
+    async (targets: SaveSkillFileTarget[], options?: SaveAssetOptions) => {
+      if (!skill || targets.length === 0) return { options, failedCount: 0 };
+
+      setSaveQueueItems(
+        targets.map(({ file }) => ({
+          id: file.id,
+          name: file.name,
+          path: file.path,
+          size: file.size,
+          phase: 'preparing',
+          progress: 0,
+        }))
+      );
+
+      const currentSelectedFileId = selectedFile?.id;
+      let results: UploadSkillAssetResult[];
+      try {
+        results = await skillService.uploadAssets(
+          skill.resourceId,
+          skill.draftVersion,
+          targets.map(({ file, content }) => ({
+            clientId: file.id,
+            name: file.name,
+            path: file.path,
+            content,
+            size: file.size,
+          })),
+          {
+            onProgress: ({ clientId, progress }) => {
+              setSaveQueueItems((prev) =>
+                prev.map((item) =>
+                  item.id === clientId ? { ...item, phase: 'uploading', progress } : item
+                )
+              );
+            },
+          }
+        );
+      } catch (err) {
+        const errorMessage = parseErrorMessage(err);
+        setSaveQueueItems((prev) =>
+          prev.map((item) =>
+            item.phase === 'preparing' || item.phase === 'uploading'
+              ? { ...item, phase: 'failed', errorMessage }
+              : item
+          )
+        );
+        throw err;
+      }
+
+      const targetById = new Map(targets.map((target) => [target.file.id, target]));
+      const resultById = new Map(results.map((result) => [result.clientId, result]));
+      const failedResults = results.filter((result) => result.error);
+      const successResults = results.filter((result) => !result.error);
+
+      if (successResults.length > 0) {
+        setLocalFiles((prev) =>
+          successResults.reduce((tree, result) => {
+            const target = targetById.get(result.clientId);
+            if (!target) return tree;
+            return updateSavedTreeFile(tree, target.file.id, target.content, result.assetId);
+          }, prev)
+        );
+
+        successResults.forEach((result) => {
+          const assetId = result.assetId;
+          if (!assetId) return;
+          setSelectedFileId((prev) => (prev === result.clientId ? assetId : prev));
+          setSelectedTreeNodeId((prev) => (prev === result.clientId ? assetId : prev));
+          setPendingFileSwitchId((prev) => (prev === result.clientId ? assetId : prev));
+        });
+
+        const selectedTarget = currentSelectedFileId ? targetById.get(currentSelectedFileId) : null;
+        const selectedResult = currentSelectedFileId ? resultById.get(currentSelectedFileId) : null;
+        if (
+          selectedTarget &&
+          selectedResult &&
+          !selectedResult.error &&
+          typeof selectedTarget.content === 'string'
+        ) {
+          setSavedContent(selectedTarget.content);
+        }
+      }
+
+      setSaveQueueItems((prev) =>
+        prev.map((item) => {
+          const result = resultById.get(item.id);
+          if (!result) {
+            if (item.phase === 'preparing' || item.phase === 'uploading') {
+              return { ...item, phase: 'failed', errorMessage: '保存结果缺失，请重试' };
+            }
+            return item;
+          }
+          if (result.error) {
+            return {
+              ...item,
+              phase: 'failed',
+              progress: item.progress,
+              errorMessage: parseErrorMessage(result.error),
+            };
+          }
+          return {
+            ...item,
+            phase: 'done',
+            progress: 100,
+          };
+        })
+      );
+
+      if (failedResults.length > 0) {
+        throw new Error(`${failedResults.length} 个文件保存失败`);
+      }
+
+      return { options, failedCount: 0 };
     },
     {
       manual: true,
       onSuccess: (result) => {
         if (!result) return;
-        setLocalFiles((prev) =>
-          updateTreeFileContent(prev, result.file.id, result.content, result.assetId)
-        );
-        const assetId = result.assetId;
-        if (assetId) {
-          setSelectedFileId((prev) => (prev === result.file.id ? assetId : prev));
-          setSelectedTreeNodeId((prev) => (prev === result.file.id ? assetId : prev));
-          setPendingFileSwitchId((prev) => (prev === result.file.id ? assetId : prev));
-        }
-        setSavedContent(result.content);
+        setSaveQueueItems([]);
         setEditing(false);
+        if (skill) clearDraftCache(skill.resourceId);
         if (result.options?.showToast !== false) {
           toast.success('保存成功');
         }
@@ -649,6 +1143,17 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         toast.danger(parseErrorMessage(err));
       },
     }
+  );
+
+  const saveTargets = useCallback(
+    async (targets: SaveSkillFileTarget[], options?: SaveAssetOptions) => {
+      if (targets.length === 0) {
+        setSaveQueueItems((prev) => (prev.some((item) => item.phase === 'failed') ? [] : prev));
+        return;
+      }
+      await runSaveTargetsAsync(targets, options);
+    },
+    [runSaveTargetsAsync]
   );
 
   const { loading: publishLoading, run: runPublish } = useRequest(
@@ -679,6 +1184,8 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         if (!data) return;
         setViewingVersion(params[0]);
         setLocalFiles(data.files);
+        setSaveQueueItems([]);
+        setPendingVersionSwitch(null);
         setEditing(false);
       },
       onError: (err) => {
@@ -691,9 +1198,9 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     async (target: SkillFileNode) => {
       if (!skill) return null;
       const ids = collectFileIds(target);
-      const persistedIds = ids.filter(isPersistedAssetId);
-      if (persistedIds.length > 0) {
-        await skillService.deleteAssets(skill.resourceId, skill.draftVersion, persistedIds);
+      const remoteAssetIds = ids.filter(isRemoteAssetId);
+      if (remoteAssetIds.length > 0) {
+        await skillService.deleteAssets(skill.resourceId, skill.draftVersion, remoteAssetIds);
       }
       return { target, ids };
     },
@@ -703,6 +1210,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         if (!result) return;
         const removeIds = new Set<string>([result.target.id, ...result.ids]);
         setLocalFiles((prev) => removeTreeNode(prev, removeIds));
+        setSaveQueueItems((prev) => prev.filter((item) => !removeIds.has(item.id)));
         if (removeIds.has(selectedFileId)) setSelectedFileId('');
         if (removeIds.has(selectedTreeNodeId)) setSelectedTreeNodeId('');
         setDeleteTarget(null);
@@ -716,41 +1224,38 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   );
 
   const handleSave = useCallback(() => {
-    if (!selectedFile || !canEdit) return;
-    runSave(selectedFile, editorContent);
-  }, [canEdit, editorContent, runSave, selectedFile]);
+    if (!canEdit) return;
+    void saveTargets(buildAllSaveTargets());
+  }, [buildAllSaveTargets, canEdit, saveTargets]);
 
   const saveCurrentFile = useCallback(
     async (options?: SaveAssetOptions) => {
-      if (!selectedFile || !canEdit) return;
-      await runSaveAsync(selectedFile, editorContent, options);
+      if (!canEdit) return;
+      await saveTargets(buildCurrentSaveTarget(), options);
     },
-    [canEdit, editorContent, runSaveAsync, selectedFile]
+    [buildCurrentSaveTarget, canEdit, saveTargets]
   );
 
   const handlePublish = useCallback(() => {
+    if (isSaveQueueActive) {
+      toast.warning('正在保存 Skill，请稍后再发布');
+      return;
+    }
     const mainSkillFile = findRootMainSkillFile(activeFiles);
     if (!mainSkillFile) {
       toast.warning('发布前需要在根目录下创建并保存大写的 SKILL.md');
       return;
     }
-    if (
-      mainSkillFile.id.startsWith('local-file:') &&
-      !(mainSkillFile.id === selectedFileId && isDirty)
-    ) {
-      toast.warning('发布前需要先保存根目录下的 SKILL.md');
-      return;
-    }
-    if (isDirty) {
+    if (hasUnsavedSkillChanges || isLocalAssetId(mainSkillFile.id)) {
       setPublishConfirmOpen(true);
       return;
     }
     runPublish();
-  }, [activeFiles, isDirty, runPublish, selectedFileId]);
+  }, [activeFiles, hasUnsavedSkillChanges, isSaveQueueActive, runPublish]);
 
   const handleSaveAndPublish = async () => {
     try {
-      await saveCurrentFile({ refresh: false, showToast: false });
+      await saveTargets(buildAllSaveTargets(), { refresh: false, showToast: false });
       setPublishConfirmOpen(false);
       runPublish();
     } catch {
@@ -760,6 +1265,11 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
 
   const handleDiscardAndPublish = () => {
     setEditorContent(savedContent);
+    setSaveQueueItems([]);
+    if (skill) {
+      setLocalFiles(skill.files);
+      clearDraftCache(skill.resourceId);
+    }
     setPublishConfirmOpen(false);
     runPublish();
   };
@@ -773,13 +1283,14 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const handleDiscardAndLeave = () => {
     if (navigationBlocker.state !== 'blocked') return;
     setEditorContent(savedContent);
+    if (skill) clearDraftCache(skill.resourceId);
     navigationBlocker.proceed();
   };
 
   const handleSaveAndLeave = async () => {
     if (navigationBlocker.state !== 'blocked') return;
     try {
-      await saveCurrentFile({ refresh: false, showToast: false });
+      await saveTargets(buildAllSaveTargets(), { refresh: false, showToast: false });
       navigationBlocker.proceed();
     } catch {
       // useRequest 已统一 toast 错误信息。
@@ -806,6 +1317,47 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       setPendingFileSwitchId('');
       applyTreeSelection(nextFileId);
       setEditing(false);
+    } catch {
+      // useRequest 已统一 toast 错误信息。
+    }
+  };
+
+  const handleVersionSelect = useCallback(
+    (version: number) => {
+      if (version === viewingVersion) return;
+      if (isSaveQueueActive) {
+        toast.warning('正在保存 Skill，请稍后再切换版本');
+        return;
+      }
+      if (hasUnsafeNavigation) {
+        setPendingVersionSwitch(version);
+        return;
+      }
+      runSwitchVersion(version);
+    },
+    [hasUnsafeNavigation, isSaveQueueActive, runSwitchVersion, viewingVersion]
+  );
+
+  const handleCancelVersionSwitch = () => {
+    setPendingVersionSwitch(null);
+  };
+
+  const handleDiscardAndSwitchVersion = () => {
+    const nextVersion = pendingVersionSwitch;
+    setPendingVersionSwitch(null);
+    setEditorContent(savedContent);
+    setSaveQueueItems([]);
+    if (skill) clearDraftCache(skill.resourceId);
+    if (nextVersion != null) runSwitchVersion(nextVersion);
+  };
+
+  const handleSaveAndSwitchVersion = async () => {
+    const nextVersion = pendingVersionSwitch;
+    if (nextVersion == null) return;
+    try {
+      await saveTargets(buildAllSaveTargets(), { refresh: false, showToast: false });
+      setPendingVersionSwitch(null);
+      runSwitchVersion(nextVersion);
     } catch {
       // useRequest 已统一 toast 错误信息。
     }
@@ -844,6 +1396,9 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       dropPosition: SkillFileDropPosition;
     }) => {
       if (!skill || !canEdit) return null;
+      if (isSaveQueueActive) {
+        throw new Error('正在保存 Skill，请稍后再移动文件');
+      }
       if (isDirty) {
         throw new Error('请先保存或放弃当前修改后再移动文件');
       }
@@ -854,10 +1409,10 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       }
 
       const idMap = new Map(moveResult.idMap);
-      const persistedPathMoves = moveResult.movedFiles.filter(
-        ({ previous, next }) => previous.path !== next.path && isPersistedAssetId(previous.id)
+      const remotePathMoves = moveResult.movedFiles.filter(
+        ({ previous, next }) => previous.path !== next.path && isRemoteAssetId(previous.id)
       );
-      const missingContentFile = persistedPathMoves.find(
+      const missingContentFile = remotePathMoves.find(
         ({ previous }) => typeof previous.content !== 'string'
       );
 
@@ -866,7 +1421,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       }
 
       const previousAssetIds: string[] = [];
-      for (const { previous, next } of persistedPathMoves) {
+      for (const { previous, next } of remotePathMoves) {
         const assetId = await skillService.saveAsset(skill.resourceId, skill.draftVersion, {
           name: next.name,
           path: next.path,
@@ -899,7 +1454,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     }
   );
 
-  const canEditTree = canEdit && !moveLoading;
+  const canEditTree = canEdit && !moveLoading && !saveLoading && !isSaveQueueActive;
 
   const handleCommitCreate = (name: string, kind: 'file' | 'folder') => {
     if (!canEdit) {
@@ -925,25 +1480,69 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
 
   const handleAddLocalFiles = async (files: File[]) => {
     if (!canEditTree || files.length === 0) return;
-
-    const acceptedFiles = files.filter(isAcceptedSkillFile);
-    if (acceptedFiles.length === 0) {
-      toast.warning('仅支持 .md、.py、.txt、.json、.yaml、.yml、.toml 文件');
+    if (isDirty) {
+      toast.warning('请先保存或放弃当前修改后再上传文件');
       return;
     }
-    if (acceptedFiles.length < files.length) {
-      toast.warning('已跳过不支持的文件类型');
+
+    const zipFiles = files.filter(isSkillZipFile);
+    if (zipFiles.length > 0) {
+      if (files.length > 1 || zipFiles.length > 1) {
+        toast.warning('导入 zip 压缩包时请单独上传一个文件');
+        return;
+      }
+      try {
+        const parsedFiles = await parseSkillZip(zipFiles[0], {
+          mainSkillFileName: MAIN_SKILL_FILE_NAME,
+        });
+        const conflicts = parsedFiles.filter((file) =>
+          findFileByPathAndName(activeFiles, file.path, file.name)
+        );
+        if (conflicts.length > 0) {
+          throw new Error(
+            `导入失败，已存在同路径文件：${conflicts
+              .slice(0, 3)
+              .map((file) => file.name)
+              .join('、')}`
+          );
+        }
+
+        const nextFiles = parsedFiles.map((file) => ({
+          ...createLocalFileNode(file.name, file.path),
+          content: file.content,
+          contentBlob: file.contentBlob,
+          size: file.size,
+        }));
+        setLocalFiles((prev) =>
+          nextFiles.reduce((tree, fileNode) => appendFileNodeByPath(tree, fileNode), prev)
+        );
+        const mainFile = nextFiles.find(
+          (file) =>
+            file.name === MAIN_SKILL_FILE_NAME && normalizeDirectoryPath(file.path) === ROOT_PATH
+        );
+        const selectedZipFile = mainFile ?? nextFiles[0];
+        if (selectedZipFile) {
+          setSelectedFileId(selectedZipFile.id);
+          setSelectedTreeNodeId(selectedZipFile.id);
+          setEditing(false);
+        }
+        toast.success('zip 压缩包已导入，保存后生效');
+      } catch (err) {
+        toast.danger(parseErrorMessage(err));
+      }
+      return;
     }
 
     try {
       const { parentFolderId, parentPath } = resolveCreateParent();
       const nextFiles: SkillFileNode[] = [];
 
-      for (const file of acceptedFiles) {
-        const content = await file.text();
+      for (const file of files) {
+        const canPreviewUploadedFile = isEditableSkillFileName(file.name);
         nextFiles.push({
           ...createLocalFileNode(file.name, parentPath),
-          content,
+          content: canPreviewUploadedFile ? await file.text() : undefined,
+          contentBlob: canPreviewUploadedFile ? undefined : file,
           size: file.size,
         });
       }
@@ -952,7 +1551,11 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         nextFiles.reduce((tree, fileNode) => appendTreeNode(tree, parentFolderId, fileNode), prev)
       );
       const lastFile = nextFiles[nextFiles.length - 1];
-      if (lastFile) selectNewLocalFile(lastFile.id);
+      if (lastFile) {
+        setSelectedFileId(lastFile.id);
+        setSelectedTreeNodeId(lastFile.id);
+        setEditing(false);
+      }
     } catch (err) {
       toast.danger(parseErrorMessage(err));
     }
@@ -993,6 +1596,10 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (target.closest('.wisepen-tree__item')) return;
+    if (isSaveQueueActive) {
+      toast.warning('正在保存 Skill，请稍后再取消选择');
+      return;
+    }
     if (isDirty) {
       toast.warning('请先保存或放弃当前修改后再取消选择');
       return;
@@ -1015,7 +1622,13 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
           <SkillToolbarTitle
             title={skill?.title}
             saveStatus={
-              canEdit ? (saveLoading ? 'saving' : isDirty ? 'dirty' : 'saved') : undefined
+              canEdit
+                ? saveLoading || isSaveQueueActive
+                  ? 'saving'
+                  : hasSaveableChanges
+                    ? 'dirty'
+                    : 'saved'
+                : undefined
             }
           />
         ),
@@ -1023,15 +1636,31 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
           <div className={styles.topBarActions}>
             {canEdit ? (
               <>
-                <Button variant="secondary" onPress={handleToggleEditing} isDisabled={moveLoading}>
+                <Button
+                  variant="secondary"
+                  onPress={handleToggleEditing}
+                  isDisabled={
+                    !canPreviewSelectedFile ||
+                    contentLoading ||
+                    saveLoading ||
+                    isSaveQueueActive ||
+                    moveLoading
+                  }
+                >
                   <Pencil size={16} />
                   <span>{editing ? '取消' : '编辑'}</span>
                 </Button>
-                {editing ? (
+                {editing || hasSaveableChanges ? (
                   <Button
                     variant="secondary"
                     onPress={handleSave}
-                    isDisabled={!isDirty || saveLoading || moveLoading}
+                    isDisabled={
+                      !hasSaveableChanges ||
+                      contentLoading ||
+                      saveLoading ||
+                      isSaveQueueActive ||
+                      moveLoading
+                    }
                   >
                     <Save size={16} />
                     <span>保存</span>
@@ -1040,7 +1669,13 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
                 <Button
                   variant="primary"
                   onPress={handlePublish}
-                  isDisabled={publishLoading || saveLoading || moveLoading}
+                  isDisabled={
+                    publishLoading ||
+                    contentLoading ||
+                    saveLoading ||
+                    isSaveQueueActive ||
+                    moveLoading
+                  }
                 >
                   <Upload size={16} />
                   <span>发布</span>
@@ -1051,7 +1686,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
               items={versionItems}
               disabledKeys={disabledVersionKeys}
               formatVersion={SkillServicesMap.formatVersion}
-              onSelect={(version) => runSwitchVersion(version)}
+              onSelect={handleVersionSelect}
             />
           </div>
         ) : undefined,
@@ -1059,15 +1694,18 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     }),
     [
       canEdit,
+      canPreviewSelectedFile,
+      contentLoading,
       disabledVersionKeys,
       editing,
       handlePublish,
       handleSave,
       handleToggleEditing,
-      isDirty,
+      handleVersionSelect,
+      hasSaveableChanges,
+      isSaveQueueActive,
       moveLoading,
       publishLoading,
-      runSwitchVersion,
       saveLoading,
       skill,
       versionItems,
@@ -1175,7 +1813,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
                   onClick={handleTreeWrapClick}
                 >
                   {canEditTree && isTreeDragOver ? (
-                    <div className={styles.treeDropHint}>释放以上传文件</div>
+                    <div className={styles.treeDropHint}>释放以上传文件或 zip 压缩包</div>
                   ) : null}
                   {activeFiles.length > 0 || pendingCreate ? (
                     <SkillFileTree
@@ -1199,6 +1837,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
                     />
                   )}
                 </div>
+                <SkillSaveQueueDock items={visibleSaveQueueItems} onRetry={handleSave} />
               </section>
 
               <main className={styles.rightPanel}>
@@ -1208,15 +1847,29 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
                       <span className={styles.editorFileName}>{selectedFile.name}</span>
                     </header>
                     <div className={styles.editorBody}>
-                      <SkillEditor
-                        content={editorContent}
-                        fileName={selectedFile.name}
-                        readOnly={
-                          !editing || !canEdit || saveLoading || versionLoading || moveLoading
-                        }
-                        onSave={handleSave}
-                        onChange={setEditorContent}
-                      />
+                      {canPreviewSkillFile(selectedFile) ? (
+                        <SkillEditor
+                          content={editorContent}
+                          fileName={selectedFile.name}
+                          readOnly={
+                            !editing ||
+                            !canEdit ||
+                            contentLoading ||
+                            saveLoading ||
+                            isSaveQueueActive ||
+                            versionLoading ||
+                            moveLoading
+                          }
+                          onSave={handleSave}
+                          onChange={setEditorContent}
+                        />
+                      ) : (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description="该文件类型暂不支持预览，保存时会保留原文件内容"
+                          className={styles.emptyBlock}
+                        />
+                      )}
                     </div>
                   </>
                 ) : (
@@ -1278,11 +1931,18 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         onDiscard={handleDiscardAndSwitchFile}
         onConfirm={() => void handleSaveAndSwitchFile()}
       />
+      <UnsavedSkillChangesModal
+        isOpen={pendingVersionSwitch != null}
+        mode="switchVersion"
+        isLoading={saveLoading}
+        onCancel={handleCancelVersionSwitch}
+        onDiscard={handleDiscardAndSwitchVersion}
+        onConfirm={() => void handleSaveAndSwitchVersion()}
+      />
 
       <input
         ref={fileInputRef}
         type="file"
-        accept=".md,.py,.txt,.json,.yaml,.yml,.toml"
         multiple
         hidden
         onChange={(event) => void handleFileChange(event)}

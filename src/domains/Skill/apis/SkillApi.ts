@@ -1,12 +1,14 @@
-import { apiPost } from '@/apis/request';
+import { apiGet, apiPost } from '@/apis/request';
 import type {
   CreateSkillData,
   DeleteSkillAssetsData,
+  GetSkillAssetStsTokenData,
   GetSkillInfoData,
   GetSkillVersionBundleInfoData,
   InitUploadSkillAssetsData,
   PublishSkillVersionData,
   RassetUploadInitResponse,
+  RSkillAssetStsTokenResponse,
   RSkillResourceInfoResponse,
   RSkillVersionBundleInfoResponse,
   RString,
@@ -28,6 +30,12 @@ function getSkillVersionBundleInfo(
   query: GetSkillVersionBundleInfoData['query']
 ): Promise<RSkillVersionBundleInfoResponse['data']> {
   return apiPost('/skill/getSkillVersionBundleInfo', null, { params: query });
+}
+
+function getSkillAssetStsToken(
+  query: GetSkillAssetStsTokenData['query']
+): Promise<RSkillAssetStsTokenResponse['data']> {
+  return apiGet('/skill/getSkillAssetStsToken', { params: query });
 }
 
 function changeSkillInfo(body: UpdateSkillInfoData['body']): Promise<RVoid['data']> {
@@ -52,6 +60,7 @@ export const SkillApi = {
   createSkill,
   getSkillInfo,
   getSkillVersionBundleInfo,
+  getSkillAssetStsToken,
   changeSkillInfo,
   initUploadSkillAssets,
   deleteSkillAssets,

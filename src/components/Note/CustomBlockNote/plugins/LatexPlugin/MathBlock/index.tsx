@@ -203,7 +203,7 @@ function MathBlockView(props: MathBlockRenderProps) {
   const shellRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const openValueRef = useRef(props.block.props.expression);
-  const blurCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const blurCommitTimerRef = useRef<number | null>(null);
   const [popoverPos, setPopoverPos] = useState<{
     top: number;
     left: number;

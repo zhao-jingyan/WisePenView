@@ -16,6 +16,8 @@ function fileExtToLanguage(name: string): string {
       return 'javascript';
     case 'ts':
       return 'typescript';
+    case 'tsx':
+      return 'typescript';
     case 'json':
       return 'json';
     case 'yml':
@@ -27,7 +29,32 @@ function fileExtToLanguage(name: string): string {
       return 'css';
     case 'less':
       return 'less';
+    case 'sh':
+    case 'bash':
+    case 'zsh':
+      return 'shell';
+    case 'ps1':
+      return 'powershell';
+    case 'bat':
+    case 'cmd':
+      return 'bat';
+    case 'ini':
+    case 'env':
+      return 'ini';
+    case 'xml':
+      return 'xml';
+    case 'java':
+      return 'java';
+    case 'go':
+      return 'go';
+    case 'rs':
+      return 'rust';
+    case 'rb':
+      return 'ruby';
+    case 'pl':
+      return 'perl';
     default:
+      if (name.toLowerCase() === 'dockerfile') return 'dockerfile';
       return 'plaintext';
   }
 }

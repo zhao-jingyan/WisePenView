@@ -9,6 +9,7 @@ export interface SkillFileNode {
   kind: 'folder' | 'file';
   language?: string;
   content?: string;
+  contentBlob?: Blob;
   objectKey?: string;
   uploadStatus?: string;
   size?: number;

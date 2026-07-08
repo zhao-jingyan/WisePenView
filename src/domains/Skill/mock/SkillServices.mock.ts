@@ -32,7 +32,19 @@ export const SkillServicesMock: ISkillService = {
   getSkillVersionFiles: async () => mockDetail,
   updateSkillInfo: async () => undefined,
   publishVersion: async () => undefined,
+  loadAssetContent: async () => '# Mock Skill\n',
   deleteAssets: async () => undefined,
   uploadAsset: async () => undefined,
+  uploadAssets: async (_resourceId, _draftVersion, assets, options) => {
+    assets.forEach((asset, index) => {
+      options?.onProgress?.({ clientId: asset.clientId ?? String(index), progress: 100 });
+    });
+    return assets.map((asset, index) => ({
+      clientId: asset.clientId ?? String(index),
+      name: asset.name,
+      path: asset.path,
+      assetId: `mock-asset-${index}-${asset.name}`,
+    }));
+  },
   saveAsset: async () => undefined,
 };

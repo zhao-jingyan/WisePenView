@@ -310,7 +310,7 @@ function InlineMathView(
   const [value, setValue] = useState(expression);
   const shellRef = useRef<HTMLSpanElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const textareaBlurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textareaBlurTimerRef = useRef<number | null>(null);
   const [popoverPos, setPopoverPos] = useState<{
     top: number;
     left: number;

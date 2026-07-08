@@ -1,7 +1,7 @@
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
 import { Button } from '@heroui/react';
 
-type UnsavedSkillChangesMode = 'publish' | 'leave' | 'switchFile';
+type UnsavedSkillChangesMode = 'publish' | 'leave' | 'switchFile' | 'switchVersion';
 
 interface UnsavedSkillChangesModalProps {
   isOpen: boolean;
@@ -33,6 +33,11 @@ const modalCopy: Record<
   switchFile: {
     title: '保存后切换文件？',
     description: '当前文件有未保存修改。保存后再切换可避免丢失本次编辑。',
+    confirmText: '保存并切换',
+  },
+  switchVersion: {
+    title: '保存后切换版本？',
+    description: '当前 Skill 有未保存内容。保存后再切换版本可避免丢失本次编辑。',
     confirmText: '保存并切换',
   },
 };
