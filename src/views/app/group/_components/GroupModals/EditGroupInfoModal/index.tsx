@@ -1,3 +1,4 @@
+import ResourcePermissionActionIcon from '@/components/Drive/common/resourcePermissionActionIcon';
 import { Input, TextArea } from '@/components/Input';
 import AppModal from '@/components/Overlay/AppModal';
 import UploadZone from '@/components/UploadZone';
@@ -5,14 +6,11 @@ import { useGroupService, useImageService } from '@/domains';
 import type { EditGroupRequest, GroupResConfig } from '@/domains/Group';
 import { DEFAULT_MEMBER_ACTIONS, GROUP_TYPE } from '@/domains/Group';
 import {
-  actionsToPermissionCode,
   getResourceActionImpliedActions,
-  getResourceActionImpliedMask,
-  hasResourceAction,
   normalizeResourceActions,
-  permissionCodeToActions,
   TAG_RESOURCE_ACTION,
   type TagResourceAction,
+  updateResourceActionSelection,
 } from '@/domains/Tag';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import {
@@ -220,15 +218,10 @@ function EditGroupInfoModal({
     const current = normalizeResourceActions(
       formValues.defaultMemberActions ?? DEFAULT_MEMBER_ACTIONS
     );
-    if (checked) {
-      const nextCode = actionsToPermissionCode([...current, action]);
-      updateFormValue('defaultMemberActions', permissionCodeToActions(nextCode));
-      return;
-    }
-    const next = normalizeResourceActions(
-      current.filter((item) => !hasResourceAction(getResourceActionImpliedMask(item), action))
+    updateFormValue(
+      'defaultMemberActions',
+      updateResourceActionSelection(current, action, checked)
     );
-    updateFormValue('defaultMemberActions', next);
   };
 
   return (
@@ -323,7 +316,8 @@ function EditGroupInfoModal({
                   </Checkbox.Control>
                   <Checkbox.Content>
                     <span data-slot="label" className={styles.actionLabel}>
-                      {item.label}
+                      <ResourcePermissionActionIcon action={action} className={styles.actionIcon} />
+                      <span className={styles.actionText}>{item.label}</span>
                     </span>
                   </Checkbox.Content>
                 </Checkbox>

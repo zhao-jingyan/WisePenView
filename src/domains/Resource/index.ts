@@ -22,6 +22,7 @@ export {
   permissionCodeToActions,
   resourceActionsInclude,
   resourceActionsToApiKeys,
+  updateResourceActionSelection,
 } from './enum';
 export type {
   ResourceAction,

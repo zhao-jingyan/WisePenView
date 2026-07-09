@@ -134,7 +134,10 @@ export const buildResourcePermissionActionKeySet = (
   actions: ResourceAction[] | null | undefined,
   actionOptions: ResourcePermissionActionOption[]
 ): Set<string> => {
-  const actionSet = new Set(actions ?? []);
+  const supportedActions = actionOptions
+    .filter((option) => option.supported)
+    .map((option) => option.action);
+  const actionSet = new Set(filterSupportedResourcePermissionActions(actions, supportedActions));
   return new Set(
     actionOptions.filter((option) => actionSet.has(option.action)).map((option) => option.key)
   );
@@ -159,16 +162,6 @@ export const areResourcePermissionActionsEqualByOptions = (
     right,
     actionOptions.filter((option) => option.supported).map((option) => option.action)
   );
-
-export const readResourcePermissionActionsFromKeys = (
-  keys: Set<string>,
-  actionOptions: ResourcePermissionActionOption[]
-): ResourceAction[] => {
-  const selectedActions = actionOptions
-    .filter((option) => keys.has(option.key))
-    .map((option) => option.action);
-  return filterResourcePermissionActionsByOptions(selectedActions, actionOptions);
-};
 
 export const resolveTagInheritedResourceActions = (
   tag: TagTreeNode | undefined,

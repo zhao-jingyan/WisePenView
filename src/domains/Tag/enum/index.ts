@@ -8,6 +8,7 @@ import {
   permissionCodeToActions,
   RESOURCE_ACTION,
   type ResourceAction,
+  updateResourceActionSelection,
 } from '@/domains/Resource';
 import type { EnumKey, EnumValue } from '@/utils/enum';
 import { createEnum } from '@/utils/enum';
@@ -91,6 +92,7 @@ export {
   hasResourceAction,
   normalizeResourceActions,
   permissionCodeToActions,
+  updateResourceActionSelection,
 };
 
 export const resourceActionsToApiKeys = (

@@ -1,3 +1,4 @@
+import ResourcePermissionActionIcon from '@/components/Drive/common/resourcePermissionActionIcon';
 import {
   areResourcePermissionActionsEqualByOptions,
   buildResourcePermissionActionKeySet,
@@ -13,6 +14,7 @@ import {
   type ResourcePermissionOverview,
   type ResourcePermissionSource,
   type ResourcePermissionSubject,
+  updateResourceActionSelection,
 } from '@/domains/Resource';
 import type { UserSearchUser } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
@@ -47,6 +49,11 @@ const TAG_INHERITED_DESCRIPTION = '继承自资源所在标签的权限';
 const RESOURCE_OVERRIDE_DESCRIPTION = '已覆盖标签策略，仅对此资源生效';
 const EMPTY_ACTION_OPTIONS: ResourcePermissionActionOption[] = [];
 const PANEL_SKELETON_ROWS = ['owner', 'tag', 'override', 'specifiedUser'] as const;
+
+const getSupportedActionsFromOptions = (
+  actionOptions: ResourcePermissionActionOption[]
+): ResourceAction[] =>
+  actionOptions.filter((option) => option.supported).map((option) => option.action);
 
 const getDisplayInitial = (name: string): string => name.trim().charAt(0).toUpperCase() || '?';
 
@@ -312,7 +319,13 @@ function SubjectPermissionPopover({
                 textValue={option.label}
                 onPress={() => onActionToggle(subject, option.action)}
               >
-                <span className={styles.actionLabel}>{option.label}</span>
+                <span className={styles.actionLabel}>
+                  <ResourcePermissionActionIcon
+                    action={option.action}
+                    className={styles.actionIcon}
+                  />
+                  <span className={styles.actionText}>{option.label}</span>
+                </span>
                 <ListBox.ItemIndicator />
               </ListBox.Item>
             ))}
@@ -558,9 +571,12 @@ function ResourcePermissionPanel({
     );
     if (!currentSelectedSubject || currentSelectedSubject.readonly) return;
     const currentActions = getSubjectActionsForDisplay(currentSelectedSubject);
-    const nextActions = currentActions.includes(action)
-      ? currentActions.filter((currentAction) => currentAction !== action)
-      : [...currentActions, action];
+    const nextActions = updateResourceActionSelection(
+      currentActions,
+      action,
+      !currentActions.includes(action),
+      getSupportedActionsFromOptions(actionOptions)
+    );
     const nextSubjects = updateSubjectActions(
       currentSubjects,
       currentSelectedSubject.id,

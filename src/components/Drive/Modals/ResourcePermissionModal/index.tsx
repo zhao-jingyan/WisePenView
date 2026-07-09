@@ -1,8 +1,9 @@
+import ResourcePermissionActionIcon from '@/components/Drive/common/resourcePermissionActionIcon';
 import {
   buildResourceOverrideActions,
   buildResourcePermissionActionKeySet,
   buildResourcePermissionActionOptions,
-  readResourcePermissionActionsFromKeys,
+  filterResourcePermissionActionsByOptions,
   resolveResourcePermissionPolicy,
   resolveTagInheritedResourceActions,
 } from '@/components/Drive/common/resourcePermissionPolicy';
@@ -11,7 +12,9 @@ import AppModal from '@/components/Overlay/AppModal';
 import { useResourceService, useTagService } from '@/domains';
 import {
   areResourcePermissionActionsEqual,
+  updateResourceActionSelection,
   type ResourceAction,
+  type ResourcePermissionActionOption,
   type ResourcePermissionOverview,
 } from '@/domains/Resource';
 import { parseErrorMessage } from '@/utils/error';
@@ -30,6 +33,20 @@ const toStringKeySet = (keys: Selection): Set<string> => {
   if (keys === 'all') return new Set();
   return new Set([...keys].map((key) => String(key)));
 };
+
+const getSupportedActionsFromOptions = (
+  actionOptions: ResourcePermissionActionOption[]
+): ResourceAction[] =>
+  actionOptions.filter((option) => option.supported).map((option) => option.action);
+
+const readSelectedActionsFromKeys = (
+  keys: Set<string>,
+  actionOptions: ResourcePermissionActionOption[]
+): ResourceAction[] =>
+  filterResourcePermissionActionsByOptions(
+    actionOptions.filter((option) => keys.has(option.key)).map((option) => option.action),
+    actionOptions
+  );
 
 function ResourcePermissionModal({
   isOpen,
@@ -152,10 +169,33 @@ function ResourcePermissionModal({
 
   const handleSelectionChange = (keys: Selection) => {
     if (keys === 'all') {
-      setSelectedActions(actionOptions.map((option) => option.action));
+      setSelectedActions(
+        filterResourcePermissionActionsByOptions(
+          actionOptions.map((option) => option.action),
+          actionOptions
+        )
+      );
       return;
     }
-    setSelectedActions(readResourcePermissionActionsFromKeys(toStringKeySet(keys), actionOptions));
+    const nextActionKeys = toStringKeySet(keys);
+    const addedKey = [...nextActionKeys].find((key) => !selectedActionKeys.has(key));
+    const removedKey = [...selectedActionKeys].find((key) => !nextActionKeys.has(key));
+    const changedKey = addedKey ?? removedKey;
+    const changedOption = actionOptions.find((option) => option.key === changedKey);
+
+    if (!changedOption) {
+      setSelectedActions(readSelectedActionsFromKeys(nextActionKeys, actionOptions));
+      return;
+    }
+
+    setSelectedActions(
+      updateResourceActionSelection(
+        selectedActions,
+        changedOption.action,
+        Boolean(addedKey),
+        getSupportedActionsFromOptions(actionOptions)
+      )
+    );
   };
 
   return (
@@ -204,7 +244,13 @@ function ResourcePermissionModal({
           >
             {actionOptions.map((option) => (
               <ListBox.Item id={option.key} key={option.key} textValue={option.label}>
-                <span className={styles.actionLabel}>{option.label}</span>
+                <span className={styles.actionLabel}>
+                  <ResourcePermissionActionIcon
+                    action={option.action}
+                    className={styles.actionIcon}
+                  />
+                  <span className={styles.actionText}>{option.label}</span>
+                </span>
                 <ListBox.ItemIndicator />
               </ListBox.Item>
             ))}

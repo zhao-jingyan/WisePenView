@@ -130,6 +130,25 @@
   font-weight: 600;
 }
 
+.actionName {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.actionIcon {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.actionText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .toggleHeader {
   width: 88px;
 }
@@ -138,11 +157,15 @@
   width: 118px;
 }
 
-.supportedCell {
+.permissionTable td.supportedCell {
   color: var(--success);
 }
 
-.supportedIcon {
+.permissionTable td.deniedCell {
+  color: var(--danger);
+}
+
+.permissionStateIcon {
   display: inline-flex;
   vertical-align: middle;
 }

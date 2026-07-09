@@ -24,6 +24,12 @@ export interface TagPermissionResourceStrategy {
   supportedActions: TagResourceAction[];
 }
 
+export interface TagPermissionActionPresetOption {
+  key: Exclude<TagPermissionPresetKey, 'custom'>;
+  label: string;
+  actions: TagResourceAction[];
+}
+
 export interface TagPermissionActionRow {
   action: TagResourceAction;
   key: string;
@@ -111,6 +117,20 @@ export const TAG_PERMISSION_PRESETS: TagPermissionPresetOption[] = [
   },
 ];
 
+export const TAG_PERMISSION_ACTION_PRESET_OPTIONS: TagPermissionActionPresetOption[] =
+  TAG_PERMISSION_PRESETS.filter(
+    (
+      preset
+    ): preset is TagPermissionPresetOption & {
+      key: Exclude<TagPermissionPresetKey, 'custom'>;
+      values: TagPermissionPresetValues;
+    } => Boolean(preset.values)
+  ).map((preset) => ({
+    key: preset.key,
+    label: preset.label,
+    actions: preset.values.grantedActions,
+  }));
+
 const createActionSet = (actions: TagResourceAction[] | undefined): Set<TagResourceAction> =>
   new Set(normalizeResourceActions(actions));
 
@@ -143,6 +163,15 @@ export const resolveTagPermissionPresetKey = (
     if (!preset.values) return false;
     return isPresetValuesMatched(preset.values, values);
   });
+  return matchedPreset?.key ?? 'custom';
+};
+
+export const resolveTagPermissionActionPresetKey = (
+  actions: TagResourceAction[] | undefined
+): TagPermissionPresetKey => {
+  const matchedPreset = TAG_PERMISSION_ACTION_PRESET_OPTIONS.find((preset) =>
+    isSameActionSet(preset.actions, actions)
+  );
   return matchedPreset?.key ?? 'custom';
 };
 

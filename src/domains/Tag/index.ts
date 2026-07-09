@@ -13,6 +13,7 @@ export {
   normalizeResourceActions,
   permissionCodeToActions,
   resourceActionsToApiKeys,
+  updateResourceActionSelection,
 } from './enum';
 export type {
   AccessControlScope,

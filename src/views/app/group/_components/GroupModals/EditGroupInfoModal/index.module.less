@@ -77,7 +77,23 @@
 }
 
 .actionLabel {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-xs);
   font-weight: 500;
+}
+
+.actionIcon {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.actionText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .actionHint {

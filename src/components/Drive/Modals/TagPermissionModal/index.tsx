@@ -1,8 +1,9 @@
 import DriveNav from '@/components/Drive/DriveNav';
+import ResourcePermissionActionIcon from '@/components/Drive/common/resourcePermissionActionIcon';
 import {
-  resolveTagPermissionPresetKey,
+  resolveTagPermissionActionPresetKey,
+  TAG_PERMISSION_ACTION_PRESET_OPTIONS,
   TAG_PERMISSION_ACTION_ROWS,
-  TAG_PERMISSION_PRESETS,
   TAG_PERMISSION_RESOURCE_STRATEGIES,
 } from '@/components/Drive/common/tagPermissionPreset';
 import { Empty, Spin } from '@/components/Feedback';
@@ -11,9 +12,9 @@ import { useTagService } from '@/domains';
 import { mapTagToFolderNode } from '@/domains/Drive/mapper/DriveServices.map';
 import {
   ACCESS_CONTROL_SCOPE,
-  getResourceActionImpliedActions,
   getTagPermissionPresetValues,
   normalizeResourceActions,
+  updateResourceActionSelection,
   type AccessControlScope,
   type TagPermissionPresetKey,
   type TagResourceAction,
@@ -23,7 +24,7 @@ import { useEffectForce } from '@/hooks/useEffectForce';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { Button, Checkbox, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Check } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { useState } from 'react';
 import {
   resolveDriveScope,
@@ -48,13 +49,6 @@ const DEFAULT_FORM_VALUES: TagPermissionFormValues = {
   tagMountSpecifiedUsers: [],
   grantedActions: [],
 };
-
-const PRESET_SEGMENT_ITEMS = TAG_PERMISSION_PRESETS.filter((preset) => preset.values).map(
-  (preset) => ({
-    key: preset.key,
-    label: preset.label,
-  })
-) as Array<{ key: Exclude<TagPermissionPresetKey, 'custom'>; label: string }>;
 
 const buildSelectionFromTag = (tag: TagTreeNode, groupId?: string): DriveSelectionItem => {
   const scope = resolveDriveScope(groupId ? { type: 'group', groupId } : undefined).scope;
@@ -81,25 +75,6 @@ const buildFormFromTag = (tag: TagTreeNode): TagPermissionFormValues => ({
   grantedActions: normalizeResourceActions(tag.grantedActions),
 });
 
-const updateGrantedActions = (
-  currentActions: TagResourceAction[],
-  action: TagResourceAction,
-  checked: boolean
-): TagResourceAction[] => {
-  if (checked) {
-    return normalizeResourceActions([
-      ...currentActions,
-      ...getResourceActionImpliedActions(action),
-      action,
-    ]);
-  }
-  return normalizeResourceActions(
-    currentActions.filter(
-      (item) => item !== action && !getResourceActionImpliedActions(item).includes(action)
-    )
-  );
-};
-
 const TagPermissionModal = ({
   isOpen,
   groupId,
@@ -114,11 +89,9 @@ const TagPermissionModal = ({
   const [tagRefreshSeed, setTagRefreshSeed] = useState(0);
   const [initialTagLoading, setInitialTagLoading] = useState(false);
   const showTagTree = !initialTagId;
-  const selectedPresetKey = resolveTagPermissionPresetKey({
-    taggedResourceAclGrantScope: permissionForm.taggedResourceAclGrantScope,
-    tagMountPermissionScope: permissionForm.tagMountPermissionScope,
-    grantedActions: permissionForm.grantedActions,
-  });
+  const selectedActionPresetKey = resolveTagPermissionActionPresetKey(
+    permissionForm.grantedActions
+  );
 
   const resetPermissionForm = () => {
     setPermissionForm(DEFAULT_FORM_VALUES);
@@ -256,7 +229,7 @@ const TagPermissionModal = ({
   const handleActionToggle = (action: TagResourceAction, checked: boolean) => {
     setPermissionForm((prev) => ({
       ...prev,
-      grantedActions: updateGrantedActions(prev.grantedActions, action, checked),
+      grantedActions: updateResourceActionSelection(prev.grantedActions, action, checked),
     }));
   };
 
@@ -290,7 +263,15 @@ const TagPermissionModal = ({
               const selected = actionSet.has(row.action);
               return (
                 <tr key={row.key}>
-                  <th className={styles.actionCell}>{row.label}</th>
+                  <th className={styles.actionCell}>
+                    <span className={styles.actionName}>
+                      <ResourcePermissionActionIcon
+                        action={row.action}
+                        className={styles.actionIcon}
+                      />
+                      <span className={styles.actionText}>{row.label}</span>
+                    </span>
+                  </th>
                   <td
                     className={styles.permissionToggleCell}
                     onClick={() => handleActionToggle(row.action, !selected)}
@@ -312,15 +293,27 @@ const TagPermissionModal = ({
                   </td>
                   {TAG_PERMISSION_RESOURCE_STRATEGIES.map((strategy) => {
                     const supported = row.supportedStrategyKeys.includes(strategy.key);
+                    const cellClassName = !supported
+                      ? styles.unsupportedCell
+                      : selected
+                        ? styles.supportedCell
+                        : styles.deniedCell;
                     return (
-                      <td
-                        key={strategy.key}
-                        className={supported ? styles.supportedCell : styles.unsupportedCell}
-                      >
-                        {supported ? (
-                          <Check size={14} aria-hidden="true" className={styles.supportedIcon} />
-                        ) : (
+                      <td key={strategy.key} className={cellClassName}>
+                        {!supported ? (
                           <span aria-hidden="true">-</span>
+                        ) : selected ? (
+                          <Check
+                            size={14}
+                            aria-label={`${strategy.label}${row.label}已开启`}
+                            className={styles.permissionStateIcon}
+                          />
+                        ) : (
+                          <X
+                            size={14}
+                            aria-label={`${strategy.label}${row.label}未开启`}
+                            className={styles.permissionStateIcon}
+                          />
                         )}
                       </td>
                     );
@@ -389,10 +382,10 @@ const TagPermissionModal = ({
                 <div className={styles.presetBar}>
                   <span className={styles.presetLabel}>基于预设</span>
                   <div className={styles.presetButtons} role="group" aria-label="基于预设">
-                    {PRESET_SEGMENT_ITEMS.map((preset) => (
+                    {TAG_PERMISSION_ACTION_PRESET_OPTIONS.map((preset) => (
                       <Button
                         key={preset.key}
-                        variant={selectedPresetKey === preset.key ? 'primary' : 'secondary'}
+                        variant={selectedActionPresetKey === preset.key ? 'primary' : 'secondary'}
                         size="sm"
                         onPress={() => applyPresetToForm(preset.key)}
                       >
@@ -401,9 +394,10 @@ const TagPermissionModal = ({
                     ))}
                   </div>
                   <span className={styles.currentPreset}>
-                    当前：
-                    {TAG_PERMISSION_PRESETS.find((preset) => preset.key === selectedPresetKey)
-                      ?.label ?? '自定义'}
+                    当前动作：
+                    {TAG_PERMISSION_ACTION_PRESET_OPTIONS.find(
+                      (preset) => preset.key === selectedActionPresetKey
+                    )?.label ?? '自定义'}
                   </span>
                 </div>
                 {initialTagLoading ? (

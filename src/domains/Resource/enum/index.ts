@@ -89,7 +89,8 @@ export const resourceActionsToApiKeys = (
     .filter((key): key is ResourceActionKey => key != null);
 };
 
-const RESOURCE_ACTION_IMPLIED_MASK: Record<ResourceAction, number> = {
+/** 权限动作的隐含低阶动作位，用常量维护高低权限关系。 */
+export const RESOURCE_ACTION_IMPLIED_MASK: Record<ResourceAction, number> = {
   [RESOURCE_ACTION.DISCOVER]: RESOURCE_ACTION.DISCOVER,
   [RESOURCE_ACTION.VIEW]: RESOURCE_ACTION.VIEW | RESOURCE_ACTION.DISCOVER,
   [RESOURCE_ACTION.LOAD]: RESOURCE_ACTION.LOAD | RESOURCE_ACTION.VIEW | RESOURCE_ACTION.DISCOVER,
@@ -199,6 +200,29 @@ export const filterSupportedResourcePermissionActions = (
   return normalizeResourceActions(actions ?? undefined).filter((action) =>
     supportedActionSet.has(action)
   );
+};
+
+/** 根据高低阶权限联动规则更新受控 action 集合。 */
+export const updateResourceActionSelection = (
+  currentActions: ResourceAction[] | null | undefined,
+  action: ResourceAction,
+  checked: boolean,
+  supportedActions?: ResourceAction[]
+): ResourceAction[] => {
+  const normalizedCurrentActions = supportedActions
+    ? filterSupportedResourcePermissionActions(currentActions, supportedActions)
+    : normalizeResourceActions(currentActions ?? undefined);
+  const nextActions = checked
+    ? normalizeResourceActions([...normalizedCurrentActions, action])
+    : normalizeResourceActions(
+        normalizedCurrentActions.filter(
+          (currentAction) => !hasResourceAction(getResourceActionImpliedMask(currentAction), action)
+        )
+      );
+
+  return supportedActions
+    ? filterSupportedResourcePermissionActions(nextActions, supportedActions)
+    : nextActions;
 };
 
 export const areResourcePermissionActionsEqual = (
