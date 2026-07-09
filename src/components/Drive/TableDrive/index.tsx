@@ -6,6 +6,7 @@ import {
   type FolderTableRowAction,
 } from '@/components/Table';
 import { resolveSelectedCount } from '@/components/Table/shared/TableBase/tableSelection';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/_shadcn';
 import { useDriveService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
 import { useTrashTagStore } from '@/store';
@@ -481,35 +482,46 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   return (
     <main className={styles.listArea}>
       <div className={styles.driveFrame}>
-        <div className={styles.driveBody}>
-          <FolderTable<DriveTableRow>
-            ariaLabel="云盘文件列表"
-            items={rows}
-            columns={DRIVE_TABLE_COLUMNS}
-            loading={loading}
-            breadcrumb={breadcrumb}
-            toolbar={toolbar}
-            expandedRowKeys={expandedRowKeys}
-            onExpandedChange={handleExpandedChange}
-            onRowSelect={batchEditMode ? undefined : handleRowSelect}
-            onRowActivate={handleRowActivate}
-            totalCount={currentDirectoryItemCount}
-            summary={`当前目录共 ${currentDirectoryItemCount} 项`}
-            className={styles.table}
-            sortDescriptor={sortDescriptor}
-            onSortChange={setSortDescriptor}
-            rowActions={resolveRowActions}
-            batchSelection={
-              batchEditMode
-                ? {
-                    selectedKeys: batchSelectedKeys,
-                    disabledKeys: batchDisabledKeys,
-                    onSelectionChange: setBatchSelectedKeys,
-                  }
-                : undefined
-            }
-          />
-          <div className={styles.detailPanel}>
+        <ResizablePanelGroup orientation="horizontal" className={styles.driveBody}>
+          <ResizablePanel id="drive-table" minSize="45%" className={styles.tablePanel}>
+            <FolderTable<DriveTableRow>
+              ariaLabel="云盘文件列表"
+              items={rows}
+              columns={DRIVE_TABLE_COLUMNS}
+              loading={loading}
+              breadcrumb={breadcrumb}
+              toolbar={toolbar}
+              expandedRowKeys={expandedRowKeys}
+              onExpandedChange={handleExpandedChange}
+              onRowSelect={batchEditMode ? undefined : handleRowSelect}
+              onRowActivate={handleRowActivate}
+              totalCount={currentDirectoryItemCount}
+              summary={`当前目录共 ${currentDirectoryItemCount} 项`}
+              className={styles.table}
+              sortDescriptor={sortDescriptor}
+              onSortChange={setSortDescriptor}
+              rowActions={resolveRowActions}
+              batchSelection={
+                batchEditMode
+                  ? {
+                      selectedKeys: batchSelectedKeys,
+                      disabledKeys: batchDisabledKeys,
+                      onSelectionChange: setBatchSelectedKeys,
+                    }
+                  : undefined
+              }
+            />
+          </ResizablePanel>
+
+          <ResizableHandle className={styles.resizeHandle} />
+
+          <ResizablePanel
+            id="drive-detail"
+            defaultSize={280}
+            minSize={240}
+            maxSize={420}
+            className={styles.detailPanel}
+          >
             <TableDriveSelectionPanel
               selectedRow={batchEditMode ? undefined : selectedNode}
               batchEditMode={batchEditMode}
@@ -527,8 +539,8 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
               onManageResourcePermission={openResourcePermission}
               onTagPermissionChange={refreshDrive}
             />
-          </div>
-        </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
       {ModalHost}
       <RenameNodeModal

@@ -71,6 +71,7 @@ function CustomBlockNote({
   resourceId,
   doc,
   provider,
+  collaborationUser,
   aiDiffDisplayMode,
   readOnly = false,
   blockLocalDocWrites = false,
@@ -145,10 +146,7 @@ function CustomBlockNote({
     collaboration: {
       provider: provider as BlockNoteCollaborationConfig['provider'],
       fragment: noteFragment,
-      user: {
-        name: '',
-        color: '#4096ff',
-      },
+      user: collaborationUser,
     },
   });
 

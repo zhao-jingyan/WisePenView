@@ -1,11 +1,11 @@
 import type {
-FudanUISVerifyStatusData,
-IUserService,
-ListAdminMessagesResponse,
-PublishMessageRequest,
-User,
-UserAccountProfile,
-UserSearchUser,
+  FudanUISVerifyStatusData,
+  IUserService,
+  ListAdminMessagesResponse,
+  PublishMessageRequest,
+  User,
+  UserAccountProfile,
+  UserSearchUser,
 } from '@/domains/User';
 import type { GetUserInfoApiResponse } from '../apis/UserApi.type';
 import { UserServicesMap } from '../mapper/UserServices.map';
@@ -49,6 +49,7 @@ const getUserInfo = async (_options?: { forceRefresh?: boolean }): Promise<User>
     id: fullUserInfo.userId?.toString() ?? '',
     username: userInfo.username,
     nickname: userInfo.nickname ?? undefined,
+    realName: userInfo.realName ?? undefined,
     avatar: userInfo.avatar ?? undefined,
     identityType: normalizeIdentityTypeFromApi(userInfo.identityType),
   };

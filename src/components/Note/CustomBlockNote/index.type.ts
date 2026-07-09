@@ -12,10 +12,16 @@ export interface NoteBodyEditorHandle {
   downloadMarkdown: (fileName?: string) => Promise<void>;
 }
 
+export interface NoteCollaborationUser {
+  name: string;
+  color: string;
+}
+
 export interface CustomBlockNoteProps {
   resourceId: string;
   doc: Doc;
   provider: WisepenProvider;
+  collaborationUser: NoteCollaborationUser;
   aiDiffDisplayMode: AiDiffDisplayMode;
   /** UI/editable：连接中或无 EDIT 时为 true */
   readOnly?: boolean;

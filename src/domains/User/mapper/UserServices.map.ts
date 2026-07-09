@@ -1,31 +1,31 @@
 import type { AdminMessage, User, UserAccountProfile, UserSearchUser } from '@/domains/User';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import type {
-AdminMessageApiModel,
-ChangeUserInfoApiRequest,
-ChangeUserProfileApiRequest,
-CheckEmailVerifyApiRequest,
-GetUserInfoApiResponse,
-InitiateEmailVerifyApiRequest,
-InitiateFudanUISVerifyApiRequest,
-ListUserSearchSuggestionsApiRequest,
-SearchUserApiRequest,
-UserSearchUserApiResponse,
-ListAdminMessagesApiRequest,
-ListAdminMessagesApiResponse,
-PublishMessageApiRequest,
+  AdminMessageApiModel,
+  ChangeUserInfoApiRequest,
+  ChangeUserProfileApiRequest,
+  CheckEmailVerifyApiRequest,
+  GetUserInfoApiResponse,
+  InitiateEmailVerifyApiRequest,
+  InitiateFudanUISVerifyApiRequest,
+  ListAdminMessagesApiRequest,
+  ListAdminMessagesApiResponse,
+  ListUserSearchSuggestionsApiRequest,
+  PublishMessageApiRequest,
+  SearchUserApiRequest,
+  UserSearchUserApiResponse,
 } from '../apis/UserApi.type';
 import type {
-ConfirmEmailVerifyRequest,
-FudanUISVerifyStatusData,
-InitiateUISVerifyRequest,
-ListUserSearchSuggestionsRequest,
-SearchUsersRequest,
-ListAdminMessagesRequest,
-ListAdminMessagesResponse,
-PublishMessageRequest,
-SendEmailVerifyRequest,
-UpdateUserInfoRequest,
+  ConfirmEmailVerifyRequest,
+  FudanUISVerifyStatusData,
+  InitiateUISVerifyRequest,
+  ListAdminMessagesRequest,
+  ListAdminMessagesResponse,
+  ListUserSearchSuggestionsRequest,
+  PublishMessageRequest,
+  SearchUsersRequest,
+  SendEmailVerifyRequest,
+  UpdateUserInfoRequest,
 } from '../service/index.type';
 import {
   mapDegreeLevelToApi,
@@ -37,7 +37,10 @@ import {
   normalizeUserStatusFromApi,
 } from './userEnum.mapper';
 
-type CachedUserSafe = Pick<User, 'id' | 'username' | 'nickname' | 'avatar' | 'identityType'>;
+type CachedUserSafe = Pick<
+  User,
+  'id' | 'username' | 'nickname' | 'avatar' | 'identityType' | 'realName'
+>;
 
 const mapAccountProfileFromApi = (data: GetUserInfoApiResponse): UserAccountProfile => {
   const { userInfo, userProfile } = data;
@@ -74,6 +77,7 @@ const mapUserSafeFromAccountProfile = (data: UserAccountProfile): CachedUserSafe
   id: data.id,
   username: data.userInfo.username,
   nickname: data.userInfo.nickname,
+  realName: data.userInfo.realName,
   avatar: data.userInfo.avatar,
   identityType: data.userInfo.identityType,
 });

@@ -23,40 +23,47 @@
 }
 
 .driveBody {
-  display: flex;
   flex: 1;
-  align-items: stretch;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+}
 
-  /* FolderTable 根节点（shell + table class）：去掉独立外框 */
-  > .table {
-    flex: 1 1 0;
-    min-width: 0;
-    min-height: 0;
-    height: 100%;
-    max-height: 100%;
-    overflow: hidden;
-    align-self: stretch;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-  }
+.tablePanel {
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.table {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  align-self: stretch;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
 /* 详情列：全高贴右，无上方 header，仅左侧分隔线 */
 .detailPanel {
-  flex: 0 0 var(--table-drive-detail-panel-width, 280px);
-  width: var(--table-drive-detail-panel-width, 280px);
-  min-width: var(--table-drive-detail-panel-width, 280px);
-  max-width: var(--table-drive-detail-panel-width, 280px);
+  width: 100%;
   height: 100%;
   min-height: 0;
   align-self: stretch;
   overflow: hidden;
   border-left: 1px solid var(--border-light);
   background: var(--surface);
+}
+
+.resizeHandle {
+  z-index: 2;
+  flex: 0 0 1px;
+  height: 100%;
+  background: var(--border-light);
 }
 
 .toolbarActions {
@@ -79,8 +86,11 @@
     flex-direction: column;
   }
 
+  .tablePanel {
+    height: auto;
+  }
+
   .detailPanel {
-    flex: 0 0 auto;
     width: 100%;
     min-width: 0;
     max-width: none;
@@ -88,5 +98,9 @@
     min-height: 200px;
     border-left: 0;
     border-top: 1px solid var(--border-light);
+  }
+
+  .resizeHandle {
+    display: none;
   }
 }

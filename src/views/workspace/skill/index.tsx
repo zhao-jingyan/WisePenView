@@ -9,6 +9,7 @@ import type {
   SkillPendingCreate,
 } from '@/components/Skill/SkillFileTree/index.type';
 import SkillVersionDropdown from '@/components/Skill/SkillVersionDropdown';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/_shadcn';
 import { useResourceService, useSkillService } from '@/domains';
 import type { SkillFileNode, UploadSkillAssetResult } from '@/domains/Skill';
 import { SkillServicesMap } from '@/domains/Skill';
@@ -1781,115 +1782,127 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       <div className={styles.page}>
         <div className={styles.mainArea}>
           {skill ? (
-            <div className={styles.contentRow}>
-              <section className={styles.middlePanel}>
-                <div className={styles.middlePanelHeader}>
-                  <span className={styles.middlePanelLabel}>文件</span>
-                  {canEditTree ? (
-                    <div className={styles.middlePanelActions}>
-                      <button
-                        type="button"
-                        className={styles.iconBtnSm}
-                        aria-label="新建文件夹"
-                        onClick={() => handleStartCreate('folder')}
-                      >
-                        <FolderPlus size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.iconBtnSm}
-                        aria-label="新建文件"
-                        onClick={() => handleStartCreate('file')}
-                      >
-                        <Plus size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.iconBtnSm}
-                        aria-label="上传文件"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload size={14} />
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-                <div
-                  className={`${styles.treeWrap} ${isTreeDragOver ? styles.treeWrapDragOver : ''}`}
-                  onDragOver={handleTreeDragOver}
-                  onDragLeave={handleTreeDragLeave}
-                  onDrop={handleTreeDrop}
-                  onClick={handleTreeWrapClick}
-                >
-                  {canEditTree && isTreeDragOver ? (
-                    <div className={styles.treeDropHint}>释放以上传文件或 zip 压缩包</div>
-                  ) : null}
-                  {activeFiles.length > 0 || pendingCreate ? (
-                    <SkillFileTree
-                      files={activeFiles}
-                      selectedFileId={selectedFileId}
-                      selectedNodeId={selectedTreeNodeId}
-                      expandedKeys={expandedKeys}
-                      pendingCreate={pendingCreate}
-                      isOwner={canEditTree}
-                      onSelect={handleTreeSelect}
-                      onCommitCreate={handleCommitCreate}
-                      onCancelCreate={() => setPendingCreate(null)}
-                      onDeleteFile={(fileId) => setDeleteTarget(findFile(activeFiles, fileId))}
-                      onMoveFile={runMoveFile}
-                    />
+            <ResizablePanelGroup orientation="horizontal" className={styles.contentRow}>
+              <ResizablePanel
+                id="skill-file-tree"
+                defaultSize={260}
+                minSize={220}
+                maxSize={420}
+                className={styles.middlePanelSlot}
+              >
+                <section className={styles.middlePanel}>
+                  <div className={styles.middlePanelHeader}>
+                    <span className={styles.middlePanelLabel}>文件</span>
+                    {canEditTree ? (
+                      <div className={styles.middlePanelActions}>
+                        <button
+                          type="button"
+                          className={styles.iconBtnSm}
+                          aria-label="新建文件夹"
+                          onClick={() => handleStartCreate('folder')}
+                        >
+                          <FolderPlus size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.iconBtnSm}
+                          aria-label="新建文件"
+                          onClick={() => handleStartCreate('file')}
+                        >
+                          <Plus size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.iconBtnSm}
+                          aria-label="上传文件"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload size={14} />
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div
+                    className={`${styles.treeWrap} ${isTreeDragOver ? styles.treeWrapDragOver : ''}`}
+                    onDragOver={handleTreeDragOver}
+                    onDragLeave={handleTreeDragLeave}
+                    onDrop={handleTreeDrop}
+                    onClick={handleTreeWrapClick}
+                  >
+                    {canEditTree && isTreeDragOver ? (
+                      <div className={styles.treeDropHint}>释放以上传文件或 zip 压缩包</div>
+                    ) : null}
+                    {activeFiles.length > 0 || pendingCreate ? (
+                      <SkillFileTree
+                        files={activeFiles}
+                        selectedFileId={selectedFileId}
+                        selectedNodeId={selectedTreeNodeId}
+                        expandedKeys={expandedKeys}
+                        pendingCreate={pendingCreate}
+                        isOwner={canEditTree}
+                        onSelect={handleTreeSelect}
+                        onCommitCreate={handleCommitCreate}
+                        onCancelCreate={() => setPendingCreate(null)}
+                        onDeleteFile={(fileId) => setDeleteTarget(findFile(activeFiles, fileId))}
+                        onMoveFile={runMoveFile}
+                      />
+                    ) : (
+                      <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={canEdit ? '暂无文件，请上传或新建' : '暂无文件'}
+                        className={styles.emptyBlock}
+                      />
+                    )}
+                  </div>
+                  <SkillSaveQueueDock items={visibleSaveQueueItems} onRetry={handleSave} />
+                </section>
+              </ResizablePanel>
+
+              <ResizableHandle className={styles.resizeHandle} />
+
+              <ResizablePanel id="skill-editor" minSize={360} className={styles.rightPanelSlot}>
+                <main className={styles.rightPanel}>
+                  {selectedFile ? (
+                    <>
+                      <header className={styles.editorHeader}>
+                        <span className={styles.editorFileName}>{selectedFile.name}</span>
+                      </header>
+                      <div className={styles.editorBody}>
+                        {canPreviewSkillFile(selectedFile) ? (
+                          <SkillEditor
+                            content={editorContent}
+                            fileName={selectedFile.name}
+                            readOnly={
+                              !editing ||
+                              !canEdit ||
+                              contentLoading ||
+                              saveLoading ||
+                              isSaveQueueActive ||
+                              versionLoading ||
+                              moveLoading
+                            }
+                            onSave={handleSave}
+                            onChange={setEditorContent}
+                          />
+                        ) : (
+                          <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description="该文件类型暂不支持预览，保存时会保留原文件内容"
+                            className={styles.emptyBlock}
+                          />
+                        )}
+                      </div>
+                    </>
                   ) : (
                     <Empty
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={canEdit ? '暂无文件，请上传或新建' : '暂无文件'}
+                      description="请选择文件进行编辑"
                       className={styles.emptyBlock}
                     />
                   )}
-                </div>
-                <SkillSaveQueueDock items={visibleSaveQueueItems} onRetry={handleSave} />
-              </section>
-
-              <main className={styles.rightPanel}>
-                {selectedFile ? (
-                  <>
-                    <header className={styles.editorHeader}>
-                      <span className={styles.editorFileName}>{selectedFile.name}</span>
-                    </header>
-                    <div className={styles.editorBody}>
-                      {canPreviewSkillFile(selectedFile) ? (
-                        <SkillEditor
-                          content={editorContent}
-                          fileName={selectedFile.name}
-                          readOnly={
-                            !editing ||
-                            !canEdit ||
-                            contentLoading ||
-                            saveLoading ||
-                            isSaveQueueActive ||
-                            versionLoading ||
-                            moveLoading
-                          }
-                          onSave={handleSave}
-                          onChange={setEditorContent}
-                        />
-                      ) : (
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description="该文件类型暂不支持预览，保存时会保留原文件内容"
-                          className={styles.emptyBlock}
-                        />
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="请选择文件进行编辑"
-                    className={styles.emptyBlock}
-                  />
-                )}
-              </main>
-            </div>
+                </main>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           ) : (
             <div className={styles.middleOverlay}>
               <ResultState status="warning" title="无法打开 Skill" />

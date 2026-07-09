@@ -1,0 +1,80 @@
+.panelGroup {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.panelGroup[aria-orientation='vertical'] {
+  flex-direction: column;
+}
+
+.handle {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 1px !important;
+  width: 1px;
+  min-width: 1px;
+  max-width: 1px;
+  height: auto !important;
+  min-height: 0;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  background: var(--border);
+  outline: none;
+}
+
+.handle::after {
+  content: '';
+  position: absolute;
+  inset: 0 -2px;
+}
+
+.handle:hover,
+.handle:focus-visible,
+.handle[data-separator='active'] {
+  background: var(--border-tertiary, var(--border));
+}
+
+.handle:focus-visible {
+  box-shadow: 0 0 0 1px var(--focus);
+}
+
+.handle[aria-orientation='horizontal'] {
+  flex-basis: 1px !important;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  height: 1px !important;
+  min-height: 1px;
+  max-height: 1px;
+  align-self: stretch;
+}
+
+.handle[aria-orientation='horizontal']::after {
+  inset: -2px 0;
+}
+
+.handleGrip {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 12px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.handle[aria-orientation='horizontal'] .handleGrip {
+  transform: rotate(90deg);
+}
+
+.handleGripIcon {
+  width: 10px;
+  height: 10px;
+}

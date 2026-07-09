@@ -1,23 +1,26 @@
-import type { User,UserAccountProfile } from '@/domains/User';
+import type { User, UserAccountProfile } from '@/domains/User';
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
 import { UserApi } from '../apis/UserApi';
 import { UserServicesMap } from '../mapper/UserServices.map';
 import type {
-ConfirmEmailVerifyRequest,
-FudanUISVerifyStatusData,
-InitiateUISVerifyRequest,
-IUserService,
-ListUserSearchSuggestionsRequest,
-QueryUserSearchCandidatesRequest,
-SearchUsersRequest,
-ListAdminMessagesRequest,
-ListAdminMessagesResponse,
-PublishMessageRequest,
-SendEmailVerifyRequest,
-UpdateUserInfoRequest,
+  ConfirmEmailVerifyRequest,
+  FudanUISVerifyStatusData,
+  InitiateUISVerifyRequest,
+  IUserService,
+  ListAdminMessagesRequest,
+  ListAdminMessagesResponse,
+  ListUserSearchSuggestionsRequest,
+  PublishMessageRequest,
+  QueryUserSearchCandidatesRequest,
+  SearchUsersRequest,
+  SendEmailVerifyRequest,
+  UpdateUserInfoRequest,
 } from './index.type';
 
-type CachedUserSafe = Pick<User, 'id' | 'username' | 'nickname' | 'avatar' | 'identityType'>;
+type CachedUserSafe = Pick<
+  User,
+  'id' | 'username' | 'nickname' | 'avatar' | 'identityType' | 'realName'
+>;
 
 /** 全量拉取，为 Account 等页服务，不缓存 */
 const getFullUserInfo = async (): Promise<UserAccountProfile> => {
