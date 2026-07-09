@@ -1,43 +1,41 @@
-// 搜索面板靠近 Spotlight 的轻浮层质感，保留 HeroUI 的主题变量。
+// 全局搜索保留 Spotlight 的顶置轻浮层，同时收敛到 HeroUI overlay/token 视觉。
 .container {
-  margin-top: 12vh;
-  width: min(680px, calc(100vw - 32px));
+  margin-top: clamp(56px, 10vh, 104px);
+  width: min(640px, calc(100vw - 32px));
 }
 
 .dialog {
   overflow: hidden;
-  color: var(--foreground);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--overlay) 96%, var(--surface-secondary)), var(--overlay)),
-    var(--overlay);
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  border-radius: 18px;
-  box-shadow:
-    0 24px 64px rgba(15, 23, 42, 0.2),
-    0 8px 24px rgba(15, 23, 42, 0.12);
-  backdrop-filter: blur(18px);
+  color: var(--overlay-foreground);
+  background: var(--overlay);
+  border: 1px solid var(--separator-secondary, var(--separator));
+  border-radius: var(--app-radius-popover, var(--radius-3xl));
+  box-shadow: var(--overlay-shadow);
 }
 
 .body {
   padding: 0;
+  background: var(--surface-secondary);
 }
 
 .resultPlaceholder {
-  min-height: 180px;
+  min-height: 220px;
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: 14px 16px;
-  border-bottom: 1px solid color-mix(in srgb, var(--separator) 78%, transparent);
+  gap: 10px;
+  min-height: 64px;
+  padding: 10px 12px 10px 16px;
+  background: var(--overlay);
+  border-bottom: 1px solid var(--separator);
 }
 
 .headerIcon {
-  font-size: var(--font-size-lg);
-  color: var(--text-tertiary);
   flex-shrink: 0;
+  font-size: var(--font-size-lg);
+  color: var(--muted);
 }
 
 .input {
@@ -49,18 +47,40 @@
 .inputGroup {
   width: 100%;
   min-height: 44px;
-  border: none;
+}
+
+.inputGroup:global(.input-group) {
+  --app-input-group-border-width: 0;
+  --app-input-group-focus-ring-width: 0;
+  --input-group-bg: transparent;
+  --input-group-bg-hover: transparent;
+  --input-group-bg-focus: transparent;
+  --field-background: transparent;
+  --field-focus: transparent;
+
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.inputGroup:global(.input-group):hover:not(:focus-within),
+.inputGroup:global(.input-group)[data-hovered='true']:not([data-focus-within='true']),
+.inputGroup:global(.input-group):has(:global([data-slot='input-group-input']:focus)) {
   background: transparent;
   box-shadow: none;
 }
 
 .inputControl {
+  height: 44px;
   font-size: 18px;
+  font-weight: 500;
   line-height: 1.4;
-  color: var(--foreground);
+  color: var(--overlay-foreground);
+  caret-color: var(--accent);
 
   &::placeholder {
     color: var(--text-tertiary);
+    font-weight: 400;
   }
 }
 
@@ -81,7 +101,61 @@
     background-color 0.15s ease;
 
   &:hover {
-    color: var(--foreground);
+    color: var(--overlay-foreground);
     background: var(--surface-secondary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+.escapeButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--overlay-foreground);
+    background: var(--surface-secondary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+.escapeKbd {
+  min-width: 34px;
+  border-color: var(--separator);
+  color: inherit;
+  background: var(--surface-secondary);
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .container {
+    margin-top: clamp(40px, 8vh, 72px);
+    width: calc(100vw - 16px);
+  }
+
+  .header {
+    gap: 8px;
+    min-height: 58px;
+    padding: 8px 10px 8px 12px;
+  }
+
+  .inputControl {
+    height: 40px;
+    font-size: 16px;
   }
 }

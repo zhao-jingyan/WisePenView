@@ -72,7 +72,14 @@ function SearchModal({ isOpen, onOpenChange }: SearchModalProps) {
                     ) : null}
                   </InputGroup>
                 </TextField>
-                <Kbd onClick={handleClose}>Esc</Kbd>
+                <button
+                  type="button"
+                  className={styles.escapeButton}
+                  aria-label="关闭搜索"
+                  onClick={handleClose}
+                >
+                  <Kbd className={styles.escapeKbd}>Esc</Kbd>
+                </button>
               </div>
 
               <Modal.DeferredContent fallback={<div className={styles.resultPlaceholder} />}>
