@@ -22,32 +22,32 @@ function WorkspaceHeader({
     <header className={clsx(styles.root, className)}>
       <div className={styles.bar}>
         <div className={styles.toolbar}>
+          {onToggleLeftSidebar ? (
+            <Tooltip>
+              <Tooltip.Trigger>
+                <button
+                  type="button"
+                  className={styles.iconButton}
+                  onClick={onToggleLeftSidebar}
+                  aria-label={leftSidebarLabel}
+                >
+                  {leftSidebarCollapsed ? (
+                    <PanelLeftOpen size={18} aria-hidden="true" />
+                  ) : (
+                    <PanelLeftClose size={18} aria-hidden="true" />
+                  )}
+                </button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>{leftSidebarLabel}</Tooltip.Content>
+            </Tooltip>
+          ) : null}
           <div className={styles.toolbarMiddle}>
             {inlineTitle ? <div className={styles.inlineTitle}>{inlineTitle}</div> : null}
           </div>
           <div className={styles.toolbarEnd}>
             {extra}
-            <div className={styles.sidebarControls}>
-              {onToggleLeftSidebar ? (
-                <Tooltip>
-                  <Tooltip.Trigger>
-                    <button
-                      type="button"
-                      className={styles.iconButton}
-                      onClick={onToggleLeftSidebar}
-                      aria-label={leftSidebarLabel}
-                    >
-                      {leftSidebarCollapsed ? (
-                        <PanelLeftOpen size={18} aria-hidden="true" />
-                      ) : (
-                        <PanelLeftClose size={18} aria-hidden="true" />
-                      )}
-                    </button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>{leftSidebarLabel}</Tooltip.Content>
-                </Tooltip>
-              ) : null}
-              {onToggleRightSidebar ? (
+            {onToggleRightSidebar ? (
+              <div className={styles.sidebarControls}>
                 <Tooltip>
                   <Tooltip.Trigger>
                     <button
@@ -65,8 +65,8 @@ function WorkspaceHeader({
                   </Tooltip.Trigger>
                   <Tooltip.Content>{rightSidebarLabel}</Tooltip.Content>
                 </Tooltip>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

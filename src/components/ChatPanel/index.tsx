@@ -10,7 +10,6 @@ import {
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
-import { IndentIncrease } from 'lucide-react';
 import { memo, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatInput from './ChatInput';
@@ -23,14 +22,16 @@ import {
   mapHistoryMessage,
   type ModelMeta,
 } from './ChatPanel';
+import ChatPanelHeader from './ChatPanelHeader';
 import MessageList from './MessageList';
-import NewChatButton from './NewChatButton';
 import styles from './style.module.less';
 
 function ChatPanel({
   collapsed,
   fullWidth = false,
   onNewChat,
+  sessionBarOpen = false,
+  onToggleSessionBar,
   workspaceContext,
   showCollapseButton = true,
 }: ChatPanelProps) {
@@ -119,10 +120,6 @@ function ChatPanel({
 
   const sending = status === 'submitted' || status === 'streaming';
   const panelTitle = currentSessionTitle || '新对话';
-  const showNewChatButton = fullWidth && Boolean(onNewChat);
-  const contentClassName = showNewChatButton
-    ? `${styles.content} ${styles.contentWithTopBar}`
-    : styles.content;
 
   const ensureChatSession = async (): Promise<string> => {
     const existingSessionId =
@@ -224,6 +221,16 @@ function ChatPanel({
     }
   };
 
+  const handleNewChat = () => {
+    if (onNewChat) {
+      onNewChat();
+      return;
+    }
+    clearCurrentSession();
+    clearNewChatSessionStore();
+    setChatPanelDraftOpen(true);
+  };
+
   useMount(() => {
     if (!currentSessionId) return;
     setHistoryMessages([]);
@@ -260,53 +267,40 @@ function ChatPanel({
 
   return (
     <div className={`${styles.panel} ${fullWidth ? styles.fullWidth : ''}`}>
-      <div className={`${styles.header} ${collapsed ? styles.collapsedHeader : ''}`}>
-        <div className={styles.headerLeft}>
-          {!collapsed && !fullWidth && showCollapseButton && (
-            <button
-              type="button"
-              onClick={handleCollapsePanel}
-              className={styles.triggerBtn}
-              aria-label="收起聊天面板"
-            >
-              <IndentIncrease size={18} />
-            </button>
-          )}
-          {!collapsed && (
-            <div className={styles.titleWrap}>
-              <div className={styles.title}>{panelTitle}</div>
-            </div>
-          )}
-        </div>
-      </div>
+      <ChatPanelHeader
+        collapsed={collapsed}
+        fullWidth={fullWidth}
+        panelTitle={panelTitle}
+        sessionBarOpen={sessionBarOpen}
+        showCollapseButton={showCollapseButton}
+        onCollapsePanel={handleCollapsePanel}
+        onNewChat={handleNewChat}
+        onToggleSessionBar={onToggleSessionBar}
+      />
 
       {!collapsed && (
-        <>
-          <div className={contentClassName}>
-            {showNewChatButton ? (
-              <div className={styles.contentTopBar}>
-                <NewChatButton onClick={onNewChat} />
+        <div className={styles.panelBody}>
+          <div className={styles.conversationPanel}>
+            <div className={styles.content}>
+              <div className={styles.messageViewport}>
+                <MessageList
+                  messages={messages}
+                  canLoadMoreHistory={Boolean(currentSessionId) && historyPage < historyTotalPage}
+                  loadingMoreHistory={loadingMoreHistory}
+                  onLoadMoreHistory={loadMoreHistoryMessages}
+                />
               </div>
-            ) : null}
+            </div>
 
-            <div className={styles.messageViewport}>
-              <MessageList
-                messages={messages}
-                canLoadMoreHistory={Boolean(currentSessionId) && historyPage < historyTotalPage}
-                loadingMoreHistory={loadingMoreHistory}
-                onLoadMoreHistory={loadMoreHistoryMessages}
+            <div className={styles.footer}>
+              <ChatInput
+                onSend={handleSend}
+                getUploadSessionId={ensureChatSession}
+                sending={sending}
               />
             </div>
           </div>
-
-          <div className={styles.footer}>
-            <ChatInput
-              onSend={handleSend}
-              getUploadSessionId={ensureChatSession}
-              sending={sending}
-            />
-          </div>
-        </>
+        </div>
       )}
     </div>
   );

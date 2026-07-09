@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100%;
   position: relative;
-background-color: var(--background);
+  background-color: var(--background);
   overflow: hidden;
 
   &.fullWidth {
@@ -55,24 +55,39 @@ background-color: var(--background);
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-xs);
 }
 
-.triggerBtn {
-  font-size: 18px;
+.headerIconButton {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
   border: none;
-  background: var(--surface);
-  padding: var(--space-xs);
-  border-radius: 14px;
+  border-radius: var(--radius, 8px);
+  background: transparent;
   color: var(--muted);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
 
   &:hover {
     color: var(--foreground);
-    background: #fff;
-    box-shadow: var(--card-shadow);
+    background: var(--surface-tertiary);
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.headerIconButtonActive {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
 }
 
 .titleWrap {
@@ -91,19 +106,21 @@ background-color: var(--background);
   text-overflow: ellipsis;
 }
 
-.agentMenuItemLabel {
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    width: 100%;
-    font-weight: 400;
-    font-size: var(--font-size-sm);
-  }
+.panelBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  overflow: hidden;
+}
 
-.agentMenuItemMeta {
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
+.conversationPanel {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .content {
@@ -115,15 +132,15 @@ background-color: var(--background);
   padding: 16px 18px 0;
 }
 
-.contentTopBar {
-  position: absolute;
-  top: 4px;
-  left: 14px;
-  z-index: 2;
+.sessionBar {
+  width: min(320px, 52%);
+  max-width: 100%;
+  flex-shrink: 0;
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 48px;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .messageViewport {
@@ -134,72 +151,166 @@ background-color: var(--background);
   padding-top: 0;
 }
 
-.contentWithTopBar {
-  .messageViewport {
-    padding-top: 54px;
-  }
+.sessionBarHeader {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 48px;
+  padding: 0 var(--space-sm) 0 var(--space-md);
+  border-bottom: 1px solid var(--border-light);
 }
 
-.newChatButton {
-  width: 42px;
-  height: 36px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
+.sessionBarTitle {
+  min-width: 0;
+  font-size: var(--font-size-base);
+  font-weight: 600;
   color: var(--foreground);
+}
+
+.sessionBarCloseButton {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius, 8px);
+  background: transparent;
+  color: var(--muted);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  padding: 0 12px;
-  overflow: hidden;
-  white-space: nowrap;
-  transition:
-    width 0.24s ease,
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    border-color 0.18s ease;
-  box-shadow: var(--card-shadow);
-
-  &:hover {
-    width: 132px;
-    transform: translateY(-1px);
-    border-color: var(--accent);
-    box-shadow: var(--card-shadow);
-  }
-}
-
-.compactNewChatButton {
-  &:hover {
-    width: 118px;
-  }
-}
-
-.newChatIconWrap {
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    color: var(--foreground);
+    background: var(--surface-tertiary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.sessionList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-xs);
+}
+
+.sessionStateText {
+  padding: var(--space-md) var(--space-sm);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.sessionItem {
+  width: 100%;
+  min-height: 56px;
+  margin: 0;
+  padding: var(--space-xs);
+  border: none;
+  border-radius: var(--radius, 8px);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  text-align: left;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.sessionItemActive {
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+
+  .sessionStatusDot {
+    background: var(--primary);
+  }
+}
+
+.sessionStatusDot {
+  width: 7px;
+  height: 7px;
   flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--border-secondary, var(--border));
 }
 
-.newChatLabel {
-  opacity: 0;
-  transform: translateX(4px);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-  font-size: var(--font-size-base);
+.sessionItemContent {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sessionItemTitle {
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
   font-weight: 500;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.newChatButton:hover .newChatLabel {
-  opacity: 1;
-  transform: translateX(0);
+.sessionItemMeta {
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs, 12px);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionLoadMoreButton {
+  width: 100%;
+  height: 34px;
+  margin: var(--space-xs) 0 0;
+  padding: 0 var(--space-sm);
+  border: none;
+  border-radius: var(--radius, 8px);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    color: var(--foreground);
+    background: var(--surface-tertiary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
 }
 
 .footer {
   flex-shrink: 0;
   padding: 0 18px 28px;
-background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, var(--background) 20%);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, var(--background) 20%);
 }

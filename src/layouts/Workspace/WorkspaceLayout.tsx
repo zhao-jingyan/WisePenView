@@ -1,7 +1,9 @@
 import ChatPanel from '@/components/ChatPanel';
+import ChatSessionBar from '@/components/ChatPanel/ChatSessionBar';
+import type { ChatSession } from '@/domains/Chat';
 import DriveSidebar from '@/layouts/_common/Sidebar/DriveSidebar';
 import { useChatPanelResize } from '@/layouts/_common/useChatPanelResize';
-import { useChatPanelStore, useCurrentChatSessionStore } from '@/store';
+import { clearNewChatSessionStore, useChatPanelStore, useCurrentChatSessionStore } from '@/store';
 import {
   normalizeWorkspaceResourceType,
   resolveLegacyEditorTypeForWorkspace,
@@ -19,11 +21,14 @@ import type { WorkspaceLayoutConfig, WorkspaceOutletContextValue } from './Works
 function WorkspaceLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [layoutConfig, setLayoutConfigState] = useState<WorkspaceLayoutConfig>({});
+  const [chatSessionBarOpen, setChatSessionBarOpen] = useState(false);
   const chatPanelCollapsed = useChatPanelStore((state) => state.chatPanelCollapsed);
   const chatPanelDraftOpen = useChatPanelStore((state) => state.chatPanelDraftOpen);
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
   const setChatPanelDraftOpen = useChatPanelStore((state) => state.setChatPanelDraftOpen);
   const currentSessionId = useCurrentChatSessionStore((state) => state.currentSessionId);
+  const setCurrentSession = useCurrentChatSessionStore((state) => state.setCurrentSession);
+  const clearCurrentSession = useCurrentChatSessionStore((state) => state.clearCurrentSession);
   const hasSessionId = Boolean(currentSessionId);
   const shouldRenderChatPanel = hasSessionId || chatPanelDraftOpen;
   const safeChatPanelCollapsed = !shouldRenderChatPanel || chatPanelCollapsed;
@@ -80,6 +85,11 @@ function WorkspaceLayout() {
     }
   }, [chatPanelDraftOpen, hasSessionId, setChatPanelDraftOpen]);
 
+  useUpdateEffect(() => {
+    if (!safeChatPanelCollapsed) return;
+    setChatSessionBarOpen(false);
+  }, [safeChatPanelCollapsed]);
+
   const handleSidebarToggle = useCallback(() => {
     setSidebarCollapsed((collapsed) => !collapsed);
   }, []);
@@ -93,11 +103,40 @@ function WorkspaceLayout() {
       return;
     }
 
+    setChatSessionBarOpen(false);
     setChatPanelCollapsed(true);
     if (!hasSessionId) {
       setChatPanelDraftOpen(false);
     }
   }, [hasSessionId, safeChatPanelCollapsed, setChatPanelCollapsed, setChatPanelDraftOpen]);
+
+  const handleNewChat = useCallback(() => {
+    setChatSessionBarOpen(false);
+    clearCurrentSession();
+    clearNewChatSessionStore();
+    setChatPanelDraftOpen(true);
+    setChatPanelCollapsed(false);
+  }, [clearCurrentSession, setChatPanelCollapsed, setChatPanelDraftOpen]);
+
+  const handleToggleChatSessionBar = useCallback(() => {
+    if (safeChatPanelCollapsed) return;
+    setChatSessionBarOpen((open) => !open);
+  }, [safeChatPanelCollapsed]);
+
+  const handleCloseChatSessionBar = useCallback(() => {
+    setChatSessionBarOpen(false);
+  }, []);
+
+  const handleSelectChatSession = useCallback(
+    (session: ChatSession) => {
+      setCurrentSession({ id: session.id, title: session.title });
+      clearNewChatSessionStore();
+      setChatPanelDraftOpen(false);
+      setChatPanelCollapsed(false);
+      setChatSessionBarOpen(false);
+    },
+    [setChatPanelCollapsed, setChatPanelDraftOpen, setCurrentSession]
+  );
 
   const setLayoutConfig = useCallback((config: WorkspaceLayoutConfig) => {
     setLayoutConfigState(config);
@@ -174,12 +213,22 @@ function WorkspaceLayout() {
           {shouldRenderChatPanel ? (
             <ChatPanel
               collapsed={safeChatPanelCollapsed}
+              onNewChat={handleNewChat}
+              sessionBarOpen={chatSessionBarOpen}
+              onToggleSessionBar={handleToggleChatSessionBar}
               workspaceContext={chatWorkspaceContext}
               showCollapseButton={false}
             />
           ) : null}
         </div>
       </aside>
+      {chatSessionBarOpen && !safeChatPanelCollapsed ? (
+        <ChatSessionBar
+          activeSessionId={currentSessionId}
+          onClose={handleCloseChatSessionBar}
+          onSelectSession={handleSelectChatSession}
+        />
+      ) : null}
     </div>
   );
 }
