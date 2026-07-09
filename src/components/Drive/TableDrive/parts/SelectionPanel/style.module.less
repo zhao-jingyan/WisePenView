@@ -104,6 +104,7 @@
 
 .permissionSection {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: var(--space-xs);
   min-width: 0;
@@ -167,12 +168,20 @@
   transition:
     border-color 0.16s ease,
     background-color 0.16s ease;
+
+  :global(.list-box-item) {
+    flex-shrink: 0;
+    height: auto;
+    min-height: 52px;
+    align-items: flex-start;
+  }
 }
 
 .presetContent {
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
+  width: 100%;
   min-width: 0;
 }
 
