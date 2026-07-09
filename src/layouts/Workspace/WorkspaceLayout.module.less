@@ -1,5 +1,4 @@
 @left-sider-width: 308px;
-@collapsed-sider-width: 80px;
 
 .root {
   height: 100vh;
@@ -20,7 +19,8 @@
 }
 
 .leftSiderCollapsed {
-  width: @collapsed-sider-width;
+  width: 0;
+  border-right: 0;
 }
 
 .middleLayout {
@@ -38,57 +38,6 @@
   overflow-y: auto;
   position: relative;
   padding: 0;
-}
-
-.chatHandleZone {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 72px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  z-index: 20;
-}
-
-.chatExpandHandle {
-  width: 40px;
-  height: 132px;
-  border: 1px solid var(--border);
-  border-right: none;
-  border-radius: 14px 0 0 14px;
-  background: var(--surface);
-  color: var(--muted);
-  box-shadow: var(--card-shadow);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 22px;
-  opacity: 0;
-  transform: translateX(14px);
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease,
-    color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.chatHandleZone:hover .chatExpandHandle,
-.chatHandleZone:focus-within .chatExpandHandle {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.chatExpandHandle:hover {
-  color: var(--foreground);
-  background: var(--surface-tertiary);
-}
-
-.chatExpandHandle:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
 }
 
 .rightSider {

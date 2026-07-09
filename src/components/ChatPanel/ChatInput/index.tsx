@@ -10,20 +10,11 @@ import OtherSkillModal from './OtherSkillModal';
 import styles from './style.module.less';
 import { useChatInputController } from './useChatInputController';
 
-function ChatInputContent({
-  onSend,
-  sending,
-  hasSelectedContext,
-  selectedContextText,
-  onClearSelectedContext,
-}: ChatInputProps) {
+function ChatInputContent({ onSend, sending }: ChatInputProps) {
   const { attachmentStripProps, containerProps, dropOverlayProps, textAreaProps, toolbarProps } =
     useChatInputController({
       onSend,
       sending,
-      hasSelectedContext,
-      selectedContextText,
-      onClearSelectedContext,
     });
 
   return (

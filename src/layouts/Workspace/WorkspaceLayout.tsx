@@ -9,7 +9,6 @@ import {
 } from '@/utils/navigation/workspaceRoute';
 import { useUpdateEffect } from 'ahooks';
 import clsx from 'clsx';
-import { Bot } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { Outlet, useLocation, useMatch } from 'react-router-dom';
 import WorkspaceFrame from './_common/WorkspaceFrame';
@@ -81,13 +80,24 @@ function WorkspaceLayout() {
     }
   }, [chatPanelDraftOpen, hasSessionId, setChatPanelDraftOpen]);
 
-  const handleChatExpand = () => {
-    if (!shouldRenderChatPanel) return;
-    setChatPanelCollapsed(false);
-  };
   const handleSidebarToggle = useCallback(() => {
     setSidebarCollapsed((collapsed) => !collapsed);
   }, []);
+
+  const handleChatPanelToggle = useCallback(() => {
+    if (safeChatPanelCollapsed) {
+      if (!hasSessionId) {
+        setChatPanelDraftOpen(true);
+      }
+      setChatPanelCollapsed(false);
+      return;
+    }
+
+    setChatPanelCollapsed(true);
+    if (!hasSessionId) {
+      setChatPanelDraftOpen(false);
+    }
+  }, [hasSessionId, safeChatPanelCollapsed, setChatPanelCollapsed, setChatPanelDraftOpen]);
 
   const setLayoutConfig = useCallback((config: WorkspaceLayoutConfig) => {
     setLayoutConfigState(config);
@@ -109,7 +119,15 @@ function WorkspaceLayout() {
   const renderHeader = () => {
     if (layoutConfig.header === false) return null;
 
-    return <WorkspaceHeader {...(layoutConfig.header ?? {})} />;
+    return (
+      <WorkspaceHeader
+        {...(layoutConfig.header ?? {})}
+        leftSidebarCollapsed={sidebarCollapsed}
+        rightSidebarCollapsed={safeChatPanelCollapsed}
+        onToggleLeftSidebar={handleSidebarToggle}
+        onToggleRightSidebar={handleChatPanelToggle}
+      />
+    );
   };
 
   return (
@@ -122,23 +140,12 @@ function WorkspaceLayout() {
       <aside
         className={clsx(styles.leftSider, sidebarCollapsed && styles.leftSiderCollapsed)}
         aria-label="资源侧边栏"
+        aria-hidden={sidebarCollapsed ? true : undefined}
       >
-        <DriveSidebar collapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
+        <DriveSidebar collapsed={sidebarCollapsed} />
       </aside>
 
       <div className={styles.middleLayout}>
-        {shouldRenderChatPanel && safeChatPanelCollapsed && (
-          <div className={styles.chatHandleZone}>
-            <button
-              type="button"
-              className={styles.chatExpandHandle}
-              onClick={handleChatExpand}
-              aria-label="展开聊天面板"
-            >
-              <Bot />
-            </button>
-          </div>
-        )}
         <main className={`${styles.middleContent} ${styles.workspaceContent}`}>
           <WorkspaceFrame
             className={layoutConfig.className}
@@ -165,7 +172,11 @@ function WorkspaceLayout() {
         )}
         <div className={styles.rightSiderInner}>
           {shouldRenderChatPanel ? (
-            <ChatPanel collapsed={safeChatPanelCollapsed} workspaceContext={chatWorkspaceContext} />
+            <ChatPanel
+              collapsed={safeChatPanelCollapsed}
+              workspaceContext={chatWorkspaceContext}
+              showCollapseButton={false}
+            />
           ) : null}
         </div>
       </aside>

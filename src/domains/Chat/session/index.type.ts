@@ -43,8 +43,6 @@ export interface SendSessionMessageOptions {
   model?: string;
   providerId?: string;
   runtimeOptions?: Record<string, unknown>;
-  selectedText?: string;
-  enableSelected?: boolean;
   workspaceContext?: ChatWorkspaceContext;
   selectedResources?: ChatSelectedResourceContext[];
   uploadedAttachments?: ChatUploadedAttachmentContext[];

@@ -4,8 +4,6 @@ import { useLayoutEffect, type ReactNode } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 export interface WorkspaceHeaderConfig {
-  fallbackTo?: string;
-  backLabel?: string;
   inlineTitle?: ReactNode;
   extra?: ReactNode;
   titleBlock?: ReactNode;

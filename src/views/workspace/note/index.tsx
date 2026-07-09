@@ -1,7 +1,7 @@
 import { ResultState, Spin } from '@/components/Feedback';
 import SegmentedTabs from '@/components/SegmentedTabs';
 import { useRequest, useUnmount } from 'ahooks';
-import { ChevronsLeft, Menu } from 'lucide-react';
+import { ChevronsRight, Menu } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -23,7 +23,7 @@ import { useWorkspaceLayoutConfig } from '@/layouts/Workspace/WorkspaceOutletCon
 import { useAiDiffDisplayStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
-import { Alert, Button, Dropdown, toast } from '@heroui/react';
+import { Alert, Button, Dropdown, toast, Tooltip } from '@heroui/react';
 import ResourcePermissionControl from '../_components/ResourcePermissionControl';
 import NoteInfoBar from './_components/NoteInfoBar';
 import NoteTitle from './_components/NoteTitle';
@@ -89,7 +89,7 @@ function NoteViewConnected({
   const titleAnchorRef = useRef<HTMLDivElement>(null);
   const reconnectTimerRef = useRef<number | null>(null);
   const [isReconnectLoading, setIsReconnectLoading] = useState(false);
-  const [isOutlineOpen, setIsOutlineOpen] = useState(true);
+  const [isOutlineOpen, setIsOutlineOpen] = useState(false);
   const [outlineItems, setOutlineItems] = useState<NoteOutlineItem[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | undefined>(undefined);
   const [pdfExportLoading, setPdfExportLoading] = useState(false);
@@ -281,62 +281,9 @@ function NoteViewConnected({
 
   return (
     <>
-      <div className={styles.mainScroll} ref={mainScrollRef}>
+      <div className={styles.mainScroll}>
         <div className={styles.contentRow}>
-          {isOutlineOpen ? (
-            <aside className={styles.outlineAside} aria-label="文档目录侧栏">
-              <div className={styles.outlineTopRow}>
-                <span className={styles.outlineTopTitle}>目录</span>
-                <button
-                  type="button"
-                  className={styles.outlineToggleBtn}
-                  aria-label="收起目录"
-                  onClick={() => setIsOutlineOpen(false)}
-                >
-                  <ChevronsLeft size={20} />
-                </button>
-              </div>
-              <div className={styles.outlineScrollArea}>
-                <NoteOutline
-                  items={outlineItems}
-                  activeId={activeHeadingId}
-                  titleResourceId={resourceId}
-                  titleFallback={noteInfoDisplay?.noteTitle}
-                  onNavigate={(id) => {
-                    if (id === NOTE_OUTLINE_TITLE_ID) {
-                      const anchor = titleAnchorRef.current;
-                      if (anchor) {
-                        anchor.scrollIntoView({ block: 'start', behavior: 'smooth' });
-                        window.requestAnimationFrame(() => {
-                          const editable = anchor.querySelector(
-                            '[contenteditable="true"]'
-                          ) as HTMLElement | null;
-                          editable?.focus();
-                        });
-                      } else {
-                        mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-                      }
-                      return;
-                    }
-                    bodyEditorRef.current?.navigateToBlock(id);
-                  }}
-                />
-              </div>
-            </aside>
-          ) : (
-            <div className={styles.outlineCollapsedCol} aria-label="展开目录">
-              <button
-                type="button"
-                className={styles.outlineToggleBtn}
-                aria-label="展开目录"
-                onClick={() => setIsOutlineOpen(true)}
-              >
-                <Menu size={20} />
-              </button>
-            </div>
-          )}
-
-          <div className={styles.mainCol}>
+          <div className={styles.mainCol} ref={mainScrollRef}>
             <div className={styles.root}>
               {isDisconnected ? (
                 <Alert className={styles.wsAlert} status="warning">
@@ -387,6 +334,64 @@ function NoteViewConnected({
               </div>
             </div>
           </div>
+
+          {isOutlineOpen ? (
+            <aside className={styles.outlineAside} aria-label="文档目录侧栏">
+              <div className={styles.outlineTopRow}>
+                <span className={styles.outlineTopTitle}>目录</span>
+                <button
+                  type="button"
+                  className={styles.outlineToggleBtn}
+                  aria-label="收起目录"
+                  onClick={() => setIsOutlineOpen(false)}
+                >
+                  <ChevronsRight size={20} />
+                </button>
+              </div>
+              <div className={styles.outlineScrollArea}>
+                <NoteOutline
+                  items={outlineItems}
+                  activeId={activeHeadingId}
+                  titleResourceId={resourceId}
+                  titleFallback={noteInfoDisplay?.noteTitle}
+                  onNavigate={(id) => {
+                    if (id === NOTE_OUTLINE_TITLE_ID) {
+                      const anchor = titleAnchorRef.current;
+                      if (anchor) {
+                        anchor.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                        window.requestAnimationFrame(() => {
+                          const editable = anchor.querySelector(
+                            '[contenteditable="true"]'
+                          ) as HTMLElement | null;
+                          editable?.focus();
+                        });
+                      } else {
+                        mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                      return;
+                    }
+                    bodyEditorRef.current?.navigateToBlock(id);
+                  }}
+                />
+              </div>
+            </aside>
+          ) : (
+            <div className={styles.outlineCollapsedCol} aria-label="展开目录">
+              <Tooltip>
+                <Tooltip.Trigger>
+                  <button
+                    type="button"
+                    className={styles.outlineToggleBtn}
+                    aria-label="展开目录"
+                    onClick={() => setIsOutlineOpen(true)}
+                  >
+                    <Menu size={20} />
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>展开目录</Tooltip.Content>
+              </Tooltip>
+            </div>
+          )}
         </div>
       </div>
 

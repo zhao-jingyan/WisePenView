@@ -20,46 +20,26 @@ import { useChatInputFiles } from '../useChatInputFiles';
 interface UseChatInputControllerOptions {
   onSend: ChatInputProps['onSend'];
   sending: boolean;
-  hasSelectedContext: ChatInputProps['hasSelectedContext'];
-  selectedContextText: string;
-  onClearSelectedContext: ChatInputProps['onClearSelectedContext'];
 }
 
-export function useChatInputController({
-  onSend,
-  sending,
-  hasSelectedContext,
-  selectedContextText,
-  onClearSelectedContext,
-}: UseChatInputControllerOptions) {
+export function useChatInputController({ onSend, sending }: UseChatInputControllerOptions) {
   const store = useChatInputStoreApi();
   const dragCounterRef = useRef(0);
-  const { routeFiles, convertPendingImagesToAttachments, clearPendingImageCache } =
-    useChatInputFiles();
+  const { routeFiles, preparePendingAttachments, clearPendingFileCache } = useChatInputFiles();
 
-  const {
-    isComposing,
-    isDragOver,
-    pendingAttachmentUploads,
-    selectedModel,
-    value,
-  } = useChatInputStore(
-    useShallow((state) => ({
-      isComposing: state.isComposing,
-      isDragOver: state.isDragOver,
-      pendingAttachmentUploads: state.pendingAttachmentUploads,
-      selectedModel: selectChatInputSelectedModel(state),
-      value: state.value,
-    }))
-  );
+  const { isComposing, isDragOver, pendingAttachmentUploads, selectedModel, value } =
+    useChatInputStore(
+      useShallow((state) => ({
+        isComposing: state.isComposing,
+        isDragOver: state.isDragOver,
+        pendingAttachmentUploads: state.pendingAttachmentUploads,
+        selectedModel: selectChatInputSelectedModel(state),
+        value: state.value,
+      }))
+    );
   const completionState = useChatInputStore(useShallow(selectChatInputCompletionState));
   const { clearAfterSend, setIsComposing, setIsDragOver, setValue } = store.getState();
 
-  const selectedPreviewChars = Array.from(selectedContextText);
-  const selectedPreview =
-    selectedPreviewChars.length <= 10
-      ? selectedContextText
-      : `${selectedPreviewChars.slice(0, 5).join('')}...${selectedPreviewChars.slice(-5).join('')}`;
   const sendDisabled = !value.trim() || sending || !selectedModel;
 
   async function handleSend(): Promise<void> {
@@ -71,17 +51,17 @@ export function useChatInputController({
     }
 
     try {
-      const imageAttachments = await convertPendingImagesToAttachments();
-      if (!imageAttachments) return;
+      const pendingAttachments = await preparePendingAttachments();
+      if (!pendingAttachments) return;
       await onSend(text, {
         model: selectedModel,
         activeDocRefs: completionState.activeDocRefs,
-        activeAttachments: [...completionState.activeAttachments, ...imageAttachments],
+        activeAttachments: [...completionState.activeAttachments, ...pendingAttachments],
         selectedSkills: completionState.selectedSkills,
         selectedTools: completionState.selectedTools,
       });
       clearAfterSend();
-      clearPendingImageCache();
+      clearPendingFileCache();
     } catch (err) {
       toast.danger(`发送失败: ${parseErrorMessage(err)}`);
     }
@@ -149,12 +129,7 @@ export function useChatInputController({
     dropOverlayProps: {
       visible: isDragOver,
     },
-    attachmentStripProps: {
-      selectedContextText,
-      selectedPreview,
-      hasSelectedContext,
-      onClearSelectedContext,
-    },
+    attachmentStripProps: {},
     textAreaProps: {
       value,
       onChange: (e: ChangeEvent<HTMLTextAreaElement>) => setValue(e.target.value),

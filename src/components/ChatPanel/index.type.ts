@@ -10,6 +10,7 @@ export interface ChatPanelProps {
   fullWidth?: boolean;
   onNewChat?: () => void;
   workspaceContext?: ChatWorkspaceContext;
+  showCollapseButton?: boolean;
 }
 
 export interface Message {

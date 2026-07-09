@@ -1,12 +1,7 @@
 import { DocumentApi } from '@/domains/Document/apis/DocumentApi';
 import { NoteApi } from '@/domains/Note/apis/NoteApi';
 import { SkillApi } from '@/domains/Skill/apis/SkillApi';
-import {
-  useNewNoteStore,
-  useNoteSelectionStore,
-  usePdfPreviewProgressStore,
-  useResourceDisplayNameStore,
-} from '@/store';
+import { useNewNoteStore, usePdfPreviewProgressStore, useResourceDisplayNameStore } from '@/store';
 import { ResourceInteractApi } from '../apis/InteractApi';
 import { ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
@@ -62,7 +57,6 @@ const removeResources = async (params: RemoveResourcesRequest): Promise<void> =>
     // 资源已删除，同步清理与之绑定的临时状态
     usePdfPreviewProgressStore.getState().removeProgress(resourceId);
     useNewNoteStore.getState().clearNewNoteResourceId(resourceId);
-    useNoteSelectionStore.getState().clearSelectedText(resourceId);
   }
 };
 

@@ -25,24 +25,32 @@
   min-height: 40px;
 }
 
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
+.iconButton {
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   margin: 0;
   padding: 0;
   border: none;
-  background: none;
-  font: inherit;
-  text-align: inherit;
-  cursor: pointer;
+  border-radius: var(--radius, 8px);
+  background: transparent;
   color: var(--muted);
-  text-decoration: none;
-  font-size: var(--font-size-base);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
 
   &:hover {
     color: var(--foreground);
+    background: var(--surface-tertiary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
   }
 }
 
@@ -80,6 +88,13 @@
   gap: var(--space-xs);
   flex-shrink: 0;
   min-width: 0;
+}
+
+.sidebarControls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  flex-shrink: 0;
 }
 
 .titleBlock {

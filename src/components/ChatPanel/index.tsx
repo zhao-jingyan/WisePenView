@@ -6,7 +6,6 @@ import {
   useChatPanelStore,
   useCurrentChatSessionStore,
   useNewChatSessionStore,
-  useNoteSelectionStore,
 } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
@@ -28,7 +27,13 @@ import MessageList from './MessageList';
 import NewChatButton from './NewChatButton';
 import styles from './style.module.less';
 
-function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }: ChatPanelProps) {
+function ChatPanel({
+  collapsed,
+  fullWidth = false,
+  onNewChat,
+  workspaceContext,
+  showCollapseButton = true,
+}: ChatPanelProps) {
   const navigate = useNavigate();
   const chatService = useChatService();
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
@@ -38,13 +43,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
   const currentSessionTitle = useCurrentChatSessionStore((state) => state.currentSessionTitle);
   const setCurrentSession = useCurrentChatSessionStore((state) => state.setCurrentSession);
   const clearCurrentSession = useCurrentChatSessionStore((state) => state.clearCurrentSession);
-  const enableSelectedText = useNoteSelectionStore((state) =>
-    currentSessionId ? Boolean(state.enableSelectedTextByResourceId[currentSessionId]) : false
-  );
-  const selectedContextText = useNoteSelectionStore((state) =>
-    currentSessionId ? (state.selectedTextByResourceId[currentSessionId] ?? '') : ''
-  );
-  const clearSelectedText = useNoteSelectionStore((state) => state.clearSelectedText);
 
   const [currentModel, setCurrentModel] = useState<Model | null>(null);
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
@@ -120,8 +118,11 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
   }, [currentSessionId, hasRenderableChatContent]);
 
   const sending = status === 'submitted' || status === 'streaming';
-  const hasSelectedContext = enableSelectedText && Boolean(selectedContextText.trim());
   const panelTitle = currentSessionTitle || '新对话';
+  const showNewChatButton = fullWidth && Boolean(onNewChat);
+  const contentClassName = showNewChatButton
+    ? `${styles.content} ${styles.contentWithTopBar}`
+    : styles.content;
 
   const ensureChatSession = async (): Promise<string> => {
     const existingSessionId =
@@ -205,8 +206,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
     const sendPromise = sendSessionMessage(text, {
       model: targetModel.modelId,
       providerId: targetModel.providerId,
-      enableSelected: hasSelectedContext,
-      selectedText: selectedContextText,
       sessionId: targetSessionId,
       workspaceContext,
       selectedResources: opts?.activeDocRefs,
@@ -215,15 +214,7 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
       allowToolNames: opts?.selectedTools?.map((tool) => tool.toolId),
     });
 
-    if (hasSelectedContext) {
-      clearSelectedText(targetSessionId);
-    }
     await sendPromise;
-  };
-
-  const handleClearSelectedContext = () => {
-    if (!currentSessionId) return;
-    clearSelectedText(currentSessionId);
   };
 
   const handleCollapsePanel = () => {
@@ -271,7 +262,7 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
     <div className={`${styles.panel} ${fullWidth ? styles.fullWidth : ''}`}>
       <div className={`${styles.header} ${collapsed ? styles.collapsedHeader : ''}`}>
         <div className={styles.headerLeft}>
-          {!collapsed && !fullWidth && (
+          {!collapsed && !fullWidth && showCollapseButton && (
             <button
               type="button"
               onClick={handleCollapsePanel}
@@ -291,10 +282,12 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
 
       {!collapsed && (
         <>
-          <div className={styles.content}>
-            <div className={styles.contentTopBar}>
-              <NewChatButton onClick={onNewChat} compact={!fullWidth} />
-            </div>
+          <div className={contentClassName}>
+            {showNewChatButton ? (
+              <div className={styles.contentTopBar}>
+                <NewChatButton onClick={onNewChat} />
+              </div>
+            ) : null}
 
             <div className={styles.messageViewport}>
               <MessageList
@@ -311,9 +304,6 @@ function ChatPanel({ collapsed, fullWidth = false, onNewChat, workspaceContext }
               onSend={handleSend}
               getUploadSessionId={ensureChatSession}
               sending={sending}
-              hasSelectedContext={hasSelectedContext}
-              selectedContextText={selectedContextText}
-              onClearSelectedContext={handleClearSelectedContext}
             />
           </div>
         </>

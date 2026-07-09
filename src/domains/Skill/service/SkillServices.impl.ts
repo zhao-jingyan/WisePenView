@@ -1,6 +1,7 @@
 import type { IResourceService } from '@/domains/Resource';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
 import type { IUserService } from '@/domains/User';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
 import OSS from 'ali-oss';
 import { SkillApi } from '../apis/SkillApi';
@@ -175,7 +176,10 @@ export const createSkillServices = (deps: SkillServicesDeps): ISkillService => {
 
   const createSkill = async (title: string, name?: string, description?: string) => {
     const resourceId = await SkillApi.createSkill({ title, name, description });
-    return resourceId ?? '';
+    if (!resourceId) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_CREATE_RESOURCE_ID_MISSING);
+    }
+    return resourceId;
   };
 
   const getSkillDetail = async (resourceId: string) => {

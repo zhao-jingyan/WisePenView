@@ -1,6 +1,7 @@
 import { Empty, ResultState, Spin } from '@/components/Feedback';
 import EntryIcon from '@/components/Icons/EntryIcon';
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
+import CreateSkillModal from '@/components/Skill/CreateSkillModal';
 import SkillEditor from '@/components/Skill/SkillEditor';
 import SkillFileTree from '@/components/Skill/SkillFileTree';
 import type {
@@ -26,7 +27,6 @@ import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom';
 import ResourcePermissionControl from '../_components/ResourcePermissionControl';
 
-import CreateSkillModal from './_components/CreateSkillModal';
 import SkillSaveQueueDock from './_components/SkillSaveQueueDock';
 import type { SkillSaveQueueItem } from './_components/SkillSaveQueueDock/index.type';
 import UnsavedSkillChangesModal from './_components/UnsavedSkillChangesModal';

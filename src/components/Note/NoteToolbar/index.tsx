@@ -11,33 +11,16 @@ import {
   TextAlignButton,
   UnnestBlockButton,
 } from '@blocknote/react';
-import { Button } from '@heroui/react';
-import { Sparkles } from 'lucide-react';
 
 import { useNoteEditorReadOnlyContext } from '@/components/Note/CustomBlockNote/editorReadOnly';
-import type { NoteToolbarProps } from './index.type';
-import styles from './style.module.less';
 
-const NoteToolbar = ({ onAskAi }: NoteToolbarProps) => {
+const NoteToolbar = () => {
   const readOnly = useNoteEditorReadOnlyContext();
 
   return (
     <FormattingToolbarController
       formattingToolbar={() => (
         <FormattingToolbar>
-          <Button
-            variant="primary"
-            size="sm"
-            className={styles.askAiBtn}
-            onMouseDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-            }}
-            onPress={onAskAi}
-          >
-            <Sparkles size={14} aria-hidden="true" />
-            问AI
-          </Button>
           {!readOnly ? (
             <>
               <BlockTypeSelect key="blockTypeSelect" />

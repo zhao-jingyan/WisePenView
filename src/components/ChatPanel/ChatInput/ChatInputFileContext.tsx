@@ -24,6 +24,7 @@ export function ChatInputFileProvider({
   const store = useChatInputStoreApi();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const base64MapRef = useRef<Map<string, string>>(new Map());
+  const pendingAttachmentFileMapRef = useRef<Map<string, File>>(new Map());
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const {
     addActiveAttachment,
@@ -33,15 +34,28 @@ export function ChatInputFileProvider({
     removePendingImageMeta,
     setAttachmentOpen,
     setPendingAttachmentUploadFailed,
+    setPendingAttachmentUploadStatus,
   } = store.getState();
 
   useMount(() => {
     unsubscribeRef.current = store.subscribe((state, previousState) => {
-      if (state.pendingImageMetas === previousState.pendingImageMetas) return;
-      const validIds = new Set(state.pendingImageMetas.map((meta) => meta.id));
-      for (const key of base64MapRef.current.keys()) {
-        if (!validIds.has(key)) {
-          base64MapRef.current.delete(key);
+      if (state.pendingImageMetas !== previousState.pendingImageMetas) {
+        const validImageIds = new Set(state.pendingImageMetas.map((meta) => meta.id));
+        for (const key of base64MapRef.current.keys()) {
+          if (!validImageIds.has(key)) {
+            base64MapRef.current.delete(key);
+          }
+        }
+      }
+
+      if (state.pendingAttachmentUploads !== previousState.pendingAttachmentUploads) {
+        const validAttachmentIds = new Set(
+          state.pendingAttachmentUploads.map((upload) => upload.id)
+        );
+        for (const key of pendingAttachmentFileMapRef.current.keys()) {
+          if (!validAttachmentIds.has(key)) {
+            pendingAttachmentFileMapRef.current.delete(key);
+          }
         }
       }
     });
@@ -57,9 +71,22 @@ export function ChatInputFileProvider({
     base64MapRef.current.delete(id);
   }
 
-  async function uploadAndAddAttachment(file: File): Promise<LocalAttachmentPayload | null> {
+  function queueLocalAttachment(file: File): void {
     const id = crypto.randomUUID();
-    addPendingAttachmentUpload({ id, filename: file.name, status: 'uploading' });
+    pendingAttachmentFileMapRef.current.set(id, file);
+    addPendingAttachmentUpload({ id, filename: file.name, status: 'pending' });
+  }
+
+  async function uploadAndAddAttachment(
+    file: File,
+    uploadId?: string
+  ): Promise<LocalAttachmentPayload | null> {
+    const id = uploadId ?? crypto.randomUUID();
+    if (uploadId) {
+      setPendingAttachmentUploadStatus(id, 'uploading');
+    } else {
+      addPendingAttachmentUpload({ id, filename: file.name, status: 'uploading' });
+    }
     try {
       const sessionId = await getUploadSessionId();
       const result = await chatService.uploadAttachment({
@@ -74,6 +101,7 @@ export function ChatInputFileProvider({
         enabled: true,
       };
       addActiveAttachment(attachment);
+      pendingAttachmentFileMapRef.current.delete(id);
       return attachment;
     } catch (err) {
       setPendingAttachmentUploadFailed(id);
@@ -98,7 +126,27 @@ export function ChatInputFileProvider({
     }
   }
 
-  async function convertPendingImagesToAttachments(): Promise<LocalAttachmentPayload[] | null> {
+  async function uploadPendingLocalAttachments(): Promise<LocalAttachmentPayload[] | null> {
+    const uploads = store
+      .getState()
+      .pendingAttachmentUploads.filter((upload) =>
+        pendingAttachmentFileMapRef.current.has(upload.id)
+      );
+    if (uploads.length === 0) return [];
+
+    const attachments: LocalAttachmentPayload[] = [];
+    for (const upload of uploads) {
+      const file = pendingAttachmentFileMapRef.current.get(upload.id);
+      if (!file) continue;
+      const attachment = await uploadAndAddAttachment(file, upload.id);
+      if (!attachment) return null;
+      attachments.push(attachment);
+    }
+
+    return attachments;
+  }
+
+  async function uploadPendingImages(): Promise<LocalAttachmentPayload[] | null> {
     const metas = store.getState().pendingImageMetas;
     if (metas.length === 0) return [];
 
@@ -119,6 +167,16 @@ export function ChatInputFileProvider({
     return attachments;
   }
 
+  async function preparePendingAttachments(): Promise<LocalAttachmentPayload[] | null> {
+    const localAttachments = await uploadPendingLocalAttachments();
+    if (!localAttachments) return null;
+
+    const imageAttachments = await uploadPendingImages();
+    if (!imageAttachments) return null;
+
+    return [...localAttachments, ...imageAttachments];
+  }
+
   async function routeFiles(fileList: FileList | File[]): Promise<void> {
     const files = Array.from(fileList);
     let acceptedImageCount = store.getState().pendingImageMetas.length;
@@ -129,12 +187,12 @@ export function ChatInputFileProvider({
       const isImage = IMAGE_EXTENSIONS.has(ext) || file.type.startsWith('image/');
 
       if (!isImage) {
-        await uploadAndAddAttachment(file);
+        queueLocalAttachment(file);
         continue;
       }
       if (!currentModelVision) {
-        toast.warning('当前模型不支持图片，已按普通附件上传');
-        await uploadAndAddAttachment(file);
+        toast.warning('当前模型不支持图片，已按普通附件待发送');
+        queueLocalAttachment(file);
         continue;
       }
       if (acceptedImageCount >= MAX_IMAGE_COUNT) {
@@ -162,15 +220,16 @@ export function ChatInputFileProvider({
     setAttachmentOpen(false);
   }
 
-  function clearPendingImageCache(): void {
+  function clearPendingFileCache(): void {
     base64MapRef.current.clear();
+    pendingAttachmentFileMapRef.current.clear();
   }
 
   const value: ChatInputFileContextValue = {
     openLocalFilePicker,
     routeFiles,
-    convertPendingImagesToAttachments,
-    clearPendingImageCache,
+    preparePendingAttachments,
+    clearPendingFileCache,
   };
 
   return (

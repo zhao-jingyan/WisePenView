@@ -85,7 +85,7 @@ Modal
 
 | 文件                                                                        | 业务                                         |
 | --------------------------------------------------------------------------- | -------------------------------------------- |
-| `src/views/workspace/skill/_components/CreateSkillModal.tsx`                | 创建 Skill，多字段输入和描述编辑。           |
+| `src/components/Skill/CreateSkillModal/index.tsx`                           | 创建 Skill，多字段输入和描述编辑。           |
 | `src/views/workspace/note/_components/NotePermissionModal/index.tsx`        | 笔记权限配置，权限模式、用户选择、保存。     |
 | `src/views/app/profile/_components/Account/AccountHeader/index.tsx`         | 更换头像，上传图片并保存。                   |
 | `src/views/app/profile/_components/Account/AccountVerification/index.tsx`   | 账号验证发起，邮箱/UIS tabs 表单。           |

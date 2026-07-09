@@ -98,6 +98,7 @@ interface ChatInputActions {
   setIsDragOver: (isDragOver: boolean) => void;
   setModelOpen: (open: boolean) => void;
   setOtherSkillModalOpen: (open: boolean) => void;
+  setPendingAttachmentUploadStatus: (id: string, status: LocalAttachmentUpload['status']) => void;
   setPendingAttachmentUploadFailed: (id: string) => void;
   setSelectedAgent: (agent: ChatAgentOption) => void;
   setSelectedModelId: (modelId: string | null) => void;
@@ -242,6 +243,13 @@ export function createChatInputStore(): ChatInputStoreApi {
     setIsDragOver: (isDragOver) => set({ isDragOver }),
     setModelOpen: (modelOpen) => set({ modelOpen }),
     setOtherSkillModalOpen: (otherSkillModalOpen) => set({ otherSkillModalOpen }),
+
+    setPendingAttachmentUploadStatus: (id, status) =>
+      set((state) => ({
+        pendingAttachmentUploads: state.pendingAttachmentUploads.map((upload) =>
+          upload.id === id ? { ...upload, status } : upload
+        ),
+      })),
 
     setPendingAttachmentUploadFailed: (id) =>
       set((state) => ({

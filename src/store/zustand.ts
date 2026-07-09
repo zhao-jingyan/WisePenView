@@ -23,7 +23,6 @@ export {
 } from './useDriveUploadQueueStore';
 export { clearNewChatSessionStore, useNewChatSessionStore } from './useNewChatSessionStore';
 export { clearNewNoteStore, useNewNoteStore } from './useNewNoteStore';
-export { clearNoteSelectionStore, useNoteSelectionStore } from './useNoteSelectionStore';
 export {
   clearPdfPreviewProgressStore,
   usePdfPreviewProgressStore,

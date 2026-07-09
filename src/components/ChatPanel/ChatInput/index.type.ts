@@ -5,9 +5,6 @@ export interface ChatInputProps {
   onSend: (text: string, opts?: SendOptions) => void | Promise<void>;
   getUploadSessionId: () => Promise<string>;
   sending: boolean;
-  hasSelectedContext: boolean;
-  selectedContextText: string;
-  onClearSelectedContext: () => void;
 }
 
 export interface LocalAttachmentPayload {
@@ -33,7 +30,7 @@ export interface LocalPendingImageMeta {
 export interface LocalAttachmentUpload {
   id: string;
   filename: string;
-  status: 'uploading' | 'failed';
+  status: 'pending' | 'uploading' | 'failed';
 }
 
 export interface SendOptions {

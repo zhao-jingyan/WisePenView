@@ -13,21 +13,10 @@ import type {
 const getCompletionsApi = (): string => `${getApiBaseURL()}chat/completions`;
 
 const buildFrontendStates = ({
-  selectedText,
-  enableSelected,
   workspaceContext,
   selectedResources,
 }: SendSessionMessageOptions): ChatFrontendState[] => {
   const frontendStates: ChatFrontendState[] = [];
-  const selectedValue = selectedText?.trim();
-
-  if (selectedValue) {
-    frontendStates.push({
-      key: 'selected_text',
-      value: selectedValue,
-      disabled: !enableSelected,
-    });
-  }
 
   if (workspaceContext?.resourceId) {
     frontendStates.push({

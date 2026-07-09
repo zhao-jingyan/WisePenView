@@ -1,13 +1,8 @@
-import { useChatService, useImageService } from '@/domains';
+import { useImageService } from '@/domains';
 import { assertImageProxyUploadLimit } from '@/domains/Image';
 import type { AiDiffDisplayMode } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE } from '@/domains/Note';
-import {
-  useChatPanelStore,
-  useCurrentChatSessionStore,
-  useNewNoteStore,
-  useNoteSelectionStore,
-} from '@/store';
+import { useNewNoteStore } from '@/store';
 import {
   createClientError,
   FRONTEND_CLIENT_ERROR,
@@ -85,16 +80,6 @@ function CustomBlockNote({
   ref,
 }: CustomBlockNoteProps & { ref?: Ref<NoteBodyEditorHandle> }) {
   const imageService = useImageService();
-  const chatService = useChatService();
-  const currentSessionId = useCurrentChatSessionStore((state) => state.currentSessionId);
-  const setCurrentSession = useCurrentChatSessionStore((state) => state.setCurrentSession);
-  const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
-  const setSelectedText = useNoteSelectionStore((state) => state.setSelectedText);
-  const setEnableSelectedText = useNoteSelectionStore((state) => state.setEnableSelectedText);
-  const selectedText = useNoteSelectionStore(
-    (state) => state.selectedTextByResourceId[resourceId] ?? ''
-  );
-  const clearSelectedText = useNoteSelectionStore((state) => state.clearSelectedText);
   const newNoteBodyOnChangeCleanupRef = useRef<(() => void) | null>(null);
   const flatBlocksRef = useRef<{ id: string; type: string }[]>([]);
   const [pmWriteGuardReady, setPmWriteGuardReady] = useState(false);
@@ -193,10 +178,6 @@ function CustomBlockNote({
     }
   }, [editorProps, editor]);
 
-  useMount(() => {
-    setSelectedText(resourceId, editor.getSelectedText());
-  });
-
   const syncAiDiffPresence = useCallback(() => {
     const nextHasAiDiffContent = hasAiDiffContentFromEditor(editor);
     if (lastAiDiffPresenceRef.current === nextHasAiDiffContent) {
@@ -259,7 +240,6 @@ function CustomBlockNote({
       newNoteBodyOnChangeCleanupRef.current();
       newNoteBodyOnChangeCleanupRef.current = null;
     }
-    clearSelectedText(resourceId);
   });
 
   useImperativeHandle(
@@ -346,7 +326,6 @@ function CustomBlockNote({
   const onKeyDownCapture = useNoteCaptureKeyEvent({ provider, undoManager, readOnly });
 
   const handleSelectionChange = () => {
-    setSelectedText(resourceId, editor.getSelectedText());
     if (!onActiveHeadingChange) {
       return;
     }
@@ -363,31 +342,6 @@ function CustomBlockNote({
       activeId = undefined;
     }
     onActiveHeadingChange(activeId);
-  };
-
-  const handleAskAi = async () => {
-    let targetSessionId = currentSessionId;
-    const selectedSnapshot = editor.getSelectedText().trim() || selectedText.trim();
-    if (!selectedSnapshot) {
-      toast.info('请先选中一段文字再问 AI');
-      return;
-    }
-
-    if (!targetSessionId) {
-      try {
-        const createdSession = await chatService.createSession();
-        targetSessionId = createdSession.id;
-        setCurrentSession({ id: createdSession.id, title: createdSession.title });
-      } catch (error) {
-        const text = error instanceof Error ? error.message : '新建聊天失败';
-        toast.danger(text);
-        return;
-      }
-    }
-
-    setSelectedText(targetSessionId, selectedSnapshot);
-    setEnableSelectedText(targetSessionId, true);
-    setChatPanelCollapsed(false);
   };
 
   const applyAllAiDiffActions = useCallback(
@@ -512,7 +466,7 @@ function CustomBlockNote({
             editable={!readOnly}
             onSelectionChange={handleSelectionChange}
           >
-            <NoteToolbar onAskAi={handleAskAi} />
+            <NoteToolbar />
             <NoteSlashMenu editor={editor} plugins={plugins} />
           </BlockNoteView>
         </AiDiffDisplayModeProvider>

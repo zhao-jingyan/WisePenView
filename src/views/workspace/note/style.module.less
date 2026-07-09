@@ -36,7 +36,9 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: var(--space-lg);
 }
 
@@ -103,6 +105,7 @@
   flex-direction: row;
   align-items: stretch;
   gap: var(--space-sm);
+  overflow: hidden;
 }
 
 .mainCol {
@@ -111,6 +114,9 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  .appSubtleScrollbar();
 }
 
 .body {
@@ -135,10 +141,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  max-height: calc(100vh - var(--space-lg) * 2);
+  align-self: stretch;
 }
 
 .outlineTopRow {
@@ -167,9 +170,7 @@
   flex: 0 0 auto;
   width: calc(var(--control-height-sm) + var(--space-2xs));
   min-height: 0;
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
+  align-self: stretch;
   padding: var(--space-sm) 0;
 }
 

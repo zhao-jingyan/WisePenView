@@ -20,12 +20,7 @@ import {
   resolveResourceIconType,
   RESOURCE_ACTION,
 } from '@/domains/Resource';
-import {
-  useNewNoteStore,
-  useNoteSelectionStore,
-  usePdfPreviewProgressStore,
-  useResourceDisplayNameStore,
-} from '@/store';
+import { useNewNoteStore, usePdfPreviewProgressStore, useResourceDisplayNameStore } from '@/store';
 import mockdata from './mockdata.json';
 import { simulateGlobalSearch } from './searchMockData';
 
@@ -186,7 +181,6 @@ const removeResources = async (params: RemoveResourcesRequest): Promise<void> =>
   for (const resourceId of params.resourceIds) {
     usePdfPreviewProgressStore.getState().removeProgress(resourceId);
     useNewNoteStore.getState().clearNewNoteResourceId(resourceId);
-    useNoteSelectionStore.getState().clearSelectedText(resourceId);
   }
 };
 

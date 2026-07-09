@@ -9,12 +9,10 @@ import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
 import styles from '../style.module.less';
-import { useChatInputFiles } from '../useChatInputFiles';
 
 function ModelPicker() {
   const chatService = useChatService();
   const store = useChatInputStoreApi();
-  const { convertPendingImagesToAttachments } = useChatInputFiles();
   const { availableModels, modelOpen, selectedModelId } = useChatInputStore(
     useShallow((state) => ({
       availableModels: state.availableModels,
@@ -57,12 +55,8 @@ function ModelPicker() {
   };
 
   function handleModelChange(model: Model): void {
-    const wasVision = selectedModel?.vision ?? false;
     setSelectedModelId(model.id);
     setModelOpen(false);
-    if (wasVision && !model.vision) {
-      void convertPendingImagesToAttachments();
-    }
   }
 
   return (

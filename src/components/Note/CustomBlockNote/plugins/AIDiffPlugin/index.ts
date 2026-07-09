@@ -4,8 +4,6 @@ import type { Transaction } from '@tiptap/pm/state';
 import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import type { EditorProps, EditorView } from '@tiptap/pm/view';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { Sparkles } from 'lucide-react';
-import { createElement } from 'react';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
 import type { NoteEditorPlugin } from '../types';
@@ -17,8 +15,6 @@ import {
   aiLinkAddInlineContentSpec,
   aiLinkDeleteInlineContentSpec,
 } from './inlineContentSpecs';
-import { aiGeneratedBlocksToBlockNoteBlocks } from './patch';
-import { aiProtoBlocksToAiGeneratedBlocks } from './proto';
 
 const aiDiffBlockFoldPluginKey = new PluginKey('AIDiffBlockFold');
 
@@ -154,8 +150,7 @@ const aiDiffBlockFoldExtension = createExtension(({ editor }) => {
           // 运行时更新插件状态
           apply: (tr, value, _oldState, newState) => {
             const meta = tr.getMeta(aiDiffBlockFoldPluginKey) as
-              | { displayMode?: AiDiffDisplayMode }
-              | undefined;
+              { displayMode?: AiDiffDisplayMode } | undefined;
             const nextDisplayMode = meta?.displayMode ?? value.displayMode;
             if (!tr.docChanged && nextDisplayMode === value.displayMode) {
               return value;
@@ -179,8 +174,7 @@ const aiDiffBlockFoldExtension = createExtension(({ editor }) => {
           // 应当应用的装饰
           decorations: (state) => {
             const pluginState = aiDiffBlockFoldPluginKey.getState(state) as
-              | AiDiffBlockFoldPluginState
-              | undefined;
+              AiDiffBlockFoldPluginState | undefined;
             return pluginState?.decorations ?? null;
           },
           // 拦截“点击添加区块”按钮的点击事件
@@ -194,8 +188,7 @@ const aiDiffBlockFoldExtension = createExtension(({ editor }) => {
 
             // 读取displayMode
             const pluginState = aiDiffBlockFoldPluginKey.getState(view.state) as
-              | AiDiffBlockFoldPluginState
-              | undefined;
+              AiDiffBlockFoldPluginState | undefined;
 
             // “新旧对比”时不起作用
             const displayMode = pluginState?.displayMode ?? AI_DIFF_DISPLAY_MODE.COMPARE;
@@ -338,38 +331,6 @@ function deleteRangesAndMaybeRemoveEmptyBlock(params: {
   view.dispatch(tr);
 }
 
-function createMockAskAiSlashMenuItem(editor: unknown) {
-  return {
-    title: '问AI',
-    group: 'AI',
-    aliases: ['ai', 'ask', 'askai', '问', '问ai', 'ai-diff', 'diff'],
-    subtext: 'Mock：用 AIDiff_proto.mock.ts 数据模拟 AI 修改笔记内容',
-    icon: createElement(Sparkles, { size: 18 }),
-    onItemClick: () => {
-      if (import.meta.env.MODE !== 'mock') {
-        return;
-      }
-      void (async () => {
-        const mod = await import('@/domains/Note/mock/AIDiff_proto.mock');
-        const generated = aiProtoBlocksToAiGeneratedBlocks(mod.MOCK_AI_PROTO_BLOCKS);
-        if (!generated) return;
-        const mapped = aiGeneratedBlocksToBlockNoteBlocks(generated);
-        if (!mapped) return;
-        const ed = editor as unknown as {
-          document?: unknown;
-          replaceBlocks?: (blocks: unknown, newBlocks: unknown) => unknown;
-          focus?: () => void;
-        };
-        const doc = ed.document;
-        if (typeof ed.replaceBlocks === 'function' && Array.isArray(doc)) {
-          ed.replaceBlocks(doc, mapped);
-          ed.focus?.();
-        }
-      })();
-    },
-  };
-}
-
 // AIDiff 插件本体：向编辑器系统注册（inline specs + extension + editorProps）
 export const aiDiffPlugin = {
   id: 'ai-diff',
@@ -442,11 +403,6 @@ export const aiDiffPlugin = {
       },
     };
     return props;
-  },
-  // 注册斜杠菜单项（仅在 mock 模式下）
-  slashMenu: ({ editor }) => {
-    if (import.meta.env.MODE !== 'mock') return [];
-    return [createMockAskAiSlashMenuItem(editor)];
   },
 } satisfies NoteEditorPlugin;
 

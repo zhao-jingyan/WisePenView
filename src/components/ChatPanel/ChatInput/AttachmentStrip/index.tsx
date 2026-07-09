@@ -9,18 +9,24 @@ import {
   AttachmentMedia,
   AttachmentTitle,
 } from '@/components/_shadcn';
-import { Image, TextQuote, X } from 'lucide-react';
+import { Image, X } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useChatInputStore, useChatInputStoreApi } from '../ChatInputStore';
 import styles from '../style.module.less';
-import type { AttachmentStripProps } from './index.type';
 
-function AttachmentStrip({
-  selectedContextText,
-  selectedPreview,
-  hasSelectedContext,
-  onClearSelectedContext,
-}: AttachmentStripProps) {
+function getUploadAttachmentState(status: 'pending' | 'uploading' | 'failed') {
+  if (status === 'failed') return 'error';
+  if (status === 'uploading') return 'uploading';
+  return 'idle';
+}
+
+function getUploadAttachmentDescription(status: 'pending' | 'uploading' | 'failed') {
+  if (status === 'pending') return '附件待发送';
+  if (status === 'uploading') return '上传中';
+  return '上传失败';
+}
+
+function AttachmentStrip() {
   const store = useChatInputStoreApi();
   const { resources, attachments, images, uploads } = useChatInputStore(
     useShallow((state) => ({
@@ -38,35 +44,12 @@ function AttachmentStrip({
   } = store.getState();
 
   const hasAny =
-    hasSelectedContext ||
-    resources.length > 0 ||
-    attachments.length > 0 ||
-    images.length > 0 ||
-    uploads.length > 0;
+    resources.length > 0 || attachments.length > 0 || images.length > 0 || uploads.length > 0;
 
   if (!hasAny) return null;
 
   return (
     <AttachmentGroup className={styles.attachmentArea} aria-label="输入上下文">
-      {hasSelectedContext ? (
-        <Attachment size="xs" className={styles.chatAttachment}>
-          <AttachmentMedia>
-            <TextQuote size={13} />
-          </AttachmentMedia>
-          <AttachmentContent>
-            <AttachmentTitle>选中内容</AttachmentTitle>
-            <AttachmentDescription title={selectedContextText}>
-              {selectedPreview}
-            </AttachmentDescription>
-          </AttachmentContent>
-          <AttachmentActions>
-            <AttachmentAction aria-label="清除已选内容" onPress={onClearSelectedContext}>
-              <X size={12} />
-            </AttachmentAction>
-          </AttachmentActions>
-        </Attachment>
-      ) : null}
-
       {resources.map((resource) => (
         <Attachment key={resource.resourceId} size="xs" className={styles.chatAttachment}>
           <AttachmentMedia>
@@ -140,7 +123,7 @@ function AttachmentStrip({
         <Attachment
           key={upload.id}
           size="xs"
-          state={upload.status === 'uploading' ? 'uploading' : 'error'}
+          state={getUploadAttachmentState(upload.status)}
           className={styles.chatAttachment}
         >
           <AttachmentMedia>
@@ -149,7 +132,7 @@ function AttachmentStrip({
           <AttachmentContent>
             <AttachmentTitle title={upload.filename}>{upload.filename}</AttachmentTitle>
             <AttachmentDescription>
-              {upload.status === 'uploading' ? '上传中' : '上传失败'}
+              {getUploadAttachmentDescription(upload.status)}
             </AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>

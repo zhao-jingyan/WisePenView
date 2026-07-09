@@ -1,39 +1,32 @@
 import { FormField, Input } from '@/components/Input';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
-import { useChatService, useNoteService } from '@/domains';
+import CreateSkillModal from '@/components/Skill/CreateSkillModal';
+import { useNoteService } from '@/domains';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
-import {
-  clearNewChatSessionStore,
-  useChatPanelStore,
-  useCurrentChatSessionStore,
-  useNewChatSessionStore,
-  useNewNoteStore,
-} from '@/store';
+import { useNewNoteStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
 import { ListBox, ListBoxItem, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
-import { Bot, CirclePlus, FileText, PenTool, Puzzle, Users, Workflow } from 'lucide-react';
+import { Bot, FileText, PenTool, Puzzle, Users, Workflow } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { AppHeaderNavProps } from './index.type';
 import styles from './style.module.less';
 
-function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
+function AppHeaderNav({ collapsed }: AppHeaderNavProps) {
   const navigate = useNavigate();
   const openInWorkspace = useOpenInWorkspace();
   const location = useLocation();
-  const chatService = useChatService();
   const noteService = useNoteService();
-  const clearCurrentSession = useCurrentChatSessionStore((s) => s.clearCurrentSession);
-  const setChatPanelCollapsed = useChatPanelStore((s) => s.setChatPanelCollapsed);
-  const setChatPanelDraftOpen = useChatPanelStore((s) => s.setChatPanelDraftOpen);
   const [drawioModalOpen, setDrawioModalOpen] = useState(false);
   const [drawioName, setDrawioName] = useState('未命名图表');
   const [drawioNameError, setDrawioNameError] = useState('');
+  const [skillModalOpen, setSkillModalOpen] = useState(false);
 
-  const isDriveActive = location.pathname.startsWith('/app/drive');
+  const isDriveActive =
+    location.pathname.startsWith('/app/drive') || location.pathname.startsWith('/app/workspace');
   const isGroupActive = location.pathname.startsWith('/app/my-group');
   const isChatActive = location.pathname.startsWith('/app/chat');
   const isSkillActive =
@@ -48,40 +41,6 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
         : isGroupActive
           ? ['/app/my-group']
           : [];
-  const { run: runCreateSession, loading: createSessionLoading } = useRequest(
-    async () => chatService.createSession(),
-    {
-      manual: true,
-      onSuccess: (session) => {
-        useNewChatSessionStore.getState().setNewChatSession({
-          id: session.id,
-          title: session.title,
-        });
-        onSessionCreated(session.id, session.title);
-      },
-      onError: (err) => {
-        toast.danger(parseErrorMessage(err));
-      },
-    }
-  );
-
-  const handleCreateSession = () => {
-    if (createSessionLoading) return;
-
-    if (isChatActive) {
-      clearCurrentSession();
-      clearNewChatSessionStore();
-      setChatPanelDraftOpen(false);
-      navigate('/app/chat');
-      return;
-    }
-
-    clearCurrentSession();
-    clearNewChatSessionStore();
-    setChatPanelDraftOpen(true);
-    setChatPanelCollapsed(false);
-  };
-
   const { loading: creatingNote, run: runCreateNote } = useRequest(
     async () => {
       const { resourceId } = await noteService.createNote({ title: '未命名笔记' });
@@ -119,7 +78,15 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
   };
 
   const handleCreateSkill = () => {
-    navigate('/app/workspace/skill');
+    setSkillModalOpen(true);
+  };
+
+  const handleCreateSkillSuccess = (resourceId: string) => {
+    setSkillModalOpen(false);
+    openInWorkspace({
+      resourceId,
+      resourceType: WORKSPACE_RESOURCE_TYPE.SKILL,
+    });
   };
 
   const { loading: creatingDrawio, run: runCreateDrawio } = useRequest(
@@ -181,18 +148,6 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
         selectedKeys={selectedKeys}
         className={clsx(styles.headerMenu, collapsed && styles.headerMenuCollapsed)}
       >
-        <ListBoxItem
-          id="new-chat"
-          textValue="新建对话"
-          isDisabled={createSessionLoading}
-          className={clsx(styles.menuItem, collapsed && styles.menuItemCollapsed)}
-          onPress={handleCreateSession}
-        >
-          <span className={styles.menuIcon}>
-            <CirclePlus size={18} />
-          </span>
-          {!collapsed && <span className={styles.menuLabel}>新建对话</span>}
-        </ListBoxItem>
         <ListBoxItem
           id="new-note"
           textValue="新建笔记"
@@ -287,6 +242,11 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
           <Input placeholder="请输入名称" autoFocus />
         </FormField>
       </AppFormDialog>
+      <CreateSkillModal
+        isOpen={skillModalOpen}
+        onOpenChange={setSkillModalOpen}
+        onSuccess={handleCreateSkillSuccess}
+      />
     </>
   );
 }

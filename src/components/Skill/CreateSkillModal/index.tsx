@@ -6,7 +6,7 @@ import { Button, Label, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
 
-import styles from '../style.module.less';
+import styles from './style.module.less';
 
 interface CreateSkillModalProps {
   isOpen: boolean;
@@ -20,6 +20,12 @@ function CreateSkillModal({ isOpen, onOpenChange, onSuccess }: CreateSkillModalP
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
+  const resetForm = () => {
+    setTitle('');
+    setName('');
+    setDescription('');
+  };
+
   const { loading, run: runCreate } = useRequest(
     async () => {
       return skillService.createSkill(
@@ -30,24 +36,29 @@ function CreateSkillModal({ isOpen, onOpenChange, onSuccess }: CreateSkillModalP
     },
     {
       manual: true,
-      onSuccess,
+      onSuccess: (resourceId) => {
+        resetForm();
+        onSuccess(resourceId);
+      },
       onError: (error) => {
         toast.danger(parseErrorMessage(error));
       },
     }
   );
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) resetForm();
+    onOpenChange(open);
+  };
+
   const handleClose = () => {
-    setTitle('');
-    setName('');
-    setDescription('');
-    onOpenChange(false);
+    handleOpenChange(false);
   };
 
   return (
     <AppModal
       isOpen={isOpen}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title="创建新 Skill"
       size="lg"
       isDismissable={!loading}
