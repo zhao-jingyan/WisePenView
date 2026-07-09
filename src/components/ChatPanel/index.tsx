@@ -4,6 +4,7 @@ import { useChatSession } from '@/domains/Chat/session/useChatSession';
 import {
   clearNewChatSessionStore,
   useChatPanelStore,
+  useChatSessionHistoryRefreshStore,
   useCurrentChatSessionStore,
   useNewChatSessionStore,
 } from '@/store';
@@ -29,6 +30,7 @@ import styles from './style.module.less';
 function ChatPanel({
   collapsed,
   fullWidth = false,
+  showHeader = true,
   onNewChat,
   sessionBarOpen = false,
   onToggleSessionBar,
@@ -40,6 +42,9 @@ function ChatPanel({
   const setChatPanelCollapsed = useChatPanelStore((state) => state.setChatPanelCollapsed);
   const chatPanelDraftOpen = useChatPanelStore((state) => state.chatPanelDraftOpen);
   const setChatPanelDraftOpen = useChatPanelStore((state) => state.setChatPanelDraftOpen);
+  const requestChatSessionHistoryRefresh = useChatSessionHistoryRefreshStore(
+    (state) => state.requestRefresh
+  );
   const currentSessionId = useCurrentChatSessionStore((state) => state.currentSessionId);
   const currentSessionTitle = useCurrentChatSessionStore((state) => state.currentSessionTitle);
   const setCurrentSession = useCurrentChatSessionStore((state) => state.setCurrentSession);
@@ -115,8 +120,9 @@ function ChatPanel({
     const pendingId = useNewChatSessionStore.getState().newChatSessionId;
     if (pendingId !== currentSessionId) return;
     if (!hasRenderableChatContent) return;
+    requestChatSessionHistoryRefresh();
     clearNewChatSessionStore();
-  }, [currentSessionId, hasRenderableChatContent]);
+  }, [currentSessionId, hasRenderableChatContent, requestChatSessionHistoryRefresh]);
 
   const sending = status === 'submitted' || status === 'streaming';
   const panelTitle = currentSessionTitle || '新对话';
@@ -132,6 +138,7 @@ function ChatPanel({
       title: createdSession.title,
     });
     setCurrentSession({ id: createdSession.id, title: createdSession.title });
+    requestChatSessionHistoryRefresh();
     setChatPanelDraftOpen(false);
     if (fullWidth) {
       navigate(`/app/chat/${createdSession.id}`, { replace: true });
@@ -267,16 +274,18 @@ function ChatPanel({
 
   return (
     <div className={`${styles.panel} ${fullWidth ? styles.fullWidth : ''}`}>
-      <ChatPanelHeader
-        collapsed={collapsed}
-        fullWidth={fullWidth}
-        panelTitle={panelTitle}
-        sessionBarOpen={sessionBarOpen}
-        showCollapseButton={showCollapseButton}
-        onCollapsePanel={handleCollapsePanel}
-        onNewChat={handleNewChat}
-        onToggleSessionBar={onToggleSessionBar}
-      />
+      {showHeader ? (
+        <ChatPanelHeader
+          collapsed={collapsed}
+          fullWidth={fullWidth}
+          panelTitle={panelTitle}
+          sessionBarOpen={sessionBarOpen}
+          showCollapseButton={showCollapseButton}
+          onCollapsePanel={handleCollapsePanel}
+          onNewChat={handleNewChat}
+          onToggleSessionBar={onToggleSessionBar}
+        />
+      ) : null}
 
       {!collapsed && (
         <div className={styles.panelBody}>

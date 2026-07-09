@@ -16,6 +16,7 @@ export interface TableDriveActionConfig {
     canCreateFolder?: boolean;
     canCreateNote?: boolean;
     canCreateDrawio?: boolean;
+    canCreateSkill?: boolean;
     canUploadDocument?: boolean;
     canUploadToGroup?: boolean;
     canManageTagPermission?: boolean;

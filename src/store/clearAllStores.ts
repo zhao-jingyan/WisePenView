@@ -5,6 +5,7 @@ import { clearChatAgentStore } from './useChatAgentStore';
 import { clearChatCapabilityStore } from './useChatCapabilityStore';
 import { clearChatModelPreferenceStore } from './useChatModelPreferenceStore';
 import { clearChatPanelStore } from './useChatPanelStore';
+import { clearChatSessionHistoryRefreshStore } from './useChatSessionHistoryRefreshStore';
 import { clearCurrentChatSessionStore } from './useCurrentChatSessionStore';
 import { clearDrivePreferencesStore } from './useDrivePreferencesStore';
 import { clearDriveUploadQueueStore } from './useDriveUploadQueueStore';
@@ -19,6 +20,7 @@ export function clearAllZustandStores(): void {
   clearActiveDriveScopeStore();
   clearChatModelPreferenceStore();
   clearChatPanelStore();
+  clearChatSessionHistoryRefreshStore();
   clearCurrentChatSessionStore();
   clearResourceDisplayNameStore();
   clearPdfPreviewProgressStore();

@@ -7,6 +7,10 @@ export { clearActiveDriveScopeStore, useActiveDriveScopeStore } from './useActiv
 export { clearAiDiffDisplayStore, useAiDiffDisplayStore } from './useAiDiffDisplayStore';
 export { clearChatPanelStore, useChatPanelStore } from './useChatPanelStore';
 export {
+  clearChatSessionHistoryRefreshStore,
+  useChatSessionHistoryRefreshStore,
+} from './useChatSessionHistoryRefreshStore';
+export {
   clearCurrentChatSessionStore,
   useCurrentChatSessionStore,
 } from './useCurrentChatSessionStore';

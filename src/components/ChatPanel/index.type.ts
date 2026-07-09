@@ -8,6 +8,7 @@ export type MessageRole = 'user' | 'ai' | 'system';
 export interface ChatPanelProps {
   collapsed: boolean;
   fullWidth?: boolean;
+  showHeader?: boolean;
   onNewChat?: () => void;
   sessionBarOpen?: boolean;
   onToggleSessionBar?: () => void;
