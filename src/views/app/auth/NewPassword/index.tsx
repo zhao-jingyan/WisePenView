@@ -1,21 +1,24 @@
+import { FormField, PasswordInput } from '@/components/Input';
 import AppDisplayDialog from '@/components/Overlay/AppDisplayDialog';
 import { useAuthService } from '@/domains';
 import type { NewPasswordRequest } from '@/domains/Auth';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, Form, Input, Label, TextField, toast } from '@heroui/react';
+import { Button, Form, toast } from '@heroui/react';
 import { useMount, useRequest } from 'ahooks';
-import { Lock } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import auth from '../Auth.module.less';
 import { hasFieldErrors, runFieldValidation, type FieldErrors } from '../formValidation';
 
-type NewPasswordFormValues = Pick<NewPasswordRequest, 'newPassword'>;
+type NewPasswordFormValues = Pick<NewPasswordRequest, 'newPassword'> & {
+  confirmPassword: string;
+};
 type NewPasswordField = keyof NewPasswordFormValues;
 
 const DEFAULT_NEW_PASSWORD_VALUES: NewPasswordFormValues = {
   newPassword: '',
+  confirmPassword: '',
 };
 
 function NewPassword() {
@@ -71,6 +74,16 @@ function NewPassword() {
           message: t('newPassword.passwordContainsNumber'),
         },
       ]),
+      confirmPassword: runFieldValidation([
+        {
+          test: () => formValues.confirmPassword.length > 0,
+          message: t('newPassword.confirmPasswordRequired'),
+        },
+        {
+          test: () => formValues.confirmPassword === formValues.newPassword,
+          message: t('newPassword.confirmPasswordMismatch'),
+        },
+      ]),
     };
     setFormErrors(nextErrors);
     return !hasFieldErrors(nextErrors);
@@ -95,26 +108,40 @@ function NewPassword() {
     <div className={auth.authContainer}>
       <h1 className={auth.title}>{t('newPassword.title')}</h1>
       <Form onSubmit={handleSubmit} className={auth.form}>
-        <TextField
+        <FormField
           aria-label={t('newPassword.passwordLabel')}
+          label={t('newPassword.passwordLabel')}
+          name="newPassword"
           value={formValues.newPassword}
           onChange={(value) => updateFormValue('newPassword', value)}
-          isInvalid={formErrors.newPassword != null}
+          description={t('common.passwordRules')}
+          errorMessage={formErrors.newPassword}
           isRequired
         >
-          <Label>{t('newPassword.passwordLabel')}</Label>
-          <div className={auth.inputWithIcon}>
-            <Lock className={auth.inputIcon} size={18} />
-            <Input
-              type="password"
-              placeholder={t('newPassword.passwordPlaceholder')}
-              autoComplete="new-password"
-            />
-          </div>
-          {formErrors.newPassword ? (
-            <p className={auth.fieldError}>{formErrors.newPassword}</p>
-          ) : null}
-        </TextField>
+          <PasswordInput
+            placeholder={t('newPassword.passwordPlaceholder')}
+            autoComplete="new-password"
+            showPasswordLabel={t('common.showPassword')}
+            hidePasswordLabel={t('common.hidePassword')}
+          />
+        </FormField>
+
+        <FormField
+          aria-label={t('newPassword.confirmPasswordLabel')}
+          label={t('newPassword.confirmPasswordLabel')}
+          name="confirmPassword"
+          value={formValues.confirmPassword}
+          onChange={(value) => updateFormValue('confirmPassword', value)}
+          errorMessage={formErrors.confirmPassword}
+          isRequired
+        >
+          <PasswordInput
+            placeholder={t('newPassword.confirmPasswordPlaceholder')}
+            autoComplete="new-password"
+            showPasswordLabel={t('common.showPassword')}
+            hidePasswordLabel={t('common.hidePassword')}
+          />
+        </FormField>
 
         <div className={auth.formActions}>
           <Button

@@ -1,9 +1,10 @@
+import { Input } from '@/components/Input';
 import AppModal from '@/components/Overlay/AppModal';
 import SelectedMemberList from '@/components/SelectedMemberList';
 import { useQuotaService } from '@/domains';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { parseErrorMessage } from '@/utils/error';
-import { Alert, Button, Input, Label, TextField, toast } from '@heroui/react';
+import { Alert, Button, Label, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
 import type { AssignQuotaModalProps } from './index.type';

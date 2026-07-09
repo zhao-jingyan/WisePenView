@@ -1,10 +1,11 @@
 /**
  * 高级组组长：个人计算点与小组池之间的 Token 划拨（transferTokenBetweenGroupAndUser）。
  */
+import { Input } from '@/components/Input';
 import { useGroupService, useWalletService } from '@/domains';
 import { WALLET_TOKEN_TRANSFER_TYPE } from '@/domains/Wallet';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, Input, Skeleton, TextField, toast } from '@heroui/react';
+import { Button, Skeleton, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
 import type { OwnerGroupTokenTransferProps } from './index.type';

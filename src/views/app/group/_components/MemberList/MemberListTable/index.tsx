@@ -1,3 +1,4 @@
+import { Input } from '@/components/Input';
 import QuotaBar from '@/components/QuotaBar';
 import {
   DataTable,
@@ -8,7 +9,7 @@ import {
 import type { GroupMember } from '@/domains/Group';
 import { ROLE } from '@/domains/Group';
 import { formatTimestampToDate } from '@/utils/format/formatTime';
-import { Input, Label, ListBox, Select, TextField } from '@heroui/react';
+import { Label, ListBox, Select, TextField } from '@heroui/react';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { canEditSelectedMembers, canEditSelectedMembersForQuota } from '../../GroupDisplayConfig';

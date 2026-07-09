@@ -1,0 +1,107 @@
+.textarea:global(.textarea) {
+  --app-textarea-bg: color-mix(
+    in oklab,
+    var(--surface-tertiary, #f0f3f6) 45%,
+    var(--surface, #ffffff) 55%
+  );
+  --app-textarea-bg-hover: color-mix(
+    in oklab,
+    var(--surface-tertiary, #f0f3f6) 58%,
+    var(--surface, #ffffff) 42%
+  );
+  --app-textarea-bg-focus: color-mix(
+    in oklab,
+    var(--surface-tertiary, #f0f3f6) 38%,
+    var(--surface, #ffffff) 62%
+  );
+  --app-textarea-border: color-mix(
+    in oklab,
+    var(--border, #e4e7ec) 82%,
+    var(--surface, #ffffff) 18%
+  );
+  --app-textarea-border-hover: color-mix(
+    in oklab,
+    var(--border, #e4e7ec) 90%,
+    var(--surface, #ffffff) 10%
+  );
+  --app-textarea-border-focus: color-mix(
+    in srgb,
+    var(--accent, #1e6f9f) 100%,
+    transparent
+  );
+  --app-textarea-border-width: 1.5px;
+  --app-textarea-focus-ring-width: 0.5px;
+  --app-textarea-focus-ring-color: color-mix(
+    in srgb,
+    var(--app-textarea-border-focus) 100%,
+    transparent
+  );
+  --app-textarea-focus-ring: 0 0 0 var(--app-textarea-focus-ring-width)
+    var(--app-textarea-focus-ring-color);
+  --app-textarea-danger-ring: 0 0 0 var(--app-textarea-focus-ring-width)
+    color-mix(in srgb, var(--danger-border, var(--danger)) 24%, transparent);
+  --textarea-bg: var(--app-textarea-bg);
+  --textarea-bg-hover: var(--app-textarea-bg-hover);
+  --textarea-bg-focus: var(--app-textarea-bg-focus);
+  --field-background: var(--app-textarea-bg);
+  --field-border: var(--app-textarea-border);
+  --field-border-hover: var(--app-textarea-border-hover);
+  --field-border-focus: var(--app-textarea-border-focus);
+  --field-focus: var(--app-textarea-bg-focus);
+  --field-shadow: none;
+
+  box-sizing: border-box;
+  border-width: var(--app-textarea-border-width);
+  border-color: var(--app-textarea-border);
+  background-color: var(--app-textarea-bg);
+  color: var(--field-foreground, var(--foreground));
+  box-shadow: none;
+  letter-spacing: 0;
+}
+
+.textarea:global(.textarea)::placeholder {
+  color: var(--field-placeholder, var(--muted));
+}
+
+.textarea:global(.textarea):hover:not(:focus):not(:focus-visible),
+.textarea:global(.textarea)[data-hovered='true']:not([data-focused='true']):not(
+    [data-focus-visible='true']
+  ) {
+  border-color: var(--app-textarea-border-hover);
+  background-color: var(--app-textarea-bg-hover);
+}
+
+.textarea:global(.textarea):focus,
+.textarea:global(.textarea)[data-focused='true'] {
+  border-color: var(--app-textarea-border-focus);
+  background-color: var(--app-textarea-bg-focus);
+  box-shadow: var(--app-textarea-focus-ring);
+}
+
+.textarea:global(.textarea):focus-visible,
+.textarea:global(.textarea)[data-focus-visible='true'] {
+  border-color: var(--app-textarea-border-focus);
+  outline: none;
+}
+
+.textarea:global(.textarea)[data-invalid='true'] {
+  border-color: var(--danger-border, var(--danger));
+  background-color: color-mix(
+    in srgb,
+    var(--danger-soft, rgba(239, 68, 68, 0.12)) 36%,
+    var(--app-textarea-bg-focus) 64%
+  );
+}
+
+.textarea:global(.textarea)[data-invalid='true']:focus,
+.textarea:global(.textarea)[data-invalid='true'][data-focused='true'] {
+  box-shadow: var(--app-textarea-danger-ring);
+}
+
+.textarea:global(.textarea):disabled,
+.textarea:global(.textarea)[data-disabled='true'],
+.textarea:global(.textarea)[aria-disabled='true'] {
+  border-color: color-mix(in oklab, var(--app-textarea-border) 76%, transparent);
+  background-color: color-mix(in oklab, var(--app-textarea-bg) 78%, transparent);
+  box-shadow: none;
+}

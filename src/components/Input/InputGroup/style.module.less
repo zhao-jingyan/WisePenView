@@ -1,0 +1,118 @@
+.inputGroup:global(.input-group) {
+  --app-input-group-bg: color-mix(
+    in oklab,
+    var(--surface-tertiary, #f0f3f6) 35%,
+    var(--surface, #ffffff) 65%
+  );
+  --app-input-group-bg-hover: color-mix(
+    in oklab,
+    var(--surface-tertiary, #f0f3f6) 70%,
+    var(--surface, #ffffff) 30%
+  );
+  --app-input-group-bg-focus: color-mix(
+    in oklab,
+    var(--surface-tertiary, #f0f3f6) 35%,
+    var(--surface, #ffffff) 65%
+  );
+  --app-input-group-border: color-mix(
+    in oklab,
+    var(--border, #e4e7ec) 82%,
+    var(--surface, #ffffff) 18%
+  );
+  --app-input-group-border-hover: color-mix(
+    in oklab,
+    var(--border, #e4e7ec) 90%,
+    var(--surface, #ffffff) 10%
+  );
+  --app-input-group-border-focus: color-mix(
+    in srgb,
+    var(--accent, #1e6f9f) 100%,
+    transparent
+  );
+  --app-input-group-border-width: 1.5px;
+  --app-input-group-focus-ring-width: 0.5px;
+  --app-input-group-focus-ring-color: color-mix(
+    in srgb,
+    var(--app-input-group-border-focus) 100%,
+    transparent
+  );
+  --app-input-group-focus-ring: 0 0 0 var(--app-input-group-focus-ring-width)
+    var(--app-input-group-focus-ring-color);
+  --app-input-group-danger-ring: 0 0 0 var(--app-input-group-focus-ring-width)
+    color-mix(in srgb, var(--danger-border, var(--danger)) 24%, transparent);
+  --input-group-bg: var(--app-input-group-bg);
+  --input-group-bg-hover: var(--app-input-group-bg-hover);
+  --input-group-bg-focus: var(--app-input-group-bg-focus);
+  --field-background: var(--app-input-group-bg);
+  --field-border: var(--app-input-group-border);
+  --field-border-hover: var(--app-input-group-border-hover);
+  --field-border-focus: var(--app-input-group-border-focus);
+  --field-focus: var(--app-input-group-bg-focus);
+  --field-shadow: none;
+
+  box-sizing: border-box;
+  border-width: var(--app-input-group-border-width);
+  border-color: var(--app-input-group-border);
+  background-color: var(--app-input-group-bg);
+  box-shadow: none;
+}
+
+.inputGroup:global(.input-group):hover:not(:focus-within),
+.inputGroup:global(.input-group)[data-hovered='true']:not([data-focus-within='true']) {
+  border-color: var(--app-input-group-border-hover);
+  background-color: var(--app-input-group-bg-hover);
+}
+
+.inputGroup:global(.input-group):has(:global([data-slot='input-group-input']:focus)),
+.inputGroup:global(.input-group):has(:global([data-slot='input-group-textarea']:focus)) {
+  border-color: var(--app-input-group-border-focus);
+  background-color: var(--app-input-group-bg-focus);
+  box-shadow: var(--app-input-group-focus-ring);
+}
+
+.inputGroup:global(.input-group):has(:global([data-slot='input-group-input']:-webkit-autofill)),
+.inputGroup:global(.input-group):has(:global([data-slot='input-group-input']:autofill)) {
+  border-color: var(--app-input-group-border-focus);
+  background-color: var(--app-input-group-bg-focus);
+}
+
+.inputGroup:global(.input-group)[data-invalid='true'] {
+  border-color: var(--danger-border, var(--danger));
+  background-color: color-mix(
+    in srgb,
+    var(--danger-soft, rgba(239, 68, 68, 0.12)) 36%,
+    var(--app-input-group-bg-focus) 64%
+  );
+}
+
+.inputGroup:global(.input-group)[data-invalid='true']:has(
+    :global([data-slot='input-group-input']:focus)
+  ),
+.inputGroup:global(.input-group)[data-invalid='true']:has(
+    :global([data-slot='input-group-textarea']:focus)
+  ) {
+  box-shadow: var(--app-input-group-danger-ring);
+}
+
+.inputGroup:global(.input-group) :global([data-slot='input-group-input']),
+.inputGroup:global(.input-group) :global([data-slot='input-group-textarea']) {
+  background: transparent;
+  letter-spacing: 0;
+}
+
+.inputGroup:global(.input-group) :global([data-slot='input-group-prefix']),
+.inputGroup:global(.input-group) :global([data-slot='input-group-suffix']) {
+  border-color: var(--app-input-group-border);
+  color: var(--field-placeholder, var(--muted));
+}
+
+.inputGroup:global(.input-group):has(:global([data-slot='input-group-input']:focus))
+  :global([data-slot='input-group-prefix']),
+.inputGroup:global(.input-group):has(:global([data-slot='input-group-input']:focus))
+  :global([data-slot='input-group-suffix']),
+.inputGroup:global(.input-group):has(:global([data-slot='input-group-textarea']:focus))
+  :global([data-slot='input-group-prefix']),
+.inputGroup:global(.input-group):has(:global([data-slot='input-group-textarea']:focus))
+  :global([data-slot='input-group-suffix']) {
+  border-color: var(--app-input-group-border-focus);
+}

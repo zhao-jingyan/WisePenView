@@ -1,10 +1,11 @@
+import { FormField, Input, PasswordInput } from '@/components/Input';
 import { useAuthService } from '@/domains';
 import type { LoginRequest } from '@/domains/Auth';
 import { parseErrorMessage } from '@/utils/error';
 import ServiceAgreement from '@/views/app/auth/_components/ServiceAgreement/index';
-import { Button, Form, Input, Label, TextField, toast } from '@heroui/react';
+import { Button, Form, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Lock, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
@@ -71,39 +72,35 @@ function Login() {
       <h1 className={auth.title}>{t('login.title')}</h1>
 
       <Form onSubmit={handleSubmit} className={auth.form}>
-        <TextField
+        <FormField
           aria-label={t('login.accountLabel')}
+          label={t('login.accountLabel')}
           value={formValues.account}
           onChange={(value) => updateFormValue('account', value)}
-          isInvalid={formErrors.account != null}
+          errorMessage={formErrors.account}
           isRequired
         >
-          <Label>{t('login.accountLabel')}</Label>
           <div className={auth.inputWithIcon}>
-            <User className={auth.inputIcon} size={18} />
+            <User className={auth.inputIcon} size={18} aria-hidden="true" />
             <Input placeholder={t('login.accountPlaceholder')} autoComplete="username" />
           </div>
-          {formErrors.account ? <p className={auth.fieldError}>{formErrors.account}</p> : null}
-        </TextField>
+        </FormField>
 
-        <TextField
+        <FormField
           aria-label={t('login.passwordLabel')}
+          label={t('login.passwordLabel')}
           value={formValues.password}
           onChange={(value) => updateFormValue('password', value)}
-          isInvalid={formErrors.password != null}
+          errorMessage={formErrors.password}
           isRequired
         >
-          <Label>{t('login.passwordLabel')}</Label>
-          <div className={auth.inputWithIcon}>
-            <Lock className={auth.inputIcon} size={18} />
-            <Input
-              type="password"
-              placeholder={t('login.passwordPlaceholder')}
-              autoComplete="current-password"
-            />
-          </div>
-          {formErrors.password ? <p className={auth.fieldError}>{formErrors.password}</p> : null}
-        </TextField>
+          <PasswordInput
+            placeholder={t('login.passwordPlaceholder')}
+            autoComplete="current-password"
+            showPasswordLabel={t('common.showPassword')}
+            hidePasswordLabel={t('common.hidePassword')}
+          />
+        </FormField>
 
         <div className={auth.formActions}>
           <Button

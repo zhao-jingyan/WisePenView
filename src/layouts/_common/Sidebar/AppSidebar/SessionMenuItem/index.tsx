@@ -1,8 +1,9 @@
+import { FormField, Input } from '@/components/Input';
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import { useChatService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
-import { Input, TextField, toast } from '@heroui/react';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -14,6 +15,7 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
   const chatService = useChatService();
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [editingTitle, setEditingTitle] = useState(session.title || '');
+  const [editingTitleError, setEditingTitleError] = useState('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const { runAsync: runRenameSession } = useRequest(
@@ -56,7 +58,7 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
   const submitRename = async () => {
     const trimmedTitle = editingTitle.trim();
     if (!trimmedTitle) {
-      toast.warning('请输入会话名称');
+      setEditingTitleError('请输入对话标题');
       return;
     }
     await runRenameSession(trimmedTitle);
@@ -84,6 +86,7 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
             event.preventDefault();
             event.stopPropagation();
             setEditingTitle(session.title || '');
+            setEditingTitleError('');
             setRenameModalOpen(true);
           }}
         >
@@ -108,18 +111,36 @@ function SessionMenuItem({ session, onUpdated, onDeleted }: SessionMenuItemProps
       </div>
       <AppFormDialog
         isOpen={renameModalOpen}
-        onOpenChange={setRenameModalOpen}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            setEditingTitleError('');
+          }
+          setRenameModalOpen(nextOpen);
+        }}
         title="修改对话标题"
         confirmText="保存"
         onCancel={() => {
           setRenameModalOpen(false);
           setEditingTitle(session.title || '');
+          setEditingTitleError('');
         }}
         onSubmit={() => void submitRename()}
       >
-        <TextField aria-label="对话标题" value={editingTitle} autoFocus onChange={setEditingTitle}>
+        <FormField
+          aria-label="对话标题"
+          label="对话标题"
+          name="sessionTitle"
+          value={editingTitle}
+          autoFocus
+          onChange={(value) => {
+            setEditingTitle(value);
+            setEditingTitleError('');
+          }}
+          errorMessage={editingTitleError}
+          isRequired
+        >
           <Input placeholder="请输入对话标题" />
-        </TextField>
+        </FormField>
       </AppFormDialog>
       <AppAlertDialog
         type="danger"

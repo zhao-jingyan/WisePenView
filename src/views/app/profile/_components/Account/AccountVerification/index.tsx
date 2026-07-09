@@ -1,21 +1,11 @@
+import { Input, InputGroup } from '@/components/Input';
 import AppDisplayDialog from '@/components/Overlay/AppDisplayDialog';
 import AppModal from '@/components/Overlay/AppModal';
 import { useUserService } from '@/domains';
 import type { InitiateUISVerifyRequest, SendEmailVerifyRequest } from '@/domains/User';
 import { USER_STATUS } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
-import {
-  Alert,
-  Button,
-  ErrorMessage,
-  Form,
-  Input,
-  InputGroup,
-  Label,
-  Tabs,
-  TextField,
-  toast,
-} from '@heroui/react';
+import { Alert, Button, ErrorMessage, Form, Label, Tabs, TextField, toast } from '@heroui/react';
 import { useRequest, useUnmount } from 'ahooks';
 import { CircleCheck, Info, Mail, ShieldUser, TriangleAlert } from 'lucide-react';
 import type { FormEvent } from 'react';

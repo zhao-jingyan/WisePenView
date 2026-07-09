@@ -1,7 +1,8 @@
+import { Input, TextArea } from '@/components/Input';
 import AppModal from '@/components/Overlay/AppModal';
 import { useSkillService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, Input, Label, TextArea, TextField, toast } from '@heroui/react';
+import { Button, Label, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
 

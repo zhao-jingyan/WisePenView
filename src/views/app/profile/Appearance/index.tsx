@@ -4,7 +4,6 @@ import {
   Chip,
   Dropdown,
   Heading,
-  Input,
   Label,
   Paragraph,
   ProgressBar,
@@ -17,6 +16,7 @@ import {
 } from '@heroui/react';
 import { ChevronDown } from 'lucide-react';
 
+import { Input } from '@/components/Input';
 import {
   COLOR_SCHEME_OPTIONS,
   THEME_FORM_RADIUS_OPTIONS,

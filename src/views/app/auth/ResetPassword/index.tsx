@@ -1,7 +1,8 @@
+import { FormField, Input } from '@/components/Input';
 import { useAuthService } from '@/domains';
 import type { ResetPasswordRequest } from '@/domains/Auth';
 import { parseErrorMessage } from '@/utils/error';
-import { Alert, Button, Form, Input, Label, TextField, toast } from '@heroui/react';
+import { Alert, Button, Form, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Mail } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -73,20 +74,20 @@ function ResetPassword() {
         </Alert.Content>
       </Alert>
       <Form onSubmit={handleSubmit} className={auth.form}>
-        <TextField
+        <FormField
           aria-label={t('resetPassword.campusNumLabel')}
+          label={t('resetPassword.campusNumLabel')}
+          name="campusNum"
           value={formValues.campusNum}
           onChange={(value) => updateFormValue('campusNum', value)}
-          isInvalid={formErrors.campusNum != null}
+          errorMessage={formErrors.campusNum}
           isRequired
         >
-          <Label>{t('resetPassword.campusNumLabel')}</Label>
           <div className={auth.inputWithIcon}>
-            <Mail className={auth.inputIcon} size={18} />
+            <Mail className={auth.inputIcon} size={18} aria-hidden="true" />
             <Input placeholder={t('resetPassword.campusNumPlaceholder')} />
           </div>
-          {formErrors.campusNum ? <p className={auth.fieldError}>{formErrors.campusNum}</p> : null}
-        </TextField>
+        </FormField>
 
         <div className={auth.formActions}>
           <Button

@@ -1,4 +1,9 @@
 const zhCNAuth = {
+  common: {
+    showPassword: '显示密码',
+    hidePassword: '隐藏密码',
+    passwordRules: '至少 9 位，需同时包含字母和数字。',
+  },
   login: {
     title: '登录',
     accountLabel: '学工号/用户名',
@@ -26,6 +31,10 @@ const zhCNAuth = {
     passwordContainsLetter: '密码必须包含字母',
     passwordContainsNumber: '密码必须包含数字',
     passwordPlaceholder: '输入密码',
+    confirmPasswordLabel: '确认密码',
+    confirmPasswordRequired: '请再次输入密码',
+    confirmPasswordMismatch: '两次输入的密码不一致',
+    confirmPasswordPlaceholder: '再次输入密码',
     agreementCheckedPrefix: '我已阅读并接受',
     agreementLink: '用户协议',
     submit: '注册',
@@ -71,6 +80,10 @@ const zhCNAuth = {
     passwordContainsLetter: '密码必须包含字母',
     passwordContainsNumber: '密码必须包含数字',
     passwordPlaceholder: '输入新密码',
+    confirmPasswordLabel: '确认新密码',
+    confirmPasswordRequired: '请再次输入新密码',
+    confirmPasswordMismatch: '两次输入的新密码不一致',
+    confirmPasswordPlaceholder: '再次输入新密码',
     submit: '确认',
     backToLogin: '返回登录',
     successTitle: '密码设置成功',

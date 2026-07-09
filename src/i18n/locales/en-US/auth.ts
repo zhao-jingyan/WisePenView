@@ -1,4 +1,9 @@
 const enUSAuth = {
+  common: {
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
+    passwordRules: 'At least 9 characters, including both letters and numbers.',
+  },
   login: {
     title: 'Sign In',
     accountLabel: 'Campus ID / Username',
@@ -26,6 +31,10 @@ const enUSAuth = {
     passwordContainsLetter: 'Password must contain letters',
     passwordContainsNumber: 'Password must contain numbers',
     passwordPlaceholder: 'Enter password',
+    confirmPasswordLabel: 'Confirm Password',
+    confirmPasswordRequired: 'Please enter password again',
+    confirmPasswordMismatch: 'The two passwords do not match',
+    confirmPasswordPlaceholder: 'Enter password again',
     agreementCheckedPrefix: 'I have read and accept',
     agreementLink: 'User Agreement',
     submit: 'Register',
@@ -72,6 +81,10 @@ const enUSAuth = {
     passwordContainsLetter: 'Password must contain letters',
     passwordContainsNumber: 'Password must contain numbers',
     passwordPlaceholder: 'Enter new password',
+    confirmPasswordLabel: 'Confirm New Password',
+    confirmPasswordRequired: 'Please enter new password again',
+    confirmPasswordMismatch: 'The two new passwords do not match',
+    confirmPasswordPlaceholder: 'Enter new password again',
     submit: 'Confirm',
     backToLogin: 'Back to Sign In',
     successTitle: 'Password Set Successfully',

@@ -1,3 +1,4 @@
+import { FormField, Input } from '@/components/Input';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import { useChatService, useNoteService } from '@/domains';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
@@ -10,7 +11,7 @@ import {
 } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
-import { Input, ListBox, ListBoxItem, TextField, toast } from '@heroui/react';
+import { ListBox, ListBoxItem, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import clsx from 'clsx';
 import { Bot, CirclePlus, FileText, PenTool, Puzzle, Users, Workflow } from 'lucide-react';
@@ -30,6 +31,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
   const setChatPanelDraftOpen = useChatPanelStore((s) => s.setChatPanelDraftOpen);
   const [drawioModalOpen, setDrawioModalOpen] = useState(false);
   const [drawioName, setDrawioName] = useState('未命名图表');
+  const [drawioNameError, setDrawioNameError] = useState('');
 
   const isDriveActive = location.pathname.startsWith('/app/drive');
   const isGroupActive = location.pathname.startsWith('/app/my-group');
@@ -136,6 +138,7 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
       manual: true,
       onSuccess: ({ resourceId }) => {
         setDrawioModalOpen(false);
+        setDrawioNameError('');
         openInWorkspace({
           resourceId,
           resourceType: WORKSPACE_RESOURCE_TYPE.DRAWIO,
@@ -150,12 +153,24 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
   const handleOpenDrawioModal = () => {
     if (creatingDrawio) return;
     setDrawioName('未命名图表');
+    setDrawioNameError('');
     setDrawioModalOpen(true);
   };
 
   const handleConfirmCreateDrawio = () => {
     if (creatingDrawio) return;
+    if (!drawioName.trim()) {
+      setDrawioNameError('请输入 Draw.io 图名称');
+      return;
+    }
     runCreateDrawio();
+  };
+
+  const handleDrawioModalOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setDrawioNameError('');
+    }
+    setDrawioModalOpen(nextOpen);
   };
 
   return (
@@ -249,17 +264,28 @@ function AppHeaderNav({ collapsed, onSessionCreated }: AppHeaderNavProps) {
       </ListBox>
       <AppFormDialog
         isOpen={drawioModalOpen}
-        onOpenChange={setDrawioModalOpen}
+        onOpenChange={handleDrawioModalOpenChange}
         title="新建 Draw.io 图"
         confirmText="创建"
         onSubmit={handleConfirmCreateDrawio}
         isSubmitting={creatingDrawio}
-        isSubmitDisabled={creatingDrawio || !drawioName.trim()}
+        isSubmitDisabled={creatingDrawio}
         isDismissable={!creatingDrawio}
       >
-        <TextField aria-label="Draw.io 图名称" value={drawioName} onChange={setDrawioName}>
+        <FormField
+          aria-label="Draw.io 图名称"
+          label="Draw.io 图名称"
+          name="drawioName"
+          value={drawioName}
+          onChange={(value) => {
+            setDrawioName(value);
+            setDrawioNameError('');
+          }}
+          errorMessage={drawioNameError}
+          isRequired
+        >
           <Input placeholder="请输入名称" autoFocus />
-        </TextField>
+        </FormField>
       </AppFormDialog>
     </>
   );

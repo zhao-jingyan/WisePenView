@@ -1,5 +1,6 @@
+import { Input } from '@/components/Input';
 import type { UserSearchUser } from '@/domains/User';
-import { Avatar, Button, Input, TextField } from '@heroui/react';
+import { Avatar, Button, TextField } from '@heroui/react';
 import { useRequest, useUnmount } from 'ahooks';
 import clsx from 'clsx';
 import type { KeyboardEvent } from 'react';

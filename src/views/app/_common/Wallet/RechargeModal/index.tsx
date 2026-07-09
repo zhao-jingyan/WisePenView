@@ -7,8 +7,8 @@
  * - 提交：剔除横杠与空格，仅传 16 位纯字符。
  * - 防重复提交：进行中按钮文案为「充值中...」并禁用。
  */
+import { InputOTP, REGEXP_ONLY_DIGITS_AND_CHARS } from '@/components/Input';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
-import { InputOTP, REGEXP_ONLY_DIGITS_AND_CHARS } from '@heroui/react';
 import { useRequest, useUpdateEffect } from 'ahooks';
 import React, { useRef, useState } from 'react';
 import type { RechargeModalProps } from './index.type';
@@ -31,9 +31,11 @@ const OTP_GROUPS = [
 function RechargeModal({ open, onCancel, groupDisplayName, onSubmit }: RechargeModalProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState('');
+  const [codeError, setCodeError] = useState('');
 
   const handleCancel = () => {
     setValue('');
+    setCodeError('');
     onCancel();
   };
 
@@ -55,6 +57,7 @@ function RechargeModal({ open, onCancel, groupDisplayName, onSubmit }: RechargeM
   const handleOk = () => {
     const code = normalizeVoucherCode(value);
     if (code.length !== 16) {
+      setCodeError('请输入 16 位兑换码');
       return;
     }
     runRecharge(code);
@@ -88,33 +91,54 @@ function RechargeModal({ open, onCancel, groupDisplayName, onSubmit }: RechargeM
       isSubmitDisabled={!canSubmit}
       isDismissable={!submitting}
     >
-      <InputOTP
-        ref={inputRef}
-        className={styles.codeInput}
-        inputClassName={styles.codeInputHidden}
-        value={value}
-        onChange={(nextValue) => setValue(normalizeVoucherCode(nextValue))}
-        maxLength={16}
-        pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
-        autoComplete="one-time-code"
-        inputMode="text"
-        isDisabled={submitting}
-        pasteTransformer={normalizeVoucherCode}
-        pushPasswordManagerStrategy="none"
-        textAlign="center"
-      >
-        {OTP_GROUPS.map((group, groupIndex) => (
-          <React.Fragment key={group.join('-')}>
-            {groupIndex > 0 ? <InputOTP.Separator className={styles.codeSeparator} /> : null}
-            <InputOTP.Group className={styles.codeGroup}>
-              {group.map((slotIndex) => (
-                <InputOTP.Slot key={slotIndex} className={styles.codeSlot} index={slotIndex} />
-              ))}
-            </InputOTP.Group>
-          </React.Fragment>
-        ))}
-      </InputOTP>
-      <p className={styles.hint}>请输入 16 位兑换码，将自动转为大写并分段显示。</p>
+      <div className={styles.field}>
+        <label className={styles.fieldLabel} id="recharge-code-label" htmlFor="recharge-code">
+          兑换码
+        </label>
+        <InputOTP
+          ref={inputRef}
+          id="recharge-code"
+          aria-labelledby="recharge-code-label"
+          aria-describedby="recharge-code-hint"
+          aria-errormessage={codeError ? 'recharge-code-error' : undefined}
+          className={styles.codeInput}
+          inputClassName={styles.codeInputHidden}
+          value={value}
+          onChange={(nextValue) => {
+            setValue(normalizeVoucherCode(nextValue));
+            setCodeError('');
+          }}
+          maxLength={16}
+          pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
+          autoComplete="one-time-code"
+          inputMode="text"
+          isDisabled={submitting}
+          isInvalid={Boolean(codeError)}
+          validationErrors={codeError ? [codeError] : undefined}
+          pasteTransformer={normalizeVoucherCode}
+          pushPasswordManagerStrategy="none"
+          textAlign="center"
+        >
+          {OTP_GROUPS.map((group, groupIndex) => (
+            <React.Fragment key={group.join('-')}>
+              {groupIndex > 0 ? <InputOTP.Separator className={styles.codeSeparator} /> : null}
+              <InputOTP.Group className={styles.codeGroup}>
+                {group.map((slotIndex) => (
+                  <InputOTP.Slot key={slotIndex} className={styles.codeSlot} index={slotIndex} />
+                ))}
+              </InputOTP.Group>
+            </React.Fragment>
+          ))}
+        </InputOTP>
+        <p id="recharge-code-hint" className={styles.hint}>
+          请输入 16 位兑换码，将自动转为大写并分段显示。
+        </p>
+        {codeError ? (
+          <p id="recharge-code-error" className={styles.fieldError}>
+            {codeError}
+          </p>
+        ) : null}
+      </div>
     </AppFormDialog>
   );
 }

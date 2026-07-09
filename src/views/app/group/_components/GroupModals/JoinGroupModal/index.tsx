@@ -1,8 +1,9 @@
+import { InputOTP, REGEXP_ONLY_DIGITS_AND_CHARS } from '@/components/Input';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import { useGroupService } from '@/domains';
 import type { JoinGroupRequest } from '@/domains/Group';
 import { parseErrorMessage } from '@/utils/error';
-import { InputOTP, REGEXP_ONLY_DIGITS_AND_CHARS, toast } from '@heroui/react';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import React, { useState } from 'react';
 import type { JoinGroupModalProps } from './index.type';
@@ -25,9 +26,11 @@ const normalizeInviteCode = (raw = ''): string =>
 function JoinGroupModal({ isOpen, onOpenChange, onSuccess }: JoinGroupModalProps) {
   const groupService = useGroupService();
   const [inviteCode, setInviteCode] = useState('');
+  const [inviteCodeError, setInviteCodeError] = useState('');
   const isSubmitDisabled = normalizeInviteCode(inviteCode).length !== INVITE_CODE_LENGTH;
   const resetForm = () => {
     setInviteCode('');
+    setInviteCodeError('');
   };
 
   const handleCancel = () => {
@@ -54,7 +57,7 @@ function JoinGroupModal({ isOpen, onOpenChange, onSuccess }: JoinGroupModalProps
   const handleConfirm = () => {
     const normalizedInviteCode = normalizeInviteCode(inviteCode);
     if (normalizedInviteCode.length !== INVITE_CODE_LENGTH) {
-      toast.warning('请输入 8 位邀请码');
+      setInviteCodeError('请输入 8 位邀请码');
       return;
     }
     runJoinGroup({
@@ -65,7 +68,12 @@ function JoinGroupModal({ isOpen, onOpenChange, onSuccess }: JoinGroupModalProps
   return (
     <AppFormDialog
       isOpen={isOpen}
-      onOpenChange={onOpenChange}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          resetForm();
+        }
+        onOpenChange(nextOpen);
+      }}
       title="加入小组"
       onCancel={handleCancel}
       onSubmit={handleConfirm}
@@ -73,35 +81,56 @@ function JoinGroupModal({ isOpen, onOpenChange, onSuccess }: JoinGroupModalProps
       isSubmitDisabled={isSubmitDisabled || loading}
       isDismissable={!loading}
     >
-      <label className={styles.fieldLabel} htmlFor="join-group-invite-code">
-        邀请码
-      </label>
-      <InputOTP
-        id="join-group-invite-code"
-        value={inviteCode}
-        onChange={(value) => setInviteCode(normalizeInviteCode(value))}
-        className={styles.codeInput}
-        inputClassName={styles.codeInputHidden}
-        maxLength={INVITE_CODE_LENGTH}
-        pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
-        autoComplete="one-time-code"
-        inputMode="text"
-        pasteTransformer={normalizeInviteCode}
-        pushPasswordManagerStrategy="none"
-        textAlign="center"
-      >
-        {OTP_GROUPS.map((group, groupIndex) => (
-          <React.Fragment key={group.join('-')}>
-            {groupIndex > 0 ? <InputOTP.Separator className={styles.codeSeparator} /> : null}
-            <InputOTP.Group className={styles.codeGroup}>
-              {group.map((slotIndex) => (
-                <InputOTP.Slot key={slotIndex} className={styles.codeSlot} index={slotIndex} />
-              ))}
-            </InputOTP.Group>
-          </React.Fragment>
-        ))}
-      </InputOTP>
-      <p className={styles.hint}>请输入 8 位邀请码，将自动转为大写并分段显示。</p>
+      <div className={styles.field}>
+        <label
+          className={styles.fieldLabel}
+          id="join-group-invite-code-label"
+          htmlFor="join-group-invite-code"
+        >
+          邀请码
+        </label>
+        <InputOTP
+          id="join-group-invite-code"
+          aria-labelledby="join-group-invite-code-label"
+          aria-describedby="join-group-invite-code-hint"
+          aria-errormessage={inviteCodeError ? 'join-group-invite-code-error' : undefined}
+          value={inviteCode}
+          onChange={(value) => {
+            setInviteCode(normalizeInviteCode(value));
+            setInviteCodeError('');
+          }}
+          className={styles.codeInput}
+          inputClassName={styles.codeInputHidden}
+          maxLength={INVITE_CODE_LENGTH}
+          pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
+          autoComplete="one-time-code"
+          inputMode="text"
+          isInvalid={Boolean(inviteCodeError)}
+          validationErrors={inviteCodeError ? [inviteCodeError] : undefined}
+          pasteTransformer={normalizeInviteCode}
+          pushPasswordManagerStrategy="none"
+          textAlign="center"
+        >
+          {OTP_GROUPS.map((group, groupIndex) => (
+            <React.Fragment key={group.join('-')}>
+              {groupIndex > 0 ? <InputOTP.Separator className={styles.codeSeparator} /> : null}
+              <InputOTP.Group className={styles.codeGroup}>
+                {group.map((slotIndex) => (
+                  <InputOTP.Slot key={slotIndex} className={styles.codeSlot} index={slotIndex} />
+                ))}
+              </InputOTP.Group>
+            </React.Fragment>
+          ))}
+        </InputOTP>
+        <p id="join-group-invite-code-hint" className={styles.hint}>
+          请输入 8 位邀请码，将自动转为大写并分段显示。
+        </p>
+        {inviteCodeError ? (
+          <p id="join-group-invite-code-error" className={styles.fieldError}>
+            {inviteCodeError}
+          </p>
+        ) : null}
+      </div>
     </AppFormDialog>
   );
 }

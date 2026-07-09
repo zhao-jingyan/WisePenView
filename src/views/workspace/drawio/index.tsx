@@ -1,4 +1,5 @@
 import { ResultState, Spin } from '@/components/Feedback';
+import { FormField, Input } from '@/components/Input';
 import AppDisplayDialog from '@/components/Overlay/AppDisplayDialog';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import { useNoteService, useResourceService, useUserService } from '@/domains';
@@ -12,7 +13,7 @@ import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
 import { useWorkspaceLayoutConfig } from '@/layouts/Workspace/WorkspaceOutletContext';
 import { parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
-import { Button, Input, TextField, toast } from '@heroui/react';
+import { Button, toast } from '@heroui/react';
 import { useEventListener, useRequest, useUnmount, useUpdateEffect } from 'ahooks';
 import { Copy, History, Save } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -254,21 +255,49 @@ function CopyModal({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  const [nameError, setNameError] = useState('');
+
+  const handleNameChange = (value: string) => {
+    onNameChange(value);
+    setNameError('');
+  };
+
+  const handleConfirm = () => {
+    if (!name.trim()) {
+      setNameError('请输入复制后的名称');
+      return;
+    }
+    onConfirm();
+  };
+
+  const handleClose = () => {
+    setNameError('');
+    onClose();
+  };
+
   return (
     <AppFormDialog
       isOpen={open}
-      onOpenChange={(visible) => !visible && onClose()}
+      onOpenChange={(visible) => !visible && handleClose()}
       title="复制 Draw.io 图"
       confirmText="复制"
-      onCancel={onClose}
-      onSubmit={onConfirm}
+      onCancel={handleClose}
+      onSubmit={handleConfirm}
       isSubmitting={loading}
-      isSubmitDisabled={loading || !name.trim()}
+      isSubmitDisabled={loading}
       isDismissable={!loading}
     >
-      <TextField aria-label="复制后的名称" value={name} onChange={onNameChange}>
+      <FormField
+        aria-label="复制后的名称"
+        label="复制后的名称"
+        name="copyName"
+        value={name}
+        onChange={handleNameChange}
+        errorMessage={nameError}
+        isRequired
+      >
         <Input placeholder="请输入名称" autoFocus />
-      </TextField>
+      </FormField>
     </AppFormDialog>
   );
 }

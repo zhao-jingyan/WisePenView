@@ -1,9 +1,10 @@
+import { Input } from '@/components/Input';
 import { useUserService } from '@/domains';
 import type { UpdateUserInfoRequest } from '@/domains/User';
 import { DEGREE, SEX } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
 import type { ProfileFieldKey } from '@/views/app/profile/profile.config';
-import { Button, Form, Input, Label, ListBox, Select, TextField, toast } from '@heroui/react';
+import { Button, Form, Label, ListBox, Select, TextField, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Pencil, X } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';

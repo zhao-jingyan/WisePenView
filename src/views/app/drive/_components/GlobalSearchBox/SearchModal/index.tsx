@@ -1,5 +1,6 @@
+import { InputGroup } from '@/components/Input';
 import { Modal } from '@/components/Overlay';
-import { InputGroup, Kbd, TextField } from '@heroui/react';
+import { Kbd, TextField } from '@heroui/react';
 import { useDebounce, useKeyPress } from 'ahooks';
 import { Search, X } from 'lucide-react';
 import { useState } from 'react';

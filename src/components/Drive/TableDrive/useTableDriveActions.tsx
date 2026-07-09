@@ -6,13 +6,14 @@ import {
   UploadFileToGroupModal,
   type ResourcePermissionModalTarget,
 } from '@/components/Drive/Modals';
+import { FormField, Input } from '@/components/Input';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import { useDocumentService, useNoteService, useResourceService } from '@/domains';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useNewNoteStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
-import { Input, TextField, toast } from '@heroui/react';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { mountResourceToFolderTag, resolveCurrentFolderTagId } from '../common/driveComponentModel';
@@ -81,6 +82,7 @@ export function useTableDriveActions({
   const [resourcePermissionRefreshToken, setResourcePermissionRefreshToken] = useState(0);
   const [drawioModalOpen, setDrawioModalOpen] = useState(false);
   const [drawioName, setDrawioName] = useState('未命名图表');
+  const [drawioNameError, setDrawioNameError] = useState('');
 
   const existingFolderNames = useMemo(
     () => currentRows.filter((row) => row.node.type === 'folder').map((row) => row.name.trim()),
@@ -153,6 +155,7 @@ export function useTableDriveActions({
       manual: true,
       onSuccess: (resourceId) => {
         setDrawioModalOpen(false);
+        setDrawioNameError('');
         refresh();
         openInWorkspace({
           resourceId,
@@ -227,17 +230,39 @@ export function useTableDriveActions({
         ) : null}
         <AppFormDialog
           isOpen={drawioModalOpen}
-          onOpenChange={setDrawioModalOpen}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              setDrawioNameError('');
+            }
+            setDrawioModalOpen(nextOpen);
+          }}
           title="新建图表"
           confirmText="创建"
-          onSubmit={() => runCreateDrawio()}
+          onSubmit={() => {
+            if (!drawioName.trim()) {
+              setDrawioNameError('请输入图表名称');
+              return;
+            }
+            runCreateDrawio();
+          }}
           isSubmitting={creatingDrawio}
-          isSubmitDisabled={creatingDrawio || !drawioName.trim()}
+          isSubmitDisabled={creatingDrawio}
           isDismissable={!creatingDrawio}
         >
-          <TextField aria-label="图表名称" value={drawioName} onChange={setDrawioName}>
+          <FormField
+            aria-label="图表名称"
+            label="图表名称"
+            name="drawioName"
+            value={drawioName}
+            onChange={(value) => {
+              setDrawioName(value);
+              setDrawioNameError('');
+            }}
+            errorMessage={drawioNameError}
+            isRequired
+          >
             <Input placeholder="请输入名称" autoFocus />
-          </TextField>
+          </FormField>
         </AppFormDialog>
       </>
     ),
@@ -246,6 +271,7 @@ export function useTableDriveActions({
       currentNodeId,
       drawioModalOpen,
       drawioName,
+      drawioNameError,
       existingFolderNames,
       groupId,
       handleUploadSuccess,
@@ -303,6 +329,7 @@ export function useTableDriveActions({
   const handleOpenDrawioModal = useCallback(() => {
     if (creatingDrawio) return;
     setDrawioName('未命名图表');
+    setDrawioNameError('');
     setDrawioModalOpen(true);
   }, [creatingDrawio]);
 
