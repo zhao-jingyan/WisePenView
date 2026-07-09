@@ -28,10 +28,11 @@ background-color: var(--background);
 }
 
 .header {
-  min-height: 68px;
+  box-sizing: border-box;
+  min-height: calc(40px + var(--space-sm) * 2 + 1px);
   flex-shrink: 0;
   padding: 0 18px;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border);
   background: var(--surface);
   backdrop-filter: blur(12px);
   display: flex;

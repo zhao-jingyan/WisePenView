@@ -7,7 +7,7 @@
   flex-direction: column;
   background: var(--surface);
   overflow: auto;
-  padding: 8px 0;
+  padding: 8px 4px;
   .appSubtleScrollbar();
 }
 
@@ -21,36 +21,54 @@
 .tree {
   color: var(--foreground);
   font-size: var(--font-size-md, 14px);
+  gap: 1px;
 
   :global(.wisepen-tree__item) {
-    padding: 1px 0;
+    min-height: 36px;
     width: 100%;
-  }
-
-  :global(.wisepen-tree__content) {
-    min-height: 24px;
-    flex: 1;
-    min-width: 0;
+    padding: 0 2px;
     color: var(--muted);
-    border-radius: var(--radius-sm, 4px);
+    border-radius: var(--radius-md, 6px);
+    box-sizing: border-box;
+    transition:
+      color 0.16s ease,
+      background-color 0.16s ease;
 
-    &:hover {
+    &:hover,
+    &:focus-within {
       color: var(--foreground);
       background: var(--surface-tertiary);
     }
   }
 
-  :global(.wisepen-tree__item[aria-selected='true'] .wisepen-tree__content) {
+  :global(.wisepen-tree__content) {
+    min-height: 36px;
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    color: inherit;
+    background: transparent !important;
+    border-radius: 0;
+
+    &:hover {
+      color: inherit;
+      background: transparent !important;
+    }
+  }
+
+  :global(.wisepen-tree__item[aria-selected='true']) {
     color: var(--primary);
     background: color-mix(in srgb, var(--primary) 12%, var(--surface)) !important;
   }
 
-  :global(.wisepen-tree__switcher) {
+  :global(.wisepen-tree__switcher),
+  :global(.wisepen-tree__switcher-placeholder) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
     color: var(--muted);
   }
 
@@ -59,4 +77,171 @@
     width: 100%;
     min-width: 0;
   }
+}
+
+.nodeTitle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  gap: var(--space-xs, 8px);
+}
+
+.nodeMain {
+  display: inline-flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: var(--space-2xs, 4px);
+}
+
+.nodeIcon {
+  display: inline-flex;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.nodeLabel {
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeActions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(2px);
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+}
+
+.tree :global(.wisepen-tree__item:hover) .nodeActions,
+.tree :global(.wisepen-tree__item:focus-within) .nodeActions {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.nodeActionsPinned {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.nodeActionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition:
+    color 0.14s ease,
+    background-color 0.14s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--foreground) 8%, transparent);
+    outline: none;
+  }
+}
+
+.scopePopover {
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md, 6px);
+  background: var(--overlay);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.scopeMenuPanel {
+  width: 240px;
+  max-height: 340px;
+  padding: var(--space-xs, 8px);
+  background: var(--surface);
+}
+
+.scopeMenuTitle {
+  padding: 4px 8px 6px;
+  color: var(--muted);
+  font-size: var(--font-size-sm, 12px);
+  font-weight: 500;
+}
+
+.scopeList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: transparent;
+}
+
+.scopeMenuItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 32px;
+  min-width: 0;
+  padding: 0 8px;
+  gap: 8px;
+  color: var(--foreground);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition:
+    color 0.14s ease,
+    background-color 0.14s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--surface-tertiary);
+    outline: none;
+  }
+
+  &[aria-checked='true'] {
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+  }
+}
+
+.scopeMenuItemText {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scopeCheckIcon {
+  flex: 0 0 auto;
+  color: var(--primary);
+}
+
+.scopeHint {
+  padding: 8px;
+  color: var(--muted);
+  font-size: var(--font-size-sm, 12px);
 }

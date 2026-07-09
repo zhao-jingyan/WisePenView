@@ -397,7 +397,10 @@ function Tree({
                 <span className={styles.switcherIcon}>{renderSwitcherIcon(expanded, loading)}</span>
               </button>
             ) : (
-              <span className={styles.switcherPlaceholder} aria-hidden />
+              <span
+                className={clsx(styles.switcherPlaceholder, 'wisepen-tree__switcher-placeholder')}
+                aria-hidden
+              />
             )}
 
             {showCheckbox ? (

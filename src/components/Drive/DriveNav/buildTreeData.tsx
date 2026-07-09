@@ -1,11 +1,13 @@
 import type { DataNode } from '@/components/Tree';
 import type { DriveNode } from '@/domains/Drive';
+import type { ReactNode } from 'react';
 import DriveTreeNodeTitle from './DriveTreeNodeTitle';
 
 interface BuildTreeDataOptions {
   renderableTypes: Set<'root' | 'folder' | 'resource' | 'link'>;
   selectableTypes: Set<'root' | 'folder' | 'resource' | 'link'>;
   disabledNodeIds: Set<string>;
+  renderTitle?: (node: DriveNode) => ReactNode;
 }
 
 export function buildDriveTreeData(
@@ -40,10 +42,12 @@ export function replaceTreeNodeChildren(
 }
 
 function toTreeDataNode(node: DriveNode, options: BuildTreeDataOptions): DataNode {
+  const title = options.renderTitle?.(node) ?? <DriveTreeNodeTitle node={node} />;
+
   if (node.type === 'loading') {
     return {
       key: node.id,
-      title: <DriveTreeNodeTitle node={node} />,
+      title,
       selectable: false,
       checkable: false,
       isLeaf: true,
@@ -52,7 +56,6 @@ function toTreeDataNode(node: DriveNode, options: BuildTreeDataOptions): DataNod
 
   const selectable = options.selectableTypes.has(node.type);
   const disabled = options.disabledNodeIds.has(node.id);
-  const title = <DriveTreeNodeTitle node={node} />;
 
   if (node.type === 'root' || node.type === 'folder') {
     return {
