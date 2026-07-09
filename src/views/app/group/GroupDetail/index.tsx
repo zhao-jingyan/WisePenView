@@ -113,6 +113,7 @@ function GroupDetail() {
                   canCreateFolder: groupDisplayConfig.canCreateTag,
                   canCreateNote: groupDisplayConfig.canCreateTag,
                   canCreateDrawio: groupDisplayConfig.canCreateTag,
+                  canCreateSkill: groupDisplayConfig.canCreateTag,
                   canUploadDocument: groupDisplayConfig.canCreateTag,
                   canUploadToGroup: groupDisplayConfig.canCreateTag,
                   canManageTagPermission: groupDisplayConfig.canManageTag,

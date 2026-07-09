@@ -12,6 +12,8 @@ function CreateMenuIcon({ id }: { id: CreateMenuItem['id'] }) {
       return <EntryIcon entryType="resource" resourceIconType="drawio" size={16} />;
     case 'note':
       return <EntryIcon entryType="resource" resourceIconType="note" size={16} />;
+    case 'skill':
+      return <EntryIcon entryType="resource" resourceIconType="skill" size={16} />;
     case 'upload':
       return <CloudUpload size={16} aria-hidden="true" />;
   }

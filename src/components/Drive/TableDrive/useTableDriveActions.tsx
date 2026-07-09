@@ -8,6 +8,7 @@ import {
 } from '@/components/Drive/Modals';
 import { FormField, Input } from '@/components/Input';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
+import CreateSkillModal from '@/components/Skill/CreateSkillModal';
 import { useDocumentService, useNoteService, useResourceService } from '@/domains';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useNewNoteStore } from '@/store';
@@ -49,6 +50,7 @@ const DEFAULT_TOOLBAR_CONFIG: Required<NonNullable<TableDriveActionConfig['toolb
   canCreateFolder: true,
   canCreateNote: true,
   canCreateDrawio: true,
+  canCreateSkill: true,
   canUploadDocument: true,
   canUploadToGroup: false,
   canManageTagPermission: false,
@@ -83,6 +85,7 @@ export function useTableDriveActions({
   const [drawioModalOpen, setDrawioModalOpen] = useState(false);
   const [drawioName, setDrawioName] = useState('未命名图表');
   const [drawioNameError, setDrawioNameError] = useState('');
+  const [skillModalOpen, setSkillModalOpen] = useState(false);
 
   const existingFolderNames = useMemo(
     () => currentRows.filter((row) => row.node.type === 'folder').map((row) => row.name.trim()),
@@ -166,6 +169,25 @@ export function useTableDriveActions({
         toast.danger(parseErrorMessage(err));
       },
     }
+  );
+
+  const handleCreateSkillSuccess = useCallback(
+    (resourceId: string) => {
+      void (async () => {
+        try {
+          await mountCreatedResource(resourceId);
+          setSkillModalOpen(false);
+          refresh();
+          openInWorkspace({
+            resourceId,
+            resourceType: WORKSPACE_RESOURCE_TYPE.SKILL,
+          });
+        } catch (err) {
+          toast.danger(parseErrorMessage(err));
+        }
+      })();
+    },
+    [mountCreatedResource, openInWorkspace, refresh]
   );
 
   const ModalHost = useMemo(
@@ -264,6 +286,11 @@ export function useTableDriveActions({
             <Input placeholder="请输入名称" autoFocus />
           </FormField>
         </AppFormDialog>
+        <CreateSkillModal
+          isOpen={skillModalOpen}
+          onOpenChange={setSkillModalOpen}
+          onSuccess={handleCreateSkillSuccess}
+        />
       </>
     ),
     [
@@ -274,6 +301,7 @@ export function useTableDriveActions({
       drawioNameError,
       existingFolderNames,
       groupId,
+      handleCreateSkillSuccess,
       handleUploadSuccess,
       newFolderOpen,
       refresh,
@@ -282,6 +310,7 @@ export function useTableDriveActions({
       targetTagId,
       tagPermissionOpen,
       tagPermissionTagId,
+      skillModalOpen,
       uploadDocumentOpen,
       uploadMountTagId,
       uploadOpen,
@@ -333,6 +362,10 @@ export function useTableDriveActions({
     setDrawioModalOpen(true);
   }, [creatingDrawio]);
 
+  const handleOpenSkillModal = useCallback(() => {
+    setSkillModalOpen(true);
+  }, []);
+
   const handleCreateMenuSelect = useCallback(
     (id: CreateMenuItem['id']) => {
       switch (id) {
@@ -345,12 +378,21 @@ export function useTableDriveActions({
         case 'drawio':
           handleOpenDrawioModal();
           break;
+        case 'skill':
+          handleOpenSkillModal();
+          break;
         case 'upload':
           openUploadDocument();
           break;
       }
     },
-    [handleCreateNote, handleOpenDrawioModal, openNewFolder, openUploadDocument]
+    [
+      handleCreateNote,
+      handleOpenDrawioModal,
+      handleOpenSkillModal,
+      openNewFolder,
+      openUploadDocument,
+    ]
   );
 
   const showUploadDocument = Boolean(
@@ -363,7 +405,10 @@ export function useTableDriveActions({
     !isTrashView &&
     (toolbarConfig.canCreateFolder ||
       (canCreateInCurrentFolder &&
-        (toolbarConfig.canCreateNote || toolbarConfig.canCreateDrawio || showUploadDocument)))
+        (toolbarConfig.canCreateNote ||
+          toolbarConfig.canCreateDrawio ||
+          toolbarConfig.canCreateSkill ||
+          showUploadDocument)))
   );
 
   const createMenuItems = useMemo<CreateMenuItem[]>(() => {
@@ -378,6 +423,9 @@ export function useTableDriveActions({
     if (canCreateInCurrentFolder && toolbarConfig.canCreateNote) {
       items.push({ id: 'note', label: '新建笔记', disabled: creatingNote });
     }
+    if (canCreateInCurrentFolder && toolbarConfig.canCreateSkill) {
+      items.push({ id: 'skill', label: '新建 Skill' });
+    }
     if (showUploadDocument) {
       items.push({ id: 'upload', label: '上传文件' });
     }
@@ -391,6 +439,7 @@ export function useTableDriveActions({
     toolbarConfig.canCreateDrawio,
     toolbarConfig.canCreateFolder,
     toolbarConfig.canCreateNote,
+    toolbarConfig.canCreateSkill,
   ]);
 
   return {
