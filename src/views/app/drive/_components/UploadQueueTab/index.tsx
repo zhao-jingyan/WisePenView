@@ -12,10 +12,22 @@ import { parseErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format/formatFileSize';
 import { Button, ProgressBar, toast } from '@heroui/react';
 import { useInterval, useMount, useRequest, useUnmount } from 'ahooks';
-import { useImperativeHandle, useMemo, useState, type Ref } from 'react';
+import { useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import styles from './style.module.less';
 
 const REFRESH_INTERVAL_MS = 5000;
+const PROGRESS_TICK_INTERVAL_MS = 500;
+const COMPLETED_ROW_VISIBLE_DELAY_MS = 900;
+const PROCESSING_PROGRESS_START = 40;
+const PROCESSING_PROGRESS_LIMIT = 96;
+const PROCESSING_PROGRESS_DURATION_MS = 12000;
+
+const PROCESSING_STATUS_PROGRESS_START: Record<string, number> = {
+  [DOCUMENT_PROCESS.UPLOADING]: 24,
+  [DOCUMENT_PROCESS.UPLOADED]: PROCESSING_PROGRESS_START,
+  [DOCUMENT_PROCESS.CONVERTING_AND_PARSING]: 56,
+  [DOCUMENT_PROCESS.REGISTERING_RES]: 84,
+};
 
 const formatFileType = (fileType: string): string => {
   const value = fileType.toUpperCase();
@@ -24,7 +36,14 @@ const formatFileType = (fileType: string): string => {
 
 type UploadProgressColor = 'accent' | 'warning' | 'danger';
 
+type PendingProgressAnchor = {
+  status: string;
+  startedAt: number;
+  baseProgress: number;
+};
+
 type UploadQueueRow = {
+  source: 'local' | 'pending' | 'completed';
   queueRowKey: string;
   documentId?: string;
   uploadMeta: {
@@ -45,7 +64,14 @@ export interface UploadQueueTabRef {
 function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
   const documentService = useDocumentService();
   const localUploads = useDriveUploadQueueStore((s) => s.uploads);
+  const latestPendingListRef = useRef<PendingDocItem[]>([]);
+  const canceledDocumentIdsRef = useRef<Set<string>>(new Set());
   const [list, setList] = useState<PendingDocItem[]>([]);
+  const [completedRows, setCompletedRows] = useState<UploadQueueRow[]>([]);
+  const [displayNow, setDisplayNow] = useState(() => Date.now());
+  const [progressAnchorsByKey, setProgressAnchorsByKey] = useState<
+    Record<string, PendingProgressAnchor>
+  >({});
   const [pollingActive, setPollingActive] = useState(false);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
@@ -55,6 +81,18 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
     [localUploads]
   );
 
+  const enqueueCompletedRows = (rows: UploadQueueRow[]) => {
+    setCompletedRows((prev) => [
+      ...prev.filter((row) => rows.every((nextRow) => nextRow.queueRowKey !== row.queueRowKey)),
+      ...rows,
+    ]);
+
+    const rowKeys = new Set(rows.map((row) => row.queueRowKey));
+    window.setTimeout(() => {
+      setCompletedRows((prev) => prev.filter((row) => !rowKeys.has(row.queueRowKey)));
+    }, COMPLETED_ROW_VISIBLE_DELAY_MS);
+  };
+
   const {
     run: runFetchPendingList,
     loading: listLoading,
@@ -62,7 +100,19 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
   } = useRequest(async () => documentService.listPendingDocs(), {
     manual: true,
     onSuccess: (nextList) => {
+      const now = Date.now();
+      const completed = buildCompletedRowsFromDisappearedPendingRows(
+        latestPendingListRef.current,
+        nextList,
+        canceledDocumentIdsRef.current
+      );
+      latestPendingListRef.current = nextList;
       setList(nextList);
+      if (completed.length > 0) {
+        enqueueCompletedRows(completed);
+      }
+      setDisplayNow(now);
+      setProgressAnchorsByKey((prev) => buildNextPendingProgressAnchors(prev, nextList, now));
       setPollingActive(
         nextList.some((item) => !isDocumentTerminalStatus(item.documentStatus.status))
       );
@@ -106,7 +156,8 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
       onBefore: (params) => {
         setCancelingId(params[0] ?? null);
       },
-      onSuccess: () => {
+      onSuccess: (documentId) => {
+        canceledDocumentIdsRef.current.add(documentId);
         toast.success('已取消处理');
         runFetchPendingList();
       },
@@ -167,17 +218,28 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
 
     const pendingRows = list.map((item, index) => ({
       ...item,
-      queueRowKey:
-        item.documentId ??
-        `${item.uploadMeta.documentName}-${item.uploadMeta.uploaderId ?? 'unknown'}-${String(index)}`,
+      source: 'pending' as const,
+      queueRowKey: getPendingQueueRowKey(item, index),
       localUpload:
         item.documentId != null && item.documentId !== ''
           ? localUploadByDocumentId.get(item.documentId)
           : undefined,
     }));
 
-    return [...localRows, ...pendingRows];
-  }, [list, localUploads]);
+    const activeRowKeys = new Set([...localRows, ...pendingRows].map((row) => row.queueRowKey));
+    const visibleCompletedRows = completedRows.filter((row) => !activeRowKeys.has(row.queueRowKey));
+
+    return [...visibleCompletedRows, ...localRows, ...pendingRows];
+  }, [completedRows, list, localUploads]);
+
+  const hasAnimatedProgress = useMemo(() => items.some(isAnimatedUploadQueueRow), [items]);
+
+  useInterval(
+    () => {
+      setDisplayNow(Date.now());
+    },
+    hasAnimatedProgress ? PROGRESS_TICK_INTERVAL_MS : undefined
+  );
 
   const columns = useMemo<DataTableColumn<UploadQueueRow>[]>(
     () => [
@@ -204,9 +266,15 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
       },
       {
         id: 'progress',
-        label: '上传进度',
+        label: '进度',
         width: 'lg',
-        renderCell: (row) => <UploadProgressCell row={row} />,
+        renderCell: (row) => (
+          <UploadProgressCell
+            row={row}
+            now={displayNow}
+            progressAnchor={progressAnchorsByKey[row.queueRowKey]}
+          />
+        ),
       },
       {
         id: 'action',
@@ -245,7 +313,14 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
         },
       },
     ],
-    [retryingId, cancelingId, runRetryPendingDoc, runCancelPendingDoc]
+    [
+      retryingId,
+      cancelingId,
+      runRetryPendingDoc,
+      runCancelPendingDoc,
+      displayNow,
+      progressAnchorsByKey,
+    ]
   );
 
   return (
@@ -265,8 +340,16 @@ function UploadQueueTab({ ref }: { ref?: Ref<UploadQueueTabRef> }) {
   );
 }
 
-function UploadProgressCell({ row }: { row: UploadQueueRow }) {
-  const progress = resolveRowUploadProgress(row);
+function UploadProgressCell({
+  row,
+  now,
+  progressAnchor,
+}: {
+  row: UploadQueueRow;
+  now: number;
+  progressAnchor?: PendingProgressAnchor;
+}) {
+  const progress = resolveRowUploadProgress(row, now, progressAnchor);
   const label = resolveRowUploadProgressLabel(row);
 
   return (
@@ -278,7 +361,7 @@ function UploadProgressCell({ row }: { row: UploadQueueRow }) {
         <span className={styles.progressValue}>{progress}%</span>
       </div>
       <ProgressBar
-        aria-label={`${row.uploadMeta.documentName || '未命名文档'} 上传进度`}
+        aria-label={`${row.uploadMeta.documentName || '未命名文档'} 处理进度`}
         color={resolveRowUploadProgressColor(row)}
         size="sm"
         value={progress}
@@ -293,6 +376,7 @@ function UploadProgressCell({ row }: { row: UploadQueueRow }) {
 
 function mapLocalUploadToRow(upload: DriveUploadQueueItem): UploadQueueRow {
   return {
+    source: 'local',
     queueRowKey: upload.id,
     documentId: upload.documentId,
     uploadMeta: {
@@ -321,19 +405,48 @@ function resolveLocalUploadStatus(upload: DriveUploadQueueItem): string {
   return DOCUMENT_PROCESS.UPLOADING;
 }
 
-function resolveRowUploadProgress(row: UploadQueueRow): number {
-  if (row.localUpload != null) {
-    return clampProgress(row.localUpload.progress);
+function resolveRowUploadProgress(
+  row: UploadQueueRow,
+  now: number,
+  progressAnchor?: PendingProgressAnchor
+): number {
+  if (row.source === 'completed') {
+    return 100;
   }
 
   const status = row.documentStatus.status;
+  if (row.localUpload?.phase === 'failed') {
+    return clampProgress(row.localUpload.progress);
+  }
+
   if (status === DOCUMENT_PROCESS.TRANSFER_TIMEOUT) {
     return 0;
   }
+
+  if (isDocumentTerminalStatus(status)) {
+    return 100;
+  }
+
+  if (row.localUpload?.phase === 'done' && row.source === 'pending') {
+    return resolveBackendProcessingProgress(status, now, progressAnchor);
+  }
+
+  if (row.localUpload != null) {
+    return resolveLocalUploadProgress(row.localUpload, now);
+  }
+
+  if (isAnimatedDocumentStatus(status)) {
+    return resolveBackendProcessingProgress(status, now, progressAnchor);
+  }
+
   return 100;
 }
 
 function resolveRowUploadProgressLabel(row: UploadQueueRow): string {
+  if (row.source === 'completed') {
+    return '处理完成';
+  }
+
   const status = row.documentStatus.status;
   if (
     status === DOCUMENT_PROCESS.FAILED ||
@@ -344,6 +457,14 @@ function resolveRowUploadProgressLabel(row: UploadQueueRow): string {
   }
 
   const localUpload = row.localUpload;
+  if (
+    localUpload?.phase === 'done' &&
+    row.source === 'pending' &&
+    isAnimatedDocumentStatus(status)
+  ) {
+    return resolveAnimatedDocumentStatusLabel(status);
+  }
+
   if (localUpload != null) {
     if (localUpload.phase === 'hashing') return '计算校验值';
     if (localUpload.phase === 'uploading') return '上传中';
@@ -352,9 +473,10 @@ function resolveRowUploadProgressLabel(row: UploadQueueRow): string {
     return localUpload.errorMessage ?? '上传失败';
   }
 
-  if (status === DOCUMENT_PROCESS.UPLOADING) {
-    return '处理中';
+  if (isAnimatedDocumentStatus(status)) {
+    return resolveAnimatedDocumentStatusLabel(status);
   }
+
   return DOCUMENT_PROCESS.getLabel(status);
 }
 
@@ -373,6 +495,154 @@ function resolveRowUploadProgressColor(row: UploadQueueRow): UploadProgressColor
   }
 
   return 'accent';
+}
+
+function getPendingQueueRowKey(item: PendingDocItem, index: number): string {
+  return (
+    item.documentId ??
+    `${item.uploadMeta.documentName}-${item.uploadMeta.uploaderId ?? 'unknown'}-${String(index)}`
+  );
+}
+
+function buildNextPendingProgressAnchors(
+  prev: Record<string, PendingProgressAnchor>,
+  items: PendingDocItem[],
+  now: number
+): Record<string, PendingProgressAnchor> {
+  const next: Record<string, PendingProgressAnchor> = {};
+
+  items.forEach((item, index) => {
+    const status = item.documentStatus.status;
+    if (!isAnimatedDocumentStatus(status)) return;
+
+    const key = getPendingQueueRowKey(item, index);
+    const prevAnchor = prev[key];
+    if (prevAnchor?.status === status) {
+      next[key] = prevAnchor;
+      return;
+    }
+
+    const prevProgress =
+      prevAnchor == null
+        ? undefined
+        : resolveTimedProgress(
+            prevAnchor.baseProgress,
+            PROCESSING_PROGRESS_LIMIT,
+            prevAnchor.startedAt,
+            now,
+            PROCESSING_PROGRESS_DURATION_MS
+          );
+
+    next[key] = {
+      status,
+      startedAt: now,
+      baseProgress: Math.max(getProcessingStatusProgressStart(status), prevProgress ?? 0),
+    };
+  });
+
+  return next;
+}
+
+function buildCompletedRowsFromDisappearedPendingRows(
+  prevItems: PendingDocItem[],
+  nextItems: PendingDocItem[],
+  canceledDocumentIds: Set<string>
+): UploadQueueRow[] {
+  const nextKeys = new Set(nextItems.map(getPendingQueueRowKey));
+
+  return prevItems.flatMap((item, index) => {
+    const status = item.documentStatus.status;
+    const key = getPendingQueueRowKey(item, index);
+    if (item.documentId != null && canceledDocumentIds.has(item.documentId)) {
+      canceledDocumentIds.delete(item.documentId);
+      return [];
+    }
+    if (nextKeys.has(key) || !isCompletableDocumentStatus(status)) {
+      return [];
+    }
+    return [mapPendingItemToCompletedRow(item, index)];
+  });
+}
+
+function mapPendingItemToCompletedRow(item: PendingDocItem, index: number): UploadQueueRow {
+  return {
+    ...item,
+    source: 'completed',
+    queueRowKey: getPendingQueueRowKey(item, index),
+    documentStatus: {
+      status: DOCUMENT_PROCESS.READY,
+    },
+  };
+}
+
+function isAnimatedUploadQueueRow(row: UploadQueueRow): boolean {
+  if (row.source === 'completed') return false;
+  if (row.localUpload?.phase === 'confirming') return true;
+  if (row.localUpload != null && row.localUpload.phase !== 'done') return false;
+  return isAnimatedDocumentStatus(row.documentStatus.status);
+}
+
+function isAnimatedDocumentStatus(status: string): boolean {
+  return PROCESSING_STATUS_PROGRESS_START[status] != null;
+}
+
+function isCompletableDocumentStatus(status: string): boolean {
+  return isAnimatedDocumentStatus(status) || status === DOCUMENT_PROCESS.READY;
+}
+
+function resolveAnimatedDocumentStatusLabel(status: string): string {
+  if (status === DOCUMENT_PROCESS.UPLOADING) return '上传中';
+  if (status === DOCUMENT_PROCESS.REGISTERING_RES) return DOCUMENT_PROCESS.getLabel(status);
+  return '处理中';
+}
+
+function resolveLocalUploadProgress(upload: DriveUploadQueueItem, now: number): number {
+  if (upload.phase === 'confirming') {
+    return resolveTimedProgress(
+      Math.max(clampProgress(upload.progress), PROCESSING_PROGRESS_START),
+      PROCESSING_PROGRESS_LIMIT,
+      upload.phaseStartedAt ?? upload.updatedAt ?? now,
+      now,
+      PROCESSING_PROGRESS_DURATION_MS
+    );
+  }
+
+  if (upload.phase === 'done') return 100;
+  return clampProgress(upload.progress);
+}
+
+function resolveBackendProcessingProgress(
+  status: string,
+  now: number,
+  progressAnchor?: PendingProgressAnchor
+): number {
+  const statusStart = getProcessingStatusProgressStart(status);
+  const baseProgress = Math.max(progressAnchor?.baseProgress ?? statusStart, statusStart);
+  return resolveTimedProgress(
+    baseProgress,
+    PROCESSING_PROGRESS_LIMIT,
+    progressAnchor?.startedAt ?? now,
+    now,
+    PROCESSING_PROGRESS_DURATION_MS
+  );
+}
+
+function getProcessingStatusProgressStart(status: string): number {
+  return PROCESSING_STATUS_PROGRESS_START[status] ?? PROCESSING_PROGRESS_START;
+}
+
+function resolveTimedProgress(
+  start: number,
+  limit: number,
+  startedAt: number,
+  now: number,
+  duration: number
+): number {
+  const safeStart = Math.min(clampProgress(start), limit);
+  const elapsed = Math.max(0, now - startedAt);
+  const ratio = Math.min(1, elapsed / duration);
+  const easedRatio = 1 - (1 - ratio) ** 2;
+  return clampProgress(safeStart + (limit - safeStart) * easedRatio);
 }
 
 function clampProgress(value: number): number {

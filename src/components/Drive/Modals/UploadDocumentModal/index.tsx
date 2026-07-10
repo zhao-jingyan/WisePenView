@@ -30,11 +30,13 @@ const ACCEPT_DOCUMENT_TYPES = [
 ].join(',');
 
 const UPLOAD_STATUS_SYNC_DELAY_MS = 3000;
+const QUEUE_DONE_VISIBLE_DELAY_MS = 900;
 const FOLDER_MOUNT_RETRY_DELAY_MS = 2000;
 const FOLDER_MOUNT_MAX_ATTEMPTS = 15;
-const QUEUE_HASH_PROGRESS_WEIGHT = 0.15;
-const QUEUE_UPLOAD_PROGRESS_START = 15;
-const QUEUE_UPLOAD_PROGRESS_WEIGHT = 0.85;
+const QUEUE_HASH_PROGRESS_WEIGHT = 0.08;
+const QUEUE_UPLOAD_PROGRESS_START = 8;
+const QUEUE_UPLOAD_PROGRESS_WEIGHT = 0.32;
+const QUEUE_PROCESSING_PROGRESS_START = 40;
 const RESOURCE_NOT_READY_CODES = new Set([5411, 6111, 8111]);
 
 interface SubmitUploadPayload {
@@ -62,14 +64,18 @@ function UploadDocumentModal({
     setSelectedFiles([]);
   };
 
-  const dismissQueuedUpload = (
+  const completeQueuedUpload = (
     uploadId: string,
     patch: { documentId?: string; objectKey?: string } = {}
   ) => {
-    if (Object.keys(patch).length > 0) {
-      updateQueuedUpload(uploadId, patch);
-    }
-    removeQueuedUpload(uploadId);
+    updateQueuedUpload(uploadId, {
+      ...patch,
+      phase: 'done',
+      progress: 100,
+    });
+    window.setTimeout(() => {
+      removeQueuedUpload(uploadId);
+    }, QUEUE_DONE_VISIBLE_DELAY_MS);
   };
 
   const scheduleUploadStatusSync = (documentId: string, uploadId: string) => {
@@ -78,7 +84,7 @@ function UploadDocumentModal({
         .syncPendingDocStatus(documentId)
         .catch(() => undefined)
         .finally(() => {
-          dismissQueuedUpload(uploadId);
+          completeQueuedUpload(uploadId);
         });
     }, UPLOAD_STATUS_SYNC_DELAY_MS);
   };
@@ -153,8 +159,10 @@ function UploadDocumentModal({
                 updateQueuedUpload(uploadId, {
                   documentId: payload.documentId,
                   objectKey: payload.objectKey,
-                  phase: payload.flashUploaded ? 'done' : 'uploading',
-                  progress: payload.flashUploaded ? 100 : QUEUE_UPLOAD_PROGRESS_START,
+                  phase: payload.flashUploaded ? 'confirming' : 'uploading',
+                  progress: payload.flashUploaded
+                    ? QUEUE_PROCESSING_PROGRESS_START
+                    : QUEUE_UPLOAD_PROGRESS_START,
                 });
               },
               onHashProgress: (p) => {
@@ -171,10 +179,13 @@ function UploadDocumentModal({
               },
             });
             if (result.flashUploaded) {
-              dismissQueuedUpload(uploadId, {
+              updateQueuedUpload(uploadId, {
                 documentId: result.documentId,
                 objectKey: result.objectKey,
+                phase: 'confirming',
+                progress: QUEUE_PROCESSING_PROGRESS_START,
               });
+              scheduleUploadStatusSync(result.documentId, uploadId);
               if (shouldMountToFolder && mountTagId) {
                 scheduleFolderMount(result.documentId, mountTagId);
               }
@@ -183,7 +194,7 @@ function UploadDocumentModal({
                 documentId: result.documentId,
                 objectKey: result.objectKey,
                 phase: 'confirming',
-                progress: 100,
+                progress: QUEUE_PROCESSING_PROGRESS_START,
               });
               scheduleUploadStatusSync(result.documentId, uploadId);
               if (shouldMountToFolder && mountTagId) {
@@ -299,7 +310,10 @@ function UploadDocumentModal({
 }
 
 function getQueueUploadProgress(value: number): number {
-  return Math.min(100, QUEUE_UPLOAD_PROGRESS_START + value * QUEUE_UPLOAD_PROGRESS_WEIGHT);
+  return Math.min(
+    QUEUE_PROCESSING_PROGRESS_START,
+    QUEUE_UPLOAD_PROGRESS_START + value * QUEUE_UPLOAD_PROGRESS_WEIGHT
+  );
 }
 
 function getDisplayFileType(file: File): string {

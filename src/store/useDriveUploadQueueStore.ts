@@ -9,12 +9,16 @@ export interface DriveUploadQueueItem {
   size: number;
   phase: DriveUploadQueuePhase;
   progress: number;
+  updatedAt?: number;
+  phaseStartedAt?: number;
   documentId?: string;
   objectKey?: string;
   errorMessage?: string;
 }
 
-type DriveUploadQueuePatch = Partial<Omit<DriveUploadQueueItem, 'id'>>;
+type DriveUploadQueuePatch = Partial<
+  Omit<DriveUploadQueueItem, 'id' | 'updatedAt' | 'phaseStartedAt'>
+>;
 
 interface DriveUploadQueueState {
   uploads: DriveUploadQueueItem[];
@@ -32,22 +36,41 @@ export const useDriveUploadQueueStore = create<DriveUploadQueueState>()((set) =>
   ...initialState,
 
   startUploads: (uploads) =>
-    set((state) => ({
-      uploads: [
-        ...state.uploads,
-        ...uploads.map((upload) => ({
-          ...upload,
-          progress: clampProgress(upload.progress),
-        })),
-      ],
-    })),
+    set((state) => {
+      const now = Date.now();
+      return {
+        uploads: [
+          ...state.uploads,
+          ...uploads.map((upload) => ({
+            ...upload,
+            progress: clampProgress(upload.progress),
+            updatedAt: now,
+            phaseStartedAt: now,
+          })),
+        ],
+      };
+    }),
 
   updateUpload: (id, patch) =>
-    set((state) => ({
-      uploads: state.uploads.map((upload) =>
-        upload.id === id ? { ...upload, ...normalizeUploadPatch(patch) } : upload
-      ),
-    })),
+    set((state) => {
+      const now = Date.now();
+      const normalizedPatch = normalizeUploadPatch(patch);
+      return {
+        uploads: state.uploads.map((upload) =>
+          upload.id === id
+            ? {
+                ...upload,
+                ...normalizedPatch,
+                updatedAt: now,
+                phaseStartedAt:
+                  normalizedPatch.phase != null && normalizedPatch.phase !== upload.phase
+                    ? now
+                    : (upload.phaseStartedAt ?? now),
+              }
+            : upload
+        ),
+      };
+    }),
 
   removeUpload: (id) =>
     set((state) => ({
