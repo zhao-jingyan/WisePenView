@@ -13,7 +13,7 @@ function PasswordInput({
 }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
   const visibilityLabel = visible ? hidePasswordLabel : showPasswordLabel;
-  const VisibilityIcon = visible ? EyeOff : Eye;
+  const VisibilityIcon = visible ? Eye : EyeOff;
 
   return (
     <div className={styles.passwordInput}>
