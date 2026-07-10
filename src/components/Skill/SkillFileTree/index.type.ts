@@ -1,3 +1,4 @@
+import type { DataNode } from '@/components/Tree';
 import type { SkillFileNode } from '@/domains/Skill';
 
 export type SkillFileDropPosition = 'before' | 'inside' | 'after';
@@ -9,6 +10,7 @@ export interface SkillPendingCreate {
 
 export interface SkillFileTreeProps {
   files: SkillFileNode[];
+  prependNodes?: DataNode[];
   selectedFileId?: string;
   selectedNodeId?: string;
   expandedKeys?: string[];

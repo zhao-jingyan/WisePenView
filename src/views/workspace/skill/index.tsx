@@ -1,5 +1,6 @@
 import { Empty, ResultState, Spin } from '@/components/Feedback';
 import EntryIcon from '@/components/Icons/EntryIcon';
+import { FormField, Input, TextArea } from '@/components/Input';
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
 import CreateSkillModal from '@/components/Skill/CreateSkillModal';
 import SkillEditor from '@/components/Skill/SkillEditor';
@@ -9,6 +10,7 @@ import type {
   SkillPendingCreate,
 } from '@/components/Skill/SkillFileTree/index.type';
 import SkillVersionDropdown from '@/components/Skill/SkillVersionDropdown';
+import type { DataNode } from '@/components/Tree';
 import { useResourceService, useSkillService } from '@/domains';
 import type { SkillFileNode, UploadSkillAssetResult } from '@/domains/Skill';
 import { SkillServicesMap } from '@/domains/Skill';
@@ -22,7 +24,7 @@ import { parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { FolderPlus, Pencil, Plus, Save, Upload } from 'lucide-react';
+import { FolderPlus, Pencil, Plus, Save, Settings, Upload } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom';
 import ResourcePermissionControl from '../_components/ResourcePermissionControl';
@@ -59,9 +61,25 @@ interface SaveAssetOptions {
   showToast?: boolean;
 }
 
+interface SaveSkillConfigOptions {
+  showToast?: boolean;
+}
+
 interface SaveSkillFileTarget {
   file: SkillFileNode;
   content: string | Blob;
+}
+
+interface SkillConfigPanelProps {
+  name: string;
+  description: string;
+  canEdit: boolean;
+  isDirty: boolean;
+  isLoading: boolean;
+  onNameChange: (value: string) => void;
+  onDescriptionChange: (value: string) => void;
+  onReset: () => void;
+  onSave: () => void;
 }
 
 interface MoveTreeNodeResult {
@@ -75,6 +93,9 @@ interface MoveTreeNodeResult {
 
 const ROOT_PATH = '/';
 const MAIN_SKILL_FILE_NAME = 'SKILL.md';
+const SKILL_CONFIG_NODE_ID = '__skill_config__';
+const SKILL_CONFIG_NAME_MAX_LENGTH = 64;
+const SKILL_CONFIG_DESCRIPTION_MAX_LENGTH = 500;
 const LOCAL_FILE_ID_PREFIX = 'local-file:';
 const LOCAL_FOLDER_ID_PREFIX = 'folder:';
 const EDITABLE_SKILL_FILE_EXTENSIONS = new Set([
@@ -607,6 +628,111 @@ function SkillToolbarTitle({ title, saveStatus }: SkillToolbarTitleProps) {
   );
 }
 
+function SkillConfigPanel({
+  name,
+  description,
+  canEdit,
+  isDirty,
+  isLoading,
+  onNameChange,
+  onDescriptionChange,
+  onReset,
+  onSave,
+}: SkillConfigPanelProps) {
+  const nameMissing = name.trim().length === 0;
+  const descriptionMissing = description.trim().length === 0;
+  const hasMissingConfig = nameMissing || descriptionMissing;
+
+  return (
+    <>
+      <header className={styles.editorHeader}>
+        <span className={styles.editorFileName}>Config</span>
+      </header>
+      <div className={styles.editorBody}>
+        <section className={styles.configPage} aria-label="Skill 配置">
+          <div className={styles.configIntro}>
+            <h2>Skill Info</h2>
+            <p>
+              请填写 name 和 description。它们用于帮助模型识别这个 Skill 的用途；缺失时不能发布。
+            </p>
+          </div>
+
+          <div className={styles.configForm}>
+            <FormField
+              aria-label="Skill name"
+              value={name}
+              onChange={onNameChange}
+              isDisabled={!canEdit || isLoading}
+              isRequired
+              label={
+                <span className={styles.configFieldHeader}>
+                  <span>name</span>
+                  <span className={styles.configCounter}>
+                    {name.length} / {SKILL_CONFIG_NAME_MAX_LENGTH}
+                  </span>
+                </span>
+              }
+              description="用于模型识别 Skill，建议使用稳定的英文名，例如 planning_with_files。"
+              errorMessage={nameMissing ? '请填写 name。' : undefined}
+            >
+              <Input maxLength={SKILL_CONFIG_NAME_MAX_LENGTH} placeholder="planning_with_files" />
+            </FormField>
+
+            <FormField
+              aria-label="Skill description"
+              value={description}
+              onChange={onDescriptionChange}
+              isDisabled={!canEdit || isLoading}
+              isRequired
+              label={
+                <span className={styles.configFieldHeader}>
+                  <span>description</span>
+                  <span className={styles.configCounter}>
+                    {description.length} / {SKILL_CONFIG_DESCRIPTION_MAX_LENGTH}
+                  </span>
+                </span>
+              }
+              description="说明这个 Skill 适合处理什么任务。描述越清晰，模型越容易正确选择。"
+              errorMessage={descriptionMissing ? '请填写 description。' : undefined}
+            >
+              <TextArea
+                maxLength={SKILL_CONFIG_DESCRIPTION_MAX_LENGTH}
+                rows={5}
+                placeholder="说明这个 Skill 适合处理什么任务"
+              />
+            </FormField>
+          </div>
+
+          <footer className={styles.configFooter}>
+            <span className={styles.configFooterText}>
+              {hasMissingConfig
+                ? '补全 name 和 description 后，才允许发布 Skill。'
+                : isDirty
+                  ? '配置修改尚未更新。'
+                  : '配置已更新。'}
+            </span>
+            {canEdit ? (
+              <span className={styles.configFooterActions}>
+                <Button variant="secondary" isDisabled={!isDirty || isLoading} onPress={onReset}>
+                  重置
+                </Button>
+                <Button
+                  variant="primary"
+                  isDisabled={!isDirty || hasMissingConfig || isLoading}
+                  aria-busy={isLoading || undefined}
+                  onPress={onSave}
+                >
+                  更新配置
+                </Button>
+              </span>
+            ) : null}
+          </footer>
+        </section>
+      </div>
+    </>
+  );
+}
+
 function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const navigate = useNavigate();
   const openInWorkspace = useOpenInWorkspace();
@@ -635,6 +761,11 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const [isTreeDragOver, setIsTreeDragOver] = useState(false);
   const [saveQueueItems, setSaveQueueItems] = useState<SkillSaveQueueItem[]>([]);
   const [draftCacheReady, setDraftCacheReady] = useState(false);
+  const [configName, setConfigName] = useState('');
+  const [configDescription, setConfigDescription] = useState('');
+  const [savedConfigName, setSavedConfigName] = useState('');
+  const [savedConfigDescription, setSavedConfigDescription] = useState('');
+  const [pendingConfigSwitch, setPendingConfigSwitch] = useState(false);
 
   const invalidateDraftCacheWrites = useCallback(() => {
     draftCacheWriteVersionRef.current += 1;
@@ -643,7 +774,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const clearDraftCache = useCallback(
     (targetResourceId: string) => {
       invalidateDraftCacheWrites();
-      void clearSkillDraftCache(targetResourceId);
+      return clearSkillDraftCache(targetResourceId).catch(() => undefined);
     },
     [invalidateDraftCacheWrites]
   );
@@ -700,7 +831,12 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     setSelectedTreeNodeId('');
     setEditing(false);
     setPendingVersionSwitch(null);
+    setPendingConfigSwitch(false);
     setSaveQueueItems([]);
+    setConfigName(skill.skillName);
+    setConfigDescription(skill.description);
+    setSavedConfigName(skill.skillName);
+    setSavedConfigDescription(skill.description);
 
     void loadSkillDraftCache(skill.resourceId)
       .then((snapshot) => {
@@ -735,10 +871,12 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   }, [invalidateDraftCacheWrites, skill]);
 
   const activeFiles = localFiles;
+  const isConfigSelected = selectedTreeNodeId === SKILL_CONFIG_NODE_ID;
   const selectedFile = useMemo(() => {
+    if (isConfigSelected) return null;
     if (selectedFileId) return findFile(activeFiles, selectedFileId);
     return getFirstFile(activeFiles);
-  }, [activeFiles, selectedFileId]);
+  }, [activeFiles, isConfigSelected, selectedFileId]);
   const selectedTreeNode = useMemo(
     () => (selectedTreeNodeId ? findFile(activeFiles, selectedTreeNodeId) : null),
     [activeFiles, selectedTreeNodeId]
@@ -791,6 +929,35 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const hasUnsavedLocalAssets = canEdit && localAssetNodes.length > 0;
   const hasFailedSaveItems = saveQueueItems.some((item) => item.phase === 'failed');
   const hasSaveableChanges = isDirty || hasUnsavedLocalAssets || hasFailedSaveItems;
+  const isConfigDirty =
+    canEdit && (configName !== savedConfigName || configDescription !== savedConfigDescription);
+  const hasConfigValuesMissing =
+    configName.trim().length === 0 || configDescription.trim().length === 0;
+  const hasSavedConfigMissing =
+    savedConfigName.trim().length === 0 || savedConfigDescription.trim().length === 0;
+  const hasMissingConfig = canEdit && hasConfigValuesMissing;
+  const configTreeBadgeText = hasConfigValuesMissing ? '必填' : isConfigDirty ? '未保存' : '完成';
+  const configTreeNodes = useMemo<DataNode[]>(
+    () => [
+      {
+        key: SKILL_CONFIG_NODE_ID,
+        draggable: false,
+        isLeaf: true,
+        title: (
+          <span className={styles.configTreeNode}>
+            <span className={styles.configTreeTitle}>
+              <span className={styles.configTreeIcon} aria-hidden="true">
+                <Settings size={14} />
+              </span>
+              <span className={styles.configTreeName}>Config</span>
+            </span>
+            <span className={styles.configTreeBadge}>{configTreeBadgeText}</span>
+          </span>
+        ),
+      },
+    ],
+    [configTreeBadgeText]
+  );
   const isSaveQueueActive = saveQueueItems.some(
     (item) => item.phase === 'preparing' || item.phase === 'uploading'
   );
@@ -810,7 +977,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     saveQueueItems.length > 0 ? saveQueueItems : pendingLocalSaveQueueItems;
   const hasUnsavedSkillChanges =
     canEdit && (isDirty || hasUnsavedLocalAssets || hasFailedSaveItems);
-  const hasUnsafeNavigation = hasUnsavedSkillChanges || isSaveQueueActive;
+  const hasUnsafeNavigation = hasUnsavedSkillChanges || isConfigDirty || isSaveQueueActive;
   const navigationBlocker = useBlocker(hasUnsafeNavigation);
 
   useBeforeUnload(
@@ -888,7 +1055,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
    */
   useEffectForce(() => {
     if (!skill || !draftCacheReady || hasUnsavedSkillChanges) return;
-    clearDraftCache(skill.resourceId);
+    void clearDraftCache(skill.resourceId);
   }, [clearDraftCache, draftCacheReady, hasUnsavedSkillChanges, skill]);
 
   const versionItems = useMemo(() => {
@@ -952,13 +1119,65 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     [activeFiles]
   );
 
+  const applyConfigSelection = useCallback(() => {
+    setSelectedTreeNodeId(SKILL_CONFIG_NODE_ID);
+    setSelectedFileId('');
+    setPendingCreate(null);
+    setEditing(false);
+  }, []);
+
+  const resetConfigDraft = useCallback(() => {
+    setConfigName(savedConfigName);
+    setConfigDescription(savedConfigDescription);
+  }, [savedConfigDescription, savedConfigName]);
+
+  const discardLocalSkillChanges = useCallback(() => {
+    setEditorContent(savedContent);
+    resetConfigDraft();
+    setSaveQueueItems([]);
+    setPendingCreate(null);
+    setPendingFileSwitchId('');
+    setPendingConfigSwitch(false);
+    setEditing(false);
+    if (skill) {
+      setLocalFiles(skill.files);
+      setSelectedFileId('');
+      setSelectedTreeNodeId('');
+    }
+  }, [resetConfigDraft, savedContent, skill]);
+
+  const handleConfigSelect = () => {
+    if (isSaveQueueActive) {
+      toast.warning('正在保存 Skill，请稍后再切换配置');
+      return;
+    }
+    if (isConfigSelected) return;
+    if (isDirty) {
+      setPendingConfigSwitch(true);
+      return;
+    }
+    applyConfigSelection();
+  };
+
   const handleTreeSelect = (nodeId: string) => {
+    if (nodeId === SKILL_CONFIG_NODE_ID) {
+      handleConfigSelect();
+      return;
+    }
     if (isSaveQueueActive) {
       toast.warning('正在保存 Skill，请稍后再切换文件');
       return;
     }
     const node = findFile(activeFiles, nodeId);
     if (!node) return;
+    if (isConfigSelected && isConfigDirty) {
+      if (node.kind === 'file') {
+        setPendingFileSwitchId(node.id);
+        return;
+      }
+      toast.warning('请先更新或重置配置后再切换目录');
+      return;
+    }
     if (node.kind === 'file' && node.id !== selectedFileId && isDirty) {
       setPendingFileSwitchId(node.id);
       return;
@@ -1133,7 +1352,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         if (!result) return;
         setSaveQueueItems([]);
         setEditing(false);
-        if (skill) clearDraftCache(skill.resourceId);
+        if (skill) void clearDraftCache(skill.resourceId);
         if (result.options?.showToast !== false) {
           toast.success('保存成功');
         }
@@ -1156,6 +1375,45 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       await runSaveTargetsAsync(targets, options);
     },
     [runSaveTargetsAsync]
+  );
+
+  const { loading: configLoading, runAsync: runUpdateConfigAsync } = useRequest(
+    async (options?: SaveSkillConfigOptions) => {
+      if (!skill) return null;
+      const name = configName.trim();
+      const description = configDescription.trim();
+      if (!name || !description) {
+        throw new Error('请填写 Config 中的 name 和 description');
+      }
+      await skillService.updateSkillInfo(skill.resourceId, name, description);
+      return { name, description, options };
+    },
+    {
+      manual: true,
+      onSuccess: (result) => {
+        if (!result) return;
+        setConfigName(result.name);
+        setConfigDescription(result.description);
+        setSavedConfigName(result.name);
+        setSavedConfigDescription(result.description);
+        if (result.options?.showToast !== false) {
+          toast.success('配置已更新');
+        }
+      },
+      onError: (err) => {
+        toast.danger(parseErrorMessage(err));
+      },
+    }
+  );
+
+  const savePendingChanges = useCallback(
+    async (options?: SaveAssetOptions & SaveSkillConfigOptions) => {
+      if (isConfigDirty) {
+        await runUpdateConfigAsync(options);
+      }
+      await saveTargets(buildAllSaveTargets(), options);
+    },
+    [buildAllSaveTargets, isConfigDirty, runUpdateConfigAsync, saveTargets]
   );
 
   const { loading: publishLoading, run: runPublish } = useRequest(
@@ -1248,16 +1506,30 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       toast.warning('发布前需要在根目录下创建并保存大写的 SKILL.md');
       return;
     }
-    if (hasUnsavedSkillChanges || isLocalAssetId(mainSkillFile.id)) {
+    if (hasMissingConfig) {
+      toast.warning('发布前需要填写 Config 中的 name 和 description');
+      if (!isDirty) applyConfigSelection();
+      return;
+    }
+    if (hasUnsavedSkillChanges || isConfigDirty || isLocalAssetId(mainSkillFile.id)) {
       setPublishConfirmOpen(true);
       return;
     }
     runPublish();
-  }, [activeFiles, hasUnsavedSkillChanges, isSaveQueueActive, runPublish]);
+  }, [
+    activeFiles,
+    applyConfigSelection,
+    hasMissingConfig,
+    hasUnsavedSkillChanges,
+    isConfigDirty,
+    isDirty,
+    isSaveQueueActive,
+    runPublish,
+  ]);
 
   const handleSaveAndPublish = async () => {
     try {
-      await saveTargets(buildAllSaveTargets(), { refresh: false, showToast: false });
+      await savePendingChanges({ refresh: false, showToast: false });
       setPublishConfirmOpen(false);
       runPublish();
     } catch {
@@ -1266,11 +1538,13 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   };
 
   const handleDiscardAndPublish = () => {
-    setEditorContent(savedContent);
-    setSaveQueueItems([]);
-    if (skill) {
-      setLocalFiles(skill.files);
-      clearDraftCache(skill.resourceId);
+    discardLocalSkillChanges();
+    if (skill) void clearDraftCache(skill.resourceId);
+    if (hasSavedConfigMissing) {
+      setPublishConfirmOpen(false);
+      toast.warning('发布前需要填写 Config 中的 name 和 description');
+      if (!isDirty) applyConfigSelection();
+      return;
     }
     setPublishConfirmOpen(false);
     runPublish();
@@ -1282,17 +1556,17 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     }
   };
 
-  const handleDiscardAndLeave = () => {
+  const handleDiscardAndLeave = async () => {
     if (navigationBlocker.state !== 'blocked') return;
-    setEditorContent(savedContent);
-    if (skill) clearDraftCache(skill.resourceId);
+    discardLocalSkillChanges();
+    if (skill) await clearDraftCache(skill.resourceId);
     navigationBlocker.proceed();
   };
 
   const handleSaveAndLeave = async () => {
     if (navigationBlocker.state !== 'blocked') return;
     try {
-      await saveTargets(buildAllSaveTargets(), { refresh: false, showToast: false });
+      await savePendingChanges({ refresh: false, showToast: false });
       navigationBlocker.proceed();
     } catch {
       // useRequest 已统一 toast 错误信息。
@@ -1303,10 +1577,35 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     setPendingFileSwitchId('');
   };
 
+  const handleCancelConfigSwitch = () => {
+    setPendingConfigSwitch(false);
+  };
+
+  const handleDiscardAndSwitchConfig = () => {
+    setPendingConfigSwitch(false);
+    setEditorContent(savedContent);
+    setEditing(false);
+    applyConfigSelection();
+  };
+
+  const handleSaveAndSwitchConfig = async () => {
+    try {
+      await saveCurrentFile({ refresh: false, showToast: false });
+      setPendingConfigSwitch(false);
+      applyConfigSelection();
+    } catch {
+      // useRequest 已统一 toast 错误信息。
+    }
+  };
+
   const handleDiscardAndSwitchFile = () => {
     const nextFileId = pendingFileSwitchId;
     setPendingFileSwitchId('');
-    setEditorContent(savedContent);
+    if (isConfigSelected) {
+      resetConfigDraft();
+    } else {
+      setEditorContent(savedContent);
+    }
     if (nextFileId) applyTreeSelection(nextFileId);
     setEditing(false);
   };
@@ -1315,7 +1614,11 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     const nextFileId = pendingFileSwitchId;
     if (!nextFileId) return;
     try {
-      await saveCurrentFile({ refresh: false, showToast: false });
+      if (isConfigSelected) {
+        await runUpdateConfigAsync({ showToast: false });
+      } else {
+        await saveCurrentFile({ refresh: false, showToast: false });
+      }
       setPendingFileSwitchId('');
       applyTreeSelection(nextFileId);
       setEditing(false);
@@ -1347,9 +1650,8 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const handleDiscardAndSwitchVersion = () => {
     const nextVersion = pendingVersionSwitch;
     setPendingVersionSwitch(null);
-    setEditorContent(savedContent);
-    setSaveQueueItems([]);
-    if (skill) clearDraftCache(skill.resourceId);
+    discardLocalSkillChanges();
+    if (skill) void clearDraftCache(skill.resourceId);
     if (nextVersion != null) runSwitchVersion(nextVersion);
   };
 
@@ -1357,7 +1659,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     const nextVersion = pendingVersionSwitch;
     if (nextVersion == null) return;
     try {
-      await saveTargets(buildAllSaveTargets(), { refresh: false, showToast: false });
+      await savePendingChanges({ refresh: false, showToast: false });
       setPendingVersionSwitch(null);
       runSwitchVersion(nextVersion);
     } catch {
@@ -1606,6 +1908,10 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       toast.warning('请先保存或放弃当前修改后再取消选择');
       return;
     }
+    if (isConfigSelected && isConfigDirty) {
+      toast.warning('请先更新或重置配置后再取消选择');
+      return;
+    }
     setSelectedTreeNodeId('');
     setSelectedFileId('');
   };
@@ -1625,9 +1931,9 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
             title={skill?.title}
             saveStatus={
               canEdit
-                ? saveLoading || isSaveQueueActive
+                ? saveLoading || configLoading || isSaveQueueActive
                   ? 'saving'
-                  : hasSaveableChanges
+                  : hasSaveableChanges || isConfigDirty
                     ? 'dirty'
                     : 'saved'
                 : undefined
@@ -1651,6 +1957,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
                     !canPreviewSelectedFile ||
                     contentLoading ||
                     saveLoading ||
+                    configLoading ||
                     isSaveQueueActive ||
                     moveLoading
                   }
@@ -1666,6 +1973,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
                       !hasSaveableChanges ||
                       contentLoading ||
                       saveLoading ||
+                      configLoading ||
                       isSaveQueueActive ||
                       moveLoading
                     }
@@ -1681,6 +1989,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
                     publishLoading ||
                     contentLoading ||
                     saveLoading ||
+                    configLoading ||
                     isSaveQueueActive ||
                     moveLoading
                   }
@@ -1703,6 +2012,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     [
       canEdit,
       canPreviewSelectedFile,
+      configLoading,
       contentLoading,
       disabledVersionKeys,
       editing,
@@ -1711,6 +2021,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       handleToggleEditing,
       handleVersionSelect,
       hasSaveableChanges,
+      isConfigDirty,
       isSaveQueueActive,
       moveLoading,
       publishLoading,
@@ -1825,27 +2136,27 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
                     {canEditTree && isTreeDragOver ? (
                       <div className={styles.treeDropHint}>释放以上传文件或 zip 压缩包</div>
                     ) : null}
-                    {activeFiles.length > 0 || pendingCreate ? (
-                      <SkillFileTree
-                        files={activeFiles}
-                        selectedFileId={selectedFileId}
-                        selectedNodeId={selectedTreeNodeId}
-                        expandedKeys={expandedKeys}
-                        pendingCreate={pendingCreate}
-                        isOwner={canEditTree}
-                        onSelect={handleTreeSelect}
-                        onCommitCreate={handleCommitCreate}
-                        onCancelCreate={() => setPendingCreate(null)}
-                        onDeleteFile={(fileId) => setDeleteTarget(findFile(activeFiles, fileId))}
-                        onMoveFile={runMoveFile}
-                      />
-                    ) : (
+                    <SkillFileTree
+                      files={activeFiles}
+                      prependNodes={configTreeNodes}
+                      selectedFileId={selectedFileId}
+                      selectedNodeId={selectedTreeNodeId}
+                      expandedKeys={expandedKeys}
+                      pendingCreate={pendingCreate}
+                      isOwner={canEditTree}
+                      onSelect={handleTreeSelect}
+                      onCommitCreate={handleCommitCreate}
+                      onCancelCreate={() => setPendingCreate(null)}
+                      onDeleteFile={(fileId) => setDeleteTarget(findFile(activeFiles, fileId))}
+                      onMoveFile={runMoveFile}
+                    />
+                    {activeFiles.length === 0 && !pendingCreate ? (
                       <Empty
                         image={Empty.PRESENTED_IMAGE_SIMPLE}
                         description={canEdit ? '暂无文件，请上传或新建' : '暂无文件'}
                         className={styles.emptyBlock}
                       />
-                    )}
+                    ) : null}
                   </div>
                   <SkillSaveQueueDock items={visibleSaveQueueItems} onRetry={handleSave} />
                 </section>
@@ -1853,7 +2164,19 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
 
               <div className={styles.rightPanelSlot}>
                 <main className={styles.rightPanel}>
-                  {selectedFile ? (
+                  {isConfigSelected ? (
+                    <SkillConfigPanel
+                      name={configName}
+                      description={configDescription}
+                      canEdit={canEdit}
+                      isDirty={isConfigDirty}
+                      isLoading={configLoading}
+                      onNameChange={setConfigName}
+                      onDescriptionChange={setConfigDescription}
+                      onReset={resetConfigDraft}
+                      onSave={() => void runUpdateConfigAsync()}
+                    />
+                  ) : selectedFile ? (
                     <>
                       <header className={styles.editorHeader}>
                         <span className={styles.editorFileName}>{selectedFile.name}</span>
@@ -1923,7 +2246,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       <UnsavedSkillChangesModal
         isOpen={publishConfirmOpen}
         mode="publish"
-        isLoading={saveLoading || publishLoading}
+        isLoading={saveLoading || configLoading || publishLoading}
         onCancel={() => setPublishConfirmOpen(false)}
         onDiscard={handleDiscardAndPublish}
         onConfirm={() => void handleSaveAndPublish()}
@@ -1931,7 +2254,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       <UnsavedSkillChangesModal
         isOpen={navigationBlocker.state === 'blocked'}
         mode="leave"
-        isLoading={saveLoading}
+        isLoading={saveLoading || configLoading}
         onCancel={handleCancelLeave}
         onDiscard={handleDiscardAndLeave}
         onConfirm={() => void handleSaveAndLeave()}
@@ -1939,15 +2262,23 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       <UnsavedSkillChangesModal
         isOpen={Boolean(pendingFileSwitchId)}
         mode="switchFile"
-        isLoading={saveLoading}
+        isLoading={saveLoading || configLoading}
         onCancel={handleCancelFileSwitch}
         onDiscard={handleDiscardAndSwitchFile}
         onConfirm={() => void handleSaveAndSwitchFile()}
       />
       <UnsavedSkillChangesModal
+        isOpen={pendingConfigSwitch}
+        mode="switchConfig"
+        isLoading={saveLoading}
+        onCancel={handleCancelConfigSwitch}
+        onDiscard={handleDiscardAndSwitchConfig}
+        onConfirm={() => void handleSaveAndSwitchConfig()}
+      />
+      <UnsavedSkillChangesModal
         isOpen={pendingVersionSwitch != null}
         mode="switchVersion"
-        isLoading={saveLoading}
+        isLoading={saveLoading || configLoading}
         onCancel={handleCancelVersionSwitch}
         onDiscard={handleDiscardAndSwitchVersion}
         onConfirm={() => void handleSaveAndSwitchVersion()}

@@ -141,6 +141,7 @@ function insertPendingNode(
 
 function SkillFileTree({
   files,
+  prependNodes = [],
   selectedFileId,
   selectedNodeId,
   expandedKeys,
@@ -159,17 +160,16 @@ function SkillFileTree({
 
   const treeData = useMemo(() => {
     const base = buildTreeData(files, opts);
+    const fileNodes = pendingCreate
+      ? insertPendingNode(
+          base,
+          pendingCreate.parentFolderId,
+          buildPendingNode(pendingCreate, onCommitCreate, onCancelCreate)
+        )
+      : base;
 
-    if (pendingCreate) {
-      return insertPendingNode(
-        base,
-        pendingCreate.parentFolderId,
-        buildPendingNode(pendingCreate, onCommitCreate, onCancelCreate)
-      );
-    }
-
-    return base;
-  }, [files, onCancelCreate, onCommitCreate, opts, pendingCreate]);
+    return prependNodes.length > 0 ? [...prependNodes, ...fileNodes] : fileNodes;
+  }, [files, onCancelCreate, onCommitCreate, opts, pendingCreate, prependNodes]);
 
   const handleSelect = (keys: React.Key[]) => {
     const key = String(keys[0] ?? '');

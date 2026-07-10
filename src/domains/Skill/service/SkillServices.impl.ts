@@ -29,6 +29,7 @@ interface SkillAssetClientCache {
 const STS_REFRESH_BUFFER_MS = 60_000;
 const DEFAULT_STS_EXPIRES_IN_MS = 55 * 60_000;
 const DEFAULT_UPLOAD_CONCURRENCY = 4;
+const DEFAULT_UPLOAD_INIT_BATCH_SIZE = 12;
 
 function buildUploadBody(params: UploadSkillAssetRequest): Blob {
   if (params.content instanceof Blob) return params.content;
@@ -263,56 +264,93 @@ export const createSkillServices = (deps: SkillServicesDeps): ISkillService => {
       body: buildUploadBody(asset),
       clientId: resolveUploadClientId(asset, index),
     }));
-    const res = await SkillApi.initUploadSkillAssets({
-      resourceId,
-      draftVersion,
-      assets: entries.map(({ request, body }) => ({
-        name: request.name,
-        path: request.path,
-        assetResourceType: SkillServicesMap.resolveAssetResourceType(request.name),
-        md5: request.md5,
-        expectedSize: request.size ?? body.size,
-      })),
-    });
-    const tickets = res?.assetUploadTickets ?? [];
+    const results = new Array<UploadSkillAssetResult>(entries.length);
 
-    return runWithConcurrency(
-      entries,
-      options?.concurrency ?? DEFAULT_UPLOAD_CONCURRENCY,
-      async ({ request, body, clientId }, index) => {
-        const ticket = tickets[index];
-        try {
-          if (!ticket?.assetId) {
-            throw new Error(`技能文件上传票据缺少 assetId：${request.name}`);
-          }
+    for (let start = 0; start < entries.length; start += DEFAULT_UPLOAD_INIT_BATCH_SIZE) {
+      const batchEntries = entries.slice(start, start + DEFAULT_UPLOAD_INIT_BATCH_SIZE);
+      let tickets: NonNullable<
+        NonNullable<
+          Awaited<ReturnType<typeof SkillApi.initUploadSkillAssets>>
+        >['assetUploadTickets']
+      > = [];
 
-          options?.onProgress?.({ clientId, progress: 0 });
-          if (ticket.putUrl && ticket.callbackHeader) {
-            await putOssPresignedUrl({
-              putUrl: ticket.putUrl,
-              callbackHeader: ticket.callbackHeader,
-              body,
-              onProgress: (progress) => options?.onProgress?.({ clientId, progress }),
-            });
-          }
-          options?.onProgress?.({ clientId, progress: 100 });
-
-          return {
-            clientId,
+      try {
+        const res = await SkillApi.initUploadSkillAssets({
+          resourceId,
+          draftVersion,
+          assets: batchEntries.map(({ request, body }) => ({
             name: request.name,
             path: request.path,
-            assetId: ticket.assetId,
-          };
-        } catch (error) {
-          return {
+            assetResourceType: SkillServicesMap.resolveAssetResourceType(request.name),
+            md5: request.md5,
+            expectedSize: request.size ?? body.size,
+          })),
+        });
+        tickets = res?.assetUploadTickets ?? [];
+      } catch (error) {
+        batchEntries.forEach(({ request, clientId }, batchIndex) => {
+          results[start + batchIndex] = {
             clientId,
             name: request.name,
             path: request.path,
             error,
           };
-        }
+        });
+        continue;
       }
-    );
+
+      const batchResults = await runWithConcurrency(
+        batchEntries,
+        options?.concurrency ?? DEFAULT_UPLOAD_CONCURRENCY,
+        async ({ request, body, clientId }, index) => {
+          const ticket = tickets[index];
+          try {
+            if (!ticket?.assetId) {
+              throw new Error(`技能文件上传票据缺少 assetId：${request.name}`);
+            }
+
+            options?.onProgress?.({ clientId, progress: 0 });
+            if (ticket.putUrl && ticket.callbackHeader) {
+              await putOssPresignedUrl({
+                putUrl: ticket.putUrl,
+                callbackHeader: ticket.callbackHeader,
+                body,
+                onProgress: (progress) => options?.onProgress?.({ clientId, progress }),
+              });
+            }
+            options?.onProgress?.({ clientId, progress: 100 });
+
+            return {
+              clientId,
+              name: request.name,
+              path: request.path,
+              assetId: ticket.assetId,
+            };
+          } catch (error) {
+            if (ticket?.assetId) {
+              await SkillApi.deleteSkillAssets({
+                resourceId,
+                draftVersion,
+                assetIds: [ticket.assetId],
+              }).catch(() => undefined);
+            }
+            return {
+              clientId,
+              name: request.name,
+              path: request.path,
+              assetId: ticket?.assetId,
+              error,
+            };
+          }
+        }
+      );
+
+      batchResults.forEach((result, batchIndex) => {
+        results[start + batchIndex] = result;
+      });
+    }
+
+    return results;
   };
 
   const uploadAsset = async (
