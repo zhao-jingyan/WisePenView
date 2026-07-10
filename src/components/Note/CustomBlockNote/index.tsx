@@ -27,6 +27,7 @@ import {
   type CSSProperties,
   type Ref,
 } from 'react';
+import NoteSideMenu from '../NoteSideMenu';
 import NoteSlashMenu from '../NoteSlashMenu';
 import NoteToolbar from '../NoteToolbar';
 import { hasAiDiffContentFromEditor } from './AiDiffPresence';
@@ -751,6 +752,7 @@ function CustomBlockNoteEditor({
               theme="light"
               formattingToolbar={false}
               slashMenu={false}
+              sideMenu={false}
               comments={false}
               editable={!readOnly}
               onSelectionChange={handleSelectionChange}
@@ -764,6 +766,7 @@ function CustomBlockNoteEditor({
                 }}
               />
               <NoteSlashMenu editor={editor} plugins={plugins} />
+              <NoteSideMenu />
               {showCommentsUi ? (
                 <NoteCommentsUi
                   editor={editor}
