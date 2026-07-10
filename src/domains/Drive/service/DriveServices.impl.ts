@@ -17,7 +17,7 @@ import {
   mapResourceItemToChildNode,
   mapTagToFolderNode,
 } from '../mapper/DriveServices.map';
-import type { CreateDriveServiceOptions, IDriveService } from './index.type';
+import type { CreateDriveServiceOptions, IDriveService, MoveToFolderParams } from './index.type';
 
 const CACHE_KEY_DEFAULT = '__default__';
 const DEFAULT_PAGE_SIZE = 50;
@@ -62,6 +62,12 @@ interface CascadeDeletePlan {
       tagIds: Set<string>;
     }
   >;
+}
+
+interface MoveNodeToFolderPlan {
+  source: DriveNode;
+  targetTagId?: string;
+  groupId?: string;
 }
 
 const createCascadeDeletePlan = (): CascadeDeletePlan => ({
@@ -582,7 +588,7 @@ export const createDriveServices = (
     return [await getRootNode({ groupId: effectiveGroupId })];
   };
 
-  const moveToFolder: IDriveService['moveToFolder'] = async (params) => {
+  const createMoveNodeToFolderPlan = (params: MoveToFolderParams): MoveNodeToFolderPlan => {
     const { nodeId, targetFolderNodeId } = params;
     const source = getNodeOrThrow(nodeId);
     const target = getNodeOrThrow(targetFolderNodeId);
@@ -605,15 +611,63 @@ export const createDriveServices = (
       if (targetTagId && isDescendantTag(targetTagId, source.tagId, groupId)) {
         throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
       }
+      return { source, targetTagId, groupId };
+    }
+
+    if (isResourceNode(source) && targetTagId) {
+      return { source, targetTagId, groupId };
+    }
+
+    throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
+  };
+
+  const executeMoveNodeToFolderPlan = async (plan: MoveNodeToFolderPlan): Promise<void> => {
+    if (plan.source.type === 'folder') {
       await tagService.moveTag({
-        targetTagId: source.tagId,
-        newParentId: targetTagId,
-        groupId,
+        targetTagId: plan.source.tagId,
+        newParentId: plan.targetTagId,
+        groupId: plan.groupId,
       });
-    } else if (isResourceNode(source) && targetTagId) {
-      await moveResourceNode(source, targetTagId, groupId);
-    } else {
-      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
+      return;
+    }
+
+    if (isResourceNode(plan.source) && plan.targetTagId) {
+      await moveResourceNode(plan.source, plan.targetTagId, plan.groupId);
+      return;
+    }
+
+    throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
+  };
+
+  const moveNodeToFolder = async (
+    params: MoveToFolderParams,
+    options?: { clearCacheAfterMove?: boolean }
+  ): Promise<void> => {
+    const plan = createMoveNodeToFolderPlan(params);
+    await executeMoveNodeToFolderPlan(plan);
+    if (options?.clearCacheAfterMove !== false) {
+      clearCache();
+    }
+  };
+
+  const moveToFolder: IDriveService['moveToFolder'] = async (params) => {
+    await moveNodeToFolder(params);
+  };
+
+  const moveNodesToFolder: IDriveService['moveNodesToFolder'] = async (params) => {
+    const uniqueNodeIds = [...new Set(params.nodeIds)].filter(
+      (nodeId) => nodeId !== params.targetFolderNodeId
+    );
+    const plans = uniqueNodeIds.map((nodeId) =>
+      createMoveNodeToFolderPlan({
+        nodeId,
+        targetFolderNodeId: params.targetFolderNodeId,
+        groupId: params.groupId,
+      })
+    );
+
+    for (const plan of plans) {
+      await executeMoveNodeToFolderPlan(plan);
     }
     clearCache();
   };
@@ -714,6 +768,7 @@ export const createDriveServices = (
     listNodeChildren,
     getNodePath,
     moveToFolder,
+    moveNodesToFolder,
     removeNode,
     renameNode,
     createFolder,

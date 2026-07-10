@@ -9,6 +9,7 @@ import type {
   GetRootNodeParams,
   IDriveService,
   ListNodeChildrenParams,
+  MoveNodesToFolderParams,
   MoveToFolderParams,
   RemoveNodeParams,
   RenameNodeParams,
@@ -40,6 +41,12 @@ type MockJson = {
   rootId: string;
   nodes: Record<string, LegacyNode>;
 };
+
+interface MockMovePlan {
+  node: DriveNode;
+  newParent: RootNode | FolderNode;
+  targetTagId?: string;
+}
 
 const md = mockdata as unknown as MockJson;
 
@@ -224,8 +231,7 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     return buildPath(params.nodeId);
   };
 
-  const moveToFolder = async (params: MoveToFolderParams): Promise<void> => {
-    await delay(NETWORK_DELAY_MS);
+  function createMovePlan(params: MoveToFolderParams): MockMovePlan {
     const node = nodes.get(params.nodeId);
     const newParent = getContainer(params.targetFolderNodeId);
     if (!node || !newParent) {
@@ -246,18 +252,45 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     if ((node.type === 'resource' || node.type === 'link') && !targetTagId) {
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
     }
-    if (node.type === 'link' && targetTagId) {
-      if (node.primaryTagId === targetTagId) {
-        throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_LINK_MOVE_TO_PRIMARY_TAG);
-      }
-      node.folderTagId = targetTagId;
+    if (node.type === 'link' && targetTagId && node.primaryTagId === targetTagId) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_LINK_MOVE_TO_PRIMARY_TAG);
     }
-    if (node.type === 'resource' && targetTagId) {
-      node.folderTagId = targetTagId;
+
+    return { node, newParent, targetTagId };
+  }
+
+  function executeMovePlan(plan: MockMovePlan): void {
+    if (plan.node.type === 'link' && plan.targetTagId) {
+      plan.node.folderTagId = plan.targetTagId;
     }
-    detachFromParent(params.nodeId);
-    node.parentId = params.targetFolderNodeId;
-    newParent.childrenIds.push(params.nodeId);
+    if (plan.node.type === 'resource' && plan.targetTagId) {
+      plan.node.folderTagId = plan.targetTagId;
+    }
+    detachFromParent(plan.node.id);
+    plan.node.parentId = plan.newParent.id;
+    plan.newParent.childrenIds.push(plan.node.id);
+  }
+
+  const moveToFolder = async (params: MoveToFolderParams): Promise<void> => {
+    await delay(NETWORK_DELAY_MS);
+    executeMovePlan(createMovePlan(params));
+  };
+
+  const moveNodesToFolder = async (params: MoveNodesToFolderParams): Promise<void> => {
+    await delay(NETWORK_DELAY_MS);
+    const uniqueNodeIds = [...new Set(params.nodeIds)].filter(
+      (nodeId) => nodeId !== params.targetFolderNodeId
+    );
+    const plans = uniqueNodeIds.map((nodeId) =>
+      createMovePlan({
+        nodeId,
+        targetFolderNodeId: params.targetFolderNodeId,
+        groupId: params.groupId,
+      })
+    );
+    for (const plan of plans) {
+      executeMovePlan(plan);
+    }
   };
 
   const removeNode = async (params: RemoveNodeParams): Promise<void> => {
@@ -309,6 +342,7 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     listNodeChildren,
     getNodePath,
     moveToFolder,
+    moveNodesToFolder,
     removeNode,
     renameNode,
     createFolder,

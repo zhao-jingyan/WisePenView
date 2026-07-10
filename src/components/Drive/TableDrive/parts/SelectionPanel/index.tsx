@@ -54,8 +54,7 @@ function toActionTarget(node: DriveNode): DriveActionTarget | null {
 
 function TableDriveSelectionPanel({
   selectedRow,
-  batchEditMode = false,
-  batchSelectedCount = 0,
+  selectedCount = 0,
   groupId,
   isTrashView = false,
   canManageTagPermission = false,
@@ -103,14 +102,14 @@ function TableDriveSelectionPanel({
     }) as ResourcePermissionResourceType;
   }, [node, selectedRow?.name]);
   const canShowTagPermission = Boolean(
-    canManageTagPermission && groupId && folderTagId && !batchEditMode
+    canManageTagPermission && groupId && folderTagId && selectedCount <= 1
   );
   const canShowResourcePermission = Boolean(
     canManageTagPermission &&
     groupId &&
     resourceId &&
     resourcePermissionResourceType &&
-    !batchEditMode
+    selectedCount <= 1
   );
   const {
     data: selectedTag,
@@ -353,19 +352,22 @@ function TableDriveSelectionPanel({
     void handleResourcePresetSelect(String(key) as ResourcePermissionPresetKey);
   };
 
-  if (batchEditMode) {
+  if (selectedCount > 1) {
     return (
-      <aside className={styles.panel} aria-label="全局编辑">
+      <aside className={styles.panel} aria-label="多选节点详情">
         <div className={styles.content}>
           <div className={styles.header}>
             <div className={styles.titleBlock}>
-              <span className={styles.title}>全局编辑</span>
-              <span className={styles.typeLabel}>批量选择模式</span>
+              <span className={styles.title}>已选 {selectedCount} 项</span>
+              <span className={styles.typeLabel}>多选</span>
             </div>
           </div>
           <div className={styles.body}>
-            <span className={styles.fieldLabel}>已选</span>
-            <p className={styles.description}>{batchSelectedCount} 项</p>
+            <span className={styles.fieldLabel}>拖拽</span>
+            <p className={styles.description}>拖动任一已选行到文件夹，可同时移动这些项目。</p>
+            <p className={styles.descriptionMuted}>
+              按住 Cmd 或 Ctrl 点击行，可继续添加或移除选择。
+            </p>
           </div>
         </div>
       </aside>

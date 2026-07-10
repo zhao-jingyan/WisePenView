@@ -4,15 +4,16 @@ import {
   type FolderTableBreadcrumbItem,
   type FolderTableColumn,
   type FolderTableRowAction,
+  type FolderTableRowDragDrop,
+  type FolderTableRowPressContext,
 } from '@/components/Table';
-import { resolveSelectedCount } from '@/components/Table/shared/TableBase/tableSelection';
 import { useDriveService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
 import { useTrashTagStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { findTreeNodeById } from '@/utils/tree/findTreeNodeById';
-import { Button, toast, type Selection, type SortDescriptor } from '@heroui/react';
-import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
+import { Button, toast, type SortDescriptor } from '@heroui/react';
+import { useMount, useRequest, useUnmount, useUpdateEffect } from 'ahooks';
 import { Trash2 } from 'lucide-react';
 import {
   forwardRef,
@@ -22,6 +23,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type DragEvent,
 } from 'react';
 import {
   buildTrashFolderNodeId,
@@ -138,6 +140,36 @@ function toDriveActionTarget(node: DriveNode): DriveActionTarget | null {
   return isDriveActionTarget(node) ? node : null;
 }
 
+function isDriveMoveSource(row: DriveTableRow): boolean {
+  return isDriveActionTarget(row.node);
+}
+
+function isDriveMoveTarget(row: DriveTableRow): boolean {
+  return isDriveMoveTargetNode(row.node);
+}
+
+function isDriveMoveTargetNode(node: DriveNode): boolean {
+  return node.type === 'folder' || node.type === 'root';
+}
+
+function resolveSelectionKeysAfterRowPress(
+  currentKeys: Set<string>,
+  rowId: string,
+  ctx: FolderTableRowPressContext
+): Set<string> {
+  if (!ctx.modifierKey) {
+    return new Set([rowId]);
+  }
+
+  const nextKeys = new Set(currentKeys);
+  if (nextKeys.has(rowId)) {
+    nextKeys.delete(rowId);
+    return nextKeys;
+  }
+  nextKeys.add(rowId);
+  return nextKeys;
+}
+
 const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableDrive(
   { groupId, rootId, scope, actions, onTrashViewChange, onUploadSuccess, showToolbarTrash = true },
   ref
@@ -160,15 +192,23 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     refresh,
   } = useTableDrive({ rootId: finalRootId, groupId: finalGroupId, scope: resolvedScope.scope });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [batchEditMode, setBatchEditMode] = useState(false);
-  const [batchSelectedKeys, setBatchSelectedKeys] = useState<Selection>(new Set());
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Set<string>>(new Set());
+  const [draggingRowKeys, setDraggingRowKeys] = useState<Set<string>>(new Set());
+  const [dropTargetRowId, setDropTargetRowId] = useState<string | null>(null);
+  const [dropTargetBreadcrumbId, setDropTargetBreadcrumbId] = useState<string | null>(null);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor | undefined>();
   const [renameTarget, setRenameTarget] = useState<DriveActionTarget | null>(null);
   const [moveTarget, setMoveTarget] = useState<DriveActionTarget | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DriveActionTarget | null>(null);
   const selectedNodeIdRef = useRef<string | null>(null);
+  const draggingRowKeysRef = useRef<Set<string>>(new Set());
   const selectedCommitFrameRef = useRef<number | null>(null);
   const selectedCommitTimerRef = useRef<number | null>(null);
+
+  const updateDraggingRowKeys = useCallback((keys: Set<string>) => {
+    draggingRowKeysRef.current = keys;
+    setDraggingRowKeys(keys);
+  }, []);
 
   const cancelSelectedNodeIdCommit = useCallback(() => {
     if (selectedCommitFrameRef.current !== null) {
@@ -201,6 +241,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
 
   const handleClearSelection = useCallback(() => {
     selectedNodeIdRef.current = null;
+    setSelectedRowKeys(new Set());
     scheduleSelectedNodeIdCommit(null);
   }, [scheduleSelectedNodeIdCommit]);
 
@@ -212,11 +253,13 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     (nodeId: string) => {
       selectedNodeIdRef.current = null;
       scheduleSelectedNodeIdCommit(null);
-      setBatchEditMode(false);
-      setBatchSelectedKeys(new Set());
+      setSelectedRowKeys(new Set());
+      updateDraggingRowKeys(new Set());
+      setDropTargetRowId(null);
+      setDropTargetBreadcrumbId(null);
       enterFolder(nodeId);
     },
-    [enterFolder, scheduleSelectedNodeIdCommit]
+    [enterFolder, scheduleSelectedNodeIdCommit, updateDraggingRowKeys]
   );
   const handleClickNode = useClickNode({
     enterFolder: handleEnterFolder,
@@ -224,6 +267,13 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   });
   const rows = useMemo(() => dataSource.map((node) => toDriveTableRow(node)), [dataSource]);
   const rowMap = useMemo(() => buildDriveTableRowMap(rows), [rows]);
+  const pathNodeMap = useMemo(() => {
+    const map = new Map<string, DriveNode>();
+    pathNodes.forEach((node) => {
+      map.set(node.id, node);
+    });
+    return map;
+  }, [pathNodes]);
   const selectedNode = useMemo(
     () => (selectedNodeId ? rowMap.get(selectedNodeId) : undefined),
     [rowMap, selectedNodeId]
@@ -232,21 +282,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     () => rows.filter((row) => row.entryType !== 'loading').length,
     [rows]
   );
-  const batchDisabledKeys = useMemo(
-    () => rows.filter((row) => row.entryType === 'loading').map((row) => row.id),
-    [rows]
-  );
-  const batchSelectedCount = resolveSelectedCount(batchSelectedKeys, currentDirectoryItemCount);
-  const exitBatchEditMode = useCallback(() => {
-    setBatchEditMode(false);
-    setBatchSelectedKeys(new Set());
-  }, []);
-
-  const enterBatchEditMode = useCallback(() => {
-    handleClearSelection();
-    setBatchEditMode(true);
-    setBatchSelectedKeys(new Set());
-  }, [handleClearSelection]);
 
   const handleNodeActionSuccess = useCallback(() => {
     handleClearSelection();
@@ -264,6 +299,57 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   const handleOpenDelete = useCallback((node: DriveActionTarget) => {
     setDeleteTarget(node);
   }, []);
+
+  const { loading: movingByDrag, run: runMoveRowsByDrag } = useRequest(
+    async ({
+      sourceRowIds,
+      targetFolderNodeId,
+    }: {
+      sourceRowIds: string[];
+      targetFolderNodeId: string;
+    }) => {
+      const sourceRows = sourceRowIds
+        .map((rowId) => rowMap.get(rowId))
+        .filter((row): row is DriveTableRow => {
+          if (!row) return false;
+          return isDriveMoveSource(row);
+        });
+
+      if (sourceRows.length === 0) {
+        return 0;
+      }
+
+      const movableRows = sourceRows.filter((row) => row.id !== targetFolderNodeId);
+      await driveService.moveNodesToFolder({
+        nodeIds: movableRows.map((row) => row.node.id),
+        targetFolderNodeId,
+        groupId: finalGroupId,
+      });
+
+      return movableRows.length;
+    },
+    {
+      manual: true,
+      onSuccess: (movedCount) => {
+        updateDraggingRowKeys(new Set());
+        setDropTargetRowId(null);
+        setDropTargetBreadcrumbId(null);
+        handleClearSelection();
+        refreshDrive();
+        if (movedCount > 1) {
+          toast.success(`已移动 ${movedCount} 项`);
+        } else if (movedCount === 1) {
+          toast.success('已移动');
+        }
+      },
+      onError: (error) => {
+        updateDraggingRowKeys(new Set());
+        setDropTargetRowId(null);
+        setDropTargetBreadcrumbId(null);
+        toast.danger(parseErrorMessage(error));
+      },
+    }
+  );
 
   const trashTagId = useTrashTagStore((state) => state.getTrashTagId(finalGroupId));
   const trashFolderNodeId = useMemo(
@@ -336,10 +422,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     targetTagId,
     isTrashView,
   });
-  const breadcrumb = useMemo(
-    () => <FolderTable.Breadcrumb items={breadcrumbItems} onJump={handleEnterFolder} />,
-    [breadcrumbItems, handleEnterFolder]
-  );
   const toolbar = useMemo(
     () => (
       <div className={styles.toolbarActions}>
@@ -367,22 +449,10 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
             回收站
           </Button>
         ) : null}
-        {batchEditMode ? (
-          <Button variant="ghost" size="sm" onPress={exitBatchEditMode}>
-            取消
-          </Button>
-        ) : (
-          <Button variant="secondary" size="sm" onPress={enterBatchEditMode}>
-            全局编辑
-          </Button>
-        )}
       </div>
     ),
     [
-      batchEditMode,
       createMenuItems,
-      enterBatchEditMode,
-      exitBatchEditMode,
       handleCreateMenuSelect,
       isTrashView,
       openTagPermission,
@@ -481,16 +551,230 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   );
 
   const handleRowSelect = useCallback(
-    (row: DriveTableRow) => {
-      if (batchEditMode || row.node.type === 'loading') return;
-      if (selectedNodeIdRef.current === row.node.id) {
+    (row: DriveTableRow, ctx: FolderTableRowPressContext) => {
+      if (row.node.type === 'loading') return;
+
+      const nextSelectedRowKeys = resolveSelectionKeysAfterRowPress(selectedRowKeys, row.id, ctx);
+      setSelectedRowKeys(nextSelectedRowKeys);
+
+      if (ctx.modifierKey) {
+        selectedNodeIdRef.current = nextSelectedRowKeys.has(row.id) ? row.node.id : null;
+        scheduleSelectedNodeIdCommit(selectedNodeIdRef.current);
+        return;
+      }
+
+      if (selectedNodeIdRef.current === row.node.id && selectedRowKeys.size <= 1) {
         handleRowActivate(row);
         return;
       }
+
       selectedNodeIdRef.current = row.node.id;
       scheduleSelectedNodeIdCommit(row.node.id);
     },
-    [batchEditMode, handleRowActivate, scheduleSelectedNodeIdCommit]
+    [handleRowActivate, scheduleSelectedNodeIdCommit, selectedRowKeys]
+  );
+
+  const resolveDragSourceIds = useCallback(
+    (row: DriveTableRow): string[] => {
+      if (!isDriveMoveSource(row)) {
+        return [];
+      }
+      if (selectedRowKeys.has(row.id)) {
+        return [...selectedRowKeys].filter((rowId) => {
+          const selectedRow = rowMap.get(rowId);
+          return selectedRow ? isDriveMoveSource(selectedRow) : false;
+        });
+      }
+      return [row.id];
+    },
+    [rowMap, selectedRowKeys]
+  );
+
+  const canDropRowsToTargetNode = useCallback(
+    (sourceRowIds: string[], targetNode: DriveNode): boolean => {
+      if (sourceRowIds.length === 0 || !isDriveMoveTargetNode(targetNode)) {
+        return false;
+      }
+      if (sourceRowIds.includes(targetNode.id)) {
+        return false;
+      }
+      return sourceRowIds.every((rowId) => {
+        const sourceRow = rowMap.get(rowId);
+        return Boolean(sourceRow && sourceRow.node.scope.rootId === targetNode.scope.rootId);
+      });
+    },
+    [rowMap]
+  );
+
+  const canDropRowsToTarget = useCallback(
+    (sourceRowIds: string[], targetRow: DriveTableRow): boolean =>
+      canDropRowsToTargetNode(sourceRowIds, targetRow.node),
+    [canDropRowsToTargetNode]
+  );
+
+  const handleRowDragStart = useCallback(
+    (row: DriveTableRow, event: DragEvent<HTMLElement>) => {
+      const sourceRowIds = resolveDragSourceIds(row);
+      if (sourceRowIds.length === 0 || movingByDrag) {
+        event.preventDefault();
+        return;
+      }
+
+      const nextDraggingRowKeys = new Set(sourceRowIds);
+      updateDraggingRowKeys(nextDraggingRowKeys);
+      if (!selectedRowKeys.has(row.id)) {
+        setSelectedRowKeys(nextDraggingRowKeys);
+        selectedNodeIdRef.current = row.node.id;
+        scheduleSelectedNodeIdCommit(row.node.id);
+      }
+
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('application/x-wisepen-drive-row-ids', sourceRowIds.join('\n'));
+      event.dataTransfer.setData('text/plain', row.name);
+    },
+    [
+      movingByDrag,
+      resolveDragSourceIds,
+      scheduleSelectedNodeIdCommit,
+      selectedRowKeys,
+      updateDraggingRowKeys,
+    ]
+  );
+
+  const handleRowDragOver = useCallback(
+    (row: DriveTableRow, event: DragEvent<HTMLElement>) => {
+      const sourceRowIds = [...draggingRowKeysRef.current];
+      if (!canDropRowsToTarget(sourceRowIds, row)) {
+        event.dataTransfer.dropEffect = 'none';
+        return;
+      }
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      setDropTargetBreadcrumbId(null);
+      setDropTargetRowId(row.id);
+    },
+    [canDropRowsToTarget]
+  );
+
+  const handleRowDragLeave = useCallback((row: DriveTableRow, event: DragEvent<HTMLElement>) => {
+    const nextTarget = event.relatedTarget;
+    if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) {
+      return;
+    }
+    setDropTargetRowId((current) => (current === row.id ? null : current));
+  }, []);
+
+  const handleRowDrop = useCallback(
+    (row: DriveTableRow, event: DragEvent<HTMLElement>) => {
+      const sourceRowIds = [...draggingRowKeysRef.current];
+      if (!canDropRowsToTarget(sourceRowIds, row)) {
+        return;
+      }
+      event.preventDefault();
+      setDropTargetRowId(null);
+      runMoveRowsByDrag({ sourceRowIds, targetFolderNodeId: row.node.id });
+    },
+    [canDropRowsToTarget, runMoveRowsByDrag]
+  );
+
+  const handleBreadcrumbDragOver = useCallback(
+    (item: FolderTableBreadcrumbItem, event: DragEvent<HTMLElement>) => {
+      const targetNode = pathNodeMap.get(item.id);
+      const sourceRowIds = [...draggingRowKeysRef.current];
+      if (!targetNode || !canDropRowsToTargetNode(sourceRowIds, targetNode)) {
+        event.dataTransfer.dropEffect = 'none';
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      event.dataTransfer.dropEffect = 'move';
+      setDropTargetRowId(null);
+      setDropTargetBreadcrumbId(item.id);
+    },
+    [canDropRowsToTargetNode, pathNodeMap]
+  );
+
+  const handleBreadcrumbDragLeave = useCallback(
+    (item: FolderTableBreadcrumbItem, event: DragEvent<HTMLElement>) => {
+      const nextTarget = event.relatedTarget;
+      if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) {
+        return;
+      }
+      setDropTargetBreadcrumbId((current) => (current === item.id ? null : current));
+    },
+    []
+  );
+
+  const handleBreadcrumbDrop = useCallback(
+    (item: FolderTableBreadcrumbItem, event: DragEvent<HTMLElement>) => {
+      const targetNode = pathNodeMap.get(item.id);
+      const sourceRowIds = [...draggingRowKeysRef.current];
+      if (!targetNode || !canDropRowsToTargetNode(sourceRowIds, targetNode)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      setDropTargetRowId(null);
+      setDropTargetBreadcrumbId(null);
+      runMoveRowsByDrag({ sourceRowIds, targetFolderNodeId: targetNode.id });
+    },
+    [canDropRowsToTargetNode, pathNodeMap, runMoveRowsByDrag]
+  );
+
+  const handleRowDragEnd = useCallback(() => {
+    updateDraggingRowKeys(new Set());
+    setDropTargetRowId(null);
+    setDropTargetBreadcrumbId(null);
+  }, [updateDraggingRowKeys]);
+
+  const breadcrumb = useMemo(
+    () => (
+      <FolderTable.Breadcrumb
+        items={breadcrumbItems}
+        onJump={handleEnterFolder}
+        dropTarget={{
+          isDropActive: (item) => dropTargetBreadcrumbId === item.id,
+          onDragEnter: handleBreadcrumbDragOver,
+          onDragOver: handleBreadcrumbDragOver,
+          onDragLeave: handleBreadcrumbDragLeave,
+          onDrop: handleBreadcrumbDrop,
+        }}
+      />
+    ),
+    [
+      breadcrumbItems,
+      dropTargetBreadcrumbId,
+      handleBreadcrumbDragLeave,
+      handleBreadcrumbDragOver,
+      handleBreadcrumbDrop,
+      handleEnterFolder,
+    ]
+  );
+
+  const rowDragDrop = useMemo<FolderTableRowDragDrop<DriveTableRow>>(
+    () => ({
+      getRowState: (row) => ({
+        draggable: isDriveMoveSource(row) && !movingByDrag,
+        dragging: draggingRowKeys.has(row.id),
+        dropTarget: dropTargetRowId === row.id,
+      }),
+      onDragStart: handleRowDragStart,
+      onDragOver: handleRowDragOver,
+      onDragEnter: handleRowDragOver,
+      onDragLeave: handleRowDragLeave,
+      onDrop: handleRowDrop,
+      onDragEnd: handleRowDragEnd,
+    }),
+    [
+      draggingRowKeys,
+      dropTargetRowId,
+      handleRowDragEnd,
+      handleRowDragLeave,
+      handleRowDragOver,
+      handleRowDragStart,
+      handleRowDrop,
+      movingByDrag,
+    ]
   );
 
   return (
@@ -507,31 +791,23 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
               toolbar={toolbar}
               expandedRowKeys={expandedRowKeys}
               onExpandedChange={handleExpandedChange}
-              onRowSelect={batchEditMode ? undefined : handleRowSelect}
+              selectedRowKeys={selectedRowKeys}
+              onRowSelect={handleRowSelect}
               onRowActivate={handleRowActivate}
+              rowDragDrop={rowDragDrop}
               totalCount={currentDirectoryItemCount}
               summary={`当前目录共 ${currentDirectoryItemCount} 项`}
               className={styles.table}
               sortDescriptor={sortDescriptor}
               onSortChange={setSortDescriptor}
               rowActions={resolveRowActions}
-              batchSelection={
-                batchEditMode
-                  ? {
-                      selectedKeys: batchSelectedKeys,
-                      disabledKeys: batchDisabledKeys,
-                      onSelectionChange: setBatchSelectedKeys,
-                    }
-                  : undefined
-              }
             />
           </div>
 
           <div className={styles.detailPanel}>
             <TableDriveSelectionPanel
-              selectedRow={batchEditMode ? undefined : selectedNode}
-              batchEditMode={batchEditMode}
-              batchSelectedCount={batchSelectedCount}
+              selectedRow={selectedRowKeys.size > 1 ? undefined : selectedNode}
+              selectedCount={selectedRowKeys.size}
               groupId={finalGroupId}
               isTrashView={isTrashView}
               canManageTagPermission={showManagePermission && !isTrashView}

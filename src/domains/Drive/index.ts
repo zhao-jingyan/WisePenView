@@ -21,6 +21,7 @@ export type {
   GetRootNodeParams,
   IDriveService,
   ListNodeChildrenParams,
+  MoveNodesToFolderParams,
   MoveToFolderParams,
   RemoveNodeParams,
   RenameNodeParams,

@@ -5,8 +5,7 @@ import type { DriveTableRow } from '../../index.type';
 
 export interface TableDriveSelectionPanelProps {
   selectedRow?: DriveTableRow;
-  batchEditMode?: boolean;
-  batchSelectedCount?: number;
+  selectedCount?: number;
   groupId?: string;
   isTrashView?: boolean;
   canManageTagPermission?: boolean;

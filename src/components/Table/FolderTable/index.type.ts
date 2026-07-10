@@ -1,6 +1,6 @@
 import type { ResourceIconType } from '@/domains/Resource';
 import type { Selection, SortDescriptor } from '@heroui/react';
-import type { ReactNode } from 'react';
+import type { DragEvent, ReactNode } from 'react';
 import type { FolderColumnWidth } from '../shared/TableBase/columnWidth';
 import type { TableColumnBase, TableLoadMore } from '../shared/TableBase/index.type';
 import type { TableRowAction } from '../shared/TableRowActions/index.type';
@@ -32,6 +32,29 @@ export interface FolderTableRowContext<T extends FolderTableRow> {
   row: T;
   rowId: string;
   depth: number;
+}
+
+export interface FolderTableRowPressContext {
+  metaKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  modifierKey: boolean;
+}
+
+export interface FolderTableRowDragState {
+  draggable?: boolean;
+  dragging?: boolean;
+  dropTarget?: boolean;
+}
+
+export interface FolderTableRowDragDrop<T extends FolderTableRow> {
+  getRowState?: (row: T) => FolderTableRowDragState;
+  onDragStart?: (row: T, event: DragEvent<HTMLElement>) => void;
+  onDragEnter?: (row: T, event: DragEvent<HTMLElement>) => void;
+  onDragOver?: (row: T, event: DragEvent<HTMLElement>) => void;
+  onDragLeave?: (row: T, event: DragEvent<HTMLElement>) => void;
+  onDrop?: (row: T, event: DragEvent<HTMLElement>) => void;
+  onDragEnd?: (row: T, event: DragEvent<HTMLElement>) => void;
 }
 
 export interface FolderTableColumn<T extends FolderTableRow> extends Omit<
@@ -74,10 +97,14 @@ export interface FolderTableProps<T extends FolderTableRow> {
   onExpandedChange?: (keys: string[]) => void;
   /** 当前选中的行 id */
   selectedRowKey?: string;
+  /** 当前选中的多行 id */
+  selectedRowKeys?: Iterable<string>;
   /** 单击行选中；未传时单击沿用激活行为 */
-  onRowSelect?: (row: T) => void;
+  onRowSelect?: (row: T, ctx: FolderTableRowPressContext) => void;
   /** 行激活（例如进入文件夹 / 打开资源） */
   onRowActivate?: (row: T) => void;
+  /** 行级拖拽，不绑定到单元格，保持文件管理器的整行心智 */
+  rowDragDrop?: FolderTableRowDragDrop<T>;
   rowActions?: FolderTableRowAction<T>[] | ((row: T) => FolderTableRowAction<T>[]);
   /** 滚动加载更多；Folder 型不做分页 */
   loadMore?: FolderTableLoadMore;
