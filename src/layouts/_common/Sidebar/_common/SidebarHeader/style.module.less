@@ -1,6 +1,8 @@
 .header {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  background: var(--surface);
 }
 
 .headerTop {
@@ -10,6 +12,10 @@
   padding: 0 24px;
   gap: 10px;
   transition: all 0.2s ease-in-out;
+}
+
+.headerTopWithToggleSlot {
+  padding-left: 62px;
 }
 
 .collapsedHeaderTop {
@@ -60,6 +66,14 @@
   &:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
+  }
+}
+
+.logoStatic {
+  cursor: default;
+
+  &:hover {
+    background: transparent;
   }
 }
 

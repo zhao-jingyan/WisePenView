@@ -1,37 +1,60 @@
 import logoImg from '@/assets/images/logo-icon.png';
 import clsx from 'clsx';
-import { ChevronDown, ChevronUp, IndentDecrease, IndentIncrease } from 'lucide-react';
+import { ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useState } from 'react';
 import type { SidebarHeaderProps } from './index.type';
 import styles from './style.module.less';
 
-function SidebarHeader({ collapsed, onToggle, title = 'WisePen', nav }: SidebarHeaderProps) {
+function SidebarHeader({
+  collapsed,
+  onToggle,
+  title = 'WisePen',
+  nav,
+  reserveToggleSlot = false,
+}: SidebarHeaderProps) {
   const [navFolded, setNavFolded] = useState(false);
-  const headerNavFolded = !collapsed && navFolded;
+  const hasNav = Boolean(nav);
+  const headerNavFolded = hasNav && !collapsed && navFolded;
+  const toggleLabel = collapsed ? '展开侧边栏' : '收起侧边栏';
 
   const handleLogoRowPress = () => {
+    if (!hasNav) return;
     setNavFolded((folded) => !folded);
   };
+  const logoContent = (
+    <>
+      <div className={styles.logoIcon}>
+        <img src={logoImg} alt="WisePen" />
+      </div>
+      <span className={styles.logoText}>{title}</span>
+    </>
+  );
 
   return (
     <div className={styles.header}>
-      <div className={clsx(styles.headerTop, collapsed && styles.collapsedHeaderTop)}>
+      <div
+        className={clsx(
+          styles.headerTop,
+          collapsed && styles.collapsedHeaderTop,
+          reserveToggleSlot && !collapsed && styles.headerTopWithToggleSlot
+        )}
+      >
         {onToggle ? (
           <button
             type="button"
             onClick={onToggle}
             className={styles.triggerBtn}
-            aria-label="切换侧边栏"
+            aria-label={toggleLabel}
           >
             {collapsed ? (
-              <IndentIncrease size={18} style={{ transform: 'rotate(180deg)' }} />
+              <PanelLeftOpen size={18} aria-hidden="true" />
             ) : (
-              <IndentDecrease size={18} style={{ transform: 'rotate(180deg)' }} />
+              <PanelLeftClose size={18} aria-hidden="true" />
             )}
           </button>
         ) : null}
 
-        {!collapsed && (
+        {!collapsed && hasNav ? (
           <button
             type="button"
             className={styles.logoToggle}
@@ -39,26 +62,29 @@ function SidebarHeader({ collapsed, onToggle, title = 'WisePen', nav }: SidebarH
             aria-expanded={!navFolded}
             aria-label={navFolded ? '展开顶部导航' : '收起顶部导航'}
           >
-            <div className={styles.logoIcon}>
-              <img src={logoImg} alt="WisePen" />
-            </div>
-            <span className={styles.logoText}>{title}</span>
+            {logoContent}
             <span className={styles.logoChevron} aria-hidden="true">
               {navFolded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
             </span>
           </button>
-        )}
+        ) : null}
+
+        {!collapsed && !hasNav ? (
+          <div className={clsx(styles.logoToggle, styles.logoStatic)}>{logoContent}</div>
+        ) : null}
       </div>
 
-      <div
-        className={clsx(
-          styles.headerNav,
-          collapsed && styles.headerNavCollapsed,
-          headerNavFolded && styles.headerNavFolded
-        )}
-      >
-        {nav}
-      </div>
+      {hasNav ? (
+        <div
+          className={clsx(
+            styles.headerNav,
+            collapsed && styles.headerNavCollapsed,
+            headerNavFolded && styles.headerNavFolded
+          )}
+        >
+          {nav}
+        </div>
+      ) : null}
     </div>
   );
 }
