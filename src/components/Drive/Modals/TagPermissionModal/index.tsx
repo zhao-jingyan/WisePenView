@@ -1,7 +1,7 @@
 import DriveNavigator from '@/components/Drive/DriveNavigator';
 import ResourcePermissionActionIcon from '@/components/Drive/common/resourcePermissionActionIcon';
 import {
-  resolveTagPermissionActionPresetKey,
+  resolveTagPermissionPresetKey,
   TAG_PERMISSION_ACTION_PRESET_OPTIONS,
   TAG_PERMISSION_ACTION_ROWS,
   TAG_PERMISSION_RESOURCE_STRATEGIES,
@@ -12,10 +12,12 @@ import { useTagService } from '@/domains';
 import { mapTagToFolderNode } from '@/domains/Drive/mapper/DriveServices.map';
 import {
   ACCESS_CONTROL_SCOPE,
+  buildTagPermissionListActionSelectionPatch,
   getTagPermissionPresetValues,
+  isTagPermissionListActionSelected,
   normalizeResourceActions,
-  updateResourceActionSelection,
   type AccessControlScope,
+  type TagPermissionListAction,
   type TagPermissionPresetKey,
   type TagResourceAction,
   type TagTreeNode,
@@ -24,7 +26,7 @@ import { useEffectForce } from '@/hooks/useEffectForce';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { Button, Checkbox, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Check, X } from 'lucide-react';
+import { Check, FolderInput, X } from 'lucide-react';
 import { useState } from 'react';
 import {
   resolveDriveScope,
@@ -89,9 +91,7 @@ const TagPermissionModal = ({
   const [tagRefreshSeed, setTagRefreshSeed] = useState(0);
   const [initialTagLoading, setInitialTagLoading] = useState(false);
   const showTagTree = !initialTagId;
-  const selectedActionPresetKey = resolveTagPermissionActionPresetKey(
-    permissionForm.grantedActions
-  );
+  const selectedPresetKey = resolveTagPermissionPresetKey(permissionForm);
 
   const resetPermissionForm = () => {
     setPermissionForm(DEFAULT_FORM_VALUES);
@@ -226,10 +226,10 @@ const TagPermissionModal = ({
     }
   };
 
-  const handleActionToggle = (action: TagResourceAction, checked: boolean) => {
+  const handleActionToggle = (action: TagPermissionListAction, checked: boolean) => {
     setPermissionForm((prev) => ({
       ...prev,
-      grantedActions: updateResourceActionSelection(prev.grantedActions, action, checked),
+      ...buildTagPermissionListActionSelectionPatch(prev, action, checked),
     }));
   };
 
@@ -243,7 +243,6 @@ const TagPermissionModal = ({
   }, [isOpen]);
 
   const renderPermissionTable = () => {
-    const actionSet = new Set(permissionForm.grantedActions);
     return (
       <div className={styles.permissionTableShell}>
         <table className={styles.permissionTable}>
@@ -260,15 +259,24 @@ const TagPermissionModal = ({
           </thead>
           <tbody>
             {TAG_PERMISSION_ACTION_ROWS.map((row) => {
-              const selected = actionSet.has(row.action);
+              const selected = isTagPermissionListActionSelected(permissionForm, row.action);
               return (
                 <tr key={row.key}>
                   <th className={styles.actionCell}>
                     <span className={styles.actionName}>
-                      <ResourcePermissionActionIcon
-                        action={row.action}
-                        className={styles.actionIcon}
-                      />
+                      {row.action.kind === 'tagMount' ? (
+                        <FolderInput
+                          aria-hidden="true"
+                          className={styles.actionIcon}
+                          focusable="false"
+                          size={14}
+                        />
+                      ) : (
+                        <ResourcePermissionActionIcon
+                          action={row.action.action}
+                          className={styles.actionIcon}
+                        />
+                      )}
                       <span className={styles.actionText}>{row.label}</span>
                     </span>
                   </th>
@@ -385,7 +393,7 @@ const TagPermissionModal = ({
                     {TAG_PERMISSION_ACTION_PRESET_OPTIONS.map((preset) => (
                       <Button
                         key={preset.key}
-                        variant={selectedActionPresetKey === preset.key ? 'primary' : 'secondary'}
+                        variant={selectedPresetKey === preset.key ? 'primary' : 'secondary'}
                         size="sm"
                         onPress={() => applyPresetToForm(preset.key)}
                       >
@@ -394,9 +402,9 @@ const TagPermissionModal = ({
                     ))}
                   </div>
                   <span className={styles.currentPreset}>
-                    当前动作：
+                    当前预设：
                     {TAG_PERMISSION_ACTION_PRESET_OPTIONS.find(
-                      (preset) => preset.key === selectedActionPresetKey
+                      (preset) => preset.key === selectedPresetKey
                     )?.label ?? '自定义'}
                   </span>
                 </div>

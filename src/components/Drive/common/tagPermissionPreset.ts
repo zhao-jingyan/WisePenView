@@ -1,7 +1,9 @@
 import {
   getTagPermissionPresetValues,
   normalizeResourceActions,
+  TAG_PERMISSION_LIST_ACTIONS,
   TAG_RESOURCE_ACTION,
+  type TagPermissionListAction,
   type TagPermissionPresetKey,
   type TagPermissionPresetValues,
   type TagResourceAction,
@@ -27,11 +29,11 @@ export interface TagPermissionResourceStrategy {
 export interface TagPermissionActionPresetOption {
   key: Exclude<TagPermissionPresetKey, 'custom'>;
   label: string;
-  actions: TagResourceAction[];
+  values: TagPermissionPresetValues;
 }
 
 export interface TagPermissionActionRow {
-  action: TagResourceAction;
+  action: TagPermissionListAction;
   key: string;
   label: string;
   supportedStrategyKeys: TagPermissionResourceStrategyKey[];
@@ -76,14 +78,17 @@ export const TAG_PERMISSION_RESOURCE_STRATEGIES: TagPermissionResourceStrategy[]
   },
 ];
 
-export const TAG_PERMISSION_ACTION_ROWS: TagPermissionActionRow[] = TAG_RESOURCE_ACTION.options.map(
-  (item) => ({
-    action: item.value as TagResourceAction,
-    key: item.key,
-    label: item.label,
-    supportedStrategyKeys: TAG_PERMISSION_RESOURCE_STRATEGIES.filter((strategy) =>
-      strategy.supportedActions.includes(item.value as TagResourceAction)
-    ).map((strategy) => strategy.key),
+export const TAG_PERMISSION_ACTION_ROWS: TagPermissionActionRow[] = TAG_PERMISSION_LIST_ACTIONS.map(
+  (action) => ({
+    action,
+    key: action.key,
+    label: action.label,
+    supportedStrategyKeys:
+      action.kind === 'tagMount'
+        ? TAG_PERMISSION_RESOURCE_STRATEGIES.map((strategy) => strategy.key)
+        : TAG_PERMISSION_RESOURCE_STRATEGIES.filter((strategy) =>
+            strategy.supportedActions.includes(action.action)
+          ).map((strategy) => strategy.key),
   })
 );
 
@@ -128,7 +133,7 @@ export const TAG_PERMISSION_ACTION_PRESET_OPTIONS: TagPermissionActionPresetOpti
   ).map((preset) => ({
     key: preset.key,
     label: preset.label,
-    actions: preset.values.grantedActions,
+    values: preset.values,
   }));
 
 const createActionSet = (actions: TagResourceAction[] | undefined): Set<TagResourceAction> =>
@@ -163,15 +168,6 @@ export const resolveTagPermissionPresetKey = (
     if (!preset.values) return false;
     return isPresetValuesMatched(preset.values, values);
   });
-  return matchedPreset?.key ?? 'custom';
-};
-
-export const resolveTagPermissionActionPresetKey = (
-  actions: TagResourceAction[] | undefined
-): TagPermissionPresetKey => {
-  const matchedPreset = TAG_PERMISSION_ACTION_PRESET_OPTIONS.find((preset) =>
-    isSameActionSet(preset.actions, actions)
-  );
   return matchedPreset?.key ?? 'custom';
 };
 
