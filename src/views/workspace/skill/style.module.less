@@ -173,6 +173,47 @@
   pointer-events: none;
 }
 
+.configTreeNode {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.configTreeTitle {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.configTreeIcon {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.configTreeName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.configTreeBadge {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .rightPanel {
   width: 100%;
   height: 100%;
@@ -207,6 +248,84 @@
 .editorBody {
   flex: 1;
   min-height: 0;
+}
+
+.configPage {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--surface-secondary);
+}
+
+.configIntro {
+  padding: var(--space-lg) var(--space-xl) var(--space-md);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--surface);
+
+  h2 {
+    margin: 0;
+    color: var(--foreground);
+    font-size: 18px;
+    line-height: 1.35;
+  }
+
+  p {
+    max-width: 720px;
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: var(--font-size-sm);
+    line-height: 1.65;
+  }
+}
+
+.configForm {
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: var(--space-sm);
+  max-width: 760px;
+  padding: var(--space-lg) var(--space-xl);
+  overflow: auto;
+}
+
+.configFieldHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.configCounter,
+.configFooterText {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+}
+
+.configFooter {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 0 var(--space-xl);
+  border-top: 1px solid var(--border-light);
+  background: var(--surface);
+}
+
+.configFooterText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.configFooterActions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .middleOverlay {
