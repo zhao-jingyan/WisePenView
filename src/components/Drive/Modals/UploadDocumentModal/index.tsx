@@ -5,7 +5,7 @@ import {
 } from '@/components/Drive/common/driveComponentModel';
 import AppModal from '@/components/Overlay/AppModal';
 import UploadZone from '@/components/UploadZone';
-import { useDocumentService, useResourceService } from '@/domains';
+import { useDocumentService, useDriveService, useResourceService } from '@/domains';
 import { useDriveUploadQueueStore } from '@/store';
 import { parseErrorMessage } from '@/utils/error';
 import { parseExtension } from '@/utils/parser/extensionParser';
@@ -53,6 +53,7 @@ function UploadDocumentModal({
   groupId,
 }: UploadDocumentModalProps) {
   const documentService = useDocumentService();
+  const driveService = useDriveService();
   const resourceService = useResourceService();
   const startUploads = useDriveUploadQueueStore((s) => s.startUploads);
   const updateQueuedUpload = useDriveUploadQueueStore((s) => s.updateUpload);
@@ -96,7 +97,9 @@ function UploadDocumentModal({
     window.setTimeout(() => {
       void (async () => {
         await documentService.syncPendingDocStatus(documentId).catch(() => undefined);
-        const mounted = await mountToFolderWhenReady(documentId, tagId);
+        const mounted = groupId
+          ? await mountUploadedGroupDocument(documentId, tagId)
+          : await mountToPersonalFolderWhenReady(documentId, tagId);
         if (mounted) {
           onSuccess?.();
         }
@@ -104,7 +107,11 @@ function UploadDocumentModal({
     }, UPLOAD_STATUS_SYNC_DELAY_MS);
   };
 
-  const mountToFolderWhenReady = async (resourceId: string, tagId: string): Promise<boolean> => {
+  const mountToPersonalFolderWhenReady = async (
+    resourceId: string,
+    tagId: string,
+    failureTargetName = '当前文件夹'
+  ): Promise<boolean> => {
     for (let attempt = 1; attempt <= FOLDER_MOUNT_MAX_ATTEMPTS; attempt += 1) {
       try {
         const { resourceInfo } = await documentService.getDocInfo(resourceId);
@@ -117,7 +124,32 @@ function UploadDocumentModal({
           resourceId,
           tagIds,
           primaryTagId: tagId,
-          ...(groupId ? { groupId } : {}),
+        });
+        return true;
+      } catch (err) {
+        const shouldRetry = isResourceNotReadyError(err) && attempt < FOLDER_MOUNT_MAX_ATTEMPTS;
+        if (!shouldRetry) {
+          toast.warning(`文件已上传，但未能放入${failureTargetName}：${parseErrorMessage(err)}`);
+          return false;
+        }
+        await delay(FOLDER_MOUNT_RETRY_DELAY_MS);
+      }
+    }
+    return false;
+  };
+
+  const mountToGroupFolderWhenReady = async (
+    resourceId: string,
+    tagId: string
+  ): Promise<boolean> => {
+    if (!groupId) return false;
+
+    for (let attempt = 1; attempt <= FOLDER_MOUNT_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        await resourceService.mountResourcesToGroupTag({
+          resourceIds: [resourceId],
+          groupId,
+          tagId,
         });
         return true;
       } catch (err) {
@@ -130,6 +162,23 @@ function UploadDocumentModal({
       }
     }
     return false;
+  };
+
+  const mountUploadedGroupDocument = async (resourceId: string, groupTargetTagId: string) => {
+    let sharedTagId: string;
+    try {
+      sharedTagId = await driveService.ensureSharedFolder();
+    } catch (err) {
+      toast.warning(`文件已上传，但未能准备共享文件夹：${parseErrorMessage(err)}`);
+      return false;
+    }
+    const mountedToShared = await mountToPersonalFolderWhenReady(
+      resourceId,
+      sharedTagId,
+      '共享文件夹'
+    );
+    if (!mountedToShared) return false;
+    return mountToGroupFolderWhenReady(resourceId, groupTargetTagId);
   };
 
   const { run: submitUpload } = useRequest(

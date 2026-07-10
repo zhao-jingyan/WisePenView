@@ -12,6 +12,7 @@ export interface TableSortColumn<T extends object, C = unknown> {
 
 export interface SortTableRowsOptions<T extends object> {
   getEntryType?: (row: T) => string;
+  isPinnedFirst?: (row: T) => boolean;
   isPinnedLast?: (row: T) => boolean;
 }
 
@@ -82,6 +83,28 @@ function resolveSortColumn<T extends object, C>(
   return column;
 }
 
+function comparePinnedRows<T extends object>(
+  a: T,
+  b: T,
+  options: SortTableRowsOptions<T> | undefined
+): number {
+  const aPinnedFirst = options?.isPinnedFirst?.(a) === true;
+  const bPinnedFirst = options?.isPinnedFirst?.(b) === true;
+  if (aPinnedFirst || bPinnedFirst) {
+    if (aPinnedFirst && bPinnedFirst) return 0;
+    return aPinnedFirst ? -1 : 1;
+  }
+
+  const aPinnedLast = options?.isPinnedLast?.(a) === true;
+  const bPinnedLast = options?.isPinnedLast?.(b) === true;
+  if (aPinnedLast || bPinnedLast) {
+    if (aPinnedLast && bPinnedLast) return 0;
+    return aPinnedLast ? 1 : -1;
+  }
+
+  return 0;
+}
+
 export function sortTableRows<T extends object, C>(
   rows: T[],
   columns: TableSortColumn<T, C>[],
@@ -95,15 +118,10 @@ export function sortTableRows<T extends object, C>(
   }
 
   const compare = buildValueComparator(column, sortDescriptor.direction, getContext);
-  const pinnedLast = options?.isPinnedLast;
 
   return [...rows].sort((a, b) => {
-    if (pinnedLast?.(a)) {
-      return 1;
-    }
-    if (pinnedLast?.(b)) {
-      return -1;
-    }
+    const pinnedCompare = comparePinnedRows(a, b, options);
+    if (pinnedCompare !== 0) return pinnedCompare;
     return compare(a, b);
   });
 }
@@ -121,7 +139,6 @@ export function sortFolderTreeRows<T extends object, C>(
   }
 
   const compare = buildValueComparator(column, sortDescriptor.direction, getContext);
-  const pinnedLast = options?.isPinnedLast;
 
   const readChildren = (row: T): T[] | undefined => {
     const children = (row as { children?: T[] }).children;
@@ -131,12 +148,8 @@ export function sortFolderTreeRows<T extends object, C>(
   const sortLevel = (levelRows: T[]): T[] =>
     [...levelRows]
       .sort((a, b) => {
-        if (pinnedLast?.(a)) {
-          return 1;
-        }
-        if (pinnedLast?.(b)) {
-          return -1;
-        }
+        const pinnedCompare = comparePinnedRows(a, b, options);
+        if (pinnedCompare !== 0) return pinnedCompare;
         return compare(a, b);
       })
       .map((row) => {

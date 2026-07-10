@@ -1,5 +1,6 @@
+import { Popover } from '@/components/Overlay';
 import { Tooltip } from '@heroui/react';
-import { FolderPlus, Pencil, Trash2 } from 'lucide-react';
+import { CloudUpload, FilePlus2, FolderPlus, Pencil, Trash2 } from 'lucide-react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 
 import { ROOT_DISPLAY } from '@/components/Drive/common/constants';
@@ -12,10 +13,12 @@ import type { ReactNode } from 'react';
 
 import styles from './style.module.less';
 
+export type SidebarDriveCreateAction = 'folder' | 'note' | 'drawio' | 'skill' | 'upload';
+
 interface SidebarDriveNodeTitleProps {
   node: DriveNode;
   scopeSwitcher?: ReactNode;
-  onCreateFolder: (node: RootNode | FolderNode) => void;
+  onCreateNode: (node: RootNode | FolderNode, action: SidebarDriveCreateAction) => void;
   onRenameNode: (node: DriveActionTarget) => void;
   onDeleteNode: (node: DriveActionTarget) => void;
 }
@@ -34,7 +37,7 @@ function getNodeDisplayName(node: DriveNode, resourceName: string): string {
 function SidebarDriveNodeTitle({
   node,
   scopeSwitcher,
-  onCreateFolder,
+  onCreateNode,
   onRenameNode,
   onDeleteNode,
 }: SidebarDriveNodeTitleProps) {
@@ -45,9 +48,15 @@ function SidebarDriveNodeTitle({
     node.type === 'resource' || node.type === 'link' ? node.resourceType : undefined;
   const resourceIconType =
     node.type === 'resource' || node.type === 'link' ? node.resourceIconType : undefined;
+  const folderIconType =
+    node.type === 'folder' && node.systemType === 'shared' ? 'shared' : undefined;
   const canCreateFolder = node.type === 'root' || node.type === 'folder';
-  const canRename = node.type === 'folder' || node.type === 'resource';
-  const canDelete = node.type === 'folder' || node.type === 'resource' || node.type === 'link';
+  const canCreateResource =
+    node.type === 'folder' || (node.type === 'root' && node.canMountResources);
+  const isSystemFolder = node.type === 'folder' && Boolean(node.systemType);
+  const canRename = !isSystemFolder && (node.type === 'folder' || node.type === 'resource');
+  const canDelete =
+    !isSystemFolder && (node.type === 'folder' || node.type === 'resource' || node.type === 'link');
   const label = getNodeDisplayName(node, resourceName);
 
   return (
@@ -56,6 +65,7 @@ function SidebarDriveNodeTitle({
         <span className={styles.nodeIcon} aria-hidden="true">
           <EntryIcon
             entryType={node.type}
+            folderIconType={folderIconType}
             resourceType={resourceType}
             resourceName={label}
             resourceIconType={resourceIconType}
@@ -74,19 +84,76 @@ function SidebarDriveNodeTitle({
         >
           {node.type === 'root' ? scopeSwitcher : null}
           {canCreateFolder ? (
-            <Tooltip>
-              <Tooltip.Trigger>
-                <button
-                  type="button"
-                  className={styles.nodeActionBtn}
-                  aria-label={`在${label}中新建文件夹`}
-                  onClick={() => onCreateFolder(node)}
-                >
-                  <FolderPlus size={14} aria-hidden="true" />
-                </button>
-              </Tooltip.Trigger>
-              <Tooltip.Content>新建文件夹</Tooltip.Content>
-            </Tooltip>
+            <Popover>
+              <Tooltip>
+                <Tooltip.Trigger>
+                  <Popover.Trigger>
+                    <button
+                      type="button"
+                      className={styles.nodeActionBtn}
+                      aria-label={`在${label}中新建`}
+                    >
+                      <FilePlus2 size={14} aria-hidden="true" />
+                    </button>
+                  </Popover.Trigger>
+                </Tooltip.Trigger>
+                <Tooltip.Content>新建</Tooltip.Content>
+              </Tooltip>
+              <Popover.Content className={styles.createPopover} placement="right">
+                <Popover.Dialog>
+                  <div
+                    className={styles.createMenuPanel}
+                    onClick={stopTreeAction}
+                    onKeyDown={stopTreeAction}
+                  >
+                    <button
+                      type="button"
+                      className={styles.createMenuItem}
+                      onClick={() => onCreateNode(node, 'folder')}
+                    >
+                      <FolderPlus size={15} aria-hidden="true" />
+                      <span>新建文件夹</span>
+                    </button>
+                    {canCreateResource ? (
+                      <>
+                        <button
+                          type="button"
+                          className={styles.createMenuItem}
+                          onClick={() => onCreateNode(node, 'note')}
+                        >
+                          <EntryIcon entryType="resource" resourceIconType="note" size={15} />
+                          <span>新建笔记</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.createMenuItem}
+                          onClick={() => onCreateNode(node, 'drawio')}
+                        >
+                          <EntryIcon entryType="resource" resourceIconType="drawio" size={15} />
+                          <span>新建图表</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.createMenuItem}
+                          onClick={() => onCreateNode(node, 'skill')}
+                        >
+                          <EntryIcon entryType="resource" resourceIconType="skill" size={15} />
+                          <span>新建 Skill</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.createMenuItem}
+                          onClick={() => onCreateNode(node, 'upload')}
+                        >
+                          <CloudUpload size={15} aria-hidden="true" />
+                          <span>上传文件</span>
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+                </Popover.Dialog>
+              </Popover.Content>
+            </Popover>
           ) : null}
           {canRename ? (
             <Tooltip>

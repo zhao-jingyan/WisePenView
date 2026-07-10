@@ -10,7 +10,7 @@ import {
 import { FormField, Input } from '@/components/Input';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import CreateSkillModal from '@/components/Skill/CreateSkillModal';
-import { useDocumentService, useNoteService, useResourceService } from '@/domains';
+import { useDocumentService, useDriveService, useNoteService, useResourceService } from '@/domains';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useNewNoteStore } from '@/store';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
@@ -70,6 +70,7 @@ export function useTableDriveActions({
 }: UseTableDriveActionsParams): UseTableDriveActionsReturn {
   const openInWorkspace = useOpenInWorkspace(groupId);
   const noteService = useNoteService();
+  const driveService = useDriveService();
   const documentService = useDocumentService();
   const resourceService = useResourceService();
   const toolbarConfig = { ...DEFAULT_TOOLBAR_CONFIG, ...actions?.toolbar };
@@ -102,15 +103,29 @@ export function useTableDriveActions({
   const mountCreatedResource = useCallback(
     async (resourceId: string) => {
       if (!mountTagId) return;
+      if (groupId) {
+        const sharedTagId = await driveService.ensureSharedFolder();
+        await mountResourceToFolderTag({
+          resourceId,
+          targetTagId: sharedTagId,
+          documentService,
+          resourceService,
+        });
+        await resourceService.mountResourcesToGroupTag({
+          resourceIds: [resourceId],
+          groupId,
+          tagId: mountTagId,
+        });
+        return;
+      }
       await mountResourceToFolderTag({
         resourceId,
         targetTagId: mountTagId,
         documentService,
         resourceService,
-        groupId,
       });
     },
-    [documentService, groupId, mountTagId, resourceService]
+    [documentService, driveService, groupId, mountTagId, resourceService]
   );
 
   const handleUploadSuccess = useCallback(() => {
@@ -362,7 +377,7 @@ export function useTableDriveActions({
   const handleCreateNote = useCallback(() => {
     if (creatingNote) return;
     const pendingNewNoteId = useNewNoteStore.getState().newNoteResourceId;
-    if (pendingNewNoteId) {
+    if (!groupId && pendingNewNoteId) {
       openInWorkspace({
         resourceId: pendingNewNoteId,
         resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
@@ -370,7 +385,7 @@ export function useTableDriveActions({
       return;
     }
     runCreateNote();
-  }, [creatingNote, openInWorkspace, runCreateNote]);
+  }, [creatingNote, groupId, openInWorkspace, runCreateNote]);
 
   const handleOpenDrawioModal = useCallback(() => {
     if (creatingDrawio) return;

@@ -4,6 +4,7 @@ import { normalizeTagGroupId } from '@/utils/normalize/normalizeTagGroupId';
 import type {
   DriveNode,
   DriveNodeScope,
+  DriveSystemFolderType,
   FolderNode,
   LinkNode,
   ResourceNode,
@@ -11,6 +12,8 @@ import type {
 } from '../entity/drive';
 
 export const DRIVE_ROOT_ID = 'drive-root';
+export const DRIVE_SHARED_TAG_NAME = '/.shared';
+export const DRIVE_SHARED_FOLDER_DISPLAY_NAME = '共享';
 const DRIVE_GROUP_ROOT_PREFIX = 'drive-root:group:';
 
 type EncodedNodeKind = 'folder' | 'resource' | 'link' | 'loading';
@@ -25,8 +28,14 @@ type DecodedNodeId =
 
 const getFolderName = (tagName: string): string => {
   if (tagName === '/') return '根目录';
+  if (tagName === DRIVE_SHARED_TAG_NAME) return DRIVE_SHARED_FOLDER_DISPLAY_NAME;
   if (tagName.startsWith('/')) return tagName.slice(1);
   return tagName;
+};
+
+const resolveSystemFolderType = (tagName: string): DriveSystemFolderType | undefined => {
+  if (tagName === DRIVE_SHARED_TAG_NAME) return 'shared';
+  return undefined;
 };
 
 export const encodeNodeId = (kind: EncodedNodeKind, ...parts: string[]): string => {
@@ -91,12 +100,28 @@ export const mapTagToFolderNode = (
     scope,
     tagId: tag.tagId,
     name: getFolderName(tag.tagName),
+    systemType: resolveSystemFolderType(tag.tagName),
     description: tag.tagDesc,
     taggedResourceAclGrantScope: tag.taggedResourceAclGrantScope,
     tagMountPermissionScope: tag.tagMountPermissionScope,
     grantedActions: tag.grantedActions,
     childrenIds: [],
   };
+};
+
+export const orderDriveFolderNodes = (nodes: FolderNode[]): FolderNode[] => {
+  const sharedNodes: FolderNode[] = [];
+  const remainingNodes: FolderNode[] = [];
+
+  nodes.forEach((node) => {
+    if (node.systemType === 'shared') {
+      sharedNodes.push(node);
+      return;
+    }
+    remainingNodes.push(node);
+  });
+
+  return [...sharedNodes, ...remainingNodes];
 };
 
 export const mapResourceItemToChildNode = (

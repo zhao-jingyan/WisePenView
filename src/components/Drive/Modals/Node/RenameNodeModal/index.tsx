@@ -3,6 +3,7 @@ import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import { useDriveService } from '@/domains';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { parseErrorMessage } from '@/utils/error';
+import { validateReservedName } from '@/utils/tag/validateReservedName';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
@@ -56,6 +57,13 @@ function RenameNodeModal({ isOpen, node, groupId, onOpenChange, onSuccess }: Ren
     if (!trimmed) {
       setNameError('请输入名称');
       return;
+    }
+    if (node.type === 'folder') {
+      const validation = validateReservedName(trimmed);
+      if (!validation.valid) {
+        setNameError(validation.reason ?? '名称不可用');
+        return;
+      }
     }
     runRenameNode(trimmed);
   };

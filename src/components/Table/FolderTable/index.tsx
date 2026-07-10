@@ -381,6 +381,7 @@ function FolderTable<T extends FolderTableRow>({
   className,
   sortDescriptor,
   onSortChange,
+  isPinnedFirst,
   batchSelection,
   batchFooter,
 }: FolderTableProps<T>) {
@@ -418,9 +419,12 @@ function FolderTable<T extends FolderTableRow>({
         columns,
         sortDescriptor,
         (row) => ({ row, rowId: row.id, depth: 0 }),
-        { isPinnedLast: (row) => row.entryType === 'loading' }
+        {
+          isPinnedFirst,
+          isPinnedLast: (row) => row.entryType === 'loading',
+        }
       ),
-    [columns, items, sortDescriptor]
+    [columns, isPinnedFirst, items, sortDescriptor]
   );
 
   const visibleRows = useMemo(

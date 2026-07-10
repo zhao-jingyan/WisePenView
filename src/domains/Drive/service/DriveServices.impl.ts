@@ -11,11 +11,13 @@ import {
   buildDriveRootNode,
   decodeNodeId,
   decodeRootNodeScope,
+  DRIVE_SHARED_TAG_NAME,
   encodeNodeId,
   encodeRootNodeId,
   isContainerNode,
   mapResourceItemToChildNode,
   mapTagToFolderNode,
+  orderDriveFolderNodes,
 } from '../mapper/DriveServices.map';
 import type { CreateDriveServiceOptions, IDriveService, MoveToFolderParams } from './index.type';
 
@@ -37,6 +39,19 @@ const isVisibleFolderTag = (node: TagTreeNode): boolean => {
 
 const findTrashTag = (roots: TagTreeNode[]): TagTreeNode | undefined => {
   return roots.find((node) => node.tagName === TRASH_TAG_NAME);
+};
+
+const findSharedFolderTag = (roots: TagTreeNode[]): TagTreeNode | undefined => {
+  const queue: TagTreeNode[] = [...roots];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    if (!node) continue;
+    if (node.tagName === DRIVE_SHARED_TAG_NAME) return node;
+    if (Array.isArray(node.children) && node.children.length > 0) {
+      queue.push(...node.children);
+    }
+  }
+  return undefined;
 };
 
 const resolveGroupKey = (groupId?: string): string => {
@@ -126,9 +141,12 @@ export const createDriveServices = (
     nodes.forEach((node) => trackNode(node, groupKey));
   };
 
-  const readRawRoots = async (groupId?: string): Promise<TagTreeNode[]> => {
+  const readRawRoots = async (
+    groupId?: string,
+    options?: { refresh?: boolean }
+  ): Promise<TagTreeNode[]> => {
     const normalized = normalizeTagGroupId(groupId);
-    const roots = await tagService.getRawTagTree(normalized);
+    const roots = await tagService.getRawTagTree(normalized, options);
     const trashTag = findTrashTag(roots);
     useTrashTagStore.getState().setTrashTagId(normalized, trashTag?.tagId);
     return roots;
@@ -149,6 +167,22 @@ export const createDriveServices = (
     }
     personalRootTagIdByGroup.set(groupKey, rootTag.tagId);
     return rootTag;
+  };
+
+  const ensureSharedFolder: IDriveService['ensureSharedFolder'] = async () => {
+    const roots = await readRawRoots(undefined, { refresh: true });
+    const existingSharedTag = findSharedFolderTag(roots);
+    if (existingSharedTag) {
+      return existingSharedTag.tagId;
+    }
+
+    const personalRoot = await getPersonalRootTag();
+    const tagId = await tagService.addTag({
+      parentId: personalRoot.tagId,
+      tagName: DRIVE_SHARED_TAG_NAME,
+    });
+    clearCache();
+    return tagId;
   };
 
   const getRootNode: IDriveService['getRootNode'] = async (params) => {
@@ -224,15 +258,15 @@ export const createDriveServices = (
       const scope = buildDriveNodeScope(normalizedGroupId);
       if (normalizedGroupId) {
         const roots = await readRawRoots(normalizedGroupId);
-        return roots
-          .filter(isVisibleFolderTag)
-          .map((tag) => mapTagToFolderNode(tag, rootNodeId, scope));
+        return orderDriveFolderNodes(
+          roots.filter(isVisibleFolderTag).map((tag) => mapTagToFolderNode(tag, rootNodeId, scope))
+        );
       }
       const personalRoot = await getPersonalRootTag();
       const children = personalRoot.children ?? [];
-      return children
-        .filter(isVisibleFolderTag)
-        .map((tag) => mapTagToFolderNode(tag, rootNodeId, scope));
+      return orderDriveFolderNodes(
+        children.filter(isVisibleFolderTag).map((tag) => mapTagToFolderNode(tag, rootNodeId, scope))
+      );
     }
 
     if (decoded.kind !== 'folder') return [];
@@ -241,9 +275,11 @@ export const createDriveServices = (
     await readRawRoots(normalizedGroupId);
     const tag = tagService.getRawTagById(decoded.tagId, normalizedGroupId);
     const children = tag?.children ?? [];
-    return children
-      .filter(isVisibleFolderTag)
-      .map((child) => mapTagToFolderNode(child, encodeNodeId('folder', decoded.tagId), scope));
+    return orderDriveFolderNodes(
+      children
+        .filter(isVisibleFolderTag)
+        .map((child) => mapTagToFolderNode(child, encodeNodeId('folder', decoded.tagId), scope))
+    );
   };
 
   const fetchAllResourceNodes = async (
@@ -608,6 +644,9 @@ export const createDriveServices = (
       target.type === 'root' ? (target.canMountResources ? target.tagId : undefined) : target.tagId;
 
     if (source.type === 'folder') {
+      if (source.systemType) {
+        throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
+      }
       if (targetTagId && isDescendantTag(targetTagId, source.tagId, groupId)) {
         throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
       }
@@ -679,6 +718,9 @@ export const createDriveServices = (
 
     if (groupId) {
       if (source.type === 'folder') {
+        if (source.systemType) {
+          throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_DELETE);
+        }
         await removeFolderNodeCascade(source, groupId);
       } else if (isResourceNode(source)) {
         await unmountGroupResourceNode(source, groupId);
@@ -689,7 +731,9 @@ export const createDriveServices = (
       return;
     }
 
-    if (source.type === 'folder' && (await isNodeInPersonalTrash(source))) {
+    if (source.type === 'folder' && source.systemType) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_DELETE);
+    } else if (source.type === 'folder' && (await isNodeInPersonalTrash(source))) {
       await removeFolderNodeCascade(source);
     } else if (isResourceNode(source) && (await isNodeInPersonalTrash(source))) {
       await removePersonalResourceNodePermanently(source);
@@ -714,6 +758,9 @@ export const createDriveServices = (
     const source = getNodeOrThrow(nodeId);
     const groupId = normalizeTagGroupId(params.groupId) ?? getNodeGroupId(nodeId);
     if (source.type === 'folder') {
+      if (source.systemType) {
+        throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_RENAME);
+      }
       await tagService.updateTag({
         targetTagId: source.tagId,
         tagName: `/${newName}`,
@@ -772,5 +819,6 @@ export const createDriveServices = (
     removeNode,
     renameNode,
     createFolder,
+    ensureSharedFolder,
   };
 };

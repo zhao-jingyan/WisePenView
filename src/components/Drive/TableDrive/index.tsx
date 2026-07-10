@@ -30,6 +30,8 @@ import {
   buildTrashFolderNodeId,
   getDriveNodeLabel,
   isDriveActionTarget,
+  isDriveSharedFolderNode,
+  isDriveSystemFolderNode,
   resolveCurrentFolderTagId,
   resolveDriveScope,
   type DriveActionTarget,
@@ -113,6 +115,7 @@ function toDriveTableRow(node: DriveRow): DriveTableRow {
     id: node.id,
     name: getDriveNodeLabel(node),
     entryType: node.type,
+    folderIconType: isDriveSharedFolderNode(node) ? 'shared' : undefined,
     resourceType: node.type === 'resource' ? node.resourceType : undefined,
     resourceIconType:
       node.type === 'resource' || node.type === 'link' ? node.resourceIconType : undefined,
@@ -149,7 +152,7 @@ function toDriveActionTarget(node: DriveNode): DriveActionTarget | null {
 }
 
 function isDriveMoveSource(row: DriveTableRow): boolean {
-  return isDriveActionTarget(row.node);
+  return isDriveActionTarget(row.node) && !isDriveSystemFolderNode(row.node);
 }
 
 function isDriveMoveTarget(row: DriveTableRow): boolean {
@@ -158,6 +161,10 @@ function isDriveMoveTarget(row: DriveTableRow): boolean {
 
 function isDriveMoveTargetNode(node: DriveNode): boolean {
   return node.type === 'folder' || node.type === 'root';
+}
+
+function isDrivePinnedFirstRow(row: DriveTableRow): boolean {
+  return isDriveSharedFolderNode(row.node);
 }
 
 function resolveSelectionKeysAfterRowPress(
@@ -517,6 +524,10 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
 
       const actions: FolderTableRowAction<DriveTableRow>[] = [openAction];
 
+      if (isDriveSystemFolderNode(actionTarget)) {
+        return actions;
+      }
+
       if (actionTarget.type !== 'link') {
         actions.push({
           key: 'rename',
@@ -802,6 +813,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
               className={styles.table}
               sortDescriptor={sortDescriptor}
               onSortChange={setSortDescriptor}
+              isPinnedFirst={isDrivePinnedFirstRow}
               rowActions={resolveRowActions}
             />
           </div>

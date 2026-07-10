@@ -13,7 +13,7 @@ import type {
 /** TagService 接口：供依赖注入使用 */
 export interface ITagService {
   /** 获取未过滤的原始标签树（包含路径标签与系统隐藏标签） */
-  getRawTagTree(groupId?: string): Promise<TagTreeNode[]>;
+  getRawTagTree(groupId?: string, options?: GetTagTreeOptions): Promise<TagTreeNode[]>;
   /** 从原始标签索引中按 tagId 查找节点（需先调用 getRawTagTree） */
   getRawTagById(tagId: string, groupId?: string): TagTreeNode | undefined;
   /** 获取标签树（带缓存），返回多个根节点 */
@@ -26,6 +26,11 @@ export interface ITagService {
   addTag(params: TagCreateRequest): Promise<string>;
   deleteTag(params: TagDeleteRequest): Promise<void>;
   moveTag(params: TagMoveRequest): Promise<void>;
+}
+
+export interface GetTagTreeOptions {
+  /** 强制绕过本地缓存重新拉取，适用于系统目录被外部手段修改后的恢复检查。 */
+  refresh?: boolean;
 }
 
 /** getResByTag 请求参数 */

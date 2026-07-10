@@ -32,12 +32,15 @@ function DriveNavigatorNodeTitle({ node, displayName }: DriveNavigatorNodeTitleP
     node.type === 'resource' || node.type === 'link' ? node.resourceType : undefined;
   const resourceIconType =
     node.type === 'resource' || node.type === 'link' ? node.resourceIconType : undefined;
+  const folderIconType =
+    node.type === 'folder' && node.systemType === 'shared' ? 'shared' : undefined;
 
   return (
     <span className={styles.nodeTitle}>
       <span className={styles.nodeIcon} aria-hidden="true">
         <EntryIcon
           entryType={node.type}
+          folderIconType={folderIconType}
           resourceType={resourceType}
           resourceIconType={resourceIconType}
           size={14}

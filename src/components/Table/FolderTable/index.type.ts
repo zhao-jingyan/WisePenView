@@ -1,3 +1,4 @@
+import type { FolderIconType } from '@/components/Icons/EntryIcon/index.type';
 import type { ResourceIconType } from '@/domains/Resource';
 import type { Selection, SortDescriptor } from '@heroui/react';
 import type { DragEvent, ReactNode } from 'react';
@@ -11,6 +12,8 @@ export interface FolderTableRow {
   id: string;
   name: string;
   entryType: FolderTableEntryType;
+  /** folder 类型时使用 EntryIcon 的细分图标 */
+  folderIconType?: FolderIconType;
   /** resource 类型时使用 EntryIcon */
   resourceType?: string;
   /** resource 类型时使用 EntryIcon 的细分图标 */
@@ -122,6 +125,8 @@ export interface FolderTableProps<T extends FolderTableRow> {
   className?: string;
   sortDescriptor?: SortDescriptor;
   onSortChange?: (descriptor: SortDescriptor) => void;
+  /** 始终固定在同级排序最前方的行 */
+  isPinnedFirst?: (row: T) => boolean;
   /** 全局编辑：多选勾选 */
   batchSelection?: FolderTableBatchSelection;
   /** 批量操作区（通常配合 batchSelection） */

@@ -165,6 +165,49 @@
   }
 }
 
+.createPopover {
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md, 6px);
+  background: var(--overlay);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.createMenuPanel {
+  display: flex;
+  flex-direction: column;
+  width: 176px;
+  padding: var(--space-xs, 8px);
+  gap: 2px;
+  background: var(--surface);
+}
+
+.createMenuItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 32px;
+  min-width: 0;
+  padding: 0 8px;
+  gap: 8px;
+  color: var(--foreground);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition:
+    color 0.14s ease,
+    background-color 0.14s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--surface-tertiary);
+    outline: none;
+  }
+}
+
 .scopePopover {
   padding: 0;
   border: 1px solid var(--border-light);

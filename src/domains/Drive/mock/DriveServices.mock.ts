@@ -1,7 +1,12 @@
 import { resolveResourceIconType } from '@/domains/Resource';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type { DriveNode, FolderNode, RootNode } from '../entity/drive';
-import { buildDriveNodeScope, decodeRootNodeScope } from '../mapper/DriveServices.map';
+import {
+  buildDriveNodeScope,
+  decodeRootNodeScope,
+  DRIVE_SHARED_FOLDER_DISPLAY_NAME,
+  orderDriveFolderNodes,
+} from '../mapper/DriveServices.map';
 import type {
   CreateDriveServiceOptions,
   CreateFolderParams,
@@ -20,6 +25,8 @@ const DEFAULT_PAGE_SIZE = 50;
 const NETWORK_DELAY_MS = 150;
 const ROOT_ID = 'drive-root';
 const GROUP_ROOT_PREFIX = 'drive-root:group:';
+const SHARED_FOLDER_NODE_ID = 'folder-shared';
+const SHARED_FOLDER_TAG_ID = 'tag-shared';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -221,9 +228,12 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     await delay(NETWORK_DELAY_MS);
     const parent = getContainer(params.nodeId);
     if (!parent) return [];
-    return parent.childrenIds
+    const children = parent.childrenIds
       .map((id) => nodes.get(id))
       .filter((node): node is DriveNode => node != null && node.type !== 'loading');
+    const folderNodes = children.filter((node): node is FolderNode => node.type === 'folder');
+    const otherNodes = children.filter((node) => node.type !== 'folder');
+    return [...orderDriveFolderNodes(folderNodes), ...otherNodes];
   };
 
   const getNodePath: IDriveService['getNodePath'] = async (params: GetNodePathParams) => {
@@ -337,6 +347,33 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     return node.tagId;
   };
 
+  const ensureSharedFolder = async (): Promise<string> => {
+    await delay(NETWORK_DELAY_MS);
+    const existing = nodes.get(SHARED_FOLDER_NODE_ID);
+    if (existing?.type === 'folder') {
+      return existing.tagId;
+    }
+    const root = getContainer(ROOT_ID);
+    if (!root) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_NOT_FOUND, { nodeId: ROOT_ID });
+    }
+    const node: FolderNode = {
+      id: SHARED_FOLDER_NODE_ID,
+      type: 'folder',
+      parentId: ROOT_ID,
+      scope: buildDriveNodeScope(),
+      tagId: SHARED_FOLDER_TAG_ID,
+      name: DRIVE_SHARED_FOLDER_DISPLAY_NAME,
+      systemType: 'shared',
+      childrenIds: [],
+    };
+    nodes.set(SHARED_FOLDER_NODE_ID, node);
+    if (!root.childrenIds.includes(SHARED_FOLDER_NODE_ID)) {
+      root.childrenIds.push(SHARED_FOLDER_NODE_ID);
+    }
+    return node.tagId;
+  };
+
   return {
     getRootNode,
     listNodeChildren,
@@ -346,6 +383,7 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     removeNode,
     renameNode,
     createFolder,
+    ensureSharedFolder,
   };
 }
 

@@ -95,11 +95,14 @@ export const createTagServices = (deps: TagServicesDeps): ITagService => {
 
   registerServiceCacheCleaner(() => clearTagTreeCache());
 
-  const getRawTagTree = async (groupId?: string): Promise<TagTreeNode[]> => {
+  const getRawTagTree = async (
+    groupId?: string,
+    options?: { refresh?: boolean }
+  ): Promise<TagTreeNode[]> => {
     const normalizedGroupId = normalizeTagGroupId(groupId);
     const cacheKey = normalizedGroupId ?? CACHE_KEY_DEFAULT;
     const cached = rawTagTreeCache.get(cacheKey);
-    if (cached) {
+    if (cached && !options?.refresh) {
       return cached;
     }
     const params = TagServicesMap.mapGetTagTreeRequest(normalizedGroupId);

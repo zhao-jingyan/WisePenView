@@ -1,5 +1,6 @@
 import {
   isDriveActionTarget,
+  isDriveSystemFolderNode,
   type DriveActionTarget,
 } from '@/components/Drive/common/driveComponentModel';
 import {
@@ -107,7 +108,9 @@ function TableDriveSelectionPanel({
   const actionTarget = useMemo(() => (node ? toActionTarget(node) : null), [node]);
   const isFolder = node?.type === 'folder';
   const isFile = node?.type === 'resource' || node?.type === 'link';
-  const canRename = actionTarget != null && actionTarget.type !== 'link';
+  const canModifyActionTarget = actionTarget != null && !isDriveSystemFolderNode(actionTarget);
+  const canRename =
+    actionTarget != null && !isDriveSystemFolderNode(actionTarget) && actionTarget.type !== 'link';
   const deleteActionLabel = groupId ? '移除' : isTrashView ? '彻底删除' : '删除';
   const moveActionLabel = isTrashView ? '移动到云盘' : '移动';
   const folderTagId = node?.type === 'folder' ? node.tagId : undefined;
@@ -421,6 +424,7 @@ function TableDriveSelectionPanel({
             <span className={styles.iconWrap} aria-hidden="true">
               <EntryIcon
                 entryType={selectedRow.entryType}
+                folderIconType={selectedRow.folderIconType}
                 resourceType={selectedRow.resourceType}
                 resourceIconType={selectedRow.resourceIconType}
                 size={18}
@@ -594,23 +598,27 @@ function TableDriveSelectionPanel({
 
           {actionTarget ? (
             <div className={styles.actions}>
-              <Button
-                variant="secondary"
-                size="sm"
-                className={styles.actionBtn}
-                onPress={() => onDelete(actionTarget)}
-              >
-                {deleteActionLabel}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                className={styles.actionBtn}
-                onPress={() => onMove(actionTarget)}
-              >
-                <FolderInput size={16} aria-hidden="true" />
-                {moveActionLabel}
-              </Button>
+              {canModifyActionTarget ? (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className={styles.actionBtn}
+                    onPress={() => onDelete(actionTarget)}
+                  >
+                    {deleteActionLabel}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className={styles.actionBtn}
+                    onPress={() => onMove(actionTarget)}
+                  >
+                    <FolderInput size={16} aria-hidden="true" />
+                    {moveActionLabel}
+                  </Button>
+                </>
+              ) : null}
               {isFolder ? (
                 <Button
                   variant="secondary"

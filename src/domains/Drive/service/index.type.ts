@@ -15,6 +15,8 @@ export interface IDriveService {
   removeNode(params: RemoveNodeParams): Promise<void>;
   renameNode(params: RenameNodeParams): Promise<void>;
   createFolder(params: CreateFolderParams): Promise<string>;
+  /** 确保个人云盘系统共享目录存在；用于组空间中新建资源前恢复被绕过删除的目录。 */
+  ensureSharedFolder(): Promise<string>;
 }
 
 export interface GetRootNodeParams {
