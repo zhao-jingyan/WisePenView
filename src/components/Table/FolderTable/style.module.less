@@ -106,18 +106,18 @@
     vertical-align: middle;
   }
 
-  :global(.table-root--secondary .table__row) {
+  :global(.table__row) {
     border-bottom: 0;
   }
 
-  :global(.table-root--secondary .table__row .table__cell) {
+  :global(.table__row .table__cell) {
     border-bottom-color: var(--separator);
     background: var(--surface);
   }
 
   @media (hover: hover) {
-    :global(.table-root--secondary .table__row:hover .table__cell),
-    :global(.table-root--secondary .table__row[data-hovered='true'] .table__cell) {
+    :global(.table__row:hover .table__cell),
+    :global(.table__row[data-hovered='true'] .table__cell) {
       background: var(--surface-hover);
     }
   }
