@@ -38,11 +38,15 @@ const mapForkNoteFromApi = (resourceId: string): ForkNoteResponse => ({
   resourceId: resourceId || undefined,
 });
 
-const mapAuthorDisplay = (author?: {
-  nickname?: string;
-  realName?: string;
-  avatar?: string;
-}): NoteInfoDisplayAuthor => ({
+const mapAuthorDisplay = (
+  authorId: string,
+  author?: {
+    nickname?: string;
+    realName?: string;
+    avatar?: string;
+  }
+): NoteInfoDisplayAuthor => ({
+  id: normalizeId(authorId),
   // fallback：作者展示名缺失时显示未知用户
   name: author?.nickname || author?.realName || '未知用户',
   avatar: author?.avatar,
@@ -53,7 +57,9 @@ const mapNoteInfoDisplayFromApi = (data: NoteInfoResponse): NoteInfoDisplayData 
   const resourceInfo = normalizeResourceItem(data.resourceInfo);
   const ownerId = normalizeId(resourceInfo.ownerId) || undefined;
   const authorsDisplay = data.authorsDisplay ?? {};
-  const authors = Object.values(authorsDisplay).map(mapAuthorDisplay);
+  const authors = Object.entries(authorsDisplay).map(([authorId, author]) =>
+    mapAuthorDisplay(authorId, author)
+  );
 
   return {
     noteTitle: resourceInfo.resourceName,

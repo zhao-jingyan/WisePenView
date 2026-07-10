@@ -16,6 +16,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
+  min-width: 0;
 }
 
 .authorsInfoItem {
@@ -31,13 +32,54 @@
 }
 
 .infoDivider {
-  height: 14px;
-  margin-inline: var(--space-xs) !important;
+  flex: 0 0 1px;
+  align-self: center !important;
+  width: 1px !important;
+  min-width: 1px !important;
+  height: 12px !important;
+  min-height: 12px !important;
+  margin: 0 var(--space-xs) !important;
+  border: 0;
+  border-radius: 1px;
+  background: var(--border-light, var(--separator));
 }
 
-.authorsWrap {
+.authorsInfo {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-lg);
-  flex-wrap: wrap;
+  min-width: 0;
+  max-width: min(52vw, 520px);
+  gap: var(--space-xs);
+}
+
+.avatarStack {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.avatar {
+  width: 20px;
+  height: 20px;
+  margin-left: -6px;
+  border: 1px solid var(--surface);
+  box-shadow: none;
+
+  &:first-child {
+    margin-left: 0;
+  }
+}
+
+.avatarFallback {
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.authorNames {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

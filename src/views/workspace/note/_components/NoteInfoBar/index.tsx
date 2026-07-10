@@ -1,28 +1,50 @@
-import { Separator } from '@heroui/react';
+import { Avatar, Separator } from '@heroui/react';
 
-import UserCapsule from '@/components/UserCapsule';
 import type { NoteInfoBarProps } from './index.type';
 import styles from './style.module.less';
+
+const getAvatarText = (name: string): string => {
+  const displayName = name.trim();
+  return displayName ? displayName.charAt(0).toUpperCase() : '?';
+};
 
 function NoteInfoBar({ noteInfoDisplay }: NoteInfoBarProps) {
   const authors = noteInfoDisplay?.authors ?? [];
   const lastEditedAtText = noteInfoDisplay?.lastEditedAtText ?? '暂无';
+  const hasAuthors = authors.length > 0;
+  const authorNamesText = authors.map((author) => author.name).join(', ');
 
   return (
     <div className={styles.noteInfoBar}>
-      {/* 第一行：作者 / 上次编辑 */}
       <div className={styles.metaRow}>
         <div className={`${styles.noteInfoItem} ${styles.authorsInfoItem}`}>
-          <div className={styles.authorsWrap}>
-            {authors.length > 0 ? (
-              authors.map((author, index) => (
-                <UserCapsule
-                  key={`${author.name}-${index}`}
-                  name={author.name}
-                  avatar={author.avatar}
-                  variant="bare"
-                />
-              ))
+          <div
+            className={styles.authorsInfo}
+            aria-label={hasAuthors ? `作者：${authorNamesText}` : '作者：暂无'}
+          >
+            {hasAuthors ? (
+              <>
+                <div className={styles.avatarStack} aria-hidden="true">
+                  {authors.map((author) => (
+                    <Avatar
+                      key={author.id}
+                      aria-label={author.name}
+                      className={styles.avatar}
+                      title={author.name}
+                    >
+                      {author.avatar ? (
+                        <Avatar.Image alt={author.name} src={author.avatar} />
+                      ) : null}
+                      <Avatar.Fallback className={styles.avatarFallback}>
+                        {getAvatarText(author.name)}
+                      </Avatar.Fallback>
+                    </Avatar>
+                  ))}
+                </div>
+                <span className={styles.authorNames} title={authorNamesText}>
+                  {authorNamesText}
+                </span>
+              </>
             ) : (
               <span className={styles.noteInfoValue}>暂无</span>
             )}

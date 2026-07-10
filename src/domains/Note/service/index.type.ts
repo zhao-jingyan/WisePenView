@@ -27,6 +27,7 @@ export interface INoteService {
 }
 
 export interface NoteInfoDisplayAuthor {
+  id: string;
   name: string;
   avatar?: string;
 }

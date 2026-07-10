@@ -70,7 +70,7 @@ export type TableContent = unknown;
 
 /** 获取 Note 信息返回体（对齐 /note/getNoteInfo） */
 export interface NoteInfoResponse {
-  authorsDisplay?: Record<string, UserDisplayBase>;
+  authorsDisplay?: Record<string, UserDisplayBase> | null;
   resourceInfo: ResourceItem;
   /** 当前笔记版本号 */
   version?: number;
