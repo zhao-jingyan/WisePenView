@@ -40,22 +40,28 @@ function resolveYjsTrackedOrigins<
   return trackedOrigins;
 }
 
-// 得到笔记正文在 Y.Doc 中的 XmlFragment 名，并创建 UndoManager
-export function useNoteYjsUndoManager(doc: Y.Doc): {
-  noteFragment: Y.XmlFragment;
-  undoManager: Y.UndoManager;
-} {
+// 得到笔记正文在 Y.Doc 中的 XmlFragment 名
+export function useNoteYjsFragment(doc: Y.Doc): Y.XmlFragment {
   const noteFragment = useMemo(() => doc.getXmlFragment(NOTE_YJS_DOCUMENT_FRAGMENT), [doc]);
-  const undoManager = useMemo(
-    () =>
-      new Y.UndoManager(noteFragment, {
-        trackedOrigins: new Set<unknown>([null]),
-        captureTimeout: 500,
-      }),
-    [noteFragment]
-  );
+  return noteFragment;
+}
 
-  return { noteFragment, undoManager };
+// 基于编辑器已注册的 Yjs 插件 origin 创建 UndoManager，确保首个本地事务也能入栈。
+export function useNoteYjsUndoManager<
+  BSchema extends BlockSchema,
+  ISchema extends InlineContentSchema,
+  SSchema extends StyleSchema,
+>(noteFragment: Y.XmlFragment, editor: BlockNoteEditor<BSchema, ISchema, SSchema>): Y.UndoManager {
+  const undoManager = useMemo(() => {
+    const trackedOrigins = resolveYjsTrackedOrigins(editor);
+    trackedOrigins.add(null);
+    return new Y.UndoManager(noteFragment, {
+      trackedOrigins,
+      captureTimeout: 500,
+    });
+  }, [editor, noteFragment]);
+
+  return undoManager;
 }
 
 /**

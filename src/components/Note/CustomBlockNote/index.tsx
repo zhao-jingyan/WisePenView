@@ -21,7 +21,12 @@ import NoteToolbar from '../NoteToolbar';
 import { hasAiDiffContentFromEditor } from './AiDiffPresence';
 import { blockNoteSchema } from './blockNoteSchema';
 import { mergeReadOnlyEditorProps, NoteEditorReadOnlyProvider } from './editorReadOnly';
-import { useAttachNoteYjsUndoStack, useNoteCaptureKeyEvent, useNoteYjsUndoManager } from './hooks';
+import {
+  useAttachNoteYjsUndoStack,
+  useNoteCaptureKeyEvent,
+  useNoteYjsFragment,
+  useNoteYjsUndoManager,
+} from './hooks';
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
 import {
   buildFlatBlocksFromEditor,
@@ -118,7 +123,7 @@ function CustomBlockNote({
   const effectiveAiDiffDisplayMode = exportDisplayModeOverride ?? aiDiffDisplayMode;
   const lastAiDiffPresenceRef = useRef<boolean | null>(null);
   const [hasAiDiffContent, setHasAiDiffContent] = useState(false);
-  const { noteFragment, undoManager } = useNoteYjsUndoManager(doc);
+  const noteFragment = useNoteYjsFragment(doc);
 
   const plugins = useMemo(() => getNoteEditorPlugins(), []);
   const editorExtensions = useMemo(
@@ -149,6 +154,7 @@ function CustomBlockNote({
       user: collaborationUser,
     },
   });
+  const undoManager = useNoteYjsUndoManager(noteFragment, editor);
 
   useMount(() => {
     try {
