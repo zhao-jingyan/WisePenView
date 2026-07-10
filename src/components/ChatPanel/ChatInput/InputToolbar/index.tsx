@@ -1,11 +1,11 @@
 import { Button } from '@heroui/react';
-import { Send } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import AgentPicker from '../AgentPicker';
 import ModelPicker from '../ModelPicker';
 import SkillMenu from '../SkillMenu';
+import styles from '../style.module.less';
 import UploadMenu from '../UploadMenu';
 import type { InputToolbarProps } from './index.type';
-import styles from '../style.module.less';
 
 function InputToolbar({ sendDisabled, onSend }: InputToolbarProps) {
   return (
@@ -29,7 +29,7 @@ function InputToolbar({ sendDisabled, onSend }: InputToolbarProps) {
           className={styles.toolbarCircleBtn}
           aria-label="发送消息"
         >
-          <Send size={18} />
+          <ArrowUp size={18} />
         </Button>
       </div>
     </div>
