@@ -14,7 +14,7 @@ export interface JsonDelta {
   data?: unknown;
   timestamp: number;
   seqId: number;
-  /** 首次操作，用于判断块是否本地创建（insert → delete 时直接移除） */
+  /** 首次操作，用于判断块是否本地创建。 */
   firstOp?: DeltaOp;
 }
 
@@ -29,13 +29,11 @@ export interface SendPayload {
   deltas: JsonDelta[];
 }
 
-/** BlockNote onChange 的 getChanges() 返回的单项 */
 export interface NoteChange {
   type: 'insert' | 'update' | 'delete' | 'move';
   block: { id: string } & Record<string, unknown>;
 }
 
-/** Block 结构，与 BlockNote 对齐 */
 export interface Block {
   id: string;
   type: string;
@@ -44,7 +42,6 @@ export interface Block {
   children: Block[];
 }
 
-/** 行内内容 */
 export type InlineContent = StyledText | Link | CustomInlineContent;
 
 export interface StyledText {
@@ -65,13 +62,17 @@ export interface CustomInlineContent {
   props: Record<string, boolean | number | string>;
 }
 
-/** 表格内容占位类型 */
 export type TableContent = unknown;
 
-/** 获取 Note 信息返回体（对齐 /note/getNoteInfo） */
+export interface NoteMetaInfo {
+  authors?: string[];
+  lastUpdatedAt?: number | string | null;
+}
+
 export interface NoteInfoResponse {
   authorsDisplay?: Record<string, UserDisplayBase> | null;
   resourceInfo: ResourceItem;
-  /** 当前笔记版本号 */
+  /** 当前笔记版本号。 */
   version?: number;
+  noteInfo?: NoteMetaInfo;
 }

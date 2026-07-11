@@ -4,16 +4,24 @@ import { normalizeUserDisplayBaseFromApi } from '@/domains/User/mapper/userEnum.
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import type { GetUserInteractionRecordApiResponse } from '../apis/InteractApi.type';
 import type {
+  AddInlineCommentItemApiRequest,
   ChangeResourceActionPermissionApiRequest,
+  CreateInlineCommentApiRequest,
   GlobalSearchApiResponse,
+  ListInlineCommentsApiRequest,
+  ListInlineCommentsApiResponse,
   ListResourceItemsApiRequest,
   ResourceActionApiList,
   ResourceGroupDisplayBaseApiResponse,
   ResourceGroupGrantedActionsApiResponse,
+  ResourceInlineCommentApiResponse,
+  ResourceInlineCommentItemApiResponse,
   ResourceInteractionInfoApiResponse,
   ResourceItemApiResponse,
   ResourceListPageApiResponse,
   ResourceSpecifiedUserGrantedActionsApiResponse,
+  UpdateInlineCommentItemApiRequest,
+  UpdateInlineCommentItemApiResponse,
 } from '../apis/ResourceApi.type';
 import {
   coerceResourceActions,
@@ -29,13 +37,19 @@ import {
   type ResourceActionKey,
 } from '../enum';
 import type {
+  AddInlineCommentItemRequest,
+  CreateInlineCommentRequest,
   GetUserResourcesRequest,
+  ResourceInlineCommentAuthorInfo,
+  ResourceInlineCommentThread,
   ResourceListPage,
   ResourcePermissionActionOption,
   ResourcePermissionOverview,
   ResourcePermissionSubject,
   SearchHitItem,
   SearchResultPage,
+  UpdateInlineCommentItemRequest,
+  UpdateInlineCommentItemResult,
   UpdateResourceActionPermissionRequest,
   UpdateResourcePermissionSubjectsRequest,
 } from '../service/index.type';
@@ -609,6 +623,197 @@ const mapSearchResultPageFromApi = (data: GlobalSearchApiResponse): SearchResult
   totalPage: data.totalPage,
 });
 
+function normalizeInlineCommentString(value: unknown): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  if (typeof value === 'number' || typeof value === 'bigint') {
+    return String(value);
+  }
+  return '';
+}
+
+function mapInlineCommentAuthorInfo(
+  raw:
+    | {
+        id?: string | number | null;
+        name?: string | null;
+        nickname?: string | null;
+        realName?: string | null;
+        avatar?: string | null;
+        avatarUrl?: string | null;
+      }
+    | null
+    | undefined
+): ResourceInlineCommentAuthorInfo | undefined {
+  if (!raw) {
+    return undefined;
+  }
+  const id = normalizeInlineCommentString(raw.id);
+  const name =
+    normalizeInlineCommentString(raw.name) ||
+    normalizeInlineCommentString(raw.nickname) ||
+    normalizeInlineCommentString(raw.realName) ||
+    id;
+  const avatarUrl =
+    normalizeInlineCommentString(raw.avatarUrl) || normalizeInlineCommentString(raw.avatar);
+  if (!id && !name && !avatarUrl) {
+    return undefined;
+  }
+  return {
+    id,
+    name,
+    avatarUrl: avatarUrl || '',
+  };
+}
+
+function inferInlineCommentAnchorKind(
+  anchorPayload: Record<string, unknown>
+): ResourceInlineCommentThread['anchor']['kind'] {
+  if (typeof anchorPayload.inlineIndex === 'number') {
+    return 'formula-inline';
+  }
+  if (typeof anchorPayload.blockId === 'string') {
+    return 'formula-block';
+  }
+  if (Object.keys(anchorPayload).length === 0) {
+    return 'unknown';
+  }
+  return 'text-range';
+}
+
+const mapInlineCommentThreadFromApi = (
+  raw: ResourceInlineCommentApiResponse
+): ResourceInlineCommentThread => {
+  const maybeAnchorPayload = raw.anchorRef?.anchorPayload;
+  const anchorPayload =
+    maybeAnchorPayload && typeof maybeAnchorPayload === 'object' ? maybeAnchorPayload : {};
+
+  return {
+    inlineCommentId: normalizeInlineCommentString(raw.inlineCommentId),
+    resourceId: normalizeInlineCommentString(raw.resourceId),
+    creatorId: normalizeInlineCommentString(raw.creatorId),
+    creatorInfo: mapInlineCommentAuthorInfo(raw.creatorInfo),
+    resolved: raw.resolved ?? false,
+    resolvedBy: normalizeInlineCommentString(raw.resolvedBy) || undefined,
+    resolvedByInfo: mapInlineCommentAuthorInfo(raw.resolvedByInfo),
+    resolvedAt: normalizeInlineCommentString(raw.resolvedAt) || undefined,
+    applicableFromVersion:
+      typeof raw.applicableFromVersion === 'number' ? raw.applicableFromVersion : undefined,
+    applicableToVersion:
+      typeof raw.applicableToVersion === 'number' ? raw.applicableToVersion : undefined,
+    createTime: normalizeInlineCommentString(raw.createTime) || undefined,
+    updateTime: normalizeInlineCommentString(raw.updateTime) || undefined,
+    anchor: {
+      externalAnchorId: normalizeInlineCommentString(raw.anchorRef?.externalAnchorId),
+      quoteText: normalizeInlineCommentString(raw.anchorRef?.quoteText),
+      anchorPayload,
+      kind: inferInlineCommentAnchorKind(anchorPayload),
+    },
+    items: (raw.items ?? []).map((item: ResourceInlineCommentItemApiResponse) => ({
+      itemId:
+        normalizeInlineCommentString(item.itemId) ||
+        normalizeInlineCommentString(item.inlineCommentItemId),
+      replacesItemId: normalizeInlineCommentString(item.replacesItemId) || undefined,
+      authorId: normalizeInlineCommentString(item.authorId),
+      authorInfo: mapInlineCommentAuthorInfo(item.authorInfo),
+      content: item.content ?? '',
+      imageUrls: item.imageUrls ?? [],
+      mentionUserIds: item.mentionUserIds ?? [],
+      deleted: item.deleted ?? Boolean(item.deletedAt),
+      createTime: normalizeInlineCommentString(item.createTime) || undefined,
+      updateTime: normalizeInlineCommentString(item.updateTime) || undefined,
+    })),
+  };
+};
+
+const mapListInlineCommentsRequest = (params: {
+  resourceId: string;
+  contentVersion?: number;
+  resolved?: boolean;
+}): ListInlineCommentsApiRequest => ({
+  resourceId: params.resourceId,
+  ...(params.contentVersion != null ? { contentVersion: params.contentVersion } : {}),
+  ...(params.resolved != null ? { resolved: params.resolved } : {}),
+});
+
+const mapListInlineCommentsFromApi = (
+  data: ListInlineCommentsApiResponse
+): ResourceInlineCommentThread[] =>
+  Array.isArray(data) ? data.map(mapInlineCommentThreadFromApi) : [];
+
+const mapIdFieldFromApi = (
+  data: unknown,
+  fieldName: 'inlineCommentId' | 'itemId' | 'newItemId'
+): string | undefined => {
+  if (typeof data === 'string') {
+    return data.trim() || undefined;
+  }
+  if (data && typeof data === 'object') {
+    const raw = (data as Record<string, unknown>)[fieldName];
+    const fallback = (data as { id?: unknown }).id;
+    if (typeof raw === 'string') return raw.trim() || undefined;
+    if (typeof fallback === 'string') return fallback.trim() || undefined;
+  }
+  return undefined;
+};
+
+const mapInlineCommentThreadIdFromApi = (data: unknown): string | undefined =>
+  mapIdFieldFromApi(data, 'inlineCommentId');
+
+const mapInlineCommentItemIdFromApi = (data: unknown): string | undefined =>
+  mapIdFieldFromApi(data, 'itemId');
+
+const mapCreateInlineCommentRequest = (
+  params: CreateInlineCommentRequest
+): CreateInlineCommentApiRequest => ({
+  resourceId: params.resourceId,
+  externalAnchorId: params.externalAnchorId,
+  content: params.content,
+  ...(params.quoteText ? { quoteText: params.quoteText } : {}),
+  ...(params.anchorPayload ? { anchorPayload: params.anchorPayload } : {}),
+  ...(params.contentVersion != null ? { contentVersion: params.contentVersion } : {}),
+  ...(params.applicableFromVersion != null
+    ? { applicableFromVersion: params.applicableFromVersion }
+    : {}),
+  ...(params.applicableToVersion != null
+    ? { applicableToVersion: params.applicableToVersion }
+    : {}),
+  ...(params.imageUrls?.length ? { imageUrls: params.imageUrls } : {}),
+  ...(params.mentionUserIds?.length ? { mentionUserIds: params.mentionUserIds } : {}),
+});
+
+const mapAddInlineCommentItemRequest = (
+  params: AddInlineCommentItemRequest
+): AddInlineCommentItemApiRequest => ({
+  resourceId: params.resourceId,
+  inlineCommentId: params.inlineCommentId,
+  content: params.content,
+  ...(params.contentVersion != null ? { contentVersion: params.contentVersion } : {}),
+  ...(params.imageUrls?.length ? { imageUrls: params.imageUrls } : {}),
+  ...(params.mentionUserIds?.length ? { mentionUserIds: params.mentionUserIds } : {}),
+});
+
+const mapUpdateInlineCommentItemRequest = (
+  params: UpdateInlineCommentItemRequest
+): UpdateInlineCommentItemApiRequest => ({
+  resourceId: params.resourceId,
+  inlineCommentId: params.inlineCommentId,
+  itemId: params.itemId,
+  ...(params.itemIndex != null ? { itemIndex: params.itemIndex } : {}),
+  content: params.content,
+  ...(params.contentVersion != null ? { contentVersion: params.contentVersion } : {}),
+  ...(params.imageUrls?.length ? { imageUrls: params.imageUrls } : {}),
+  ...(params.mentionUserIds?.length ? { mentionUserIds: params.mentionUserIds } : {}),
+});
+
+const mapUpdateInlineCommentItemResultFromApi = (
+  data: UpdateInlineCommentItemApiResponse
+): UpdateInlineCommentItemResult => ({
+  oldItemId: normalizeInlineCommentString(data.oldItemId),
+  newItemId: normalizeInlineCommentString(data.newItemId),
+});
+
 export const ResourceServicesMap = {
   mapListResourceItemsRequest,
   mapResourceListPageFromApi,
@@ -620,4 +825,12 @@ export const ResourceServicesMap = {
   mapRateFromApi,
   mapInteractStatsFromApi,
   mapSearchResultPageFromApi,
+  mapListInlineCommentsRequest,
+  mapListInlineCommentsFromApi,
+  mapInlineCommentThreadIdFromApi,
+  mapInlineCommentItemIdFromApi,
+  mapCreateInlineCommentRequest,
+  mapAddInlineCommentItemRequest,
+  mapUpdateInlineCommentItemRequest,
+  mapUpdateInlineCommentItemResultFromApi,
 };

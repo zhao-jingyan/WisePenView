@@ -1,20 +1,28 @@
 import { apiGet, apiPost } from '@/apis/request';
 import { serializeRepeatKeyQuery } from '@/apis/serializeRepeatKeyQuery';
 import type {
+  AddInlineCommentItemApiRequest,
   AddTagApiRequest,
+  ChangeInlineCommentResolveStatusApiRequest,
   ChangeResourceActionPermissionApiRequest,
   ChangeResourceTagsApiRequest,
   ChangeTagApiRequest,
+  CreateInlineCommentApiRequest,
+  DeleteInlineCommentItemApiRequest,
   GetTagTreeApiRequest,
   GetTagTreeApiResponse,
   GlobalSearchApiRequest,
   GlobalSearchApiResponse,
+  ListInlineCommentsApiRequest,
+  ListInlineCommentsApiResponse,
   ListResourceItemsApiRequest,
   MoveTagApiRequest,
   RemoveResourcesApiRequest,
   RemoveTagApiRequest,
   RenameResourceApiRequest,
   ResourceListPageApiResponse,
+  UpdateInlineCommentItemApiRequest,
+  UpdateInlineCommentItemApiResponse,
 } from './ResourceApi.type';
 
 // /resource/item/*
@@ -87,4 +95,43 @@ export const ResourceTagApi = {
   changeTag,
   removeTag,
   moveTag,
+};
+
+function listInlineComments(
+  req: ListInlineCommentsApiRequest
+): Promise<ListInlineCommentsApiResponse> {
+  return apiGet('/resource/inlineComment/listInlineComments', { params: req });
+}
+
+function createInlineComment(req: CreateInlineCommentApiRequest): Promise<string> {
+  return apiPost('/resource/inlineComment/createInlineComment', req);
+}
+
+function addInlineCommentItem(req: AddInlineCommentItemApiRequest): Promise<string> {
+  return apiPost('/resource/inlineComment/addInlineCommentItem', req);
+}
+
+function updateInlineCommentItem(
+  req: UpdateInlineCommentItemApiRequest
+): Promise<UpdateInlineCommentItemApiResponse> {
+  return apiPost('/resource/inlineComment/updateInlineCommentItem', req);
+}
+
+function deleteInlineCommentItem(req: DeleteInlineCommentItemApiRequest): Promise<void> {
+  return apiPost('/resource/inlineComment/deleteInlineCommentItem', req);
+}
+
+function changeInlineCommentResolveStatus(
+  req: ChangeInlineCommentResolveStatusApiRequest
+): Promise<void> {
+  return apiPost('/resource/inlineComment/changeInlineCommentResolveStatus', req);
+}
+
+export const ResourceInlineCommentApi = {
+  listInlineComments,
+  createInlineComment,
+  addInlineCommentItem,
+  updateInlineCommentItem,
+  deleteInlineCommentItem,
+  changeInlineCommentResolveStatus,
 };

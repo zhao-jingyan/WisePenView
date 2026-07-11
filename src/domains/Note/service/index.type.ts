@@ -32,6 +32,8 @@ export interface NoteInfoDisplayAuthor {
   avatar?: string;
 }
 
+export type NoteCommentUserDisplayRecord = Record<string, NoteInfoDisplayAuthor>;
+
 export interface NoteInfoDisplayData {
   noteTitle: string;
   ownerId?: string;
@@ -43,6 +45,12 @@ export interface NoteInfoDisplayData {
   version?: number;
   /** 当前用户是否具备协同编辑（EDIT）权限 */
   canCollaborativeEdit: boolean;
+  /** 当前用户是否可阅读批注（VIEW） */
+  commentsEnabled: boolean;
+  /** 当前用户是否可编辑批注（COMMENT_EDIT） */
+  canEditComments: boolean;
+  /** 批注用户展示信息，key 为 authorId */
+  authorsById?: NoteCommentUserDisplayRecord;
 }
 
 /** 与 docs/apis/note-api.md「新建文档接口」请求体一致 */

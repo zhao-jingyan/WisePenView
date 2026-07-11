@@ -1,12 +1,14 @@
 import { ResultState, Spin } from '@/components/Feedback';
 import SegmentedTabs from '@/components/SegmentedTabs';
-import { useRequest, useUnmount } from 'ahooks';
-import { ChevronsRight, Menu } from 'lucide-react';
-import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useMemoizedFn, useRequest, useUnmount } from 'ahooks';
+import { ChevronsRight, Menu, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
 import EntryIcon from '@/components/Icons/EntryIcon';
+import ResourceActionFooter from '@/components/interact/ResourceActionFooter';
 import CustomBlockNote from '@/components/Note/CustomBlockNote';
+import { useCommentSettingsSync } from '@/components/Note/CustomBlockNote/comments';
 import type {
   NoteBodyEditorHandle,
   NoteCollaborationUser,
@@ -19,15 +21,16 @@ import {
 import { useNoteService, useResourceService, useUserService } from '@/domains';
 import type { AiDiffDisplayMode, NoteInfoDisplayData } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, AI_DIFF_DISPLAY_MODE_LABELS, useNoteSession } from '@/domains/Note';
-import { RESOURCE_TYPE } from '@/domains/Resource';
+import { RESOURCE_TYPE, isCommentVisibilityPrivileged } from '@/domains/Resource';
 import type { User } from '@/domains/User';
 import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
 import { useWorkspaceLayoutConfig } from '@/layouts/Workspace/WorkspaceOutletContext';
 import { useAiDiffDisplayStore } from '@/store';
+import { useNoteCommentsSidebarStore } from '@/store/useNoteCommentsSidebarStore';
 import { parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
-import { Alert, Button, Dropdown, toast, Tooltip } from '@heroui/react';
+import { Alert, Button, Dropdown, Switch, Tooltip, toast } from '@heroui/react';
 import ResourcePermissionControl from '../_components/ResourcePermissionControl';
 import NoteInfoBar from './_components/NoteInfoBar';
 import NoteTitle from './_components/NoteTitle';
@@ -128,8 +131,12 @@ function NoteViewConnected({
   const reconnectTimerRef = useRef<number | null>(null);
   const [isReconnectLoading, setIsReconnectLoading] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
+  const [isCommentHistoryOpen, setIsCommentHistoryOpen] = useState(false);
   const [outlineItems, setOutlineItems] = useState<NoteOutlineItem[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | undefined>(undefined);
+  const [commentsSidebarHostElement, setCommentsSidebarHostElement] = useState<HTMLElement | null>(
+    null
+  );
   const [pdfExportLoading, setPdfExportLoading] = useState(false);
   const [isDownloadingMarkdown, setIsDownloadingMarkdown] = useState(false);
   const [aiDiffPresence, setAiDiffPresence] = useState<{
@@ -139,7 +146,7 @@ function NoteViewConnected({
     resourceId,
     hasAiDiffContent: false,
   });
-  const { status, doc, provider, reconnect } = useNoteSession(resourceId);
+  const { status, doc, provider, reconnect, idbSynced } = useNoteSession(resourceId);
   const resourceService = useResourceService();
   const userService = useUserService();
   const { data: currentUser, error: currentUserError } = useRequest(
@@ -148,6 +155,21 @@ function NoteViewConnected({
       ready: Boolean(resourceId),
     }
   );
+  const threadsSidebarCollapsed = useNoteCommentsSidebarStore(
+    (state) => state.collapsedByResourceId[resourceId] ?? false
+  );
+  const toggleNoteCommentsSidebar = useNoteCommentsSidebarStore(
+    (state) => state.toggleNoteCommentsSidebarCollapsed
+  );
+  const commentsSidebarWidth = useNoteCommentsSidebarStore((state) =>
+    state.getNoteCommentsSidebarWidth(resourceId)
+  );
+  const setNoteCommentsSidebarWidth = useNoteCommentsSidebarStore(
+    (state) => state.setNoteCommentsSidebarWidth
+  );
+  const { settings: commentSettings, setCollaboratorVisibility } = useCommentSettingsSync(
+    status === 'connected' ? doc : null
+  );
 
   const isConnected = status === 'connected';
   const isDisconnected = useSmoothFlag(status === 'disconnected', 2000, 2000);
@@ -155,13 +177,17 @@ function NoteViewConnected({
   const isTitleReadOnly = !noteInfoDisplay.canCollaborativeEdit;
   const blockLocalDocWrites = isConnected && !noteInfoDisplay.canCollaborativeEdit;
   const shouldWaitCurrentUser = !currentUser && !currentUserError;
-  const showFullPageSpin = status === 'connecting' || shouldWaitCurrentUser;
-  const middleOverlayText = status === 'connecting' ? '正在连接笔记服务...' : '正在加载用户信息...';
+  const showFullPageSpin = (status === 'connecting' && !idbSynced) || shouldWaitCurrentUser;
+  const middleOverlayText =
+    status === 'connecting' && !idbSynced ? '正在连接笔记服务...' : '正在加载用户信息...';
   const fallbackNoteTitle = noteInfoDisplay.noteTitle;
   const collaborationUser = useMemo(() => buildNoteCollaborationUser(currentUser), [currentUser]);
   const canRenderBodyEditor = !shouldWaitCurrentUser;
+  const canManageCommentVisibility =
+    isCommentVisibilityPrivileged(noteInfoDisplay.resourceInfo?.resourceAccessRole) ||
+    (Boolean(noteInfoDisplay.ownerId) && currentUser?.id === noteInfoDisplay.ownerId);
+  const commentsSidebarToggleLabel = threadsSidebarCollapsed ? '展开批注栏' : '收起批注栏';
 
-  // 进入页面时上报阅读
   useRequest(() => resourceService.interactRead(resourceId), {
     ready: Boolean(resourceId),
     refreshDeps: [resourceId],
@@ -241,18 +267,19 @@ function NoteViewConnected({
 
   const headerMorePending = pdfExportLoading || isDownloadingMarkdown;
 
-  const handleMoreAction = useCallback(
-    (key: React.Key) => {
-      if (key === 'print-pdf') {
-        void handlePrintPdf();
-        return;
-      }
-      if (key === 'download-md') {
-        void handleDownloadMarkdown();
-      }
-    },
-    [handleDownloadMarkdown, handlePrintPdf]
-  );
+  const handleMoreAction = useMemoizedFn((key: React.Key) => {
+    if (key === 'comment-history') {
+      setIsCommentHistoryOpen(true);
+      return;
+    }
+    if (key === 'print-pdf') {
+      void handlePrintPdf();
+      return;
+    }
+    if (key === 'download-md') {
+      void handleDownloadMarkdown();
+    }
+  });
 
   const workspaceFrameConfig = useMemo(
     () => ({
@@ -283,30 +310,84 @@ function NoteViewConnected({
               isDisabled={showFullPageSpin}
               onSuccess={onRefreshNoteInfo}
             />
-            <div className={styles.headerMoreWrap}>
-              <Dropdown>
-                <Dropdown.Trigger>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    isPending={headerMorePending}
-                    isDisabled={showFullPageSpin}
-                    aria-label="更多"
-                  >
-                    更多
-                  </Button>
-                </Dropdown.Trigger>
-                <Dropdown.Popover placement="bottom end">
-                  <Dropdown.Menu aria-label="笔记更多操作" onAction={handleMoreAction}>
-                    <Dropdown.Item id="print-pdf" textValue="打印为pdf">
-                      打印为pdf
-                    </Dropdown.Item>
-                    <Dropdown.Item id="download-md" textValue="下载为md">
-                      下载为md
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown.Popover>
-              </Dropdown>
+            <div className={styles.headerActionsEnd}>
+              <div className={styles.headerMoreWrap}>
+                <Dropdown>
+                  <Dropdown.Trigger>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      isPending={headerMorePending}
+                      isDisabled={showFullPageSpin}
+                      aria-label="更多"
+                    >
+                      更多
+                    </Button>
+                  </Dropdown.Trigger>
+                  <Dropdown.Popover placement="bottom end" className={styles.noteMorePopover}>
+                    {canManageCommentVisibility ? (
+                      <div
+                        className={styles.ownerCommentPolicyRow}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <span className={styles.ownerCommentPolicyLabel}>
+                          协作者仅可见自己的批注
+                        </span>
+                        <Switch
+                          aria-label="协作者仅可见自己的批注"
+                          isSelected={commentSettings.collaboratorVisibility === 'own_only'}
+                          isDisabled={!isConnected}
+                          onChange={(selected) =>
+                            setCollaboratorVisibility(selected ? 'own_only' : 'all')
+                          }
+                          size="sm"
+                        >
+                          <Switch.Content aria-label="协作者仅可见自己的批注">
+                            <Switch.Control>
+                              <Switch.Thumb />
+                            </Switch.Control>
+                          </Switch.Content>
+                        </Switch>
+                      </div>
+                    ) : null}
+                    <Dropdown.Menu aria-label="笔记更多操作" onAction={handleMoreAction}>
+                      {noteInfoDisplay.commentsEnabled ? (
+                        <Dropdown.Item id="comment-history" textValue="历史批注">
+                          历史批注
+                        </Dropdown.Item>
+                      ) : null}
+                      <Dropdown.Item id="print-pdf" textValue="打印为pdf">
+                        打印为pdf
+                      </Dropdown.Item>
+                      <Dropdown.Item id="download-md" textValue="下载为md">
+                        下载为md
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown.Popover>
+                </Dropdown>
+              </div>
+              {noteInfoDisplay.commentsEnabled ? (
+                <Tooltip>
+                  <Tooltip.Trigger>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      isDisabled={showFullPageSpin}
+                      aria-label={commentsSidebarToggleLabel}
+                      aria-expanded={!threadsSidebarCollapsed}
+                      onPress={() => toggleNoteCommentsSidebar(resourceId)}
+                    >
+                      {threadsSidebarCollapsed ? (
+                        <PanelRightOpen size={16} />
+                      ) : (
+                        <PanelRightClose size={16} />
+                      )}
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>{commentsSidebarToggleLabel}</Tooltip.Content>
+                </Tooltip>
+              ) : null}
             </div>
           </div>
         ),
@@ -314,15 +395,23 @@ function NoteViewConnected({
     }),
     [
       aiDiffDisplayMode,
+      canManageCommentVisibility,
+      commentSettings.collaboratorVisibility,
+      commentsSidebarToggleLabel,
       handleMoreAction,
       headerMorePending,
+      isConnected,
       noteInfoDisplay?.noteTitle,
+      noteInfoDisplay.commentsEnabled,
       noteInfoDisplay.ownerId,
       onRefreshNoteInfo,
       resourceId,
       setAiDiffDisplayMode,
+      setCollaboratorVisibility,
       showAiDiffDisplayModeSwitch,
       showFullPageSpin,
+      threadsSidebarCollapsed,
+      toggleNoteCommentsSidebar,
     ]
   );
   useWorkspaceLayoutConfig(workspaceFrameConfig);
@@ -381,9 +470,26 @@ function NoteViewConnected({
                       onOutlineChange={setOutlineItems}
                       onActiveHeadingChange={setActiveHeadingId}
                       onAiDiffPresenceChange={handleAiDiffPresenceChange}
+                      commentsEnabled={noteInfoDisplay.commentsEnabled}
+                      commentsUiEnabled={isConnected && noteInfoDisplay.commentsEnabled}
+                      commentsAuthorizable={noteInfoDisplay.canEditComments}
+                      commentsWritable={isConnected && noteInfoDisplay.canEditComments}
+                      commentUserId={currentUser?.id}
+                      commentUsersById={noteInfoDisplay.authorsById}
+                      isCommentVisibilityPrivileged={canManageCommentVisibility}
+                      collaboratorVisibility={commentSettings.collaboratorVisibility}
+                      commentsSidebarCollapsed={threadsSidebarCollapsed}
+                      commentsSidebarWidth={commentsSidebarWidth}
+                      onCommentsSidebarWidthChange={(width) =>
+                        setNoteCommentsSidebarWidth(resourceId, width)
+                      }
+                      commentsSidebarPortalContainer={commentsSidebarHostElement}
+                      commentHistoryOpen={isCommentHistoryOpen}
+                      onCommentHistoryOpenChange={setIsCommentHistoryOpen}
                     />
                   ) : null}
                 </div>
+                <ResourceActionFooter resourceId={resourceId} onRateSuccess={onRefreshNoteInfo} />
               </div>
             </div>
           </div>
@@ -449,6 +555,18 @@ function NoteViewConnected({
               </div>
             </div>
           )}
+
+          {noteInfoDisplay.commentsEnabled && !threadsSidebarCollapsed ? (
+            <div
+              ref={setCommentsSidebarHostElement}
+              className={styles.commentsSidebarPanel}
+              style={
+                {
+                  ['--comments-sidebar-width' as string]: `${commentsSidebarWidth}px`,
+                } as CSSProperties
+              }
+            />
+          ) : null}
         </div>
       </div>
 
@@ -557,6 +675,7 @@ function NoteView({ resourceId = '' }: NoteViewProps = {}) {
 
   return (
     <NoteViewConnected
+      key={resourceId}
       resourceId={resourceId}
       noteInfoDisplay={noteInfoDisplay}
       onRefreshNoteInfo={refreshNoteInfo}
