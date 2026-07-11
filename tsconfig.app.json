@@ -24,10 +24,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@services-registry": ["src/domains/_registry/registry.impl.ts"]
+      "@/*": ["./src/*"],
+      "@services-registry": ["./src/domains/_registry/registry.impl.ts"]
     }
   },
   "include": ["src"]
