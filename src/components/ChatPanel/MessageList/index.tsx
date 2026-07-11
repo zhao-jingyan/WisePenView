@@ -28,7 +28,7 @@ interface MessageListProps {
   loadingMoreHistory: boolean;
   onLoadMoreHistory: () => Promise<void>;
   onPromptClick?: (text: string) => void;
-  /** 哪类消息作为 scrollAnchor；默认 ai（与线上一致）。Demo / 新回合锚定可设为 user */
+  /** 哪类消息作为 scrollAnchor；默认 ai */
   scrollAnchorRole?: 'user' | 'ai';
 }
 
@@ -38,7 +38,6 @@ function MessageList({
   loadingMoreHistory,
   onLoadMoreHistory,
   onPromptClick,
-  //demo
   scrollAnchorRole = 'ai',
 }: MessageListProps) {
   return (

@@ -56,25 +56,23 @@ function ChatPanelHeader({
             </Tooltip.Trigger>
             <Tooltip.Content>新建对话</Tooltip.Content>
           </Tooltip>
-          {onToggleSessionBar ? (
-            <Tooltip>
-              <Tooltip.Trigger>
-                <button
-                  type="button"
-                  className={clsx(
-                    styles.headerIconButton,
-                    sessionBarOpen && styles.headerIconButtonActive
-                  )}
-                  onClick={onToggleSessionBar}
-                  aria-label={sessionBarLabel}
-                  aria-pressed={sessionBarOpen}
-                >
-                  <History size={18} aria-hidden="true" />
-                </button>
-              </Tooltip.Trigger>
-              <Tooltip.Content>{sessionBarLabel}</Tooltip.Content>
-            </Tooltip>
-          ) : null}
+          <Tooltip>
+            <Tooltip.Trigger>
+              <button
+                type="button"
+                className={clsx(
+                  styles.headerIconButton,
+                  sessionBarOpen && styles.headerIconButtonActive
+                )}
+                onClick={onToggleSessionBar}
+                aria-label={sessionBarLabel}
+                aria-pressed={sessionBarOpen}
+              >
+                <History size={18} aria-hidden="true" />
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>{sessionBarLabel}</Tooltip.Content>
+          </Tooltip>
         </div>
       ) : null}
     </div>

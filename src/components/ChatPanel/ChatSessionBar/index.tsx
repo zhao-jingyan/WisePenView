@@ -3,7 +3,7 @@ import type { ChatSession } from '@/domains/Chat';
 import { parseErrorMessage } from '@/utils/error';
 import { formatTimestampToDateTime } from '@/utils/format/formatTime';
 import { toast } from '@heroui/react';
-import { useKeyPress, useMount, useRequest } from 'ahooks';
+import { useKeyPress, useMount, useRequest, useUpdateEffect } from 'ahooks';
 import clsx from 'clsx';
 import { X } from 'lucide-react';
 import { useState } from 'react';
@@ -17,7 +17,13 @@ const getSessionTitle = (session: ChatSession): string => session.title.trim() |
 const getSessionTime = (session: ChatSession): string =>
   formatTimestampToDateTime(session.updated_at || session.created_at) || '暂无时间';
 
-function ChatSessionBar({ activeSessionId, onClose, onSelectSession }: ChatSessionBarProps) {
+function ChatSessionBar({
+  activeSessionId,
+  embedded = false,
+  open = true,
+  onClose,
+  onSelectSession,
+}: ChatSessionBarProps) {
   const chatService = useChatService();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [page, setPage] = useState(1);
@@ -45,6 +51,11 @@ function ChatSessionBar({ activeSessionId, onClose, onSelectSession }: ChatSessi
     void loadSessions(1);
   });
 
+  useUpdateEffect(() => {
+    if (!open) return;
+    void loadSessions(1);
+  }, [open]);
+
   useKeyPress(
     'esc',
     (event) => {
@@ -64,18 +75,23 @@ function ChatSessionBar({ activeSessionId, onClose, onSelectSession }: ChatSessi
   };
 
   return (
-    <aside className={styles.sessionBar} aria-label="会话列表">
-      <div className={styles.sessionBarHeader}>
-        <div className={styles.sessionBarTitle}>会话</div>
-        <button
-          type="button"
-          className={styles.sessionBarCloseButton}
-          onClick={onClose}
-          aria-label="关闭会话列表"
-        >
-          <X size={16} aria-hidden="true" />
-        </button>
-      </div>
+    <aside
+      className={clsx(styles.sessionBar, embedded && styles.sessionBarEmbedded)}
+      aria-label="会话列表"
+    >
+      {!embedded ? (
+        <div className={styles.sessionBarHeader}>
+          <div className={styles.sessionBarTitle}>会话</div>
+          <button
+            type="button"
+            className={styles.sessionBarCloseButton}
+            onClick={onClose}
+            aria-label="关闭会话列表"
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
 
       <div className={styles.sessionList}>
         {initialLoading ? <div className={styles.sessionStateText}>加载中...</div> : null}

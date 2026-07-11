@@ -1,5 +1,6 @@
 import type { ChatPanelProps, Message, Model } from '@/components/ChatPanel/index.type';
 import { useChatService } from '@/domains';
+import type { ChatSession } from '@/domains/Chat';
 import { useChatSession } from '@/domains/Chat/session/useChatSession';
 import {
   clearNewChatSessionStore,
@@ -24,6 +25,7 @@ import {
   type ModelMeta,
 } from './ChatPanel';
 import ChatPanelHeader from './ChatPanelHeader';
+import ChatSessionBar from './ChatSessionBar';
 import MessageList from './MessageList';
 import styles from './style.module.less';
 
@@ -32,8 +34,6 @@ function ChatPanel({
   fullWidth = false,
   showHeader = true,
   onNewChat,
-  sessionBarOpen = false,
-  onToggleSessionBar,
   workspaceContext,
   showCollapseButton = true,
 }: ChatPanelProps) {
@@ -51,6 +51,7 @@ function ChatPanel({
   const clearCurrentSession = useCurrentChatSessionStore((state) => state.clearCurrentSession);
 
   const [currentModel, setCurrentModel] = useState<Model | null>(null);
+  const [sessionBarOpen, setSessionBarOpen] = useState(false);
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotalPage, setHistoryTotalPage] = useState(1);
@@ -222,13 +223,34 @@ function ChatPanel({
   };
 
   const handleCollapsePanel = () => {
+    setSessionBarOpen(false);
     setChatPanelCollapsed(true);
     if (!currentSessionId) {
       setChatPanelDraftOpen(false);
     }
   };
 
+  const handleToggleSessionBar = () => {
+    if (collapsed) return;
+    setSessionBarOpen((open) => !open);
+  };
+
+  const handleCloseSessionBar = () => {
+    setSessionBarOpen(false);
+  };
+
+  const handleSelectSession = (session: ChatSession) => {
+    setCurrentSession({ id: session.id, title: session.title });
+    clearNewChatSessionStore();
+    setChatPanelDraftOpen(false);
+    setSessionBarOpen(false);
+    if (fullWidth) {
+      navigate(`/app/chat/${session.id}`, { replace: true });
+    }
+  };
+
   const handleNewChat = () => {
+    setSessionBarOpen(false);
     if (onNewChat) {
       onNewChat();
       return;
@@ -272,6 +294,11 @@ function ChatPanel({
     }
   }, [chatPanelDraftOpen, currentSessionId, setLiveMessages]);
 
+  useUpdateEffect(() => {
+    if (!collapsed) return;
+    setSessionBarOpen(false);
+  }, [collapsed]);
+
   return (
     <div className={`${styles.panel} ${fullWidth ? styles.fullWidth : ''}`}>
       {showHeader ? (
@@ -283,32 +310,42 @@ function ChatPanel({
           showCollapseButton={showCollapseButton}
           onCollapsePanel={handleCollapsePanel}
           onNewChat={handleNewChat}
-          onToggleSessionBar={onToggleSessionBar}
+          onToggleSessionBar={handleToggleSessionBar}
         />
       ) : null}
 
       {!collapsed && (
         <div className={styles.panelBody}>
-          <div className={styles.conversationPanel}>
-            <div className={styles.content}>
-              <div className={styles.messageViewport}>
-                <MessageList
-                  messages={messages}
-                  canLoadMoreHistory={Boolean(currentSessionId) && historyPage < historyTotalPage}
-                  loadingMoreHistory={loadingMoreHistory}
-                  onLoadMoreHistory={loadMoreHistoryMessages}
+          {sessionBarOpen ? (
+            <ChatSessionBar
+              embedded
+              open={sessionBarOpen}
+              activeSessionId={currentSessionId}
+              onClose={handleCloseSessionBar}
+              onSelectSession={handleSelectSession}
+            />
+          ) : (
+            <div className={styles.conversationPanel}>
+              <div className={styles.content}>
+                <div className={styles.messageViewport}>
+                  <MessageList
+                    messages={messages}
+                    canLoadMoreHistory={Boolean(currentSessionId) && historyPage < historyTotalPage}
+                    loadingMoreHistory={loadingMoreHistory}
+                    onLoadMoreHistory={loadMoreHistoryMessages}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.footer}>
+                <ChatInput
+                  onSend={handleSend}
+                  getUploadSessionId={ensureChatSession}
+                  sending={sending}
                 />
               </div>
             </div>
-
-            <div className={styles.footer}>
-              <ChatInput
-                onSend={handleSend}
-                getUploadSessionId={ensureChatSession}
-                sending={sending}
-              />
-            </div>
-          </div>
+          )}
         </div>
       )}
     </div>

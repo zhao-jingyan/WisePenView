@@ -33,8 +33,6 @@ const NewPassword = lazy(() => import('@/views/app/auth/NewPassword'));
 const VerifyEmail = lazy(() => import('@/views/app/auth/VerifyEmail'));
 const WorkspaceResourceView = lazy(() => import('@/views/workspace/WorkspaceResourceView'));
 const ChatPage = lazy(() => import('@/views/chat'));
-//demo
-const AiChatPanelDemo = lazy(() => import('@/views/dev/AiChatPanelDemo'));
 const ResourceNotFound = lazy(() => import('@/views/app/error/ResourceNotFound'));
 const AppError = lazy(() => import('@/views/app/error/AppError'));
 
@@ -156,10 +154,6 @@ const router = createBrowserRouter([
           {
             path: 'profile/appearance',
             element: <Appearance />,
-          },
-          {
-            path: 'dev/ai-chat-panel-demo',
-            element: <AiChatPanelDemo />,
           },
         ],
       },
