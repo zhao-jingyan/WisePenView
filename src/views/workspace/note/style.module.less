@@ -76,9 +76,27 @@
 .headerActionsEnd {
   display: flex;
   align-items: center;
-  gap: var(--ant-margin-xs);
+  gap: var(--space-md);
   flex-shrink: 0;
   margin-left: auto;
+}
+
+.commentsSidebarToggle {
+  color: var(--muted);
+
+  &:hover:not(:disabled) {
+    color: var(--foreground);
+  }
+}
+
+.commentsSidebarToggleActive {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+
+  &:hover:not(:disabled) {
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 16%, var(--surface));
+  }
 }
 
 .noteMorePopover {

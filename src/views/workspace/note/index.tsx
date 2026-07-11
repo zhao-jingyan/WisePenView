@@ -1,7 +1,7 @@
 import { ResultState, Spin } from '@/components/Feedback';
 import SegmentedTabs from '@/components/SegmentedTabs';
 import { useMemoizedFn, useRequest, useUnmount } from 'ahooks';
-import { ChevronsRight, Menu, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { ChevronsRight, Menu, MessageSquare } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -388,16 +388,13 @@ function NoteViewConnected({
                     <Button
                       variant="secondary"
                       size="sm"
+                      className={`${styles.commentsSidebarToggle}${threadsSidebarCollapsed ? '' : ` ${styles.commentsSidebarToggleActive}`}`}
                       isDisabled={showFullPageSpin}
                       aria-label={commentsSidebarToggleLabel}
                       aria-expanded={!threadsSidebarCollapsed}
                       onPress={() => toggleNoteCommentsSidebar(resourceId)}
                     >
-                      {threadsSidebarCollapsed ? (
-                        <PanelRightOpen size={16} />
-                      ) : (
-                        <PanelRightClose size={16} />
-                      )}
+                      <MessageSquare size={16} aria-hidden="true" />
                     </Button>
                   </Tooltip.Trigger>
                   <Tooltip.Content>{commentsSidebarToggleLabel}</Tooltip.Content>

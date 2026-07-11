@@ -10,8 +10,6 @@ export interface ChatPanelProps {
   fullWidth?: boolean;
   showHeader?: boolean;
   onNewChat?: () => void;
-  sessionBarOpen?: boolean;
-  onToggleSessionBar?: () => void;
   workspaceContext?: ChatWorkspaceContext;
   showCollapseButton?: boolean;
 }

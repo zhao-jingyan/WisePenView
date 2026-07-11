@@ -1,4 +1,4 @@
-.container {
+﻿.container {
   flex-shrink: 0;
   padding: var(--space-sm) var(--space-lg) var(--space-md);
   background: transparent;
@@ -125,19 +125,21 @@
   border-radius: var(--app-radius-popover, min(32px, var(--radius-3xl)));
   background: var(--overlay);
   box-shadow: var(--card-shadow);
-  overflow: clip;
 }
 
 .popoverPanel,
-.skillMenuPanel,
 .modelMenu {
   min-width: 220px;
   max-width: 340px;
-  padding: var(--app-popover-content-padding, var(--space-xs));
+  padding: var(--space-xs);
   background: var(--surface);
 }
 
 .skillMenuPanel {
+  min-width: 220px;
+  max-width: 340px;
+  padding: 0;
+  background: var(--surface);
   width: 260px;
   max-height: 420px;
   overflow-y: auto;
@@ -150,7 +152,7 @@
 .deferredPopoverPanel {
   min-width: 220px;
   min-height: 72px;
-  padding: var(--app-popover-content-padding, var(--space-xs));
+  padding: var(--space-xs);
   background: var(--surface);
 }
 
@@ -165,13 +167,16 @@
 }
 
 .popoverTitle {
-  padding: 6px var(--space-sm);
+  padding: var(--space-2xs) var(--space-xs);
   color: var(--muted);
   font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
 .listBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
   background: transparent;
 
   :global(.list-box-item) {
@@ -207,6 +212,7 @@
   width: 100%;
   justify-content: flex-start;
   margin: 2px 0;
+  border-radius: var(--radius-lg);
 }
 
 .switchRow {

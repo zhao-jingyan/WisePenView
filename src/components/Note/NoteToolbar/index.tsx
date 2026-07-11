@@ -84,8 +84,7 @@ function CustomFormattingToolbar({
   const editor = useBlockNoteEditor();
   const showBlockTypeFileGroup = useBlockTypeFileGroupVisible();
   const commentsExtension = editor.getExtension('comments') as
-    | { startPendingComment?: () => void }
-    | undefined;
+    { startPendingComment?: () => void } | undefined;
 
   return (
     <Toolbar
@@ -145,11 +144,7 @@ function TextSelectionFormattingToolbar({
   const editor = useBlockNoteEditor();
   const toolbarState = useFloatingToolbarState(editor);
 
-  if (
-    hidden ||
-    !toolbarState.visible ||
-    shouldHideFormattingToolbarForMathBlock(editor)
-  ) {
+  if (hidden || !toolbarState.visible || shouldHideFormattingToolbarForMathBlock(editor)) {
     return null;
   }
 
@@ -226,10 +221,7 @@ function NoteToolbar(props: NoteToolbarProps) {
 
   return (
     <>
-      <TextSelectionFormattingToolbar
-        {...props}
-        hidden={tableRailSelection.orientation !== null}
-      />
+      <TextSelectionFormattingToolbar {...props} hidden={tableRailSelection.orientation !== null} />
       <TableRailFormattingToolbar {...props} tableRailSelection={tableRailSelection} />
     </>
   );

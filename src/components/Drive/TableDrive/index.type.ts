@@ -39,4 +39,6 @@ export interface TableDriveProps {
   onUploadSuccess?: () => void;
   /** 是否在表头工具栏展示回收站按钮；页面级 header 接管时为 false */
   showToolbarTrash?: boolean;
+  /** 小组页等场景去掉列表左侧内边距 */
+  disableListPadding?: boolean;
 }

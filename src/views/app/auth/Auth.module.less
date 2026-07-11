@@ -91,20 +91,26 @@
   gap: 12px;
 }
 
-.agreementRow {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--foreground);
-}
-
 // 底部左侧链接，用户协议展示
 .leftBottomLinks {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-start;
+  align-items: center;
   gap: 4px;
   margin-top: 12px;
   color: var(--foreground);
+
+  :global(.checkbox) {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+  }
+
+  :global(a) {
+    width: auto;
+  }
 }
 
 .authAlert {

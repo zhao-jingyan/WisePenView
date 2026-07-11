@@ -37,7 +37,7 @@ function UserMessage({ message }: UserMessageProps) {
             onPress={handleCopy}
             aria-label="复制"
           >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? <Check size={12} /> : <Copy size={12} />}
           </Button>
         </div>
 

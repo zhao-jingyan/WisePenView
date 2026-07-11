@@ -1,5 +1,9 @@
 import type { Message } from '@/components/ChatPanel/index.type';
+import { Spin } from '@/components/Feedback';
 import {
+  Marker,
+  MarkerContent,
+  MarkerIcon,
   MessageScroller,
   MessageScrollerButton,
   MessageScrollerContent,
@@ -8,6 +12,7 @@ import {
   MessageScrollerViewport,
   useMessageScrollerScrollable,
 } from '@/components/_shadcn';
+import markerStyles from '@/components/_shadcn/marker.module.less';
 import { useLatest, useUpdateEffect } from 'ahooks';
 import { ArrowDown } from 'lucide-react';
 import { useRef } from 'react';
@@ -23,6 +28,8 @@ interface MessageListProps {
   loadingMoreHistory: boolean;
   onLoadMoreHistory: () => Promise<void>;
   onPromptClick?: (text: string) => void;
+  /** 哪类消息作为 scrollAnchor；默认 ai */
+  scrollAnchorRole?: 'user' | 'ai';
 }
 
 function MessageList({
@@ -31,6 +38,7 @@ function MessageList({
   loadingMoreHistory,
   onLoadMoreHistory,
   onPromptClick,
+  scrollAnchorRole = 'ai',
 }: MessageListProps) {
   return (
     <MessageScrollerProvider
@@ -60,7 +68,8 @@ function MessageList({
                   <MessageScrollerItem
                     key={message.id}
                     messageId={message.id}
-                    scrollAnchor={message.role === 'ai'}
+                    scrollAnchor={message.role === scrollAnchorRole}
+                    //scrollAnchor={message.role === 'ai'}
                   >
                     <MessageItem message={message} />
                   </MessageScrollerItem>
@@ -111,7 +120,12 @@ function HistoryLoadingMarker({ visible }: { visible: boolean }) {
 
   return (
     <MessageScrollerItem className={styles.loadMoreWrapper}>
-      <div className={styles.historyLoadingText}>正在加载更早消息...</div>
+      <Marker variant="separator" role="status">
+        <MarkerIcon>
+          <Spin size="small" />
+        </MarkerIcon>
+        <MarkerContent className={markerStyles.shimmer}>正在加载更早消息...</MarkerContent>
+      </Marker>
     </MessageScrollerItem>
   );
 }

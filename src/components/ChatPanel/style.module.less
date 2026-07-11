@@ -29,19 +29,17 @@
 
 .header {
   box-sizing: border-box;
-  min-height: calc(40px + var(--space-sm) * 2 + 1px);
+  width: 100%;
   flex-shrink: 0;
-  padding: 0 18px;
+  padding: var(--space-sm) var(--space-xl) var(--space-sm) var(--space-sm);
   border-bottom: 1px solid var(--border);
   background: var(--surface);
-  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-sm);
 
   &.collapsedHeader {
-    justify-content: flex-start;
-    padding: 0 10px;
+    padding: var(--space-sm);
   }
 }
 
@@ -50,12 +48,17 @@
   align-items: center;
   gap: var(--space-sm);
   min-width: 0;
+  flex: 1;
+  min-height: 40px;
 }
 
 .headerRight {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+  flex-shrink: 0;
+  min-width: 0;
+  min-height: 40px;
 }
 
 .headerIconButton {
@@ -98,8 +101,7 @@
 }
 
 .title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: var(--font-size-base);
   color: var(--foreground);
   white-space: nowrap;
   overflow: hidden;
@@ -141,6 +143,11 @@
   min-height: 0;
   border-left: 1px solid var(--border);
   background: var(--surface);
+}
+
+.sessionBarEmbedded {
+  border-left: none;
+  background: var(--background);
 }
 
 .messageViewport {

@@ -21,5 +21,6 @@ export {
   type ThemeRadiusOption,
 } from './constants';
 export { ThemeApplier } from './ThemeApplier';
+export { useAppTheme } from './useAppTheme';
 export { useColorScheme } from './useColorScheme';
 export { useThemeShape } from './useThemeShape';

@@ -21,7 +21,7 @@ function applyColorSchemeToDOM(scheme: ColorScheme, previous: ColorScheme | unde
   document.documentElement.setAttribute('data-color-scheme', scheme);
 }
 
-/** localStorage 持久化，同时同步到 documentElement，只控制主题颜色*/
+/** localStorage 持久化，同时同步到 documentElement，只控制主题颜色 */
 export function useColorScheme(defaultScheme: ColorScheme = DEFAULT_COLOR_SCHEME) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>(() =>
     readStoredColorScheme(defaultScheme)

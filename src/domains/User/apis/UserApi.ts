@@ -1,20 +1,20 @@
-import { apiGet,apiPost,apiPut } from '@/apis/request';
+import { apiGet, apiPost, apiPut } from '@/apis/request';
 import type {
-ChangeUserInfoApiRequest,
-ChangeUserProfileApiRequest,
-CheckEmailVerifyApiRequest,
-GetUserInfoApiResponse,
-InitiateEmailVerifyApiRequest,
-InitiateFudanUISVerifyApiRequest,
-ListAdminMessagesApiRequest,
-ListAdminMessagesApiResponse,
-ListTransactionsApiRequest,
-ListUserSearchSuggestionsApiRequest,
-PublishMessageApiRequest,
-RedeemVoucherApiRequest,
-SearchUserApiRequest,
-TransferTokenBetweenGroupAndUserApiRequest,
-UserSearchUserApiResponse,
+  ChangeUserInfoApiRequest,
+  ChangeUserProfileApiRequest,
+  CheckEmailVerifyApiRequest,
+  GetUserInfoApiResponse,
+  InitiateEmailVerifyApiRequest,
+  InitiateFudanUISVerifyApiRequest,
+  ListAdminMessagesApiRequest,
+  ListAdminMessagesApiResponse,
+  ListTransactionsApiRequest,
+  ListUserSearchSuggestionsApiRequest,
+  PublishMessageApiRequest,
+  RedeemVoucherApiRequest,
+  SearchUserApiRequest,
+  TransferTokenBetweenGroupAndUserApiRequest,
+  UserSearchUserApiResponse,
 } from './UserApi.type';
 
 /** User API: /user/* */

@@ -60,7 +60,10 @@ function AiMessage({ message }: { message: Message }) {
             loading={message.loading && !message.content}
           />
         )}
-        <ToolCallBlock content={message.toolContent || ''} />
+        <ToolCallBlock
+          content={message.toolContent || ''}
+          loading={Boolean(message.loading && !message.content && !message.reasoningContent)}
+        />
         {showLoadingIndicator && (
           <span className={styles.loadingHint}>
             <span className={styles.loadingHintIcon} aria-hidden="true">
@@ -91,7 +94,7 @@ function AiMessage({ message }: { message: Message }) {
               onPress={handleCopy}
               aria-label="复制"
             >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? <Check size={12} /> : <Copy size={12} />}
             </Button>
           </div>
         )}
