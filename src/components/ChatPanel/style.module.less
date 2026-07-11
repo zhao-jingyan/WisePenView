@@ -141,12 +141,6 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border-left: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.sessionBarEmbedded {
-  border-left: none;
   background: var(--background);
 }
 
@@ -156,53 +150,6 @@
   display: flex;
   flex-direction: column;
   padding-top: 0;
-}
-
-.sessionBarHeader {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  min-height: 48px;
-  padding: 0 var(--space-sm) 0 var(--space-md);
-  border-bottom: 1px solid var(--border-light);
-}
-
-.sessionBarTitle {
-  min-width: 0;
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.sessionBarCloseButton {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  margin: 0;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius, 8px);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease;
-
-  &:hover {
-    color: var(--foreground);
-    background: var(--surface-tertiary);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
 }
 
 .sessionList {

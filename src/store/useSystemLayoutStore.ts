@@ -7,18 +7,15 @@ interface SystemLayoutState {
   appSidebarWidth: number;
   adminSidebarWidth: number;
   workspaceLeftSidebarWidth: number;
-  workspaceChatSessionPanelWidth: number;
   setAppSidebarWidth: (width: number) => void;
   setAdminSidebarWidth: (width: number) => void;
   setWorkspaceLeftSidebarWidth: (width: number) => void;
-  setWorkspaceChatSessionPanelWidth: (width: number) => void;
 }
 
 const DEFAULT_SYSTEM_LAYOUT_STATE = {
   appSidebarWidth: 308,
   adminSidebarWidth: 308,
   workspaceLeftSidebarWidth: 308,
-  workspaceChatSessionPanelWidth: 320,
 };
 
 const setWidth =
@@ -38,8 +35,6 @@ export const useSystemLayoutStore = create<SystemLayoutState>()(
       setAdminSidebarWidth: (width) => set((state) => setWidth('adminSidebarWidth', width)(state)),
       setWorkspaceLeftSidebarWidth: (width) =>
         set((state) => setWidth('workspaceLeftSidebarWidth', width)(state)),
-      setWorkspaceChatSessionPanelWidth: (width) =>
-        set((state) => setWidth('workspaceChatSessionPanelWidth', width)(state)),
     }),
     { name: 'system-layout', storage: zustandSessionStorage }
   )

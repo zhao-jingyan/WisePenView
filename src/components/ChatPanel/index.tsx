@@ -344,8 +344,6 @@ function ChatPanel({
         <div className={styles.panelBody}>
           {sessionBarOpen ? (
             <ChatSessionBar
-              embedded
-              open={sessionBarOpen}
               activeSessionId={currentSessionId}
               onClose={handleCloseSessionBar}
               onSelectSession={handleSelectSession}
