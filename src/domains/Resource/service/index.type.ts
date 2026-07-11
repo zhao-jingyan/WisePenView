@@ -52,6 +52,20 @@ export interface IResourceService {
   getInteractStats(resourceId: string): Promise<ResourceInteractStats>;
   /** 全局全文搜索（ACL 过滤 + 高亮，分页） */
   globalSearch(params: SearchQueryRequest): Promise<SearchResultPage>;
+  /** 查询资源行内批注列表 */
+  listInlineComments(params: ListInlineCommentsRequest): Promise<ResourceInlineCommentThread[]>;
+  /** 创建行内批注串 */
+  createInlineComment(params: CreateInlineCommentRequest): Promise<string>;
+  /** 追加批注回复 */
+  addInlineCommentItem(params: AddInlineCommentItemRequest): Promise<string>;
+  /** 修改批注回复 */
+  updateInlineCommentItem(
+    params: UpdateInlineCommentItemRequest
+  ): Promise<UpdateInlineCommentItemResult>;
+  /** 删除批注回复 */
+  deleteInlineCommentItem(params: DeleteInlineCommentItemRequest): Promise<void>;
+  /** 更新批注串解决状态 */
+  changeInlineCommentResolveStatus(params: ChangeInlineCommentResolveStatusRequest): Promise<void>;
 }
 
 /** 全文搜索请求（对齐 GET /resource/search/globalSearchResources） */
@@ -193,4 +207,107 @@ export interface InteractRateRequest {
   resourceId: string;
   /** 1–5 整数，支持覆盖提交 */
   score: number;
+}
+
+export type ResourceInlineCommentAnchorKind =
+  'text-range' | 'formula-inline' | 'formula-block' | 'unknown';
+
+export interface ResourceInlineCommentAuthorInfo {
+  id: string;
+  name: string;
+  avatarUrl: string;
+}
+
+export interface ResourceInlineCommentAnchor {
+  externalAnchorId: string;
+  quoteText: string;
+  anchorPayload: Record<string, unknown>;
+  kind: ResourceInlineCommentAnchorKind;
+}
+
+export interface ResourceInlineCommentItem {
+  itemId: string;
+  replacesItemId?: string;
+  authorId: string;
+  authorInfo?: ResourceInlineCommentAuthorInfo;
+  content: string;
+  imageUrls: string[];
+  mentionUserIds: string[];
+  deleted: boolean;
+  createTime?: string;
+  updateTime?: string;
+}
+
+export interface ResourceInlineCommentThread {
+  inlineCommentId: string;
+  resourceId: string;
+  creatorId: string;
+  creatorInfo?: ResourceInlineCommentAuthorInfo;
+  resolved: boolean;
+  resolvedBy?: string;
+  resolvedByInfo?: ResourceInlineCommentAuthorInfo;
+  resolvedAt?: string;
+  applicableFromVersion?: number;
+  applicableToVersion?: number;
+  createTime?: string;
+  updateTime?: string;
+  anchor: ResourceInlineCommentAnchor;
+  items: ResourceInlineCommentItem[];
+}
+
+export interface ListInlineCommentsRequest {
+  resourceId: string;
+  contentVersion?: number;
+  resolved?: boolean;
+}
+
+export interface CreateInlineCommentRequest {
+  resourceId: string;
+  externalAnchorId: string;
+  quoteText?: string;
+  anchorPayload?: Record<string, unknown>;
+  contentVersion?: number;
+  applicableFromVersion?: number;
+  applicableToVersion?: number;
+  content: string;
+  imageUrls?: string[];
+  mentionUserIds?: string[];
+}
+
+export interface AddInlineCommentItemRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  contentVersion?: number;
+  content: string;
+  imageUrls?: string[];
+  mentionUserIds?: string[];
+}
+
+export interface UpdateInlineCommentItemRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  itemId: string;
+  itemIndex?: number;
+  contentVersion?: number;
+  content: string;
+  imageUrls?: string[];
+  mentionUserIds?: string[];
+}
+
+export interface UpdateInlineCommentItemResult {
+  oldItemId: string;
+  newItemId: string;
+}
+
+export interface DeleteInlineCommentItemRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  itemId: string;
+}
+
+export interface ChangeInlineCommentResolveStatusRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  resolved: boolean;
+  contentVersion?: number;
 }

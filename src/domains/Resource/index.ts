@@ -1,4 +1,9 @@
-export type { ResourceIconType, ResourceItem, ResourceTagBind } from './entity/resource';
+export type {
+  ResourceAccessRole,
+  ResourceIconType,
+  ResourceItem,
+  ResourceTagBind,
+} from './entity/resource';
 export type { SkillScopeType, SkillSummary } from './entity/skill';
 export {
   RESOURCE_ACTION,
@@ -36,15 +41,25 @@ export type {
 export { groupSearchHits } from './service/groupSearchHits';
 export type { SearchHitGroup } from './service/groupSearchHits';
 export type {
+  AddInlineCommentItemRequest,
+  ChangeInlineCommentResolveStatusRequest,
+  CreateInlineCommentRequest,
+  DeleteInlineCommentItemRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
   IResourceService,
   InteractRateRequest,
   InteractToggleLikeRequest,
+  ListInlineCommentsRequest,
   MountResourcesToGroupTagRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
+  ResourceInlineCommentAnchor,
+  ResourceInlineCommentAnchorKind,
+  ResourceInlineCommentAuthorInfo,
+  ResourceInlineCommentItem,
+  ResourceInlineCommentThread,
   ResourceListPage,
   ResourcePermissionActionOption,
   ResourcePermissionOverview,
@@ -55,8 +70,11 @@ export type {
   SearchHitItem,
   SearchQueryRequest,
   SearchResultPage,
+  UpdateInlineCommentItemRequest,
+  UpdateInlineCommentItemResult,
   UpdateResourceActionPermissionRequest,
   UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,
 } from './service/index.type';
+export { isCommentVisibilityPrivileged } from './utils/isCommentVisibilityPrivileged';
 export { resolveResourceIconType } from './utils/resolveResourceIconType';

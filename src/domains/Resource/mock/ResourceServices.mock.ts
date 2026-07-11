@@ -1,17 +1,25 @@
 import type {
+  AddInlineCommentItemRequest,
+  ChangeInlineCommentResolveStatusRequest,
+  CreateInlineCommentRequest,
+  DeleteInlineCommentItemRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
   InteractRateRequest,
   InteractToggleLikeRequest,
   IResourceService,
+  ListInlineCommentsRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
+  ResourceInlineCommentThread,
   ResourceItem,
   ResourceListPage,
   ResourcePermissionOverview,
   SearchQueryRequest,
   SearchResultPage,
+  UpdateInlineCommentItemRequest,
+  UpdateInlineCommentItemResult,
   UpdateResourcePermissionSubjectsRequest,
 } from '@/domains/Resource';
 import {
@@ -322,6 +330,43 @@ const globalSearch = async (params: SearchQueryRequest): Promise<SearchResultPag
   return simulateGlobalSearch(params);
 };
 
+const listInlineComments = async (
+  _params: ListInlineCommentsRequest
+): Promise<ResourceInlineCommentThread[]> => {
+  await delay(120);
+  return [];
+};
+
+const createInlineComment = async (_params: CreateInlineCommentRequest): Promise<string> => {
+  await delay(120);
+  return `mock-inline-comment-${Date.now()}`;
+};
+
+const addInlineCommentItem = async (_params: AddInlineCommentItemRequest): Promise<string> => {
+  await delay(120);
+  return `mock-inline-comment-item-${Date.now()}`;
+};
+
+const updateInlineCommentItem = async (
+  params: UpdateInlineCommentItemRequest
+): Promise<UpdateInlineCommentItemResult> => {
+  await delay(120);
+  return {
+    oldItemId: params.itemId,
+    newItemId: `mock-inline-comment-item-${Date.now()}`,
+  };
+};
+
+const deleteInlineCommentItem = async (_params: DeleteInlineCommentItemRequest): Promise<void> => {
+  await delay(120);
+};
+
+const changeInlineCommentResolveStatus = async (
+  _params: ChangeInlineCommentResolveStatusRequest
+): Promise<void> => {
+  await delay(120);
+};
+
 export const ResourceServicesMock: IResourceService = {
   getUserResources,
   getGroupResources,
@@ -339,4 +384,10 @@ export const ResourceServicesMock: IResourceService = {
   interactRead,
   getInteractStats,
   globalSearch,
+  listInlineComments,
+  createInlineComment,
+  addInlineCommentItem,
+  updateInlineCommentItem,
+  deleteInlineCommentItem,
+  changeInlineCommentResolveStatus,
 };

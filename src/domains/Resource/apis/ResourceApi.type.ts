@@ -199,3 +199,121 @@ export interface TagTreeResponse {
 }
 
 export type GetTagTreeApiResponse = TagTreeResponse[];
+
+export interface ResourceInlineCommentAnchorRefApiResponse {
+  externalAnchorId?: string | null;
+  quoteText?: string | null;
+  anchorPayload?: Record<string, unknown> | null;
+}
+
+export interface ResourceInlineCommentItemApiResponse {
+  itemId?: string | null;
+  inlineCommentItemId?: string | null;
+  replacesItemId?: string | null;
+  authorId?: string | null;
+  authorInfo?: {
+    id?: string | number | null;
+    name?: string | null;
+    nickname?: string | null;
+    realName?: string | null;
+    avatar?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+  content?: string | null;
+  imageUrls?: string[] | null;
+  mentionUserIds?: string[] | null;
+  deleted?: boolean | null;
+  deletedAt?: string | null;
+  createTime?: string | null;
+  updateTime?: string | null;
+}
+
+export interface ResourceInlineCommentApiResponse {
+  inlineCommentId?: string | null;
+  resourceId?: string | null;
+  creatorId?: string | null;
+  creatorInfo?: {
+    id?: string | number | null;
+    name?: string | null;
+    nickname?: string | null;
+    realName?: string | null;
+    avatar?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+  anchorRef?: ResourceInlineCommentAnchorRefApiResponse | null;
+  resolved?: boolean | null;
+  resolvedBy?: string | null;
+  resolvedByInfo?: {
+    id?: string | number | null;
+    name?: string | null;
+    nickname?: string | null;
+    realName?: string | null;
+    avatar?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+  resolvedAt?: string | null;
+  applicableFromVersion?: number | null;
+  applicableToVersion?: number | null;
+  createTime?: string | null;
+  updateTime?: string | null;
+  items?: ResourceInlineCommentItemApiResponse[] | null;
+}
+
+export interface ListInlineCommentsApiRequest {
+  resourceId: string;
+  contentVersion?: number;
+  resolved?: boolean;
+}
+
+export type ListInlineCommentsApiResponse = ResourceInlineCommentApiResponse[];
+
+export interface CreateInlineCommentApiRequest {
+  resourceId: string;
+  externalAnchorId: string;
+  quoteText?: string;
+  anchorPayload?: Record<string, unknown>;
+  contentVersion?: number;
+  applicableFromVersion?: number;
+  applicableToVersion?: number;
+  content: string;
+  imageUrls?: string[];
+  mentionUserIds?: string[];
+}
+
+export interface AddInlineCommentItemApiRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  contentVersion?: number;
+  content: string;
+  imageUrls?: string[];
+  mentionUserIds?: string[];
+}
+
+export interface UpdateInlineCommentItemApiRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  itemId: string;
+  itemIndex?: number;
+  contentVersion?: number;
+  content: string;
+  imageUrls?: string[];
+  mentionUserIds?: string[];
+}
+
+export interface UpdateInlineCommentItemApiResponse {
+  oldItemId?: string | null;
+  newItemId?: string | null;
+}
+
+export interface DeleteInlineCommentItemApiRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  itemId: string;
+}
+
+export interface ChangeInlineCommentResolveStatusApiRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  resolved: boolean;
+  contentVersion?: number;
+}

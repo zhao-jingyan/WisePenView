@@ -12,30 +12,80 @@ export function noteYjsIdbRoomName(resourceId: string): string {
   return `wisepen-note:${resourceId}`;
 }
 
+type IndexeddbSyncedObservable = {
+  synced: boolean;
+  on: (name: 'synced', fn: () => void) => void;
+  off: (name: 'synced', fn: () => void) => void;
+};
+
+class NoteIndexeddbSyncObserver {
+  private _synced: boolean;
+  private readonly _subscribers = new Set<() => void>();
+  private _detach: (() => void) | null = null;
+
+  constructor(idb: IndexeddbPersistence) {
+    const observable = idb as IndexeddbPersistence & IndexeddbSyncedObservable;
+    this._synced = observable.synced;
+
+    const handleSynced = () => {
+      this.updateSynced(true);
+    };
+
+    observable.on('synced', handleSynced);
+    this._detach = () => observable.off('synced', handleSynced);
+  }
+
+  detach(): void {
+    this._detach?.();
+    this._detach = null;
+    this._subscribers.clear();
+  }
+
+  private updateSynced(next: boolean): void {
+    if (this._synced === next) return;
+    this._synced = next;
+    this._subscribers.forEach((fn) => fn());
+  }
+
+  getSnapshot = (): boolean => this._synced;
+
+  subscribe = (onStoreChange: () => void): (() => void) => {
+    this._subscribers.add(onStoreChange);
+    return () => this._subscribers.delete(onStoreChange);
+  };
+}
+
 export function useNoteSession(resourceId: string) {
   const session = useMemo(() => {
     const doc = new Y.Doc();
     const provider = new WisepenProvider(resourceId, doc, { connect: false });
     const idb = new IndexeddbPersistence(noteYjsIdbRoomName(resourceId), doc);
     const observer = new NoteStatusObserver();
+    const idbObserver = new NoteIndexeddbSyncObserver(idb);
     observer.attach(provider);
 
     const reconnect = () => {
+      observer.setConnecting();
       provider.disconnect();
       provider.connect();
     };
 
     const destroy = () => {
       observer.detach();
+      idbObserver.detach();
       provider.destroy();
       void idb.destroy();
       doc.destroy();
     };
 
-    return { doc, provider, observer, reconnect, destroy };
+    return { doc, provider, observer, idbObserver, reconnect, destroy };
   }, [resourceId]);
 
   const status = useSyncExternalStore(session.observer.subscribe, session.observer.getSnapshot);
+  const idbSynced = useSyncExternalStore(
+    session.idbObserver.subscribe,
+    session.idbObserver.getSnapshot
+  );
 
   /**
    * 执行时机：resourceId 变化生成新的协同 session 后，连接 WebSocket/Yjs provider。
@@ -49,5 +99,11 @@ export function useNoteSession(resourceId: string) {
     };
   }, [session]);
 
-  return { status, doc: session.doc, provider: session.provider, reconnect: session.reconnect };
+  return {
+    status,
+    doc: session.doc,
+    provider: session.provider,
+    reconnect: session.reconnect,
+    idbSynced,
+  };
 }

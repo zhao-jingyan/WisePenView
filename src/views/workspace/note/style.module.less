@@ -73,6 +73,35 @@
   margin-left: auto;
 }
 
+.headerActionsEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--ant-margin-xs);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.noteMorePopover {
+  min-width: 252px;
+  padding: var(--ant-padding-xs);
+  border-radius: var(--ant-border-radius);
+}
+
+.ownerCommentPolicyRow {
+  margin-top: var(--ant-margin-xxs);
+  padding: var(--ant-padding-xs) var(--ant-padding-sm);
+  border-bottom: 1px solid var(--ant-color-border-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ant-margin-md);
+}
+
+.ownerCommentPolicyLabel {
+  font-size: var(--ant-font-size);
+  white-space: nowrap;
+}
+
 .aiDiffDisplayModeSwitch {
   flex-shrink: 0;
   flex: 1;
@@ -128,6 +157,15 @@
   min-height: 0;
 }
 
+.commentsSidebarPanel {
+  flex: 0 0 var(--comments-sidebar-width, 300px);
+  width: var(--comments-sidebar-width, 300px);
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+}
+
 .mainCol {
   height: 100%;
   width: 100%;
@@ -138,6 +176,13 @@
   overflow: auto;
   scrollbar-gutter: stable;
   .appSubtleScrollbar();
+}
+
+.bodyEditorLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
 }
 
 .body {

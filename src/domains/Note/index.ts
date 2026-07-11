@@ -11,6 +11,7 @@ export type {
   GetNoteInfoRequest,
   INoteService,
   ListNoteVersionsRequest,
+  NoteCommentUserDisplayRecord,
   NoteInfoDisplayAuthor,
   NoteInfoDisplayData,
   NoteVersionListPage,

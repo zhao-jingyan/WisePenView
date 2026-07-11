@@ -27,6 +27,9 @@ const getNoteInfoDisplay = async (_params: GetNoteInfoRequest): Promise<NoteInfo
     lastEditedAtText: '暂无',
     version: 0,
     canCollaborativeEdit: true,
+    commentsEnabled: true,
+    canEditComments: true,
+    authorsById: {},
   };
 };
 

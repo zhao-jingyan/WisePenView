@@ -7,14 +7,20 @@ import type {
   StyleSchema,
 } from '@blocknote/core';
 import { BlockNoteSchema, createExtension } from '@blocknote/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 import type { EditorProps } from '@tiptap/pm/view';
+import { ySyncPluginKey } from 'y-prosemirror';
 
+import { isWisePenCommentMarkSyncTransaction } from '../comments/core/commentDocumentMarks';
 import type { NoteEditorPlugin, NoteInlineContentSpecs, PluginEditor } from './types';
 
 type DOMEventHandlers = NonNullable<EditorProps['handleDOMEvents']>;
 type DOMEventName = keyof DOMEventHandlers;
 type DOMEventHandler = NonNullable<DOMEventHandlers[DOMEventName]>;
+
+function isYjsSyncTransaction(tr: Transaction): boolean {
+  return tr.getMeta(ySyncPluginKey) !== undefined || tr.getMeta('y-sync$') !== undefined;
+}
 
 /**
  * 聚合所有插件的 blockSpecs / inlineContentSpecs，构造 BlockNoteSchema。
@@ -62,10 +68,10 @@ export function createNoteReadOnlyFilterExtension(
           if (!tr.docChanged) {
             return true;
           }
-          if (tr.getMeta('y-sync$') !== undefined) {
+          if (isYjsSyncTransaction(tr)) {
             return true;
           }
-          if (tr.getMeta('addToHistory') === false) {
+          if (isWisePenCommentMarkSyncTransaction(tr)) {
             return true;
           }
           return false;

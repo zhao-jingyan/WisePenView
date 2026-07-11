@@ -6,15 +6,20 @@ import type {
   InlineContentSchema,
   StyleSchema,
 } from '@blocknote/core';
-import { createReactBlockSpec, type ReactCustomBlockRenderProps } from '@blocknote/react';
-import { useCallback, useRef, useState } from 'react';
+import { createReactBlockSpec } from '@blocknote/react';
+import type { ComponentType } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import 'katex/dist/katex.min.css';
+import type { CustomBlockNoteEditor } from '../../../blockNoteSchema';
 import { useNoteEditorReadOnlyContext } from '../../../editorReadOnly';
 import { useAiDiffDisplayModeContext } from '../../AIDiffPlugin/displayModeContext';
 import aiDiffStyles from '../../AIDiffPlugin/style.module.less';
+import { useLatexComment } from '../comments/latexCommentContext';
+import { LatexFormulaCommentButton } from '../comments/LatexFormulaCommentButton';
+import { useMathBlockCommentHighlight } from '../comments/useMathBlockThreadMarkClasses';
 import popoverStyles from '../InlineMath/style.module.less';
 import { renderKatexInto } from '../katexRender';
 import { LatexEditPopover } from '../LatexEditPopover';
@@ -47,8 +52,30 @@ const mathBlockPropSchema = {
   },
 } as const;
 
-type MathBlockConfig = BlockConfig<'math', typeof mathBlockPropSchema, 'none'>;
-type MathBlockRenderProps = ReactCustomBlockRenderProps<MathBlockConfig>;
+const mathBlockConfig: BlockConfig<'math', typeof mathBlockPropSchema, 'none'> = {
+  type: 'math',
+  propSchema: mathBlockPropSchema,
+  content: 'none',
+};
+
+type MathBlockProps = {
+  expression: string;
+  autoEdit: boolean;
+  aiDiffType: string;
+  aiDiffKey: string;
+  aiDiffOrigin: string;
+  aiDiffReplace: string;
+};
+type MathBlockData = {
+  id: string;
+  props: MathBlockProps;
+  children: unknown[];
+};
+type MathBlockRenderProps = {
+  block: MathBlockData;
+  editor: BlockNoteEditor<Record<'math', BlockConfig<'math', typeof mathBlockPropSchema, 'none'>>>;
+  contentRef: (node: HTMLElement | null) => void;
+};
 type MathAiDiffActionMode = 'accept' | 'discard';
 type MathAiDiffViewMode = 'hidden' | 'plain' | 'compare';
 
@@ -67,11 +94,6 @@ type MathAiDiffResolvedView = {
 function MathFormulaPreview({ expression, className }: { expression: string; className: string }) {
   const mathRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * 执行时机：expression 变化后，把最新 LaTeX 渲染到当前块级预览 DOM。
-   * 不可替代原因：KaTeX 渲染需要命令式写入真实 DOM，不能仅靠 React JSX 表达。
-   * cleanup：renderKatexInto 会覆盖容器内容，无需额外释放订阅或计时器。
-   */
   useEffectForce(() => {
     const el = mathRef.current;
     if (!el) return;
@@ -196,6 +218,7 @@ function MathDiffActionButtons({ onApply }: { onApply: (mode: MathAiDiffActionMo
 function MathBlockView(props: MathBlockRenderProps) {
   const readOnly = useNoteEditorReadOnlyContext();
   const aiDiffDisplayMode = useAiDiffDisplayModeContext();
+  const latexComment = useLatexComment();
 
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(props.block.props.expression);
@@ -232,13 +255,7 @@ function MathBlockView(props: MathBlockRenderProps) {
 
   useLatexPopoverAnchorSync(isEditing, shellRef, measurePopoverPosition, clearPopoverPos);
 
-  /**
-   * 执行时机：块属性 expression 变化且当前不在编辑态时，同步本地输入草稿。
-   * 不可替代原因：编辑态 value 是用户未提交草稿，非编辑态 value 又要跟随 BlockNote 块属性；二者边界由渲染后的 isEditing 决定。
-   * cleanup：只做本地 state 同步，不注册外部资源。
-   *
-   * TODO: latexSupport 后续整体重构时，优先改为更明确的草稿状态模型。
-   */
+  // TODO: 重构，不使用useEffect，使用更合适的语义以增加可读性，但是latexSupport有完全重构的可能，因此暂时保留
   useEffectForce(() => {
     if (isEditing) return;
     setValue(props.block.props.expression);
@@ -246,11 +263,6 @@ function MathBlockView(props: MathBlockRenderProps) {
 
   useFocusPopoverTextarea(isEditing, popoverPos, inputRef);
 
-  /**
-   * 执行时机：插件把 autoEdit 置为 true 后，消费该标记并打开块级公式编辑器。
-   * 不可替代原因：autoEdit 来自 BlockNote 插件写入的块属性，不是当前组件内的点击事件。
-   * cleanup：同步清除 autoEdit 标记，不额外持有订阅或计时器。
-   */
   useEffectForce(() => {
     if (readOnly) return;
     if (!props.block.props.autoEdit) return;
@@ -345,6 +357,25 @@ function MathBlockView(props: MathBlockRenderProps) {
     }, 0);
   };
 
+  const blockFormulaAnchor = useMemo(
+    () => ({ kind: 'block' as const, blockId: props.block.id }),
+    [props.block.id]
+  );
+  const commentHighlight = useMathBlockCommentHighlight({
+    commentEditor:
+      latexComment?.commentEditor ?? (props.editor as unknown as CustomBlockNoteEditor),
+    anchor: blockFormulaAnchor,
+    revisionKey: String(props.block.props.expression ?? ''),
+    hasActiveFormulaComment: (anchor) => latexComment?.hasActiveFormulaComment(anchor) ?? false,
+    getThreadAnchor: (threadId) => latexComment?.getThreadAnchor(threadId),
+  });
+  const commentHighlightClass = [
+    commentHighlight.commented ? styles.mathBlockCommented : '',
+    commentHighlight.selected ? styles.mathBlockSelected : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   const shellClass = `${styles.mathShell} ${styles.mathShellBlock}`;
   const previewClass = styles.mathPreview;
   const editTitle = '编辑 LaTeX（独立）';
@@ -410,7 +441,15 @@ function MathBlockView(props: MathBlockRenderProps) {
       hint="Enter 确定 · Shift+Enter 换行 · Esc 取消"
       textareaClassName={`${popoverStyles.inlineEditTextarea} ${styles.blockPopoverTextarea}`}
       value={value}
-      onChange={(e) => setValue(e.target.value)}
+      onChange={(e) => {
+        const nextValue = e.target.value;
+        setValue(nextValue);
+        latexComment?.updateFormulaCommentReference({
+          anchor: { kind: 'block', blockId: props.block.id },
+          expression: nextValue,
+          kind: 'block',
+        });
+      }}
       onCommit={() => commit(true)}
       commitEnterUnlessShift
       onCancel={cancel}
@@ -423,12 +462,20 @@ function MathBlockView(props: MathBlockRenderProps) {
 
   return (
     <div ref={shellRef} contentEditable={false} className={`${shellClass} bn-math-block-root`}>
+      {!isEditing && !hasPendingAiDiff ? (
+        <LatexFormulaCommentButton
+          expression={props.block.props.expression}
+          kind="block"
+          shellRef={shellRef}
+          blockId={props.block.id}
+        />
+      ) : null}
       {viewState.mode === 'hidden' ? (
         <div className={styles.mathHiddenShell} aria-hidden="true" />
       ) : null}
       {viewState.mode === 'plain' ? (
         <div
-          className={rootClass}
+          className={`${rootClass} ${commentHighlightClass}`}
           role={canEnterEdit ? 'button' : undefined}
           tabIndex={canEnterEdit ? 0 : -1}
           aria-label={canEnterEdit ? '编辑独立公式' : undefined}
@@ -452,7 +499,7 @@ function MathBlockView(props: MathBlockRenderProps) {
       ) : null}
       {viewState.mode === 'compare' ? (
         <div
-          className={`${styles.mathRoot} ${styles.mathRootReadonly} ${styles.mathDiffCompare} ${aiDiffStyles.aiDiffRoot}`}
+          className={`${styles.mathRoot} ${styles.mathRootReadonly} ${styles.mathDiffCompare} ${aiDiffStyles.aiDiffRoot} ${commentHighlightClass}`}
         >
           {viewState.origin ? (
             <div className={`${styles.mathDiffCard} ${styles.mathDiffDelete}`}>
@@ -478,6 +525,15 @@ type MathBlockExternalProps = MathBlockRenderProps & {
   context: { nestingLevel: number };
 };
 
+type MathBlockSpec = ReturnType<ReturnType<typeof createReactBlockSpec>>;
+const createMathBlockSpecUnsafe = createReactBlockSpec as unknown as (
+  blockConfig: typeof mathBlockConfig,
+  blockImplementation: {
+    render: ComponentType<MathBlockRenderProps>;
+    toExternalHTML: ComponentType<MathBlockExternalProps>;
+  }
+) => () => MathBlockSpec;
+
 /** Markdown / 外部 HTML：行间公式 `$$\n...\n$$`，避免使用编辑器内 KaTeX DOM */
 function MathBlockToExternalHTML(props: MathBlockExternalProps) {
   void props.context;
@@ -491,11 +547,7 @@ function MathBlockToExternalHTML(props: MathBlockExternalProps) {
 }
 
 /** KaTeX 独立公式块；预览在文档内，编辑区与行内公式一致为 body 挂载的浮层 */
-export const createMathBlockSpec = createReactBlockSpec(
-  {
-    type: 'math',
-    propSchema: mathBlockPropSchema,
-    content: 'none',
-  },
-  { render: MathBlockView, toExternalHTML: MathBlockToExternalHTML }
-);
+export const createMathBlockSpec = createMathBlockSpecUnsafe(mathBlockConfig, {
+  render: MathBlockView as ComponentType<MathBlockRenderProps>,
+  toExternalHTML: MathBlockToExternalHTML as ComponentType<MathBlockExternalProps>,
+});

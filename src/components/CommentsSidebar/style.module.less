@@ -1,0 +1,229 @@
+.sidebar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: visible;
+  padding: 8px;
+}
+
+.threadCard,
+.threadCardSelected {
+  position: relative;
+  border: 1px solid var(--ant-color-border-secondary, #f0f0f0);
+  border-radius: var(--ant-border-radius, 6px);
+  background: var(--ant-color-bg-container, #fff);
+  box-shadow: none;
+  padding: 10px;
+}
+
+.threadCardSelected {
+  border-color: color-mix(in srgb, var(--ant-color-primary, #1677ff) 48%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ant-color-primary, #1677ff) 12%, transparent);
+}
+
+.threadHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.threadReference {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ant-color-text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: left;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  &:hover {
+    color: var(--ant-color-primary);
+  }
+}
+
+.threadComments {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.commentItem {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.commentAvatar,
+.commentAvatarFallback {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.commentAvatar {
+  object-fit: cover;
+}
+
+.commentAvatarFallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ant-color-text-secondary);
+  background: var(--ant-color-fill-tertiary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.commentMain {
+  min-width: 0;
+}
+
+.commentHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.commentAuthor {
+  min-width: 0;
+  color: var(--ant-color-text);
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commentTime {
+  color: var(--ant-color-text-tertiary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.commentBody {
+  margin-top: 4px;
+  color: var(--ant-color-text);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.commentEditComposer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.commentQuickActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hiddenReplies {
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ant-color-text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+
+  &:hover {
+    color: var(--ant-color-primary);
+  }
+}
+
+.replyComposer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.replyInput {
+  width: 100%;
+  min-height: 54px;
+  max-height: 120px;
+  resize: vertical;
+  border: 1px solid var(--ant-color-border, #d9d9d9);
+  border-radius: var(--ant-border-radius, 6px);
+  padding: 7px 9px;
+  color: var(--ant-color-text);
+  background: var(--ant-color-bg-container, #fff);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+
+  &:focus {
+    outline: none;
+    border-color: var(--ant-color-primary, #1677ff);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ant-color-primary, #1677ff) 12%, transparent);
+  }
+}
+
+.replyActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.replyCollapsed {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.commentsEmpty {
+  padding: 16px 8px;
+  color: var(--ant-color-text-tertiary);
+  font-size: 13px;
+  text-align: center;
+}
+
+.threadQuickActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.threadQuickActionButton {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ant-border-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ant-color-text-secondary);
+  background: var(--ant-color-bg-container);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ant-color-primary);
+    background: var(--ant-color-fill-tertiary);
+  }
+}
