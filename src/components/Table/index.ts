@@ -66,7 +66,5 @@ export type {
   FolderTableRow,
   FolderTableRowAction,
   FolderTableRowContext,
-  FolderTableRowDragDrop,
-  FolderTableRowDragState,
   FolderTableRowPressContext,
 } from './FolderTable/index.type';

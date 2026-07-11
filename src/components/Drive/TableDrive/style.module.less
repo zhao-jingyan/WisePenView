@@ -75,6 +75,79 @@
   gap: var(--space-xs);
 }
 
+.dndNameContent {
+  display: inline-flex;
+  min-width: 0;
+  cursor: grab;
+
+  &[data-dragging='true'] {
+    cursor: grabbing;
+  }
+}
+
+:global(.table__row):has(.dndNameContent[data-drop-target='true']) {
+  :global(.table__cell) {
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  }
+
+  :global(.table__cell:first-child) {
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+}
+
+.breadcrumbDropTarget {
+  display: inline-flex;
+
+  &[data-drop-target='true'] > * {
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    color: var(--foreground);
+  }
+}
+
+.dragOverlay {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  max-width: 380px;
+  min-height: 36px;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  color: var(--foreground);
+  cursor: grabbing;
+}
+
+.dragOverlayIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  line-height: 0;
+
+  :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.dragOverlayName {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dragOverlayCount {
+  flex: 0 0 auto;
+  padding-left: var(--space-sm);
+  border-left: 1px solid var(--border-light);
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
 @media (max-width: 960px) {
   .driveFrame {
     min-height: auto;

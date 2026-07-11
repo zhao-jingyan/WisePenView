@@ -169,7 +169,7 @@
   cursor: pointer;
 }
 
-.rowDragSurface {
+.cellSurface {
   display: flex;
   align-items: center;
   width: 100%;
@@ -178,33 +178,9 @@
   user-select: none;
 }
 
-.rowDragSurface[draggable='true'] {
-  cursor: grab;
-}
-
-.draggingRow .rowDragSurface[draggable='true'] {
-  cursor: grabbing;
-}
-
 .selectedRow:global(.table__row) {
   :global(.table__cell) {
     background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-  }
-}
-
-.draggingRow:global(.table__row) {
-  :global(.table__cell) {
-    opacity: 0.52;
-  }
-}
-
-.dropTargetRow:global(.table__row) {
-  :global(.table__cell) {
-    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-  }
-
-  :global(.table__cell:first-child) {
-    box-shadow: inset 3px 0 0 var(--accent);
   }
 }
 
@@ -213,13 +189,6 @@
   .selectedRow:global(.table__row[data-hovered='true']) {
     :global(.table__cell) {
       background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-    }
-  }
-
-  .dropTargetRow:global(.table__row:hover),
-  .dropTargetRow:global(.table__row[data-hovered='true']) {
-    :global(.table__cell) {
-      background: color-mix(in srgb, var(--accent) 14%, var(--surface));
     }
   }
 }
@@ -280,6 +249,8 @@
 .scrollContainer {
   position: relative;
   width: 100%;
+  -webkit-user-select: none;
+  user-select: none;
   .tableSplitBodyScroll();
 }
 

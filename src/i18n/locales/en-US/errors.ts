@@ -46,6 +46,7 @@ const enUSErrors = {
     '133': 'Invalid voucher code.',
     '134': 'Shortcut cannot be moved to its primary location.',
     '135': 'Failed to create Skill: resource ID was not returned.',
+    '136': 'The selection contains a system folder that cannot be moved.',
     '999': 'Operation failed. Please try again later.',
     '1000': 'System error.',
     '1001': 'Request error.',

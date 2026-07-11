@@ -12,8 +12,27 @@ function FolderTableNameCell<T extends FolderTableRow>({
   expanded,
   expandable,
   onToggleExpand,
+  renderNameContent,
 }: FolderTableNameCellProps<T>) {
   const { t } = useTranslation('table');
+  const nameContent = (
+    <span className={styles.nameContent}>
+      <span className={styles.entryIcon}>
+        <EntryIcon
+          entryType={row.entryType}
+          folderIconType={row.folderIconType}
+          resourceType={row.resourceType}
+          resourceIconType={row.resourceIconType}
+        />
+      </span>
+      <TableTextCell emphasis className={styles.nameText}>
+        {row.name}
+      </TableTextCell>
+    </span>
+  );
+  const content = renderNameContent
+    ? renderNameContent(nameContent, row, { row, rowId: row.id, depth })
+    : nameContent;
 
   return (
     <div className={styles.nameCell} data-depth={depth}>
@@ -33,17 +52,7 @@ function FolderTableNameCell<T extends FolderTableRow>({
       ) : (
         <span className={styles.expandPlaceholder} aria-hidden />
       )}
-      <span className={styles.entryIcon}>
-        <EntryIcon
-          entryType={row.entryType}
-          folderIconType={row.folderIconType}
-          resourceType={row.resourceType}
-          resourceIconType={row.resourceIconType}
-        />
-      </span>
-      <TableTextCell emphasis className={styles.nameText}>
-        {row.name}
-      </TableTextCell>
+      {content}
     </div>
   );
 }

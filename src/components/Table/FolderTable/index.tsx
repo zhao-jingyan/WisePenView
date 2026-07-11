@@ -28,7 +28,6 @@ import type {
   FolderTableRow,
   FolderTableRowAction,
   FolderTableRowContext,
-  FolderTableRowDragDrop,
   FolderTableRowPressContext,
   FolderTableVisibleRow,
 } from './index.type';
@@ -45,7 +44,6 @@ import {
   useMemo,
   useRef,
   type CSSProperties,
-  type DragEvent,
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
@@ -191,11 +189,6 @@ function getDelegatedRowTarget(
   return rowId ? { row, rowId } : null;
 }
 
-function isInteractiveRowTarget(event: DragEvent<HTMLElement>): boolean {
-  const target = event.target;
-  return target instanceof Element && Boolean(target.closest(INTERACTIVE_ROW_TARGET_SELECTOR));
-}
-
 function markImmediateSelectedRow(container: HTMLElement, selectedRow: HTMLElement) {
   const previousRows = container.querySelectorAll<HTMLElement>(
     `[${ROW_ID_ATTRIBUTE}][data-selected="true"], [${ROW_ID_ATTRIBUTE}][${IMMEDIATE_SELECTED_ATTRIBUTE}="true"]`
@@ -218,11 +211,7 @@ interface FolderTableBodyRowProps<T extends FolderTableRow> {
   columns: FolderTableColumn<T>[];
   isLoadMoreRow: boolean;
   isSelected: boolean;
-  isDraggable: boolean;
-  isDragging: boolean;
-  isDropTarget: boolean;
   showBatchSelection: boolean;
-  rowDragDrop?: FolderTableRowDragDrop<T>;
   renderCellContent: (
     column: FolderTableColumn<T>,
     row: FolderTableVisibleRow & T,
@@ -241,11 +230,7 @@ function areBodyRowPropsEqual<T extends FolderTableRow>(
     prev.columns === next.columns &&
     prev.isLoadMoreRow === next.isLoadMoreRow &&
     prev.isSelected === next.isSelected &&
-    prev.isDraggable === next.isDraggable &&
-    prev.isDragging === next.isDragging &&
-    prev.isDropTarget === next.isDropTarget &&
     prev.showBatchSelection === next.showBatchSelection &&
-    prev.rowDragDrop === next.rowDragDrop &&
     prev.renderCellContent === next.renderCellContent &&
     prev.resolveBodyCellClass === next.resolveBodyCellClass
   );
@@ -255,11 +240,7 @@ function FolderTableBodyRowBase<T extends FolderTableRow>({
   columns,
   isLoadMoreRow,
   isSelected,
-  isDraggable,
-  isDragging,
-  isDropTarget,
   showBatchSelection,
-  rowDragDrop,
   renderCellContent,
   resolveBodyCellClass,
   row,
@@ -278,13 +259,9 @@ function FolderTableBodyRowBase<T extends FolderTableRow>({
       textValue={row.name}
       data-folder-row-id={rowId}
       data-selected={isSelected ? 'true' : undefined}
-      data-dragging={isDragging ? 'true' : undefined}
-      data-drop-target={isDropTarget ? 'true' : undefined}
       className={joinClassNames(
         styles.bodyRow,
         isSelected ? styles.selectedRow : undefined,
-        isDragging ? styles.draggingRow : undefined,
-        isDropTarget ? styles.dropTargetRow : undefined,
         isLoadMoreRow ? styles.inlineLoadMoreRow : undefined
       )}
     >
@@ -304,32 +281,7 @@ function FolderTableBodyRowBase<T extends FolderTableRow>({
         const cellContent = renderCellContent(column, row, ctx);
         return (
           <Table.Cell key={column.id} className={resolveBodyCellClass(column)}>
-            <div
-              className={styles.rowDragSurface}
-              draggable={isDraggable ? true : undefined}
-              onDragStart={(event: DragEvent<HTMLElement>) => {
-                if (isInteractiveRowTarget(event)) {
-                  event.preventDefault();
-                  return;
-                }
-                rowDragDrop?.onDragStart?.(row, event);
-              }}
-              onDragEnter={(event: DragEvent<HTMLElement>) => {
-                rowDragDrop?.onDragEnter?.(row, event);
-              }}
-              onDragOver={(event: DragEvent<HTMLElement>) => {
-                rowDragDrop?.onDragOver?.(row, event);
-              }}
-              onDragLeave={(event: DragEvent<HTMLElement>) => {
-                rowDragDrop?.onDragLeave?.(row, event);
-              }}
-              onDrop={(event: DragEvent<HTMLElement>) => {
-                rowDragDrop?.onDrop?.(row, event);
-              }}
-              onDragEnd={(event: DragEvent<HTMLElement>) => {
-                rowDragDrop?.onDragEnd?.(row, event);
-              }}
-            >
+            <div className={styles.cellSurface}>
               <TableCellAlign
                 align={column.isActionColumn ? 'center' : resolveColumnAlign(column.align)}
                 stretch={shouldStretchTableCellContent(column)}
@@ -368,7 +320,7 @@ function FolderTable<T extends FolderTableRow>({
   selectedRowKeys,
   onRowSelect,
   onRowActivate,
-  rowDragDrop,
+  renderNameContent,
   rowActions,
   loadMore,
   totalCount,
@@ -603,11 +555,11 @@ function FolderTable<T extends FolderTableRow>({
         return;
       }
       if (!onRowSelect) return;
-      if (!toRowPressContext(event).modifierKey) {
+      if (!toRowPressContext(event).modifierKey && !selectedRowKeySet.has(target.rowId)) {
         markImmediateSelectedRow(event.currentTarget, target.row);
       }
     },
-    [batchSelection, onRowSelect]
+    [batchSelection, onRowSelect, selectedRowKeySet]
   );
 
   const handleBodyKeyDown = useCallback(
@@ -633,7 +585,11 @@ function FolderTable<T extends FolderTableRow>({
   );
 
   const renderCellContent = useCallback(
-    (column: FolderTableColumn<T>, row: FolderTableVisibleRow, ctx: FolderTableRowContext<T>) => {
+    (
+      column: FolderTableColumn<T>,
+      row: FolderTableVisibleRow & T,
+      ctx: FolderTableRowContext<T>
+    ) => {
       if (column.isNameColumn) {
         if (row.entryType === 'loading') {
           return <span className={styles.inlineLoadMoreButton}>{row.name || '正在加载...'}</span>;
@@ -642,11 +598,12 @@ function FolderTable<T extends FolderTableRow>({
         const expandable = folderRowHasChildren(row);
         const expanded = expandedKeySet.has(row.id);
         return (
-          <FolderTableNameCell
+          <FolderTableNameCell<T>
             row={row}
             depth={row.depth}
             expanded={expanded}
             expandable={expandable}
+            renderNameContent={renderNameContent}
             onToggleExpand={
               expandable && onExpandedChange ? () => handleToggleExpand(row.id) : undefined
             }
@@ -673,7 +630,14 @@ function FolderTable<T extends FolderTableRow>({
 
       return null;
     },
-    [expandedKeySet, handleRowAction, handleToggleExpand, onExpandedChange, rowActions]
+    [
+      expandedKeySet,
+      handleRowAction,
+      handleToggleExpand,
+      onExpandedChange,
+      renderNameContent,
+      rowActions,
+    ]
   );
 
   const resolveColumnHeaderClass = useCallback(
@@ -796,10 +760,6 @@ function FolderTable<T extends FolderTableRow>({
                     const rowId = row.id;
                     const isLoadMoreRow = row.entryType === 'loading';
                     const isSelected = selectedRowKeySet.has(rowId);
-                    const dragState = rowDragDrop?.getRowState?.(row as T);
-                    const isDraggable = dragState?.draggable === true;
-                    const isDragging = dragState?.dragging === true;
-                    const isDropTarget = dragState?.dropTarget === true;
 
                     return (
                       <FolderTableBodyRow
@@ -807,11 +767,7 @@ function FolderTable<T extends FolderTableRow>({
                         columns={columns}
                         isLoadMoreRow={isLoadMoreRow}
                         isSelected={isSelected}
-                        isDraggable={isDraggable}
-                        isDragging={isDragging}
-                        isDropTarget={isDropTarget}
                         showBatchSelection={showBatchSelection}
-                        rowDragDrop={rowDragDrop}
                         renderCellContent={renderCellContent}
                         resolveBodyCellClass={resolveBodyCellClass}
                         row={row as FolderTableVisibleRow & T}

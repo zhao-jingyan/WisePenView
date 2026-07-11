@@ -11,7 +11,8 @@ export interface IDriveService {
   listNodeChildren(params: ListNodeChildrenParams): Promise<DriveNode[]>;
   getNodePath(params: GetNodePathParams): Promise<Array<RootNode | FolderNode>>;
   moveToFolder(params: MoveToFolderParams): Promise<void>;
-  moveNodesToFolder(params: MoveNodesToFolderParams): Promise<void>;
+  /** 批量移动并返回实际改变父目录的节点数。 */
+  moveNodesToFolder(params: MoveNodesToFolderParams): Promise<number>;
   removeNode(params: RemoveNodeParams): Promise<void>;
   renameNode(params: RenameNodeParams): Promise<void>;
   createFolder(params: CreateFolderParams): Promise<string>;

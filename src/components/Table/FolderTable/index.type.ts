@@ -1,7 +1,7 @@
 import type { FolderIconType } from '@/components/Icons/EntryIcon/index.type';
 import type { ResourceIconType } from '@/domains/Resource';
 import type { Selection, SortDescriptor } from '@heroui/react';
-import type { DragEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { FolderColumnWidth } from '../shared/TableBase/columnWidth';
 import type { TableColumnBase, TableLoadMore } from '../shared/TableBase/index.type';
 import type { TableRowAction } from '../shared/TableRowActions/index.type';
@@ -42,22 +42,6 @@ export interface FolderTableRowPressContext {
   ctrlKey: boolean;
   shiftKey: boolean;
   modifierKey: boolean;
-}
-
-export interface FolderTableRowDragState {
-  draggable?: boolean;
-  dragging?: boolean;
-  dropTarget?: boolean;
-}
-
-export interface FolderTableRowDragDrop<T extends FolderTableRow> {
-  getRowState?: (row: T) => FolderTableRowDragState;
-  onDragStart?: (row: T, event: DragEvent<HTMLElement>) => void;
-  onDragEnter?: (row: T, event: DragEvent<HTMLElement>) => void;
-  onDragOver?: (row: T, event: DragEvent<HTMLElement>) => void;
-  onDragLeave?: (row: T, event: DragEvent<HTMLElement>) => void;
-  onDrop?: (row: T, event: DragEvent<HTMLElement>) => void;
-  onDragEnd?: (row: T, event: DragEvent<HTMLElement>) => void;
 }
 
 export interface FolderTableColumn<T extends FolderTableRow> extends Omit<
@@ -106,8 +90,8 @@ export interface FolderTableProps<T extends FolderTableRow> {
   onRowSelect?: (row: T, ctx: FolderTableRowPressContext) => void;
   /** 行激活（例如进入文件夹 / 打开资源） */
   onRowActivate?: (row: T) => void;
-  /** 行级拖拽，不绑定到单元格，保持文件管理器的整行心智 */
-  rowDragDrop?: FolderTableRowDragDrop<T>;
+  /** 包装名称列的图标与名称内容，用于在业务层扩展交互能力 */
+  renderNameContent?: (content: ReactNode, row: T, ctx: FolderTableRowContext<T>) => ReactNode;
   rowActions?: FolderTableRowAction<T>[] | ((row: T) => FolderTableRowAction<T>[]);
   /** 滚动加载更多；Folder 型不做分页 */
   loadMore?: FolderTableLoadMore;

@@ -85,6 +85,7 @@ const normalizeNode = (node: LegacyNode): DriveNode | null => {
       scope: buildDriveNodeScope(),
       tagId: node.tagId,
       name: node.name ?? '未命名文件夹',
+      systemType: node.id === SHARED_FOLDER_NODE_ID ? 'shared' : undefined,
       childrenIds: node.childrenIds ?? [],
     };
   }
@@ -252,6 +253,9 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     if (node.type !== 'folder' && node.type !== 'resource' && node.type !== 'link') {
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
     }
+    if (node.id === newParent.id) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
+    }
     if (node.scope.rootId !== newParent.scope.rootId) {
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
     }
@@ -286,12 +290,37 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     executeMovePlan(createMovePlan(params));
   };
 
-  const moveNodesToFolder = async (params: MoveNodesToFolderParams): Promise<void> => {
+  const moveNodesToFolder = async (params: MoveNodesToFolderParams): Promise<number> => {
     await delay(NETWORK_DELAY_MS);
-    const uniqueNodeIds = [...new Set(params.nodeIds)].filter(
-      (nodeId) => nodeId !== params.targetFolderNodeId
-    );
-    const plans = uniqueNodeIds.map((nodeId) =>
+    const sources = [...new Set(params.nodeIds)].map((nodeId) => {
+      const node = nodes.get(nodeId);
+      if (!node) {
+        throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_NOT_FOUND, { nodeId });
+      }
+      return node;
+    });
+    if (sources.some((source) => source.type === 'folder' && source.systemType)) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_SELECTION_CONTAINS_SYSTEM_FOLDER);
+    }
+    if (sources.some((source) => source.id === params.targetFolderNodeId)) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_MOVE);
+    }
+
+    const sourceIdSet = new Set(sources.map((source) => source.id));
+    const sourceNodeIds = sources
+      .filter((source) => {
+        let parentId = source.parentId;
+        while (parentId) {
+          if (sourceIdSet.has(parentId)) {
+            return false;
+          }
+          parentId = nodes.get(parentId)?.parentId ?? null;
+        }
+        return true;
+      })
+      .filter((source) => source.parentId !== params.targetFolderNodeId)
+      .map((source) => source.id);
+    const plans = sourceNodeIds.map((nodeId) =>
       createMovePlan({
         nodeId,
         targetFolderNodeId: params.targetFolderNodeId,
@@ -301,6 +330,7 @@ function createDriveServiceMock(opts?: CreateDriveServiceOptions): IDriveService
     for (const plan of plans) {
       executeMovePlan(plan);
     }
+    return plans.length;
   };
 
   const removeNode = async (params: RemoveNodeParams): Promise<void> => {
