@@ -208,8 +208,6 @@ export interface ResourceInlineCommentAnchorRefApiResponse {
 
 export interface ResourceInlineCommentItemApiResponse {
   itemId?: string | null;
-  inlineCommentItemId?: string | null;
-  replacesItemId?: string | null;
   authorId?: string | null;
   authorInfo?: {
     id?: string | number | null;
@@ -222,8 +220,6 @@ export interface ResourceInlineCommentItemApiResponse {
   content?: string | null;
   imageUrls?: string[] | null;
   mentionUserIds?: string[] | null;
-  deleted?: boolean | null;
-  deletedAt?: string | null;
   createTime?: string | null;
   updateTime?: string | null;
 }
@@ -293,16 +289,10 @@ export interface UpdateInlineCommentItemApiRequest {
   resourceId: string;
   inlineCommentId: string;
   itemId: string;
-  itemIndex?: number;
   contentVersion?: number;
   content: string;
   imageUrls?: string[];
   mentionUserIds?: string[];
-}
-
-export interface UpdateInlineCommentItemApiResponse {
-  oldItemId?: string | null;
-  newItemId?: string | null;
 }
 
 export interface DeleteInlineCommentItemApiRequest {

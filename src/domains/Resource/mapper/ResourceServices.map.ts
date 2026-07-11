@@ -21,7 +21,6 @@ import type {
   ResourceListPageApiResponse,
   ResourceSpecifiedUserGrantedActionsApiResponse,
   UpdateInlineCommentItemApiRequest,
-  UpdateInlineCommentItemApiResponse,
 } from '../apis/ResourceApi.type';
 import {
   coerceResourceActions,
@@ -49,7 +48,6 @@ import type {
   SearchHitItem,
   SearchResultPage,
   UpdateInlineCommentItemRequest,
-  UpdateInlineCommentItemResult,
   UpdateResourceActionPermissionRequest,
   UpdateResourcePermissionSubjectsRequest,
 } from '../service/index.type';
@@ -711,16 +709,12 @@ const mapInlineCommentThreadFromApi = (
       kind: inferInlineCommentAnchorKind(anchorPayload),
     },
     items: (raw.items ?? []).map((item: ResourceInlineCommentItemApiResponse) => ({
-      itemId:
-        normalizeInlineCommentString(item.itemId) ||
-        normalizeInlineCommentString(item.inlineCommentItemId),
-      replacesItemId: normalizeInlineCommentString(item.replacesItemId) || undefined,
+      itemId: normalizeInlineCommentString(item.itemId),
       authorId: normalizeInlineCommentString(item.authorId),
       authorInfo: mapInlineCommentAuthorInfo(item.authorInfo),
       content: item.content ?? '',
       imageUrls: item.imageUrls ?? [],
       mentionUserIds: item.mentionUserIds ?? [],
-      deleted: item.deleted ?? Boolean(item.deletedAt),
       createTime: normalizeInlineCommentString(item.createTime) || undefined,
       updateTime: normalizeInlineCommentString(item.updateTime) || undefined,
     })),
@@ -744,16 +738,16 @@ const mapListInlineCommentsFromApi = (
 
 const mapIdFieldFromApi = (
   data: unknown,
-  fieldName: 'inlineCommentId' | 'itemId' | 'newItemId'
+  fieldName: 'inlineCommentId' | 'itemId'
 ): string | undefined => {
   if (typeof data === 'string') {
     return data.trim() || undefined;
   }
   if (data && typeof data === 'object') {
     const raw = (data as Record<string, unknown>)[fieldName];
-    const fallback = (data as { id?: unknown }).id;
-    if (typeof raw === 'string') return raw.trim() || undefined;
-    if (typeof fallback === 'string') return fallback.trim() || undefined;
+    if (typeof raw === 'string') {
+      return raw.trim() || undefined;
+    }
   }
   return undefined;
 };
@@ -800,18 +794,10 @@ const mapUpdateInlineCommentItemRequest = (
   resourceId: params.resourceId,
   inlineCommentId: params.inlineCommentId,
   itemId: params.itemId,
-  ...(params.itemIndex != null ? { itemIndex: params.itemIndex } : {}),
   content: params.content,
   ...(params.contentVersion != null ? { contentVersion: params.contentVersion } : {}),
   ...(params.imageUrls?.length ? { imageUrls: params.imageUrls } : {}),
   ...(params.mentionUserIds?.length ? { mentionUserIds: params.mentionUserIds } : {}),
-});
-
-const mapUpdateInlineCommentItemResultFromApi = (
-  data: UpdateInlineCommentItemApiResponse
-): UpdateInlineCommentItemResult => ({
-  oldItemId: normalizeInlineCommentString(data.oldItemId),
-  newItemId: normalizeInlineCommentString(data.newItemId),
 });
 
 export const ResourceServicesMap = {
@@ -832,5 +818,4 @@ export const ResourceServicesMap = {
   mapCreateInlineCommentRequest,
   mapAddInlineCommentItemRequest,
   mapUpdateInlineCommentItemRequest,
-  mapUpdateInlineCommentItemResultFromApi,
 };

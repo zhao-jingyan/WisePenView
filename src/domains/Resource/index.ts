@@ -71,7 +71,6 @@ export type {
   SearchQueryRequest,
   SearchResultPage,
   UpdateInlineCommentItemRequest,
-  UpdateInlineCommentItemResult,
   UpdateResourceActionPermissionRequest,
   UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,

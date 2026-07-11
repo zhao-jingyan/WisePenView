@@ -22,13 +22,11 @@ export function useCommentSettingsSync(doc: Doc | null | undefined) {
     const map = getBlockNoteCommentSettingsYMap(targetDoc);
     const sync = () => setSettings(getCommentSettingsFromDoc(targetDoc));
 
-    map.observe(sync);
-    targetDoc.on('afterTransaction', sync);
+    map.observeDeep(sync);
     sync();
 
     detachRef.current = () => {
-      map.unobserve(sync);
-      targetDoc.off('afterTransaction', sync);
+      map.unobserveDeep(sync);
       detachRef.current = null;
     };
   };

@@ -1,7 +1,7 @@
 import { NodeSelection } from '@tiptap/pm/state';
 
 import type { CustomBlockNoteEditor } from '../../blockNoteSchema';
-import { INLINE_MATH_PM_TYPE } from '../../plugins/LatexPlugin/comments/latexCommentSupport';
+import { INLINE_MATH_PM_TYPE } from './commentThreadConstants';
 
 const AI_DIFF_INLINE_TYPES = new Set([
   'ai-diff',

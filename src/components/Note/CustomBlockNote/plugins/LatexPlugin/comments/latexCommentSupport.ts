@@ -10,9 +10,11 @@ import {
   WISEPEN_COMMENT_MARK_SYNC_META,
   WISEPEN_FORMULA_YJS_ORIGIN,
 } from '../../../comments/core/commentDocumentMarks';
-import type { FormulaThreadAnchor } from '../../../comments/core/commentThreadConstants';
-
-export const INLINE_MATH_PM_TYPE = 'inlineMath';
+import {
+  INLINE_MATH_PM_TYPE,
+  isThreadActive,
+  type FormulaThreadAnchor,
+} from '../../../comments/core/commentThreadConstants';
 
 const BLOCK_CONTAINER_TYPE = 'blockContainer';
 const MATH_BLOCK_PM_TYPE = 'math';
@@ -455,10 +457,6 @@ export function applyFormulaThreadMark(
   });
 
   return formulaMarkExists(editor.prosemirrorView.state.doc, markType, threadId, from, to);
-}
-
-export function isThreadActive(thread: ThreadData | undefined): boolean {
-  return Boolean(thread && !thread.deletedAt && !thread.resolved);
 }
 
 export function pruneFormulaThreadAnchors(

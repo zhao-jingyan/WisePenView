@@ -22,7 +22,6 @@ import type {
   RenameResourceApiRequest,
   ResourceListPageApiResponse,
   UpdateInlineCommentItemApiRequest,
-  UpdateInlineCommentItemApiResponse,
 } from './ResourceApi.type';
 
 // /resource/item/*
@@ -111,9 +110,7 @@ function addInlineCommentItem(req: AddInlineCommentItemApiRequest): Promise<stri
   return apiPost('/resource/inlineComment/addInlineCommentItem', req);
 }
 
-function updateInlineCommentItem(
-  req: UpdateInlineCommentItemApiRequest
-): Promise<UpdateInlineCommentItemApiResponse> {
+function updateInlineCommentItem(req: UpdateInlineCommentItemApiRequest): Promise<void> {
   return apiPost('/resource/inlineComment/updateInlineCommentItem', req);
 }
 

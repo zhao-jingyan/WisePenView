@@ -2,7 +2,7 @@ import { Button, Tooltip } from '@heroui/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { formatCommentDate, isCommentEdited } from './commentSidebarUtils';
+import { formatCommentDate } from './commentSidebarUtils';
 import type {
   WisePenCommentAuthorInfo,
   WisePenCommentsSidebarProps,
@@ -68,10 +68,7 @@ export function WisePenCommentItem({
       <div className={styles.commentMain}>
         <div className={styles.commentHeader}>
           <span className={styles.commentAuthor}>{comment.author.name || '未知用户'}</span>
-          <span className={styles.commentTime}>
-            {formatCommentDate(comment.createdAt)}
-            {isCommentEdited(comment) ? '（已编辑）' : ''}
-          </span>
+          <span className={styles.commentTime}>{formatCommentDate(comment.createdAt)}</span>
         </div>
         {editing ? (
           <div className={styles.commentEditComposer} data-ignore-thread-select>

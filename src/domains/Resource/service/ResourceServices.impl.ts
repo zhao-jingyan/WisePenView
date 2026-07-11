@@ -28,7 +28,6 @@ import type {
   SearchQueryRequest,
   SearchResultPage,
   UpdateInlineCommentItemRequest,
-  UpdateInlineCommentItemResult,
   UpdateResourceActionPermissionRequest,
   UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,
@@ -241,27 +240,43 @@ const listInlineComments = async (params: ListInlineCommentsRequest) => {
   return ResourceServicesMap.mapListInlineCommentsFromApi(data);
 };
 
+const requireInlineCommentResponseId = (
+  id: string | undefined,
+  actionName: string,
+  fieldName: string
+): string => {
+  if (id) {
+    return id;
+  }
+  throw new Error(`${actionName}接口响应缺少 ${fieldName}`);
+};
+
 const createInlineComment = async (params: CreateInlineCommentRequest): Promise<string> => {
   const data = await ResourceInlineCommentApi.createInlineComment(
     ResourceServicesMap.mapCreateInlineCommentRequest(params)
   );
-  return ResourceServicesMap.mapInlineCommentThreadIdFromApi(data) ?? '';
+  return requireInlineCommentResponseId(
+    ResourceServicesMap.mapInlineCommentThreadIdFromApi(data),
+    '创建行内批注',
+    'inlineCommentId'
+  );
 };
 
 const addInlineCommentItem = async (params: AddInlineCommentItemRequest): Promise<string> => {
   const data = await ResourceInlineCommentApi.addInlineCommentItem(
     ResourceServicesMap.mapAddInlineCommentItemRequest(params)
   );
-  return ResourceServicesMap.mapInlineCommentItemIdFromApi(data) ?? '';
+  return requireInlineCommentResponseId(
+    ResourceServicesMap.mapInlineCommentItemIdFromApi(data),
+    '追加行内批注回复',
+    'itemId'
+  );
 };
 
-const updateInlineCommentItem = async (
-  params: UpdateInlineCommentItemRequest
-): Promise<UpdateInlineCommentItemResult> => {
-  const data = await ResourceInlineCommentApi.updateInlineCommentItem(
+const updateInlineCommentItem = async (params: UpdateInlineCommentItemRequest): Promise<void> => {
+  await ResourceInlineCommentApi.updateInlineCommentItem(
     ResourceServicesMap.mapUpdateInlineCommentItemRequest(params)
   );
-  return ResourceServicesMap.mapUpdateInlineCommentItemResultFromApi(data);
 };
 
 const deleteInlineCommentItem = async (params: DeleteInlineCommentItemRequest): Promise<void> => {

@@ -1,3 +1,4 @@
+import type { ThreadData } from '@blocknote/core/comments';
 import type { Doc } from 'yjs';
 
 /**
@@ -9,6 +10,7 @@ export const BLOCKNOTE_YJS_THREAD_REFERENCES_MAP = 'thread-references' as const;
 export const BLOCKNOTE_YJS_COMMENT_USERS_MAP = 'comment-users' as const;
 /** 公式批注的稳定锚点（blockId / inlineIndex），用于在公式编辑或重载后恢复 mark 与侧栏排序 */
 export const BLOCKNOTE_YJS_FORMULA_THREAD_ANCHORS_MAP = 'thread-formula-anchors' as const;
+export const INLINE_MATH_PM_TYPE = 'inlineMath' as const;
 
 export type FormulaThreadAnchor = {
   kind: 'block' | 'inline';
@@ -32,4 +34,9 @@ export function getBlockNoteCommentUsersYMap(doc: Doc) {
 
 export function getBlockNoteFormulaThreadAnchorsYMap(doc: Doc) {
   return doc.getMap<FormulaThreadAnchor>(BLOCKNOTE_YJS_FORMULA_THREAD_ANCHORS_MAP);
+}
+
+/** thread 仍存在且未删除即可保留锚点/高亮；resolved 只影响侧栏筛选，不销毁 sidecar。 */
+export function isThreadActive(thread: ThreadData | undefined): boolean {
+  return Boolean(thread && !thread.deletedAt);
 }

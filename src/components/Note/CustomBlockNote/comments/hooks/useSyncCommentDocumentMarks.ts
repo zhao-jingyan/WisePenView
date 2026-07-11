@@ -6,6 +6,8 @@ import type { WisepenProvider } from '@/domains/Note';
 import type { CustomBlockNoteEditor } from '../../blockNoteSchema';
 import {
   getBlockNoteThreadDocumentSelectionsYMap,
+  hasCommentDocumentYjsBinding,
+  isFormulaCommentSyncing,
   syncPlainTextCommentDocumentMarks,
 } from '../core/commentDocumentMarks';
 import type { CollaboratorCommentVisibility } from '../core/commentSettings';
@@ -26,6 +28,9 @@ type UseSyncCommentDocumentMarksOptions = {
   onAfterDocumentMarksSync?: () => void;
 };
 
+const BINDING_RETRY_DELAY_MS = 50;
+const BINDING_RETRY_LIMIT = 20;
+
 export function useSyncCommentDocumentMarks({
   editor,
   doc,
@@ -40,6 +45,8 @@ export function useSyncCommentDocumentMarks({
   const detachRef = useRef<(() => void) | null>(null);
   const firstSyncFrameRef = useRef<number | null>(null);
   const secondSyncFrameRef = useRef<number | null>(null);
+  const bindingRetryTimerRef = useRef<number | null>(null);
+  const bindingRetryCountRef = useRef(0);
 
   const buildVisibilityContext = (): ThreadVisibilityContext => ({
     currentUserId: commentUserId,
@@ -47,11 +54,34 @@ export function useSyncCommentDocumentMarks({
     collaboratorVisibility,
   });
 
+  const cancelBindingRetry = () => {
+    if (bindingRetryTimerRef.current !== null) {
+      window.clearTimeout(bindingRetryTimerRef.current);
+      bindingRetryTimerRef.current = null;
+    }
+    bindingRetryCountRef.current = 0;
+  };
+
   const runSync = () => {
     if (!commentsEnabled) {
       return;
     }
+    const selectionsYMap = getBlockNoteThreadDocumentSelectionsYMap(doc);
     const formulaAnchorsYMap = getBlockNoteFormulaThreadAnchorsYMap(doc);
+    const needsBinding = selectionsYMap.size > 0 || formulaAnchorsYMap.size > 0;
+    if (needsBinding && !hasCommentDocumentYjsBinding(editor)) {
+      if (bindingRetryCountRef.current >= BINDING_RETRY_LIMIT) {
+        return;
+      }
+      bindingRetryCountRef.current += 1;
+      bindingRetryTimerRef.current = window.setTimeout(() => {
+        bindingRetryTimerRef.current = null;
+        scheduleDocumentMarksSync();
+      }, BINDING_RETRY_DELAY_MS);
+      return;
+    }
+
+    cancelBindingRetry();
     const visibilityContext = buildVisibilityContext();
     syncPlainTextCommentDocumentMarks(editor, doc, formulaAnchorsYMap, visibilityContext);
     onAfterDocumentMarksSync?.();
@@ -81,6 +111,7 @@ export function useSyncCommentDocumentMarks({
       cancelAnimationFrame(secondSyncFrameRef.current);
       secondSyncFrameRef.current = null;
     }
+    cancelBindingRetry();
   };
 
   const detachDocumentMarksSync = () => {
@@ -114,11 +145,19 @@ export function useSyncCommentDocumentMarks({
       }
       scheduleDocumentMarksSync();
     };
+    // CommentMark 不在 Yjs CRDT 内，正文协同/本地编辑会冲掉 mark，需按 sidecar 重挂
+    const handleEditorChange = () => {
+      if (!hasSyncedRef.current || isFormulaCommentSyncing) {
+        return;
+      }
+      scheduleDocumentMarksSync();
+    };
 
     provider.on('sync', handleSync);
     threadsYMap.observeDeep(handleCommentSidecarChange);
     selectionsYMap.observe(handleCommentSidecarChange);
     formulaAnchorsYMap.observe(handleCommentSidecarChange);
+    const stopEditorChange = editor.onChange(handleEditorChange);
 
     if (provider.synced) {
       hasSyncedRef.current = true;
@@ -130,6 +169,7 @@ export function useSyncCommentDocumentMarks({
       threadsYMap.unobserveDeep(handleCommentSidecarChange);
       selectionsYMap.unobserve(handleCommentSidecarChange);
       formulaAnchorsYMap.unobserve(handleCommentSidecarChange);
+      stopEditorChange();
     };
   };
 
@@ -146,6 +186,7 @@ export function useSyncCommentDocumentMarks({
     collaboratorVisibility,
     commentUserId,
     doc,
+    editor,
     isCommentVisibilityPrivileged,
     provider,
   ]);

@@ -8,8 +8,9 @@ import type {
   DeleteInlineCommentItemRequest,
   ResourceInlineCommentThread,
   UpdateInlineCommentItemRequest,
-  UpdateInlineCommentItemResult,
 } from '@/domains/Resource';
+
+import { bumpInlineCommentListSyncEpoch } from './inlineCommentListSyncEpoch';
 
 type CommentBody = CommentData['body'];
 
@@ -17,9 +18,7 @@ export type InlineCommentDataSource = {
   listInlineComments: (params: { resourceId: string }) => Promise<ResourceInlineCommentThread[]>;
   createInlineComment: (params: CreateInlineCommentRequest) => Promise<string>;
   addInlineCommentItem: (params: AddInlineCommentItemRequest) => Promise<string>;
-  updateInlineCommentItem: (
-    params: UpdateInlineCommentItemRequest
-  ) => Promise<UpdateInlineCommentItemResult>;
+  updateInlineCommentItem: (params: UpdateInlineCommentItemRequest) => Promise<void>;
   deleteInlineCommentItem: (params: DeleteInlineCommentItemRequest) => Promise<void>;
   changeInlineCommentResolveStatus: (
     params: ChangeInlineCommentResolveStatusRequest
@@ -100,12 +99,6 @@ function createLocalId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function waitForInlineCommentSync(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
-}
-
 export function buildTextCommentBody(content: string): CommentBody {
   const text = content.trim();
   return [
@@ -169,68 +162,8 @@ function normalizeOptionalCommentDate(value: unknown): Date | undefined {
   return normalizeCommentDate(value);
 }
 
-function readCommentDeletedFromMetadata(metadata: unknown): boolean {
-  if (isGettableMapLike(metadata)) {
-    return Boolean(metadata.get('deleted'));
-  }
-  if (isRecord(metadata)) {
-    return Boolean(metadata.deleted);
-  }
-  return false;
-}
-
-function isDeletedCommentData(comment: CommentData): boolean {
-  return Boolean(comment.deletedAt || readCommentDeletedFromMetadata(comment.metadata));
-}
-
 function getVisibleCommentData(comments: CommentData[]): CommentData[] {
-  return comments.filter((comment) => !isDeletedCommentData(comment));
-}
-
-type InlineCommentItem = ResourceInlineCommentThread['items'][number];
-
-function resolveLatestReplacementItem(
-  item: InlineCommentItem,
-  replacementByOldItemId: Map<string, InlineCommentItem>
-): InlineCommentItem {
-  const visitedItemIds = new Set<string>();
-  let current = item;
-  while (current.itemId && !visitedItemIds.has(current.itemId)) {
-    visitedItemIds.add(current.itemId);
-    const replacement = replacementByOldItemId.get(current.itemId);
-    if (!replacement) {
-      return current;
-    }
-    current = replacement;
-  }
-  return current;
-}
-
-function resolveVisibleInlineCommentItems(items: InlineCommentItem[]): InlineCommentItem[] {
-  const replacementByOldItemId = new Map<string, InlineCommentItem>();
-  const replacementItemIds = new Set<string>();
-  for (const item of items) {
-    if (!item.replacesItemId) {
-      continue;
-    }
-    replacementByOldItemId.set(item.replacesItemId, item);
-    replacementItemIds.add(item.itemId);
-  }
-
-  const visibleItems: InlineCommentItem[] = [];
-  const renderedItemIds = new Set<string>();
-  for (const item of items) {
-    if (replacementItemIds.has(item.itemId)) {
-      continue;
-    }
-    const latestItem = resolveLatestReplacementItem(item, replacementByOldItemId);
-    if (latestItem.deleted || renderedItemIds.has(latestItem.itemId)) {
-      continue;
-    }
-    visibleItems.push(latestItem);
-    renderedItemIds.add(latestItem.itemId);
-  }
-  return visibleItems;
+  return comments.filter((comment) => !comment.deletedAt);
 }
 
 function mapInlineCommentItemToCommentData(
@@ -245,15 +178,12 @@ function mapInlineCommentItemToCommentData(
     userId: item.authorId,
     createdAt,
     updatedAt,
-    deletedAt: item.deleted ? normalizeCommentDate(item.updateTime ?? item.createTime) : undefined,
     reactions: [],
     metadata: {
-      deleted: item.deleted,
       inlineCommentId: thread.inlineCommentId,
-      replacesItemId: item.replacesItemId,
       authorInfo: item.authorInfo,
     },
-    body: item.deleted ? buildTextCommentBody('已删除') : buildTextCommentBody(item.content),
+    body: buildTextCommentBody(item.content),
   };
 }
 
@@ -268,9 +198,7 @@ function mapInlineCommentThreadToThreadData(
     createdAt,
     updatedAt,
     comments: getVisibleCommentData(
-      resolveVisibleInlineCommentItems(thread.items).map((item) =>
-        mapInlineCommentItemToCommentData(thread, item)
-      )
+      thread.items.map((item) => mapInlineCommentItemToCommentData(thread, item))
     ),
     resolved: thread.resolved,
     resolvedUpdatedAt: thread.resolvedAt ? new Date(thread.resolvedAt) : undefined,
@@ -419,14 +347,6 @@ function updateThreadInMap(
   return next;
 }
 
-function isSuspiciousLocalCommentId(threadId: string, commentId: string): boolean {
-  return (
-    commentId === threadId ||
-    commentId.startsWith('inline-comment-item-local') ||
-    commentId.startsWith('inline-thread-local')
-  );
-}
-
 export function createInlineCommentThreadStore(options: {
   resourceId: string;
   threadsYMap: Y.Map<unknown>;
@@ -445,27 +365,6 @@ export function createInlineCommentThreadStore(options: {
   } = options;
   const baseStore = threadStore as unknown as ThreadStoreRuntime;
   const getCurrentUserId = () => getActiveCommentUserId() || baseStore.userId;
-  const resolveServerCommentItemId = async (
-    threadId: string,
-    commentId: string
-  ): Promise<string> => {
-    if (!isSuspiciousLocalCommentId(threadId, commentId)) {
-      return commentId;
-    }
-    const currentThread = getThreadDataFromMap(threadsYMap, threadId);
-    const commentIndex =
-      currentThread?.comments.findIndex((comment) => comment.id === commentId) ?? -1;
-    if (commentIndex < 0) {
-      return commentId;
-    }
-
-    const serverThreads = await dataSource.listInlineComments({ resourceId });
-    const serverThread = serverThreads.find((thread) => thread.inlineCommentId === threadId);
-    const serverItem = serverThread
-      ? resolveVisibleInlineCommentItems(serverThread.items)[commentIndex]
-      : undefined;
-    return serverItem?.itemId || commentId;
-  };
 
   const customStore: ThreadStoreRuntime = {
     ...baseStore,
@@ -489,7 +388,6 @@ export function createInlineCommentThreadStore(options: {
     },
     async createThread(args: CreateThreadArgs) {
       const externalAnchorId = createLocalId('inline-anchor');
-      const localThreadId = createLocalId('inline-thread-local');
       const initialContent = extractPlainTextFromCommentBody(args.initialComment.body);
       const referenceText =
         getPendingReferenceText?.() ??
@@ -505,59 +403,19 @@ export function createInlineCommentThreadStore(options: {
         imageUrls: [],
         mentionUserIds: [],
       });
-      const threadId = createdInlineCommentId || localThreadId;
+      // 使挂载期等在途 list 失效，避免用旧列表把刚创建的 thread/sidecar 清掉
+      bumpInlineCommentListSyncEpoch();
 
-      let latestThreads = await dataSource.listInlineComments({ resourceId });
-      let createdThreadFromApi = latestThreads.find((thread) =>
-        createdInlineCommentId
-          ? thread.inlineCommentId === createdInlineCommentId
-          : thread.anchor.externalAnchorId === externalAnchorId
+      const latestThreads = await dataSource.listInlineComments({ resourceId });
+      const createdThreadFromApi = latestThreads.find(
+        (thread) => thread.inlineCommentId === createdInlineCommentId
       );
-      if (!createdThreadFromApi && createdInlineCommentId) {
-        await waitForInlineCommentSync(120);
-        latestThreads = await dataSource.listInlineComments({ resourceId });
-        createdThreadFromApi = latestThreads.find(
-          (thread) => thread.inlineCommentId === createdInlineCommentId
-        );
-      }
       if (createdThreadFromApi) {
         const createdThread = mapInlineCommentThreadToThreadData(createdThreadFromApi);
         setThreadDataToMap(threadsYMap, createdThread);
         return createdThread;
       }
-      if (createdInlineCommentId) {
-        throw new Error('批注创建失败');
-      }
-
-      const now = new Date();
-      const createdThread: PlainThreadRecord = {
-        type: 'thread',
-        id: threadId,
-        createdAt: now,
-        updatedAt: now,
-        comments: [
-          {
-            type: 'comment',
-            id: createdInlineCommentId || createLocalId('inline-comment-item-local'),
-            userId: getCurrentUserId(),
-            createdAt: now,
-            updatedAt: now,
-            reactions: [],
-            metadata: args.initialComment.metadata ?? {},
-            body: args.initialComment.body,
-          },
-        ],
-        resolved: false,
-        metadata: {
-          ...(args.metadata ?? {}),
-          ...(referenceText ? { quoteText: referenceText } : {}),
-          externalAnchorId,
-          inlineCommentPendingServerId: !createdInlineCommentId,
-        },
-      };
-
-      setThreadDataToMap(threadsYMap, createdThread);
-      return createdThread;
+      throw new Error('批注创建失败');
     },
     async addComment(args: AddCommentArgs) {
       const now = new Date();
@@ -569,11 +427,11 @@ export function createInlineCommentThreadStore(options: {
         imageUrls: [],
         mentionUserIds: [],
       });
-      const itemId = createdItemId || createLocalId('inline-comment-item-local');
+      bumpInlineCommentListSyncEpoch();
 
       const comment: CommentData = {
         type: 'comment',
-        id: itemId,
+        id: createdItemId,
         userId: getCurrentUserId(),
         createdAt: now,
         updatedAt: now,
@@ -592,20 +450,15 @@ export function createInlineCommentThreadStore(options: {
     },
     async updateComment(args: UpdateCommentArgs) {
       const content = extractPlainTextFromCommentBody(args.comment.body);
-      const currentThread = getThreadDataFromMap(threadsYMap, args.threadId);
-      const itemIndex = currentThread?.comments.findIndex(
-        (comment) => comment.id === args.commentId
-      );
-      const serverItemId = await resolveServerCommentItemId(args.threadId, args.commentId);
-      const updateResult = await dataSource.updateInlineCommentItem({
+      await dataSource.updateInlineCommentItem({
         resourceId,
         inlineCommentId: args.threadId,
-        itemId: serverItemId,
-        ...(itemIndex != null && itemIndex >= 0 ? { itemIndex } : {}),
+        itemId: args.commentId,
         content,
         imageUrls: [],
         mentionUserIds: [],
       });
+      bumpInlineCommentListSyncEpoch();
       const now = new Date();
       updateThreadInMap(threadsYMap, args.threadId, (thread) => ({
         ...thread,
@@ -614,14 +467,11 @@ export function createInlineCommentThreadStore(options: {
           comment.id === args.commentId
             ? {
                 ...comment,
-                id: updateResult.newItemId || createLocalId('inline-comment-item-local'),
                 userId: getCurrentUserId(),
-                createdAt: now,
                 updatedAt: now,
                 metadata: {
                   ...(isRecord(comment.metadata) ? comment.metadata : {}),
                   ...(args.comment.metadata ?? {}),
-                  replacesItemId: updateResult.oldItemId || serverItemId,
                 },
                 body: args.comment.body,
               }
@@ -635,25 +485,13 @@ export function createInlineCommentThreadStore(options: {
         inlineCommentId: args.threadId,
         itemId: args.commentId,
       });
+      bumpInlineCommentListSyncEpoch();
 
       const now = new Date();
       updateThreadInMap(threadsYMap, args.threadId, (thread) => ({
         ...thread,
         updatedAt: now,
-        comments: thread.comments.map((comment) =>
-          comment.id === args.commentId
-            ? {
-                ...comment,
-                body: buildTextCommentBody('已删除'),
-                deletedAt: now,
-                updatedAt: now,
-                metadata: {
-                  ...(isRecord(comment.metadata) ? comment.metadata : {}),
-                  deleted: true,
-                },
-              }
-            : comment
-        ),
+        comments: thread.comments.filter((comment) => comment.id !== args.commentId),
       }));
     },
     async deleteThread() {
@@ -665,6 +503,7 @@ export function createInlineCommentThreadStore(options: {
         inlineCommentId: args.threadId,
         resolved: true,
       });
+      bumpInlineCommentListSyncEpoch();
 
       const now = new Date();
       updateThreadInMap(threadsYMap, args.threadId, (thread) => ({
@@ -681,6 +520,7 @@ export function createInlineCommentThreadStore(options: {
         inlineCommentId: args.threadId,
         resolved: false,
       });
+      bumpInlineCommentListSyncEpoch();
 
       const now = new Date();
       updateThreadInMap(threadsYMap, args.threadId, (thread) => ({

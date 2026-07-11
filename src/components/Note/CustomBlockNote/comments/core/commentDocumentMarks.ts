@@ -11,8 +11,11 @@ import * as Y from 'yjs';
 
 import type { CustomBlockNoteEditor } from '../../blockNoteSchema';
 import { getRootDomSelection } from '../../plugins/editorProseMirrorRoot';
-import { isThreadActive } from '../../plugins/LatexPlugin/comments/latexCommentSupport';
-import { getBlockNoteThreadsYMap, type FormulaThreadAnchor } from './commentThreadConstants';
+import {
+  getBlockNoteThreadsYMap,
+  isThreadActive,
+  type FormulaThreadAnchor,
+} from './commentThreadConstants';
 import { getHiddenThreadIdsForUser, type ThreadVisibilityContext } from './threadVisibility';
 
 export const WISEPEN_COMMENT_MARK_SYNC_META = 'wisePenCommentMarkSync';
@@ -132,6 +135,11 @@ function resolveStoredThreadDocumentRange(
   }
 }
 
+/**
+ * 判断 [from, to] 内所有文本是否都挂有该 thread 的可见 CommentMark。
+ * 不能只查“是否存在任意一处 mark”：跨块批注在行尾/块边界插入时，
+ * 原区间其它位置仍有 mark，会导致漏补新插入文字的高亮。
+ */
 function commentMarkCoversThread(
   editor: CustomBlockNoteEditor,
   threadId: string,
@@ -143,21 +151,28 @@ function commentMarkCoversThread(
     return false;
   }
 
-  let found = false;
-  editor.prosemirrorView.state.doc.nodesBetween(from, to, (node) => {
-    if (found) {
+  let hasText = false;
+  let fullyCovered = true;
+  editor.prosemirrorView.state.doc.nodesBetween(from, to, (node, pos) => {
+    if (!fullyCovered || !node.isText || !node.text) {
+      return fullyCovered;
+    }
+    const overlapFrom = Math.max(from, pos);
+    const overlapTo = Math.min(to, pos + node.nodeSize);
+    if (overlapFrom >= overlapTo) {
       return;
     }
-    if (
-      node.marks.some(
-        (mark) =>
-          mark.type === markType && mark.attrs.threadId === threadId && mark.attrs.orphan !== true
-      )
-    ) {
-      found = true;
+    hasText = true;
+    const covered = node.marks.some(
+      (mark) =>
+        mark.type === markType && mark.attrs.threadId === threadId && mark.attrs.orphan !== true
+    );
+    if (!covered) {
+      fullyCovered = false;
+      return false;
     }
   });
-  return found;
+  return hasText && fullyCovered;
 }
 
 export function orphanCommentMarksForThreadIds(
@@ -222,10 +237,25 @@ export function applyCommentMarkToRange(
     if (selectedNode?.type.name === 'math' && to <= from + selectedNode.nodeSize) {
       return;
     }
+    // 先清掉同 thread 的 orphan mark，再挂回可见高亮
+    tr.doc.nodesBetween(from, to, (node, pos) => {
+      if (!node.isText) {
+        return;
+      }
+      node.marks.forEach((mark) => {
+        if (mark.type === markType && mark.attrs.threadId === threadId) {
+          tr.removeMark(pos, pos + node.nodeSize, mark);
+        }
+      });
+    });
     tr.addMark(from, to, markType.create({ threadId, orphan: false }));
   });
 
   return commentMarkCoversThread(editor, threadId, from, to);
+}
+
+export function hasCommentDocumentYjsBinding(editor: CustomBlockNoteEditor): boolean {
+  return getYjsBinding(editor) !== null;
 }
 
 export function pruneThreadDocumentSelections(

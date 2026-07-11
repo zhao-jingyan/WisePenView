@@ -7,10 +7,6 @@ export function formatCommentDate(value: Date): string {
   });
 }
 
-export function isCommentEdited(comment: WisePenSidebarComment): boolean {
-  return Math.abs(comment.updatedAt.getTime() - comment.createdAt.getTime()) > 1000;
-}
-
 export function getVisibleComments(
   comments: WisePenSidebarComment[],
   selected: boolean,

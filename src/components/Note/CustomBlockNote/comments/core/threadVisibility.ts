@@ -48,6 +48,10 @@ export function getHiddenThreadIdsForUser(
   if (context.isPrivileged || context.collaboratorVisibility === 'all') {
     return new Set();
   }
+  // 用户身份尚未就绪时不隐藏，避免把全部 mark 误标为 orphan 导致高亮消失
+  if (!context.currentUserId) {
+    return new Set();
+  }
 
   const hidden = new Set<string>();
   for (const thread of threads) {

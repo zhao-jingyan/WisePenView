@@ -19,7 +19,6 @@ import type {
   SearchQueryRequest,
   SearchResultPage,
   UpdateInlineCommentItemRequest,
-  UpdateInlineCommentItemResult,
   UpdateResourcePermissionSubjectsRequest,
 } from '@/domains/Resource';
 import {
@@ -347,14 +346,8 @@ const addInlineCommentItem = async (_params: AddInlineCommentItemRequest): Promi
   return `mock-inline-comment-item-${Date.now()}`;
 };
 
-const updateInlineCommentItem = async (
-  params: UpdateInlineCommentItemRequest
-): Promise<UpdateInlineCommentItemResult> => {
+const updateInlineCommentItem = async (_params: UpdateInlineCommentItemRequest): Promise<void> => {
   await delay(120);
-  return {
-    oldItemId: params.itemId,
-    newItemId: `mock-inline-comment-item-${Date.now()}`,
-  };
 };
 
 const deleteInlineCommentItem = async (_params: DeleteInlineCommentItemRequest): Promise<void> => {

@@ -46,8 +46,7 @@ type CustomThreadsSidebarProps = {
 };
 
 function isDeletedComment(comment: CommentData): boolean {
-  const metadata = comment.metadata as { deleted?: unknown } | undefined;
-  return Boolean(comment.deletedAt || metadata?.deleted);
+  return Boolean(comment.deletedAt);
 }
 
 function mapThreadToSidebarThread(

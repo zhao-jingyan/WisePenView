@@ -121,31 +121,71 @@ type YMapLike = {
 
 type YArrayLike = {
   get: (index: number) => unknown;
+  length: number;
 };
 
 function isGettable(value: unknown): value is YMapLike {
   return typeof value === 'object' && value !== null && 'get' in value;
 }
 
-function getFirstCommentId(rawThread: unknown): string | undefined {
-  if (isGettable(rawThread)) {
-    const rawComments = rawThread.get('comments');
-    if (!isGettable(rawComments)) {
-      return undefined;
-    }
-    const firstComment = (rawComments as YArrayLike).get(0);
-    const firstCommentId = isGettable(firstComment) ? firstComment.get('id') : undefined;
-    return typeof firstCommentId === 'string' ? firstCommentId : undefined;
-  }
-
-  const plainThread = rawThread as { comments?: Array<{ id?: unknown }> } | undefined;
-  const firstCommentId = plainThread?.comments?.[0]?.id;
-  return typeof firstCommentId === 'string' ? firstCommentId : undefined;
+function isYArrayLike(value: unknown): value is YArrayLike {
+  return isGettable(value) && typeof (value as { length?: unknown }).length === 'number';
 }
 
-function isDeletingInitialComment(threadsYMap: Y.Map<unknown>, args: DeleteCommentArgs): boolean {
-  const firstCommentId = getFirstCommentId(threadsYMap.get(args.threadId));
-  return Boolean(firstCommentId) && firstCommentId === args.commentId;
+function isDeletedComment(rawComment: unknown): boolean {
+  if (isGettable(rawComment)) {
+    return Boolean(rawComment.get('deletedAt'));
+  }
+  if (typeof rawComment === 'object' && rawComment !== null) {
+    return Boolean((rawComment as { deletedAt?: unknown }).deletedAt);
+  }
+  return false;
+}
+
+function readCommentId(rawComment: unknown): string | undefined {
+  if (isGettable(rawComment)) {
+    const id = rawComment.get('id');
+    return typeof id === 'string' ? id : undefined;
+  }
+  if (typeof rawComment === 'object' && rawComment !== null) {
+    const id = (rawComment as { id?: unknown }).id;
+    return typeof id === 'string' ? id : undefined;
+  }
+  return undefined;
+}
+
+function getVisibleCommentIds(rawThread: unknown): string[] {
+  if (isGettable(rawThread)) {
+    const rawComments = rawThread.get('comments');
+    if (!isYArrayLike(rawComments)) {
+      return [];
+    }
+    const ids: string[] = [];
+    for (let index = 0; index < rawComments.length; index += 1) {
+      const rawComment = rawComments.get(index);
+      const id = readCommentId(rawComment);
+      if (id && !isDeletedComment(rawComment)) {
+        ids.push(id);
+      }
+    }
+    return ids;
+  }
+
+  const plainThread = rawThread as { comments?: unknown[] } | undefined;
+  return Array.isArray(plainThread?.comments)
+    ? plainThread.comments
+        .filter((comment) => !isDeletedComment(comment))
+        .map(readCommentId)
+        .filter((id): id is string => Boolean(id))
+    : [];
+}
+
+function isDeletingLastVisibleComment(
+  threadsYMap: Y.Map<unknown>,
+  args: DeleteCommentArgs
+): boolean {
+  const visibleCommentIds = getVisibleCommentIds(threadsYMap.get(args.threadId));
+  return visibleCommentIds.length === 1 && visibleCommentIds[0] === args.commentId;
 }
 
 function deleteThreadSidecarData(doc: Doc | undefined, threadId: string): void {
@@ -216,7 +256,7 @@ export function buildCommentsExtension(
   const originalDeleteComment = threadStoreWithDocumentMarks.deleteComment.bind(threadStore);
 
   threadStoreWithDocumentMarks.deleteComment = async (args: DeleteCommentArgs) => {
-    const shouldDeleteThread = isDeletingInitialComment(threadsYMap, args);
+    const shouldDeleteThread = isDeletingLastVisibleComment(threadsYMap, args);
     await originalDeleteComment(args);
     if (!shouldDeleteThread) {
       return;

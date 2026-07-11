@@ -59,9 +59,7 @@ export interface IResourceService {
   /** 追加批注回复 */
   addInlineCommentItem(params: AddInlineCommentItemRequest): Promise<string>;
   /** 修改批注回复 */
-  updateInlineCommentItem(
-    params: UpdateInlineCommentItemRequest
-  ): Promise<UpdateInlineCommentItemResult>;
+  updateInlineCommentItem(params: UpdateInlineCommentItemRequest): Promise<void>;
   /** 删除批注回复 */
   deleteInlineCommentItem(params: DeleteInlineCommentItemRequest): Promise<void>;
   /** 更新批注串解决状态 */
@@ -227,13 +225,11 @@ export interface ResourceInlineCommentAnchor {
 
 export interface ResourceInlineCommentItem {
   itemId: string;
-  replacesItemId?: string;
   authorId: string;
   authorInfo?: ResourceInlineCommentAuthorInfo;
   content: string;
   imageUrls: string[];
   mentionUserIds: string[];
-  deleted: boolean;
   createTime?: string;
   updateTime?: string;
 }
@@ -287,16 +283,10 @@ export interface UpdateInlineCommentItemRequest {
   resourceId: string;
   inlineCommentId: string;
   itemId: string;
-  itemIndex?: number;
   contentVersion?: number;
   content: string;
   imageUrls?: string[];
   mentionUserIds?: string[];
-}
-
-export interface UpdateInlineCommentItemResult {
-  oldItemId: string;
-  newItemId: string;
 }
 
 export interface DeleteInlineCommentItemRequest {

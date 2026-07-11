@@ -11,6 +11,7 @@ import {
   getBlockNoteFormulaThreadAnchorsYMap,
   getBlockNoteThreadReferencesYMap,
   getBlockNoteThreadsYMap,
+  isThreadActive,
   type FormulaThreadAnchor,
 } from '../../../comments/core/commentThreadConstants';
 import {
@@ -35,7 +36,6 @@ import {
   captureInlineMathAnchor,
   formatFormulaReferenceText,
   getCommentsExtension,
-  isThreadActive,
   resolveAllFormulaThreadPositions,
   selectInlineMathNode,
   selectMathBlock,
@@ -132,6 +132,8 @@ export function useFormulaComments({
           Array.from(threadsYMap.values()) as ThreadData[],
           visibilityContext
         );
+        // 每次重试挂 mark，避免首次 timing 失败后永久跳过
+        unmarkableFormulaThreadsRef.current.clear();
         runWithFormulaCommentSync(() => {
           syncFormulaThreadMarks(
             editor,
