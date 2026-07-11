@@ -6,7 +6,6 @@ import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactN
 import { Link } from 'react-router-dom';
 
 import EntryIcon from '@/components/Icons/EntryIcon';
-import ResourceActionFooter from '@/components/interact/ResourceActionFooter';
 import CustomBlockNote from '@/components/Note/CustomBlockNote';
 import { useCommentSettingsSync } from '@/components/Note/CustomBlockNote/comments';
 import type {
@@ -489,7 +488,6 @@ function NoteViewConnected({
                     />
                   ) : null}
                 </div>
-                <ResourceActionFooter resourceId={resourceId} onRateSuccess={onRefreshNoteInfo} />
               </div>
             </div>
           </div>
