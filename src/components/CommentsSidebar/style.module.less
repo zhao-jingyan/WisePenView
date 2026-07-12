@@ -15,16 +15,16 @@
 .threadCard,
 .threadCardSelected {
   position: relative;
-  border: 1px solid var(--ant-color-border-secondary, #f0f0f0);
-  border-radius: var(--ant-border-radius, 6px);
-  background: var(--ant-color-bg-container, #fff);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--surface);
   box-shadow: none;
   padding: 10px;
 }
 
 .threadCardSelected {
-  border-color: color-mix(in srgb, var(--ant-color-primary, #1677ff) 48%, transparent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ant-color-primary, #1677ff) 12%, transparent);
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .threadHeader {
@@ -41,7 +41,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--ant-color-text-secondary);
+  color: var(--muted);
   cursor: pointer;
   font-size: 12px;
   line-height: 1.4;
@@ -50,7 +50,7 @@
   word-break: break-word;
 
   &:hover {
-    color: var(--ant-color-primary);
+    color: var(--accent);
   }
 }
 
@@ -84,8 +84,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--ant-color-text-secondary);
-  background: var(--ant-color-fill-tertiary);
+  color: var(--muted);
+  background: var(--surface-tertiary);
   font-size: 12px;
   font-weight: 600;
 }
@@ -103,7 +103,7 @@
 
 .commentAuthor {
   min-width: 0;
-  color: var(--ant-color-text);
+  color: var(--foreground);
   font-size: 13px;
   font-weight: 600;
   overflow: hidden;
@@ -112,14 +112,14 @@
 }
 
 .commentTime {
-  color: var(--ant-color-text-tertiary);
+  color: var(--muted);
   font-size: 11px;
   white-space: nowrap;
 }
 
 .commentBody {
   margin-top: 4px;
-  color: var(--ant-color-text);
+  color: var(--foreground);
   font-size: 13px;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -145,13 +145,13 @@
   padding: 4px 0;
   border: 0;
   background: transparent;
-  color: var(--ant-color-text-secondary);
+  color: var(--muted);
   cursor: pointer;
   font-size: 12px;
   text-align: left;
 
   &:hover {
-    color: var(--ant-color-primary);
+    color: var(--accent);
   }
 }
 
@@ -167,19 +167,19 @@
   min-height: 54px;
   max-height: 120px;
   resize: vertical;
-  border: 1px solid var(--ant-color-border, #d9d9d9);
-  border-radius: var(--ant-border-radius, 6px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 7px 9px;
-  color: var(--ant-color-text);
-  background: var(--ant-color-bg-container, #fff);
+  color: var(--field-foreground, var(--foreground));
+  background: var(--field-background, var(--surface));
   font: inherit;
   font-size: 13px;
   line-height: 1.5;
 
   &:focus {
     outline: none;
-    border-color: var(--ant-color-primary, #1677ff);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ant-color-primary, #1677ff) 12%, transparent);
+    border-color: var(--focus);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus) 20%, transparent);
   }
 }
 
@@ -197,7 +197,7 @@
 
 .commentsEmpty {
   padding: 16px 8px;
-  color: var(--ant-color-text-tertiary);
+  color: var(--muted);
   font-size: 13px;
   text-align: center;
 }
@@ -214,16 +214,16 @@
   height: 24px;
   padding: 0;
   border: 0;
-  border-radius: var(--ant-border-radius-sm);
+  border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--ant-color-text-secondary);
-  background: var(--ant-color-bg-container);
+  color: var(--muted);
+  background: var(--surface);
   cursor: pointer;
 
   &:hover {
-    color: var(--ant-color-primary);
-    background: var(--ant-color-fill-tertiary);
+    color: var(--accent);
+    background: var(--surface-tertiary);
   }
 }

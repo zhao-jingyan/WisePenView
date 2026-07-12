@@ -5,32 +5,6 @@
   --workspace-view-max-width: 1200px;
 }
 
-.toolbarTitleText {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex: 1;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.toolbarTitleIcon {
-  display: inline-flex;
-  flex: 0 0 18px;
-  width: 18px;
-  height: 18px;
-  align-items: center;
-  justify-content: center;
-  line-height: 0;
-}
-
-.toolbarTitleLabel {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* 会话未就绪时仍挂载子树（跑 Yjs / BlockNote），但不交互、不可见 */
 .mainScroll {
   flex: 1;
@@ -61,45 +35,54 @@
   line-height: 1;
 }
 
-.headerToolbarExtra {
+.headerResourceActions {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  min-width: 0;
-}
-
-.headerMoreWrap {
   flex-shrink: 0;
-  margin-left: auto;
 }
 
-.headerActionsEnd {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.noteMorePopover {
-  min-width: 252px;
-  padding: var(--ant-padding-xs);
-  border-radius: var(--ant-border-radius);
-}
-
-.ownerCommentPolicyRow {
-  margin-top: var(--ant-margin-xxs);
-  padding: var(--ant-padding-xs) var(--ant-padding-sm);
-  border-bottom: 1px solid var(--ant-color-border-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ant-margin-md);
-}
-
-.ownerCommentPolicyLabel {
-  font-size: var(--ant-font-size);
+.headerSaveStatus {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-sm);
   white-space: nowrap;
+}
+
+.headerSaveStatusWaiting {
+  color: var(--warning);
+}
+
+.headerSaveStatusFailed {
+  color: var(--danger);
+}
+
+.commentVisibilitySetting {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.commentVisibilityCopy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.commentVisibilityTitle {
+  color: var(--overlay-foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: var(--line-height-sm);
+}
+
+.commentVisibilityDescription {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
 }
 
 .aiDiffDisplayModeSwitch {
@@ -131,7 +114,17 @@
   flex: 1;
   min-height: 0;
   display: flex;
+  position: relative;
+  box-sizing: border-box;
   overflow: hidden;
+}
+
+.contentRowOutlineOpen {
+  padding-left: 260px;
+}
+
+.contentRowOutlineCollapsed {
+  padding-left: 40px;
 }
 
 .mainPanel {
@@ -142,19 +135,21 @@
 }
 
 .outlinePanel {
-  flex: 0 0 260px;
+  position: absolute;
+  inset: 0 auto 0 0;
   width: 260px;
-  height: 100%;
   min-width: 0;
   min-height: 0;
+  z-index: 1;
 }
 
 .outlineCollapsedPanel {
-  flex: 0 0 40px;
+  position: absolute;
+  inset: 0 auto 0 0;
   width: 40px;
-  height: 100%;
   min-width: 0;
   min-height: 0;
+  z-index: 1;
 }
 
 .resourceAsidePanel {
@@ -176,6 +171,22 @@
   overflow: auto;
   scrollbar-gutter: stable;
   .appSubtleScrollbar();
+  scrollbar-color: transparent transparent;
+
+  &::-webkit-scrollbar-thumb,
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    transition: background-color 200ms ease;
+  }
+
+  &.mainColScrolling {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+      background-clip: content-box;
+    }
+  }
 }
 
 .bodyEditorLoading {
@@ -225,6 +236,21 @@
   overflow: auto;
   scrollbar-gutter: stable;
   .appSubtleScrollbar();
+  scrollbar-color: transparent transparent;
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    transition: background-color 200ms ease;
+  }
+
+  &:hover {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+      background-clip: content-box;
+    }
+  }
 }
 
 .outlineCollapsedCol {

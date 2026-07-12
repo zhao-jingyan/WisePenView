@@ -3,7 +3,7 @@ import { zh } from '@blocknote/core/locales';
 import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
 import { useCreateBlockNote } from '@blocknote/react';
-import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
+import { useMemoizedFn, useMount, useUnmount, useUpdateEffect } from 'ahooks';
 import React, { useImperativeHandle, useMemo, useRef, type Ref } from 'react';
 
 import { useNewNoteStore } from '@/components/Note/_store/useNewNoteStore';
@@ -12,7 +12,7 @@ import { useNoteService } from '@/domains';
 
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
-import type { NoteTitleHandle, NoteTitleProps } from './index.type';
+import type { NoteTitleHandle, NoteTitleProps, NoteTitleSaveStatus } from './index.type';
 import styles from './style.module.less';
 
 /** 与 Pipeline 一致的防抖时长（ms） */
@@ -67,6 +67,7 @@ function NoteTitle({
   onEnterKey,
   focusOnMount,
   readOnly = false,
+  onSaveStatusChange,
   ref,
 }: NoteTitleProps & { ref?: Ref<NoteTitleHandle> }) {
   const noteService = useNoteService();
@@ -76,6 +77,10 @@ function NoteTitle({
   const onChangeCleanupRef = useRef<(() => void) | null>(null);
   const beforeChangeCleanupRef = useRef<(() => void) | null>(null);
   const readOnlyRef = useRef(readOnly);
+  const saveVersionRef = useRef(0);
+  const emitSaveStatus = useMemoizedFn((status: NoteTitleSaveStatus) => {
+    onSaveStatusChange?.(status);
+  });
 
   useUpdateEffect(() => {
     latestIdRef.current = id;
@@ -143,6 +148,9 @@ function NoteTitle({
       if (!readOnlyRef.current) {
         const currentId = latestIdRef.current;
         if (currentId) {
+          saveVersionRef.current += 1;
+          const saveVersion = saveVersionRef.current;
+          emitSaveStatus('saving');
           if (titleDebounceTimerRef.current) {
             clearTimeout(titleDebounceTimerRef.current);
             titleDebounceTimerRef.current = null;
@@ -152,11 +160,19 @@ function NoteTitle({
             const block = editor.document[0];
             const raw = getBlockPlainText(block as { content?: unknown[] } | undefined);
             const nextTitle = raw.trim() || '未命名笔记';
-            void noteService
-              .syncTitle({ resourceId: currentId, newName: nextTitle })
-              .catch((error) => {
+            void noteService.syncTitle({ resourceId: currentId, newName: nextTitle }).then(
+              () => {
+                if (saveVersion === saveVersionRef.current) {
+                  emitSaveStatus('saved');
+                }
+              },
+              (error: unknown) => {
+                if (saveVersion === saveVersionRef.current) {
+                  emitSaveStatus('failed');
+                }
                 toast.danger(parseErrorMessage(error));
-              });
+              }
+            );
           }, TITLE_DEBOUNCE_MS);
         }
       }

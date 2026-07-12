@@ -20,6 +20,8 @@ export type {
   SaveDrawIoSnapshotRequest,
   SyncTitleRequest,
 } from './service/index.type';
+export { NoteSaveStatusObserver } from './session/NoteSaveStatusObserver';
+export type { NoteSaveStatus } from './session/NoteSaveStatusObserver';
 export { NoteStatusObserver } from './session/NoteStatusObserver';
 export type { NoteSessionStatus } from './session/NoteStatusObserver';
 export { encodeNoteClientStateVector } from './session/stateVector';

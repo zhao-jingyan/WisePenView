@@ -5,6 +5,8 @@ export interface NoteTitleHandle {
   getProseMirrorRoot: () => HTMLElement | null;
 }
 
+export type NoteTitleSaveStatus = 'saving' | 'saved' | 'failed';
+
 export interface NoteTitleProps {
   /** 资源/笔记 ID，对应 syncTitle 的 resourceId；未传则不发起标题同步 */
   id?: string;
@@ -16,4 +18,6 @@ export interface NoteTitleProps {
   focusOnMount?: boolean;
   /** 无协同编辑权限时为只读，不触发标题同步 */
   readOnly?: boolean;
+  /** 标题防抖保存状态变化 */
+  onSaveStatusChange?: (status: NoteTitleSaveStatus) => void;
 }

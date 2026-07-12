@@ -27,8 +27,8 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--ant-color-border-secondary, #f0f0f0);
-  background: var(--ant-color-bg-container, #fff);
+  border-left: 1px solid var(--separator);
+  background: var(--surface);
   overflow: visible;
 }
 
@@ -50,7 +50,7 @@
 
   &:hover,
   .threadsSidebarPanelResizing & {
-    background: color-mix(in srgb, var(--ant-color-primary, #1677ff) 20%, transparent);
+    background: var(--accent-soft-hover);
   }
 }
 

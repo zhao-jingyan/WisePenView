@@ -4,6 +4,7 @@ import * as Y from 'yjs';
 
 import { useEffectForce } from '@/hooks/useEffectForce';
 
+import { NoteSaveStatusObserver } from './NoteSaveStatusObserver';
 import { NoteStatusObserver } from './NoteStatusObserver';
 import { WisepenProvider } from './WisepenProvider';
 
@@ -67,8 +68,10 @@ export function useNoteSession(resourceId: string, options: UseNoteSessionOption
     const provider = new WisepenProvider(resourceId, doc, { connect: false, actorUserId });
     const idb = new IndexeddbPersistence(noteYjsIdbRoomName(resourceId), doc);
     const observer = new NoteStatusObserver();
+    const saveObserver = new NoteSaveStatusObserver();
     const idbObserver = new NoteIndexeddbSyncObserver(idb);
     observer.attach(provider);
+    saveObserver.attach(doc, provider);
 
     const reconnect = () => {
       observer.setConnecting();
@@ -78,16 +81,21 @@ export function useNoteSession(resourceId: string, options: UseNoteSessionOption
 
     const destroy = () => {
       observer.detach();
+      saveObserver.detach();
       idbObserver.detach();
       provider.destroy();
       void idb.destroy();
       doc.destroy();
     };
 
-    return { doc, provider, observer, idbObserver, reconnect, destroy };
+    return { doc, provider, observer, saveObserver, idbObserver, reconnect, destroy };
   }, [actorUserId, resourceId]);
 
   const status = useSyncExternalStore(session.observer.subscribe, session.observer.getSnapshot);
+  const saveStatus = useSyncExternalStore(
+    session.saveObserver.subscribe,
+    session.saveObserver.getSnapshot
+  );
   const idbSynced = useSyncExternalStore(
     session.idbObserver.subscribe,
     session.idbObserver.getSnapshot
@@ -109,6 +117,7 @@ export function useNoteSession(resourceId: string, options: UseNoteSessionOption
 
   return {
     status,
+    saveStatus,
     doc: session.doc,
     provider: session.provider,
     reconnect: session.reconnect,

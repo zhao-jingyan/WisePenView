@@ -5,7 +5,6 @@ import { ChevronsRight, Menu, MessageSquare, MessagesSquare } from 'lucide-react
 import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
-import EntryIcon from '@/components/Icons/EntryIcon';
 import CustomBlockNote from '@/components/Note/CustomBlockNote';
 import { useCommentSettingsSync } from '@/components/Note/CustomBlockNote/comments';
 import type {
@@ -20,30 +19,37 @@ import {
 import { useNoteResourceAsideStore } from '@/components/Note/_store/useNoteResourceAsideStore';
 import ResourceDiscussionPanel from '@/components/interact/ResourceDiscussionPanel';
 import { useNoteService, useResourceService, useUserService } from '@/domains';
-import type { AiDiffDisplayMode, NoteInfoDisplayData, NoteSelectionSnapshot } from '@/domains/Note';
+import type {
+  AiDiffDisplayMode,
+  NoteInfoDisplayData,
+  NoteSaveStatus,
+  NoteSelectionSnapshot,
+} from '@/domains/Note';
 import {
   AI_DIFF_DISPLAY_MODE,
   AI_DIFF_DISPLAY_MODE_LABELS,
   encodeNoteClientStateVector,
   useNoteSession,
 } from '@/domains/Note';
-import { RESOURCE_TYPE, isCommentVisibilityPrivileged } from '@/domains/Resource';
+import { isCommentVisibilityPrivileged } from '@/domains/Resource';
 import type { User } from '@/domains/User';
 import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
-import { useWorkspaceLayoutConfig } from '@/layouts/Workspace/WorkspaceOutletContext';
+import {
+  useWorkspaceLayoutConfig,
+  type WorkspaceLayoutConfig,
+} from '@/layouts/Workspace/WorkspaceOutletContext';
 import { useWorkspaceChatProtocolStore } from '@/layouts/Workspace/_store/useWorkspaceChatProtocolStore';
 import { parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
-import { Alert, Button, Dropdown, Switch, ToggleButton, Tooltip, toast } from '@heroui/react';
-import ResourcePermissionControl from '../_components/ResourcePermissionControl';
+import { Alert, Button, Switch, ToggleButton, Tooltip, toast } from '@heroui/react';
 import {
   createNoteSelectionChatContext,
   createNoteWorkspaceChatStateProvider,
 } from './NoteWorkspaceChatProtocol';
 import NoteInfoBar from './_components/NoteInfoBar';
 import NoteTitle from './_components/NoteTitle';
-import type { NoteTitleHandle } from './_components/NoteTitle/index.type';
+import type { NoteTitleHandle, NoteTitleSaveStatus } from './_components/NoteTitle/index.type';
 import { useAiDiffDisplayStore } from './_store/useAiDiffDisplayStore';
 import styles from './style.module.less';
 
@@ -51,11 +57,6 @@ interface NoteViewConnectedProps {
   resourceId: string;
   noteInfoDisplay: NoteInfoDisplayData;
   onRefreshNoteInfo: () => unknown | Promise<unknown>;
-}
-
-interface NoteToolbarTitleProps {
-  resourceId: string;
-  fallbackTitle?: string;
 }
 
 const AI_DIFF_DISPLAY_OPTIONS: Array<{ value: AiDiffDisplayMode; label: string }> = [
@@ -107,24 +108,30 @@ function buildNoteCollaborationUser(user?: User): NoteCollaborationUser {
   };
 }
 
+type NoteHeaderSaveStatus = NoteSaveStatus | 'failed';
+
+function resolveNoteHeaderSaveStatus(
+  bodyStatus: NoteSaveStatus,
+  titleStatus: NoteTitleSaveStatus
+): NoteHeaderSaveStatus {
+  if (titleStatus === 'failed') return 'failed';
+  if (bodyStatus === 'waiting') return 'waiting';
+  if (bodyStatus === 'saving' || titleStatus === 'saving') return 'saving';
+  return 'saved';
+}
+
+function formatNoteSaveStatus(status: NoteHeaderSaveStatus): string {
+  if (status === 'saving') return '保存中...';
+  if (status === 'waiting') return '等待网络同步';
+  if (status === 'failed') return '保存失败';
+  return '已自动保存';
+}
+
 function NoteLayoutConfig({ children }: { children: ReactNode }) {
   const frameConfig = useMemo(() => ({ className: styles.pageWrap }), []);
   useWorkspaceLayoutConfig(frameConfig);
 
   return <>{children}</>;
-}
-
-function NoteToolbarTitle({ resourceId, fallbackTitle }: NoteToolbarTitleProps) {
-  const title = useResourceDisplayName(resourceId, fallbackTitle, '未命名笔记');
-
-  return (
-    <span className={styles.toolbarTitleText}>
-      <span className={styles.toolbarTitleIcon} aria-hidden="true">
-        <EntryIcon entryType="resource" resourceType={RESOURCE_TYPE.NOTE} />
-      </span>
-      <span className={styles.toolbarTitleLabel}>{title}</span>
-    </span>
-  );
 }
 
 function NoteViewConnected({
@@ -140,7 +147,9 @@ function NoteViewConnected({
   const mainScrollRef = useRef<HTMLDivElement>(null);
   const titleAnchorRef = useRef<HTMLDivElement>(null);
   const reconnectTimerRef = useRef<number | null>(null);
+  const scrollBarHideTimerRef = useRef<number | null>(null);
   const [isReconnectLoading, setIsReconnectLoading] = useState(false);
+  const [isMainScrolling, setIsMainScrolling] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
   const [isCommentHistoryOpen, setIsCommentHistoryOpen] = useState(false);
   const [outlineItems, setOutlineItems] = useState<NoteOutlineItem[]>([]);
@@ -150,6 +159,7 @@ function NoteViewConnected({
   );
   const [pdfExportLoading, setPdfExportLoading] = useState(false);
   const [isDownloadingMarkdown, setIsDownloadingMarkdown] = useState(false);
+  const [titleSaveStatus, setTitleSaveStatus] = useState<NoteTitleSaveStatus>('saved');
   const [aiDiffPresence, setAiDiffPresence] = useState<{
     resourceId: string;
     hasAiDiffContent: boolean;
@@ -166,7 +176,7 @@ function NoteViewConnected({
     }
   );
   const shouldWaitCurrentUser = !currentUser && !currentUserError;
-  const { status, doc, provider, reconnect, idbSynced } = useNoteSession(resourceId, {
+  const { status, saveStatus, doc, provider, reconnect, idbSynced } = useNoteSession(resourceId, {
     actorUserId: currentUser?.id,
     enabled: !shouldWaitCurrentUser,
   });
@@ -190,6 +200,9 @@ function NoteViewConnected({
   const middleOverlayText =
     status === 'connecting' && !idbSynced ? '正在连接笔记服务...' : '正在加载用户信息...';
   const fallbackNoteTitle = noteInfoDisplay.noteTitle;
+  const resourceName = useResourceDisplayName(resourceId, fallbackNoteTitle, '未命名笔记');
+  const headerSaveStatus = resolveNoteHeaderSaveStatus(saveStatus, titleSaveStatus);
+  const saveStatusText = formatNoteSaveStatus(headerSaveStatus);
   const collaborationUser = useMemo(() => buildNoteCollaborationUser(currentUser), [currentUser]);
   const canRenderBodyEditor = !shouldWaitCurrentUser;
   const canManageCommentVisibility =
@@ -215,6 +228,21 @@ function NoteViewConnected({
       window.clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
     }
+    if (scrollBarHideTimerRef.current !== null) {
+      window.clearTimeout(scrollBarHideTimerRef.current);
+      scrollBarHideTimerRef.current = null;
+    }
+  });
+
+  const handleMainScroll = useMemoizedFn(() => {
+    setIsMainScrolling(true);
+    if (scrollBarHideTimerRef.current !== null) {
+      window.clearTimeout(scrollBarHideTimerRef.current);
+    }
+    scrollBarHideTimerRef.current = window.setTimeout(() => {
+      setIsMainScrolling(false);
+      scrollBarHideTimerRef.current = null;
+    }, 700);
   });
 
   const handleReconnect = () => {
@@ -280,19 +308,7 @@ function NoteViewConnected({
 
   const headerMorePending = pdfExportLoading || isDownloadingMarkdown;
 
-  const handleMoreAction = useMemoizedFn((key: React.Key) => {
-    if (key === 'comment-history') {
-      setIsCommentHistoryOpen(true);
-      return;
-    }
-    if (key === 'print-pdf') {
-      void handlePrintPdf();
-      return;
-    }
-    if (key === 'download-md') {
-      void handleDownloadMarkdown();
-    }
-  });
+  const handleOpenCommentHistory = useMemoizedFn(() => setIsCommentHistoryOpen(true));
 
   const noteChatStateProvider = useMemo(
     () =>
@@ -311,93 +327,43 @@ function NoteViewConnected({
     [resourceId, setWorkspaceChatContext]
   );
 
-  const workspaceFrameConfig = useMemo(
+  const workspaceFrameConfig = useMemo<WorkspaceLayoutConfig>(
     () => ({
       className: styles.pageWrap,
       chatStateProvider: noteChatStateProvider,
       header: {
-        inlineTitle: (
-          <NoteToolbarTitle resourceId={resourceId} fallbackTitle={noteInfoDisplay?.noteTitle} />
-        ),
-        extra: (
-          <div className={styles.headerToolbarExtra}>
-            {showAiDiffDisplayModeSwitch ? (
-              <SegmentedTabs<AiDiffDisplayMode>
-                ariaLabel="AI 差异展示模式"
-                selectedKey={aiDiffDisplayMode}
-                className={styles.aiDiffDisplayModeSwitch}
-                items={AI_DIFF_DISPLAY_OPTIONS.map((option) => ({
-                  key: option.value,
-                  label: option.label,
-                  disabled: showFullPageSpin,
-                }))}
-                onSelectionChange={setAiDiffDisplayMode}
-              />
-            ) : null}
-            <ResourcePermissionControl
-              resourceId={resourceId}
-              resourceType={WORKSPACE_RESOURCE_TYPE.NOTE}
-              ownerId={noteInfoDisplay.ownerId}
-              isDisabled={showFullPageSpin}
-              onSuccess={onRefreshNoteInfo}
+        resource: {
+          resourceId,
+          resourceName,
+          resourceIconType: 'note',
+          permissionResourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
+          ownerId: noteInfoDisplay.ownerId,
+          onPermissionSuccess: onRefreshNoteInfo,
+          isDisabled: showFullPageSpin,
+          titleMeta: (
+            <span
+              className={`${styles.headerSaveStatus} ${
+                headerSaveStatus === 'waiting' ? styles.headerSaveStatusWaiting : ''
+              } ${headerSaveStatus === 'failed' ? styles.headerSaveStatusFailed : ''}`}
+            >
+              {saveStatusText}
+            </span>
+          ),
+          leadingActions: showAiDiffDisplayModeSwitch ? (
+            <SegmentedTabs<AiDiffDisplayMode>
+              ariaLabel="AI 差异展示模式"
+              selectedKey={aiDiffDisplayMode}
+              className={styles.aiDiffDisplayModeSwitch}
+              items={AI_DIFF_DISPLAY_OPTIONS.map((option) => ({
+                key: option.value,
+                label: option.label,
+                disabled: showFullPageSpin,
+              }))}
+              onSelectionChange={setAiDiffDisplayMode}
             />
-            <div className={styles.headerActionsEnd}>
-              <div className={styles.headerMoreWrap}>
-                <Dropdown>
-                  <Dropdown.Trigger>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      isPending={headerMorePending}
-                      isDisabled={showFullPageSpin}
-                      aria-label="更多"
-                    >
-                      更多
-                    </Button>
-                  </Dropdown.Trigger>
-                  <Dropdown.Popover placement="bottom end" className={styles.noteMorePopover}>
-                    {canManageCommentVisibility ? (
-                      <div
-                        className={styles.ownerCommentPolicyRow}
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <span className={styles.ownerCommentPolicyLabel}>
-                          协作者仅可见自己的批注
-                        </span>
-                        <Switch
-                          aria-label="协作者仅可见自己的批注"
-                          isSelected={commentSettings.collaboratorVisibility === 'own_only'}
-                          isDisabled={!isConnected}
-                          onChange={(selected) =>
-                            setCollaboratorVisibility(selected ? 'own_only' : 'all')
-                          }
-                          size="sm"
-                        >
-                          <Switch.Content aria-label="协作者仅可见自己的批注">
-                            <Switch.Control>
-                              <Switch.Thumb />
-                            </Switch.Control>
-                          </Switch.Content>
-                        </Switch>
-                      </div>
-                    ) : null}
-                    <Dropdown.Menu aria-label="笔记更多操作" onAction={handleMoreAction}>
-                      {noteInfoDisplay.commentsEnabled ? (
-                        <Dropdown.Item id="comment-history" textValue="历史批注">
-                          历史批注
-                        </Dropdown.Item>
-                      ) : null}
-                      <Dropdown.Item id="print-pdf" textValue="打印为pdf">
-                        打印为pdf
-                      </Dropdown.Item>
-                      <Dropdown.Item id="download-md" textValue="下载为md">
-                        下载为md
-                      </Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown.Popover>
-                </Dropdown>
-              </div>
+          ) : null,
+          actions: (
+            <div className={styles.headerResourceActions}>
               {noteInfoDisplay.commentsEnabled ? (
                 <Tooltip>
                   <Tooltip.Trigger>
@@ -437,8 +403,41 @@ function NoteViewConnected({
                 </Tooltip>
               ) : null}
             </div>
-          </div>
-        ),
+          ),
+          moreMenu: {
+            advanced: canManageCommentVisibility ? (
+              <div className={styles.commentVisibilitySetting}>
+                <div className={styles.commentVisibilityCopy}>
+                  <span className={styles.commentVisibilityTitle}>隔离协作者批注</span>
+                  <span className={styles.commentVisibilityDescription}>
+                    开启后，协作者只能查看自己的批注。
+                  </span>
+                </div>
+                <Switch
+                  aria-label="隔离协作者批注"
+                  isSelected={commentSettings.collaboratorVisibility === 'own_only'}
+                  isDisabled={!isConnected}
+                  onChange={(selected) => setCollaboratorVisibility(selected ? 'own_only' : 'all')}
+                  size="sm"
+                >
+                  <Switch.Content aria-label="隔离协作者批注">
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
+              </div>
+            ) : undefined,
+            showCommentHistory: noteInfoDisplay.commentsEnabled,
+            onCommentHistory: handleOpenCommentHistory,
+            onPrint: () => void handlePrintPdf(),
+            download: {
+              label: '下载为 Markdown',
+              onAction: () => void handleDownloadMarkdown(),
+            },
+            isPending: headerMorePending,
+          },
+        },
       },
     }),
     [
@@ -449,16 +448,20 @@ function NoteViewConnected({
       annotationToggleLabel,
       discussionAsideOpen,
       discussionToggleLabel,
-      handleMoreAction,
+      handleDownloadMarkdown,
+      handleOpenCommentHistory,
+      handlePrintPdf,
       headerMorePending,
       isConnected,
       noteChatStateProvider,
-      noteInfoDisplay.noteTitle,
       noteInfoDisplay.commentsEnabled,
       noteInfoDisplay.ownerId,
       noteInfoDisplay.resourceInfo,
       onRefreshNoteInfo,
       resourceId,
+      resourceName,
+      headerSaveStatus,
+      saveStatusText,
       setAiDiffDisplayMode,
       setCollaboratorVisibility,
       showAiDiffDisplayModeSwitch,
@@ -471,9 +474,17 @@ function NoteViewConnected({
   return (
     <>
       <div className={styles.mainScroll}>
-        <div className={styles.contentRow}>
+        <div
+          className={`${styles.contentRow} ${
+            isOutlineOpen ? styles.contentRowOutlineOpen : styles.contentRowOutlineCollapsed
+          }`}
+        >
           <div className={styles.mainPanel}>
-            <div className={styles.mainCol} ref={mainScrollRef}>
+            <div
+              className={`${styles.mainCol} ${isMainScrolling ? styles.mainColScrolling : ''}`}
+              ref={mainScrollRef}
+              onScroll={handleMainScroll}
+            >
               <div className={styles.root}>
                 {isDisconnected ? (
                   <Alert className={styles.wsAlert} status="warning">
@@ -504,6 +515,7 @@ function NoteViewConnected({
                     readOnly={isTitleReadOnly}
                     focusOnMount={isConnected && !isTitleReadOnly}
                     onEnterKey={focusBody}
+                    onSaveStatusChange={setTitleSaveStatus}
                   />
                 </div>
                 <NoteInfoBar noteInfoDisplay={noteInfoDisplay} />
