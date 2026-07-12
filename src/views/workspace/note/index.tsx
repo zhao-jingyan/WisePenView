@@ -1,7 +1,7 @@
 import { ResultState, Spin } from '@/components/Feedback';
 import SegmentedTabs from '@/components/SegmentedTabs';
 import { useMemoizedFn, useRequest, useUnmount } from 'ahooks';
-import { ChevronsRight, Menu, MessageSquare } from 'lucide-react';
+import { ChevronsRight, Menu, MessageSquare, MessagesSquare } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -17,7 +17,8 @@ import {
   NOTE_OUTLINE_TITLE_ID,
   type NoteOutlineItem,
 } from '@/components/Note/NoteOutline/index.type';
-import { useNoteCommentsSidebarStore } from '@/components/Note/_store/useNoteCommentsSidebarStore';
+import { useNoteResourceAsideStore } from '@/components/Note/_store/useNoteResourceAsideStore';
+import ResourceDiscussionPanel from '@/components/interact/ResourceDiscussionPanel';
 import { useNoteService, useResourceService, useUserService } from '@/domains';
 import type { AiDiffDisplayMode, NoteInfoDisplayData, NoteSelectionSnapshot } from '@/domains/Note';
 import {
@@ -34,7 +35,7 @@ import { useWorkspaceLayoutConfig } from '@/layouts/Workspace/WorkspaceOutletCon
 import { useWorkspaceChatProtocolStore } from '@/layouts/Workspace/_store/useWorkspaceChatProtocolStore';
 import { parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
-import { Alert, Button, Dropdown, Switch, Tooltip, toast } from '@heroui/react';
+import { Alert, Button, Dropdown, Switch, ToggleButton, Tooltip, toast } from '@heroui/react';
 import ResourcePermissionControl from '../_components/ResourcePermissionControl';
 import {
   createNoteSelectionChatContext,
@@ -49,7 +50,7 @@ import styles from './style.module.less';
 interface NoteViewConnectedProps {
   resourceId: string;
   noteInfoDisplay: NoteInfoDisplayData;
-  onRefreshNoteInfo: () => void;
+  onRefreshNoteInfo: () => unknown | Promise<unknown>;
 }
 
 interface NoteToolbarTitleProps {
@@ -170,18 +171,12 @@ function NoteViewConnected({
     enabled: !shouldWaitCurrentUser,
   });
   const getNoteClientStateVector = useCallback(() => encodeNoteClientStateVector(doc), [doc]);
-  const threadsSidebarCollapsed = useNoteCommentsSidebarStore(
-    (state) => state.collapsedByResourceId[resourceId] ?? false
+  const resourceAsideMode = useNoteResourceAsideStore(
+    (state) => state.modeByResourceId[resourceId] ?? 'annotation'
   );
-  const toggleNoteCommentsSidebar = useNoteCommentsSidebarStore(
-    (state) => state.toggleNoteCommentsSidebarCollapsed
-  );
-  const commentsSidebarWidth = useNoteCommentsSidebarStore((state) =>
-    state.getNoteCommentsSidebarWidth(resourceId)
-  );
-  const setNoteCommentsSidebarWidth = useNoteCommentsSidebarStore(
-    (state) => state.setNoteCommentsSidebarWidth
-  );
+  const toggleResourceAsideMode = useNoteResourceAsideStore((state) => state.toggleMode);
+  const resourceAsideWidth = useNoteResourceAsideStore((state) => state.getWidth(resourceId));
+  const setResourceAsideWidth = useNoteResourceAsideStore((state) => state.setWidth);
   const { settings: commentSettings, setCollaboratorVisibility } = useCommentSettingsSync(
     status === 'connected' ? doc : null
   );
@@ -200,7 +195,11 @@ function NoteViewConnected({
   const canManageCommentVisibility =
     isCommentVisibilityPrivileged(noteInfoDisplay.resourceInfo?.resourceAccessRole) ||
     (Boolean(noteInfoDisplay.ownerId) && currentUser?.id === noteInfoDisplay.ownerId);
-  const commentsSidebarToggleLabel = threadsSidebarCollapsed ? '展开批注栏' : '收起批注栏';
+  const annotationAsideOpen = noteInfoDisplay.commentsEnabled && resourceAsideMode === 'annotation';
+  const discussionAsideOpen =
+    Boolean(noteInfoDisplay.resourceInfo) && resourceAsideMode === 'discussion';
+  const annotationToggleLabel = annotationAsideOpen ? '收起批注栏' : '展开批注栏';
+  const discussionToggleLabel = discussionAsideOpen ? '收起讨论栏' : '展开讨论栏';
 
   useRequest(() => resourceService.interactRead(resourceId), {
     ready: Boolean(resourceId),
@@ -402,19 +401,39 @@ function NoteViewConnected({
               {noteInfoDisplay.commentsEnabled ? (
                 <Tooltip>
                   <Tooltip.Trigger>
-                    <Button
-                      variant="secondary"
+                    <ToggleButton
+                      variant="ghost"
                       size="sm"
-                      className={`${styles.commentsSidebarToggle}${threadsSidebarCollapsed ? '' : ` ${styles.commentsSidebarToggleActive}`}`}
+                      isIconOnly
+                      isSelected={annotationAsideOpen}
                       isDisabled={showFullPageSpin}
-                      aria-label={commentsSidebarToggleLabel}
-                      aria-expanded={!threadsSidebarCollapsed}
-                      onPress={() => toggleNoteCommentsSidebar(resourceId)}
+                      aria-label={annotationToggleLabel}
+                      aria-expanded={annotationAsideOpen}
+                      onChange={() => toggleResourceAsideMode(resourceId, 'annotation')}
                     >
                       <MessageSquare size={16} aria-hidden="true" />
-                    </Button>
+                    </ToggleButton>
                   </Tooltip.Trigger>
-                  <Tooltip.Content>{commentsSidebarToggleLabel}</Tooltip.Content>
+                  <Tooltip.Content>{annotationToggleLabel}</Tooltip.Content>
+                </Tooltip>
+              ) : null}
+              {noteInfoDisplay.resourceInfo ? (
+                <Tooltip>
+                  <Tooltip.Trigger>
+                    <ToggleButton
+                      variant="ghost"
+                      size="sm"
+                      isIconOnly
+                      isSelected={discussionAsideOpen}
+                      isDisabled={showFullPageSpin}
+                      aria-label={discussionToggleLabel}
+                      aria-expanded={discussionAsideOpen}
+                      onChange={() => toggleResourceAsideMode(resourceId, 'discussion')}
+                    >
+                      <MessagesSquare size={16} aria-hidden="true" />
+                    </ToggleButton>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>{discussionToggleLabel}</Tooltip.Content>
                 </Tooltip>
               ) : null}
             </div>
@@ -426,7 +445,10 @@ function NoteViewConnected({
       aiDiffDisplayMode,
       canManageCommentVisibility,
       commentSettings.collaboratorVisibility,
-      commentsSidebarToggleLabel,
+      annotationAsideOpen,
+      annotationToggleLabel,
+      discussionAsideOpen,
+      discussionToggleLabel,
       handleMoreAction,
       headerMorePending,
       isConnected,
@@ -434,14 +456,14 @@ function NoteViewConnected({
       noteInfoDisplay.noteTitle,
       noteInfoDisplay.commentsEnabled,
       noteInfoDisplay.ownerId,
+      noteInfoDisplay.resourceInfo,
       onRefreshNoteInfo,
       resourceId,
       setAiDiffDisplayMode,
       setCollaboratorVisibility,
       showAiDiffDisplayModeSwitch,
       showFullPageSpin,
-      threadsSidebarCollapsed,
-      toggleNoteCommentsSidebar,
+      toggleResourceAsideMode,
     ]
   );
   useWorkspaceLayoutConfig(workspaceFrameConfig);
@@ -509,10 +531,10 @@ function NoteViewConnected({
                       commentUsersById={noteInfoDisplay.authorsById}
                       isCommentVisibilityPrivileged={canManageCommentVisibility}
                       collaboratorVisibility={commentSettings.collaboratorVisibility}
-                      commentsSidebarCollapsed={threadsSidebarCollapsed}
-                      commentsSidebarWidth={commentsSidebarWidth}
+                      commentsSidebarCollapsed={!annotationAsideOpen}
+                      commentsSidebarWidth={resourceAsideWidth}
                       onCommentsSidebarWidthChange={(width) =>
-                        setNoteCommentsSidebarWidth(resourceId, width)
+                        setResourceAsideWidth(resourceId, width)
                       }
                       commentsSidebarPortalContainer={commentsSidebarHostElement}
                       commentHistoryOpen={isCommentHistoryOpen}
@@ -586,16 +608,30 @@ function NoteViewConnected({
             </div>
           )}
 
-          {noteInfoDisplay.commentsEnabled && !threadsSidebarCollapsed ? (
+          {annotationAsideOpen ? (
             <div
               ref={setCommentsSidebarHostElement}
-              className={styles.commentsSidebarPanel}
+              className={styles.resourceAsidePanel}
               style={
                 {
-                  ['--comments-sidebar-width' as string]: `${commentsSidebarWidth}px`,
+                  ['--note-resource-aside-width' as string]: `${resourceAsideWidth}px`,
                 } as CSSProperties
               }
             />
+          ) : discussionAsideOpen && noteInfoDisplay.resourceInfo ? (
+            <div
+              className={styles.resourceAsidePanel}
+              style={
+                {
+                  ['--note-resource-aside-width' as string]: `${resourceAsideWidth}px`,
+                } as CSSProperties
+              }
+            >
+              <ResourceDiscussionPanel
+                resource={noteInfoDisplay.resourceInfo}
+                onInteractionSuccess={onRefreshNoteInfo}
+              />
+            </div>
           ) : null}
         </div>
       </div>

@@ -9,6 +9,7 @@ function Rating({
   maxValue = 5,
   isDisabled = false,
   ariaLabel = 'Rating',
+  size = 'md',
   className,
   onValueChange,
 }: RatingProps) {
@@ -44,7 +45,7 @@ function Rating({
 
   return (
     <div
-      className={clsx(styles.rating, className)}
+      className={clsx(styles.rating, size === 'sm' && styles.ratingSmall, className)}
       role="radiogroup"
       aria-label={ariaLabel}
       aria-disabled={isDisabled || undefined}

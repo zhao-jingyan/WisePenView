@@ -315,11 +315,6 @@ const interactRead = async (_resourceId: string): Promise<void> => {
   await delay(50);
 };
 
-const getInteractStats = async (_resourceId: string) => {
-  await delay(50);
-  return { readCount: 0, likeCount: 0, scoreAvgText: '暂无评分' };
-};
-
 const globalSearch = async (params: SearchQueryRequest): Promise<SearchResultPage> => {
   await delay(180);
   return simulateGlobalSearch(params);
@@ -371,7 +366,6 @@ export const ResourceServicesMock: IResourceService = {
   interactToggleLike,
   interactRate,
   interactRead,
-  getInteractStats,
   globalSearch,
   listInlineComments,
   createInlineComment,

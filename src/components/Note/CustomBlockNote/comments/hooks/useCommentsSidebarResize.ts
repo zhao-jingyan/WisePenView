@@ -1,7 +1,7 @@
 import { useUpdateEffect } from 'ahooks';
 import { useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 
-import { normalizeCommentsSidebarWidth } from '@/components/Note/_store/noteCommentsSidebarConfig';
+import { normalizeNoteResourceAsideWidth } from '@/components/Note/_store/noteResourceAsideConfig';
 
 interface UseCommentsSidebarResizeOptions {
   width: number;
@@ -39,7 +39,7 @@ export function useCommentsSidebarResize({
 
     const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
       const deltaX = startX - moveEvent.clientX;
-      pendingWidth = normalizeCommentsSidebarWidth(startWidth + deltaX);
+      pendingWidth = normalizeNoteResourceAsideWidth(startWidth + deltaX);
       onWidthChange(pendingWidth);
     };
 

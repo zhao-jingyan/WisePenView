@@ -13,7 +13,6 @@ import type {
   SearchScope,
   TagQueryLogicMode,
 } from '@/domains/Resource';
-import type { ResourceInteractStats } from '../mapper/ResourceServices.map';
 
 /** 资源列表分页 */
 export interface ResourceListPage {
@@ -48,8 +47,6 @@ export interface IResourceService {
   interactRate(params: InteractRateRequest): Promise<void>;
   /** 上报资源阅读（详情页 / 文档预览页进入时调用一次） */
   interactRead(resourceId: string): Promise<void>;
-  /** 获取资源聚合互动统计（readCount / likeCount / scoreAvg），供互动统计组件自行请求 */
-  getInteractStats(resourceId: string): Promise<ResourceInteractStats>;
   /** 全局全文搜索（ACL 过滤 + 高亮，分页） */
   globalSearch(params: SearchQueryRequest): Promise<SearchResultPage>;
   /** 查询资源行内批注列表 */

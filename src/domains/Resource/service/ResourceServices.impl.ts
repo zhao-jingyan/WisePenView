@@ -6,7 +6,6 @@ import { ResourceInlineCommentApi, ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
 import type { ResourceItem } from '../entity/resource';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '../enum';
-import type { ResourceInteractStats } from '../mapper/ResourceServices.map';
 import { ResourceServicesMap } from '../mapper/ResourceServices.map';
 import { useResourceDisplayNameStore } from '../store/useResourceDisplayNameStore';
 import type {
@@ -209,17 +208,6 @@ const interactRead = async (resourceId: string): Promise<void> => {
   await ResourceInteractApi.read({ resourceId });
 };
 
-/** 获取资源聚合互动统计，供互动统计组件自行请求；编排 note 和 document 两个接口 */
-const getInteractStats = async (resourceId: string): Promise<ResourceInteractStats> => {
-  try {
-    const data = await NoteApi.getNoteInfo({ resourceId });
-    return ResourceServicesMap.mapInteractStatsFromApi(data.resourceInfo);
-  } catch {
-    const data = await DocumentApi.getDocInfo({ resourceId });
-    return ResourceServicesMap.mapInteractStatsFromApi(data.resourceInfo);
-  }
-};
-
 const globalSearch = async (params: SearchQueryRequest): Promise<SearchResultPage> => {
   const data = await ResourceItemApi.globalSearch(params);
   return ResourceServicesMap.mapSearchResultPageFromApi(data);
@@ -296,7 +284,6 @@ export const createResourceServices = (): IResourceService => ({
   interactToggleLike,
   interactRate,
   interactRead,
-  getInteractStats,
   globalSearch,
   listInlineComments,
   createInlineComment,

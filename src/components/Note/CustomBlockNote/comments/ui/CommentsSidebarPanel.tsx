@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import type { CSSProperties, ReactNode } from 'react';
 
-import { MIN_COMMENTS_SIDEBAR_WIDTH } from '@/components/Note/_store/noteCommentsSidebarConfig';
+import { MIN_NOTE_RESOURCE_ASIDE_WIDTH } from '@/components/Note/_store/noteResourceAsideConfig';
 import { useCommentsSidebarResize } from '../hooks/useCommentsSidebarResize';
 import styles from './commentStyles.module.less';
 
@@ -20,7 +20,7 @@ export function CommentsSidebarPanel({
 
   const panelStyle = {
     ['--comments-sidebar-width' as string]: `${width}px`,
-    ['--comments-sidebar-min-width' as string]: `${MIN_COMMENTS_SIDEBAR_WIDTH}px`,
+    ['--comments-sidebar-min-width' as string]: `${MIN_NOTE_RESOURCE_ASIDE_WIDTH}px`,
   } as CSSProperties;
 
   return (

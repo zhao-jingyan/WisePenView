@@ -480,27 +480,6 @@ const mapRateFromApi = (
   score: res?.score ?? 0,
 });
 
-/** 资源互动聚合统计（供互动统计组件展示） */
-export interface ResourceInteractStats {
-  readCount?: number | null;
-  likeCount?: number | null;
-  /** mapper 内已完成格式化：有评分则 "X.X 分"，无则 "暂无评分" */
-  scoreAvgText: string;
-}
-
-/** 资源 API 响应 → 聚合互动统计，供互动统计组件展示 */
-const mapInteractStatsFromApi = (resourceInfo: ResourceItemApiResponse): ResourceInteractStats => {
-  const interactionInfo = resourceInfo.resourceInteractionInfo;
-  const scoreCount = interactionInfo?.scoreCount ?? 0;
-  const scoreTotal = interactionInfo?.scoreTotal ?? 0;
-  const scoreAvg = scoreCount > 0 ? scoreTotal / scoreCount : null;
-  return {
-    readCount: interactionInfo?.readCount ?? null,
-    likeCount: interactionInfo?.likeCount ?? null,
-    scoreAvgText: scoreAvg != null ? `${scoreAvg.toFixed(1)} 分` : '暂无评分',
-  };
-};
-
 // 枚举归一化大小写，下游 === 比较与分组 label 生效
 const mapSearchHitFromApi = (raw: GlobalSearchApiResponse['list'][number]): SearchHitItem => ({
   ...raw,
@@ -707,7 +686,6 @@ export const ResourceServicesMap = {
   mapResourcePermissionOverviewFromApi,
   mapLikeStatusFromApi,
   mapRateFromApi,
-  mapInteractStatsFromApi,
   mapSearchResultPageFromApi,
   mapListInlineCommentsRequest,
   mapListInlineCommentsFromApi,

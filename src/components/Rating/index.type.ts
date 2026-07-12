@@ -3,6 +3,7 @@ export interface RatingProps {
   maxValue?: number;
   isDisabled?: boolean;
   ariaLabel?: string;
+  size?: 'sm' | 'md';
   className?: string;
   onValueChange?: (value: number) => void;
 }

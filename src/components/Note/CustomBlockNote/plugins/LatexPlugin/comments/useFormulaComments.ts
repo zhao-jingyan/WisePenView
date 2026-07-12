@@ -3,7 +3,7 @@ import { useExtensionState } from '@blocknote/react';
 import { useCallback, useRef, useState, type RefObject } from 'react';
 import type { Doc } from 'yjs';
 
-import { useNoteCommentsSidebarStore } from '@/components/Note/_store/useNoteCommentsSidebarStore';
+import { useNoteResourceAsideStore } from '@/components/Note/_store/useNoteResourceAsideStore';
 import type { CustomBlockNoteEditor } from '../../../blockNoteSchema';
 import { runWithFormulaCommentSync } from '../../../comments/core/commentDocumentMarks';
 import type { CollaboratorCommentVisibility } from '../../../comments/core/commentSettings';
@@ -74,9 +74,7 @@ export function useFormulaComments({
   const threadsYMap = getBlockNoteThreadsYMap(doc);
   const threadReferencesYMap = getBlockNoteThreadReferencesYMap(doc);
   const formulaAnchorsYMap = getBlockNoteFormulaThreadAnchorsYMap(doc);
-  const setNoteCommentsSidebarCollapsed = useNoteCommentsSidebarStore(
-    (state) => state.setNoteCommentsSidebarCollapsed
-  );
+  const setNoteResourceAsideMode = useNoteResourceAsideStore((state) => state.setMode);
 
   const pendingFormulaAnchorRef = useRef<PendingFormulaAnchor | null>(null);
   const unmarkableFormulaThreadsRef = useRef(new Set<string>());
@@ -231,7 +229,7 @@ export function useFormulaComments({
     }
 
     editor.focus();
-    setNoteCommentsSidebarCollapsed(resourceId, false);
+    setNoteResourceAsideMode(resourceId, 'annotation');
     commentsExtension.startPendingComment();
   };
 
