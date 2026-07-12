@@ -9,6 +9,7 @@ import type { INoteService } from '@/domains/Note';
 import type { IQuotaService } from '@/domains/Quota';
 import type { IResourceService } from '@/domains/Resource';
 import type { ISkillService } from '@/domains/Skill';
+import type { ISpeechService } from '@/domains/Speech';
 import type { ITagService } from '@/domains/Tag';
 import type { IUserService } from '@/domains/User';
 import type { IWalletService } from '@/domains/Wallet';
@@ -25,6 +26,7 @@ export interface ServicesContextValue {
   quotaService: IQuotaService;
   resourceService: IResourceService;
   skillService: ISkillService;
+  speechService: ISpeechService;
   tagService: ITagService;
   userService: IUserService;
   walletService: IWalletService;

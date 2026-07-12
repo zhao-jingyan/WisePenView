@@ -21,6 +21,7 @@ import { createNoteServices } from '@/domains/Note/service/NoteServices.impl';
 import { createQuotaServices } from '@/domains/Quota/service/QuotaServices.impl';
 import { createResourceServices } from '@/domains/Resource/service/ResourceServices.impl';
 import { createSkillServices } from '@/domains/Skill/service/SkillServices.impl';
+import { createSpeechServices } from '@/domains/Speech/service/SpeechServices.impl';
 import { createTagServices } from '@/domains/Tag/service/TagServices.impl';
 import { createUserServices } from '@/domains/User/service/UserServices.impl';
 import { createWalletServices } from '@/domains/Wallet/service/WalletServices.impl';
@@ -34,6 +35,7 @@ const groupService = createGroupServices();
 const imageService = createImageServices();
 const quotaService = createQuotaServices();
 const resourceService = createResourceServices();
+const speechService = createSpeechServices();
 const userService = createUserServices();
 const walletService = createWalletServices();
 
@@ -68,6 +70,7 @@ const servicesValue: ServicesContextValue = {
   quotaService: quotaService,
   resourceService: resourceService,
   skillService: skillService,
+  speechService: speechService,
   tagService: tagService,
   userService: userService,
   walletService: walletService,

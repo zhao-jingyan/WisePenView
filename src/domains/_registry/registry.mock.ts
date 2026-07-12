@@ -12,6 +12,7 @@ import { NoteServicesMock } from '@/domains/Note/mock/NoteServices.mock';
 import { QuotaServicesMock } from '@/domains/Quota/mock/QuotaServices.mock';
 import { ResourceServicesMock } from '@/domains/Resource/mock/ResourceServices.mock';
 import { SkillServicesMock } from '@/domains/Skill/mock/SkillServices.mock';
+import { SpeechServicesMock } from '@/domains/Speech/mock/SpeechServices.mock';
 import { TagServicesMock } from '@/domains/Tag/mock/TagServices.mock';
 import { UserServicesMock } from '@/domains/User/mock/UserServices.mock';
 import { WalletServicesMock } from '@/domains/Wallet/mock/WalletServices.mock';
@@ -32,6 +33,7 @@ const mockServicesValue: ServicesContextValue = {
   quotaService: QuotaServicesMock,
   resourceService: ResourceServicesMock,
   skillService: SkillServicesMock,
+  speechService: SpeechServicesMock,
   tagService: TagServicesMock,
   userService: UserServicesMock,
   walletService: WalletServicesMock,

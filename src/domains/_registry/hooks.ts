@@ -11,6 +11,7 @@ import type { INoteService } from '@/domains/Note';
 import type { IQuotaService } from '@/domains/Quota';
 import type { IResourceService } from '@/domains/Resource';
 import type { ISkillService } from '@/domains/Skill';
+import type { ISpeechService } from '@/domains/Speech';
 import type { ITagService } from '@/domains/Tag';
 import type { IUserService } from '@/domains/User';
 import type { IWalletService } from '@/domains/Wallet';
@@ -38,6 +39,7 @@ export const useNoteService = (): INoteService => useServicesContext().noteServi
 export const useQuotaService = (): IQuotaService => useServicesContext().quotaService;
 export const useResourceService = (): IResourceService => useServicesContext().resourceService;
 export const useSkillService = (): ISkillService => useServicesContext().skillService;
+export const useSpeechService = (): ISpeechService => useServicesContext().speechService;
 export const useTagService = (): ITagService => useServicesContext().tagService;
 export const useUserService = (): IUserService => useServicesContext().userService;
 /** 个人中心钱包、高级组 token 相关页注入 */

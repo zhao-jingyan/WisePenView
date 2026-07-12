@@ -16,6 +16,7 @@ import {
 } from '../_store/ChatInputStore';
 import type { ChatInputProps } from '../index.type';
 import { useChatInputFiles } from '../useChatInputFiles';
+import { useVoiceInput } from '../VoiceInput/useVoiceInput';
 
 interface UseChatInputControllerOptions {
   onSend: ChatInputProps['onSend'];
@@ -26,6 +27,7 @@ export function useChatInputController({ onSend, sending }: UseChatInputControll
   const store = useChatInputStoreApi();
   const dragCounterRef = useRef(0);
   const { routeFiles, preparePendingAttachments, clearPendingFileCache } = useChatInputFiles();
+  const voiceInputProps = useVoiceInput({ disabled: sending });
 
   const { isComposing, isDragOver, pendingAttachmentUploads, selectedModel, value } =
     useChatInputStore(
@@ -40,7 +42,7 @@ export function useChatInputController({ onSend, sending }: UseChatInputControll
   const completionState = useChatInputStore(useShallow(selectChatInputCompletionState));
   const { clearAfterSend, setIsComposing, setIsDragOver, setValue } = store.getState();
 
-  const sendDisabled = !value.trim() || sending || !selectedModel;
+  const sendDisabled = !value.trim() || sending || !selectedModel || voiceInputProps.isActive;
 
   async function handleSend(): Promise<void> {
     const text = completionState.value.trim();
@@ -132,6 +134,7 @@ export function useChatInputController({ onSend, sending }: UseChatInputControll
     attachmentStripProps: {},
     textAreaProps: {
       value,
+      readOnly: voiceInputProps.isActive,
       onChange: (e: ChangeEvent<HTMLTextAreaElement>) => setValue(e.target.value),
       onKeyDown: handleKeyDown,
       onCompositionStart: () => setIsComposing(true),
@@ -140,6 +143,7 @@ export function useChatInputController({ onSend, sending }: UseChatInputControll
     },
     toolbarProps: {
       sendDisabled,
+      voiceInputProps,
       onSend: () => void handleSend(),
     },
   };

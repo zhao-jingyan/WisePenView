@@ -41,6 +41,7 @@ export {
   useQuotaService,
   useResourceService,
   useSkillService,
+  useSpeechService,
   useTagService,
   useUserService,
   useWalletService,

@@ -5,9 +5,10 @@ import ModelPicker from '../ModelPicker';
 import SkillMenu from '../SkillMenu';
 import styles from '../style.module.less';
 import UploadMenu from '../UploadMenu';
+import VoiceInput from '../VoiceInput';
 import type { InputToolbarProps } from './index.type';
 
-function InputToolbar({ sendDisabled, onSend }: InputToolbarProps) {
+function InputToolbar({ sendDisabled, voiceInputProps, onSend }: InputToolbarProps) {
   return (
     <div className={styles.actionToolbar}>
       <div className={styles.toolbarLeft}>
@@ -20,6 +21,7 @@ function InputToolbar({ sendDisabled, onSend }: InputToolbarProps) {
         <div className={styles.modelSelectorShell}>
           <ModelPicker />
         </div>
+        <VoiceInput {...voiceInputProps} />
         <Button
           variant="primary"
           size="sm"
