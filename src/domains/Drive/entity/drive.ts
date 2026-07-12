@@ -49,6 +49,7 @@ interface FolderNode extends DriveNodeBase {
 }
 
 interface DriveResourceNodeBase extends DriveNodeBase {
+  parentId: string;
   resourceId: string;
   title: string;
   resourceType?: string;

@@ -1,5 +1,6 @@
-import { useActiveDriveScopeStore } from '@/components/Drive/_store/useActiveDriveScopeStore';
 import { usePdfPreviewProgressStore } from '@/components/PdfViewer/_store/usePdfPreviewProgressStore';
+import type { DriveNodeScope } from '@/domains/Drive';
+import { useWorkspaceNavigationStore } from '@/layouts/Workspace/_store/useWorkspaceNavigationStore';
 import {
   WORKSPACE_VIEWER,
   buildWorkspaceResourcePath,
@@ -15,7 +16,13 @@ export interface OpenInWorkspaceTarget {
   resourceType?: string;
   resourceName?: string;
   viewer?: WorkspaceViewer | string;
-  groupId?: string;
+  driveLocation:
+    | { scope: DriveNodeScope }
+    | {
+        scope: DriveNodeScope;
+        parentNodeId: string;
+        nodeId?: string;
+      };
   replace?: boolean;
 }
 
@@ -37,9 +44,9 @@ const appendPdfPreviewProgress = (path: string, resourceId: string, viewer?: Wor
 };
 
 /**
- * Workspace 资源打开入口。负责 scope 继承、资源身份归一化、viewer 推导与 PDF 进度恢复。
+ * Workspace 资源打开入口。负责原子记录 Drive 定位、资源身份归一化、viewer 推导与 PDF 进度恢复。
  */
-export const useOpenInWorkspace = (defaultGroupId?: string): OpenInWorkspaceFn => {
+export const useOpenInWorkspace = (): OpenInWorkspaceFn => {
   const navigate = useNavigate();
 
   return useCallback(
@@ -47,7 +54,20 @@ export const useOpenInWorkspace = (defaultGroupId?: string): OpenInWorkspaceFn =
       const resourceId = target.resourceId.trim();
       if (!resourceId) return;
 
-      useActiveDriveScopeStore.getState().setGroupId(target.groupId ?? defaultGroupId);
+      const navigationStore = useWorkspaceNavigationStore.getState();
+      const scope = target.driveLocation.scope;
+      if ('parentNodeId' in target.driveLocation) {
+        navigationStore.navigateToResource({
+          scope,
+          resource: {
+            resourceId,
+            parentNodeId: target.driveLocation.parentNodeId,
+            ...(target.driveLocation.nodeId ? { nodeId: target.driveLocation.nodeId } : {}),
+          },
+        });
+      } else {
+        navigationStore.navigateToScope(scope);
+      }
 
       const resourceType = resolveWorkspaceResourceType({
         resourceType: target.resourceType,
@@ -65,6 +85,6 @@ export const useOpenInWorkspace = (defaultGroupId?: string): OpenInWorkspaceFn =
         navigate(path, { replace: target.replace });
       });
     },
-    [defaultGroupId, navigate]
+    [navigate]
   );
 };

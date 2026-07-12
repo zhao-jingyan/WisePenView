@@ -5,10 +5,12 @@ import { normalizeId } from '@/utils/normalize/normalizeId';
 import { Button, Dropdown } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import {
+  ChevronRight,
   Copy,
   Download,
   Ellipsis,
   FolderInput,
+  HardDrive,
   History,
   Link2,
   MessageSquare,
@@ -182,6 +184,8 @@ function ResourceHeader({
   onPermissionSuccess,
   isDisabled,
   titleMeta,
+  breadcrumbItems,
+  onBreadcrumbNavigate,
   leadingActions,
   actions,
   moreMenu,
@@ -196,20 +200,38 @@ function ResourceHeader({
   const canManagePermission = Boolean(
     resourceId && normalizedOwnerId && currentUser?.id === normalizedOwnerId
   );
-
   return (
     <>
       <div className={styles.root}>
         <div className={styles.title}>
-          <span className={styles.titleIcon} aria-hidden="true">
-            <EntryIcon
-              entryType="resource"
-              resourceType={resourceType}
-              resourceName={resourceName}
-              resourceIconType={resourceIconType}
-            />
-          </span>
-          <span className={styles.titleName}>{resourceName}</span>
+          <nav className={styles.breadcrumb} aria-label="资源路径">
+            {breadcrumbItems.map((item, index) => (
+              <span key={item.nodeId} className={styles.breadcrumbSegment}>
+                <button
+                  type="button"
+                  className={styles.breadcrumbButton}
+                  onClick={() => onBreadcrumbNavigate(item.nodeId)}
+                >
+                  {index === 0 ? (
+                    <HardDrive className={styles.breadcrumbIcon} size={14} aria-hidden />
+                  ) : null}
+                  {item.label}
+                </button>
+                <ChevronRight className={styles.breadcrumbSeparator} size={14} aria-hidden />
+              </span>
+            ))}
+            <span className={styles.breadcrumbCurrent} aria-current="page">
+              <span className={styles.titleIcon} aria-hidden="true">
+                <EntryIcon
+                  entryType="resource"
+                  resourceType={resourceType}
+                  resourceName={resourceName}
+                  resourceIconType={resourceIconType}
+                />
+              </span>
+              <span className={styles.titleText}>{resourceName}</span>
+            </span>
+          </nav>
           {titleMeta ? <span className={styles.titleMeta}>{titleMeta}</span> : null}
         </div>
         <div className={styles.actions}>

@@ -1,9 +1,11 @@
 import TableDrive from '@/components/Drive/TableDrive';
 import type { TableDriveHandle } from '@/components/Drive/TableDrive/index.type';
 import SegmentedTabs from '@/components/SegmentedTabs';
+import { parseDriveRouteLocation } from '@/utils/navigation/driveRoute';
 import { Button } from '@heroui/react';
 import { Trash2 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useDrivePreferencesStore, type DriveViewMode } from '../_store/useDrivePreferencesStore';
 
 import GlobalSearchBox from '../_components/GlobalSearchBox';
@@ -17,6 +19,8 @@ const VIEW_TABS: { key: DriveViewMode; label: string }[] = [
 ];
 
 function Drive() {
+  const location = useLocation();
+  const driveLocation = useMemo(() => parseDriveRouteLocation(location.search), [location.search]);
   const viewMode = useDrivePreferencesStore((s) => s.viewMode);
   const setViewMode = useDrivePreferencesStore((s) => s.setViewMode);
   const tableDriveRef = useRef<TableDriveHandle>(null);
@@ -39,7 +43,7 @@ function Drive() {
           <span className={styles.pageSubtitle}>管理您的项目和文档</span>
         </div>
         <div className={styles.actionsRow}>
-          <GlobalSearchBox />
+          <GlobalSearchBox scope={driveLocation.scope} />
           {activeViewMode === 'tableDrive' ? (
             <Button
               variant="primary"
@@ -66,6 +70,8 @@ function Drive() {
         {activeViewMode === 'tableDrive' && (
           <TableDrive
             ref={tableDriveRef}
+            scope={driveLocation.scope}
+            initialNodeId={driveLocation.initialNodeId}
             showToolbarTrash={false}
             onTrashViewChange={setIsTrashView}
             onUploadSuccess={handleUploadSuccess}

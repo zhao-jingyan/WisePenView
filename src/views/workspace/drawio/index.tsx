@@ -11,6 +11,7 @@ import type {
 } from '@/domains/Note';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
+import { useWorkspaceNavigationStore } from '@/layouts/Workspace/_store/useWorkspaceNavigationStore';
 import {
   useWorkspaceLayoutConfig,
   type WorkspaceLayoutConfig,
@@ -521,6 +522,9 @@ function DrawioViewConnected({ resourceId, data, onRefreshDrawioInfo }: DrawioVi
         openInWorkspace({
           resourceId: newResourceId,
           resourceType: WORKSPACE_RESOURCE_TYPE.DRAWIO,
+          driveLocation: {
+            scope: useWorkspaceNavigationStore.getState().location.scope,
+          },
         });
       },
       onError: (err) => {

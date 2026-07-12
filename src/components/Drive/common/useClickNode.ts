@@ -5,8 +5,6 @@ import { useCallback } from 'react';
 export interface UseClickNodeParams {
   /** 进入 root / folder 等容器型节点（通常由 useTableDrive.enterFolder 提供） */
   enterFolder: (nodeId: string) => void;
-  /** 点击发起方所在的 Drive scope（undefined 表示个人云盘） */
-  groupId?: string;
 }
 
 /**
@@ -14,8 +12,8 @@ export interface UseClickNodeParams {
  * - root / folder：容器型节点，进入下一层
  * - resource / link：交由 navigateResource 处理跳转与 scope 写入
  */
-export const useClickNode = ({ enterFolder, groupId }: UseClickNodeParams) => {
-  const openInWorkspace = useOpenInWorkspace(groupId);
+export const useClickNode = ({ enterFolder }: UseClickNodeParams) => {
+  const openInWorkspace = useOpenInWorkspace();
 
   return useCallback(
     (node: DriveNode) => {
@@ -31,6 +29,11 @@ export const useClickNode = ({ enterFolder, groupId }: UseClickNodeParams) => {
         resourceId: node.resourceId,
         resourceType: node.resourceType,
         resourceName: node.title,
+        driveLocation: {
+          scope: node.scope,
+          nodeId: node.id,
+          parentNodeId: node.parentId,
+        },
       });
     },
     [enterFolder, openInWorkspace]

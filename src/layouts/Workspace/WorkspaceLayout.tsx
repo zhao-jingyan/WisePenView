@@ -28,6 +28,7 @@ import { Outlet, useLocation, useMatch } from 'react-router-dom';
 import WorkspaceFrame from './_common/WorkspaceFrame';
 import WorkspaceHeader from './_common/WorkspaceHeader';
 import { useWorkspaceChatProtocolStore } from './_store/useWorkspaceChatProtocolStore';
+import { useWorkspaceResourceBreadcrumb } from './useWorkspaceResourceBreadcrumb';
 import { createResourceWorkspaceChatStateProvider } from './WorkspaceChatProtocol';
 import styles from './WorkspaceLayout.module.less';
 import type { WorkspaceLayoutConfig, WorkspaceOutletContextValue } from './WorkspaceOutletContext';
@@ -110,6 +111,7 @@ function WorkspaceLayout() {
       editorType: resolveLegacyEditorTypeForWorkspace(resourceType, viewer),
     });
   }, [routeContext]);
+  const resourceBreadcrumb = useWorkspaceResourceBreadcrumb(routeContext.resourceId);
   const workspaceChatStateProvider = layoutConfig.chatStateProvider ?? routeChatStateProvider;
 
   useResizablePanelSize({
@@ -249,9 +251,19 @@ function WorkspaceLayout() {
   const renderHeader = () => {
     if (layoutConfig.header === false) return null;
 
+    const headerConfig = layoutConfig.header ?? {};
+    const resource = headerConfig.resource
+      ? {
+          ...headerConfig.resource,
+          breadcrumbItems: resourceBreadcrumb.items,
+          onBreadcrumbNavigate: resourceBreadcrumb.navigateToNode,
+        }
+      : undefined;
+
     return (
       <WorkspaceHeader
-        {...(layoutConfig.header ?? {})}
+        {...headerConfig}
+        resource={resource}
         leftSidebarCollapsed={sidebarCollapsed}
         rightSidebarCollapsed={safeChatPanelCollapsed}
         onToggleLeftSidebar={handleSidebarToggle}

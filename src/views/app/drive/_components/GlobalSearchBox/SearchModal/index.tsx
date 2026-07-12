@@ -8,7 +8,7 @@ import SearchResultList from '../SearchResultList';
 import type { SearchModalProps } from './index.type';
 import styles from './style.module.less';
 
-function SearchModal({ isOpen, onOpenChange }: SearchModalProps) {
+function SearchModal({ isOpen, onOpenChange, scope }: SearchModalProps) {
   const [rawKeyword, setRawKeyword] = useState('');
   const debouncedKeyword = useDebounce(rawKeyword, { wait: 400 });
 
@@ -83,7 +83,13 @@ function SearchModal({ isOpen, onOpenChange }: SearchModalProps) {
               </div>
 
               <Modal.DeferredContent fallback={<div className={styles.resultPlaceholder} />}>
-                {() => <SearchResultList keyword={debouncedKeyword} onClose={handleClose} />}
+                {() => (
+                  <SearchResultList
+                    keyword={debouncedKeyword}
+                    scope={scope}
+                    onClose={handleClose}
+                  />
+                )}
               </Modal.DeferredContent>
             </Modal.Body>
           </Modal.Dialog>

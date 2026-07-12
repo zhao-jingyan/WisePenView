@@ -15,7 +15,12 @@ export interface ResourceHeaderMoreMenu {
   isPending?: boolean;
 }
 
-export interface ResourceHeaderProps {
+export interface ResourceHeaderBreadcrumbItem {
+  nodeId: string;
+  label: string;
+}
+
+export interface ResourceHeaderConfig {
   resourceId?: string;
   resourceName: string;
   resourceType?: string;
@@ -28,4 +33,9 @@ export interface ResourceHeaderProps {
   leadingActions?: ReactNode;
   actions?: ReactNode;
   moreMenu?: ResourceHeaderMoreMenu;
+}
+
+export interface ResourceHeaderProps extends ResourceHeaderConfig {
+  breadcrumbItems: ResourceHeaderBreadcrumbItem[];
+  onBreadcrumbNavigate: (nodeId: string) => void;
 }

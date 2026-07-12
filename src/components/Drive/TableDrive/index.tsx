@@ -290,7 +290,16 @@ function resolveSelectionKeysAfterRowPress(
 }
 
 const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableDrive(
-  { groupId, rootId, scope, actions, onTrashViewChange, onUploadSuccess, showToolbarTrash = true },
+  {
+    groupId,
+    rootId,
+    initialNodeId,
+    scope,
+    actions,
+    onTrashViewChange,
+    onUploadSuccess,
+    showToolbarTrash = true,
+  },
   ref
 ) {
   const driveService = useDriveService();
@@ -309,7 +318,10 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     enterFolder,
     handleExpand,
     refresh,
-  } = useTableDrive({ rootId: finalRootId, groupId: finalGroupId, scope: resolvedScope.scope });
+  } = useTableDrive({
+    initialNodeId,
+    scope: resolvedScope.scope,
+  });
   const [selectedRowKeys, setSelectedRowKeys] = useState<Set<string>>(new Set());
   const [draggingRowKeys, setDraggingRowKeys] = useState<Set<string>>(new Set());
   const [activeDragRowId, setActiveDragRowId] = useState<string | null>(null);
@@ -348,7 +360,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   );
   const handleClickNode = useClickNode({
     enterFolder: handleEnterFolder,
-    groupId: finalGroupId,
   });
   const rows = useMemo(() => dataSource.map((node) => toDriveTableRow(node)), [dataSource]);
   const rowMap = useMemo(() => buildDriveTableRowMap(rows), [rows]);
@@ -491,7 +502,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   } = useTableDriveActions({
     currentNodeId,
     currentRows: rows,
-    groupId: finalGroupId,
+    scope: resolvedScope.scope,
     actions,
     refresh: refreshDrive,
     onUploadSuccess,

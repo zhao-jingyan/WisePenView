@@ -1,11 +1,11 @@
 import type { WorkspaceResourceType, WorkspaceViewer } from '@/utils/navigation/workspaceRoute';
 import { useLayoutEffect, type ReactNode } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import type { ResourceHeaderProps } from './_common/ResourceHeader/index.type';
+import type { ResourceHeaderConfig } from './_common/ResourceHeader/index.type';
 import type { WorkspaceChatStateProvider } from './WorkspaceChatProtocol';
 
 export interface WorkspaceHeaderConfig {
-  resource?: ResourceHeaderProps;
+  resource?: ResourceHeaderConfig;
   inlineTitle?: ReactNode;
   extra?: ReactNode;
   titleBlock?: ReactNode;

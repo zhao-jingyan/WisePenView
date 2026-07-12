@@ -2,15 +2,14 @@ import { useDriveService } from '@/domains';
 import type { DriveNode, DriveNodeScope } from '@/domains/Drive';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
-import { useRequest, useUpdateEffect } from 'ahooks';
+import { useRequest } from 'ahooks';
 import { startTransition, useCallback, useMemo, useState } from 'react';
 import { useDriveTreeChildren } from '../common/useDriveTreeChildren';
 import type { DriveRow } from './index.type';
 
 interface UseTableDriveParams {
-  rootId: string;
-  groupId?: string;
-  scope?: DriveNodeScope;
+  initialNodeId?: string;
+  scope: DriveNodeScope;
 }
 
 interface UseTableDriveReturn {
@@ -29,26 +28,32 @@ interface UseTableDriveReturn {
   refresh: () => void;
 }
 
+interface DrivePathResult {
+  navigationKey: string;
+  nodes: DriveNode[];
+}
+
 /**
  * TableDrive 核心 hook：
  * - 维护 currentNodeId / rows / expandedRowKeys / expandedChildrenMap
  * - 通过 driveService 派生 children + breadcrumb，分页状态机收敛在 service 内部
  */
-export function useTableDrive({
-  rootId,
-  groupId,
-  scope,
-}: UseTableDriveParams): UseTableDriveReturn {
+export function useTableDrive({ initialNodeId, scope }: UseTableDriveParams): UseTableDriveReturn {
   const driveService = useDriveService();
+  const rootId = scope.rootId;
+  const groupId = scope.type === 'group' ? scope.groupId : undefined;
   const { childrenMap, loadChildren, reset } = useDriveTreeChildren({ groupId, scope });
 
-  const [currentNodeId, setCurrentNodeId] = useState<string>(rootId);
+  const navigationKey = `${rootId}\u0000${initialNodeId ?? ''}`;
+  const initialCurrentNodeId = initialNodeId ?? rootId;
+  const [currentLocation, setCurrentLocation] = useState({
+    navigationKey,
+    nodeId: initialCurrentNodeId,
+  });
+  const currentNodeId =
+    currentLocation.navigationKey === navigationKey ? currentLocation.nodeId : initialCurrentNodeId;
   const [rows, setRows] = useState<DriveRow[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
-
-  useUpdateEffect(() => {
-    setCurrentNodeId(rootId);
-  }, [rootId]);
 
   // 切换 currentNodeId / groupId：拉取当前层级 children
   const { loading, refresh } = useRequest(
@@ -57,7 +62,7 @@ export function useTableDrive({
       return loadChildren(currentNodeId);
     },
     {
-      refreshDeps: [currentNodeId, groupId],
+      refreshDeps: [currentNodeId, groupId, rootId],
       onBefore: () => {
         setExpandedRowKeys([]);
       },
@@ -68,33 +73,46 @@ export function useTableDrive({
   );
 
   // 派生 breadcrumb 路径
-  const { data: pathNodes = [] } = useRequest(
-    () => driveService.getNodePath({ nodeId: currentNodeId, groupId }),
+  const { data: pathResult } = useRequest(
+    async (): Promise<DrivePathResult> => ({
+      navigationKey: `${navigationKey}\u0000${currentNodeId}`,
+      nodes: await driveService.getNodePath({ nodeId: currentNodeId, groupId }),
+    }),
     {
       refreshDeps: [currentNodeId, groupId],
       onError: (err) => {
         toast.danger(parseErrorMessage(err));
-        if (currentNodeId !== rootId) setCurrentNodeId(rootId);
+        if (currentNodeId !== rootId) {
+          setCurrentLocation({ navigationKey, nodeId: rootId });
+        }
       },
     }
   );
+  const pathNodes =
+    pathResult?.navigationKey === `${navigationKey}\u0000${currentNodeId}` ? pathResult.nodes : [];
 
-  const enterFolder = useCallback((nodeId: string) => {
-    startTransition(() => {
-      setCurrentNodeId(nodeId);
-    });
-  }, []);
+  const enterFolder = useCallback(
+    (nodeId: string) => {
+      startTransition(() => {
+        setCurrentLocation({ navigationKey, nodeId });
+      });
+    },
+    [navigationKey]
+  );
 
-  const handleExpand = useCallback(async (expanded: boolean, record: DriveRow) => {
-    if (!expanded || (record.type !== 'root' && record.type !== 'folder')) {
-      setExpandedRowKeys((keys) => keys.filter((k) => k !== record.id));
-      return;
-    }
-    if (!childrenMap.has(record.id)) {
-      await loadChildren(record.id);
-    }
-    setExpandedRowKeys((keys) => (keys.includes(record.id) ? keys : [...keys, record.id]));
-  }, [childrenMap, loadChildren]);
+  const handleExpand = useCallback(
+    async (expanded: boolean, record: DriveRow) => {
+      if (!expanded || (record.type !== 'root' && record.type !== 'folder')) {
+        setExpandedRowKeys((keys) => keys.filter((k) => k !== record.id));
+        return;
+      }
+      if (!childrenMap.has(record.id)) {
+        await loadChildren(record.id);
+      }
+      setExpandedRowKeys((keys) => (keys.includes(record.id) ? keys : [...keys, record.id]));
+    },
+    [childrenMap, loadChildren]
+  );
 
   // 浅 map：folder 命中 expandedChildrenMap 时挂 children，否则原样返回
   const dataSource = useMemo<DriveRow[]>(() => {

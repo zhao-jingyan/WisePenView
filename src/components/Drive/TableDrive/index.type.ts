@@ -31,6 +31,8 @@ export interface TableDriveProps {
   /** 个人云盘不传；小组云盘传 groupId */
   groupId?: string;
   rootId?: string;
+  /** 从路由进入云盘时需要直接打开的目录节点 */
+  initialNodeId?: string;
   scope?: DriveScope;
   actions?: TableDriveActionConfig;
   /** 回收站视图变化时通知页面级 header 按钮状态 */

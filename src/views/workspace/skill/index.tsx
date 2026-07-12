@@ -15,6 +15,7 @@ import type { SkillFileNode, UploadSkillAssetResult } from '@/domains/Skill';
 import { SkillServicesMap } from '@/domains/Skill';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
+import { useWorkspaceNavigationStore } from '@/layouts/Workspace/_store/useWorkspaceNavigationStore';
 import {
   useWorkspaceLayoutConfig,
   type WorkspaceLayoutConfig,
@@ -1055,6 +1056,9 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     openInWorkspace({
       resourceId: newResourceId,
       resourceType: WORKSPACE_RESOURCE_TYPE.SKILL,
+      driveLocation: {
+        scope: useWorkspaceNavigationStore.getState().location.scope,
+      },
       replace: true,
     });
   };

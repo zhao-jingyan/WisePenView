@@ -1,4 +1,3 @@
-import { useActiveDriveScopeStore } from '@/components/Drive/_store/useActiveDriveScopeStore';
 import {
   buildDriveTreeData,
   replaceDriveTreeNodeChildren,
@@ -7,10 +6,8 @@ import {
   getDriveNodeLabel,
   getDriveScopeGroupId,
   mountResourceToFolderTag,
-  resolveDriveScope,
   type DriveActionTarget,
 } from '@/components/Drive/common/driveComponentModel';
-import { useDriveTreeChildren } from '@/components/Drive/common/useDriveTreeChildren';
 import {
   DeleteNodeModal,
   NewFolderNodeModal,
@@ -26,11 +23,12 @@ import Tree from '@/components/Tree';
 import { useDocumentService, useDriveService, useNoteService, useResourceService } from '@/domains';
 import type { DriveNode, FolderNode, RootNode } from '@/domains/Drive';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
+import { useWorkspaceNavigationStore } from '@/layouts/Workspace/_store/useWorkspaceNavigationStore';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { SidebarDriveCreateAction } from './SidebarDriveNodeTitle';
 import SidebarDriveNodeTitle from './SidebarDriveNodeTitle';
@@ -46,23 +44,29 @@ const RENDERABLE_TYPES = new Set<'root' | 'folder' | 'resource' | 'link'>([
 const SELECTABLE_TYPES = new Set<'root' | 'folder' | 'resource' | 'link'>(['resource', 'link']);
 const EMPTY_DISABLED_IDS = new Set<string>();
 
+interface SidebarTreeLoadResult {
+  treeData: DataNode[];
+  nodeMap: Map<string, DriveNode>;
+  expandedKeys: React.Key[];
+  selectedKeys: React.Key[];
+}
+
+const isResourceNode = (
+  node: DriveNode | undefined
+): node is Extract<DriveNode, { type: 'resource' | 'link' }> =>
+  node?.type === 'resource' || node?.type === 'link';
+
 function SidebarDrive() {
   const driveService = useDriveService();
   const documentService = useDocumentService();
   const noteService = useNoteService();
   const resourceService = useResourceService();
-  const groupId = useActiveDriveScopeStore((state) => state.groupId);
-  const resolvedScope = useMemo(
-    () => resolveDriveScope(groupId ? { type: 'group', groupId } : undefined),
-    [groupId]
-  );
-  const openInWorkspace = useOpenInWorkspace(groupId);
-
-  const { childrenMap, loadChildren, reset } = useDriveTreeChildren({
-    groupId: resolvedScope.groupId,
-    scope: resolvedScope.scope,
-  });
-  const nodeMapRef = useRef<Map<string, DriveNode>>(new Map());
+  const navigationLocation = useWorkspaceNavigationStore((state) => state.location);
+  const scope = navigationLocation.scope;
+  const groupId = getDriveScopeGroupId(scope);
+  const resourceLocation = navigationLocation.resource;
+  const openInWorkspace = useOpenInWorkspace();
+  const [nodeMap, setNodeMap] = useState<Map<string, DriveNode>>(new Map());
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
@@ -78,15 +82,11 @@ function SidebarDrive() {
 
   const existingFolderNames = useMemo(() => {
     if (!createFolderParent) return [];
-    return (childrenMap.get(createFolderParent.id) ?? [])
+    return [...nodeMap.values()]
       .filter((node): node is FolderNode => node.type === 'folder')
+      .filter((node) => node.parentId === createFolderParent.id)
       .map((node) => node.name);
-  }, [childrenMap, createFolderParent]);
-
-  const handleSelectScope = (): void => {
-    setSelectedKeys([]);
-    setExpandedKeys([]);
-  };
+  }, [createFolderParent, nodeMap]);
 
   const resolveContainerMountTagId = (node: RootNode | FolderNode): string | undefined => {
     if (node.type === 'folder') return node.tagId;
@@ -150,7 +150,10 @@ function SidebarDrive() {
     }
   };
 
-  function buildChildrenData(nodes: DriveNode[]): DataNode[] {
+  function buildChildrenData(
+    nodes: DriveNode[],
+    targetNodeMap: Map<string, DriveNode>
+  ): DataNode[] {
     return buildDriveTreeData(
       nodes,
       {
@@ -161,44 +164,110 @@ function SidebarDrive() {
         renderTitle: (node) => (
           <SidebarDriveNodeTitle
             node={node}
-            scopeSwitcher={
-              node.type === 'root' ? (
-                <SidebarDriveScopeSwitcher onSelectScope={handleSelectScope} />
-              ) : undefined
-            }
+            scopeSwitcher={node.type === 'root' ? <SidebarDriveScopeSwitcher /> : undefined}
             onCreateNode={handleCreateNode}
             onRenameNode={setRenameTarget}
             onDeleteNode={setDeleteTarget}
           />
         ),
       },
-      nodeMapRef.current
+      targetNodeMap
     );
   }
 
   const { loading: treeLoading, refresh: refreshTree } = useRequest(
-    async (): Promise<DataNode[]> => {
-      nodeMapRef.current.clear();
-      reset();
-      setSelectedKeys([]);
-      setExpandedKeys([]);
+    async (): Promise<SidebarTreeLoadResult> => {
+      const nodeMap = new Map<string, DriveNode>();
       const rootNode = await driveService.getRootNode({
-        rootId: resolvedScope.rootId,
-        groupId: resolvedScope.groupId,
+        rootId: scope.rootId,
+        groupId,
       });
-      const baseRoot = buildChildrenData([rootNode])[0];
-      if (!baseRoot) return [];
+      const rootChildren = await driveService.listNodeChildren({
+        nodeId: rootNode.id,
+        groupId,
+      });
+      const baseRoot = buildChildrenData([rootNode], nodeMap)[0];
+      if (!baseRoot) {
+        return { treeData: [], nodeMap, expandedKeys: [], selectedKeys: [] };
+      }
       const fixedRoot = { ...baseRoot, children: undefined, isLeaf: true };
-      if (rootNode.type !== 'root') return [fixedRoot];
-      const children = await loadChildren(rootNode.id);
-      const childData = buildChildrenData(children);
-      return [fixedRoot, ...childData];
+      const buildBaseResult = (): SidebarTreeLoadResult => ({
+        treeData: [fixedRoot, ...buildChildrenData(rootChildren, nodeMap)],
+        nodeMap,
+        expandedKeys: [],
+        selectedKeys: [],
+      });
+
+      if (!resourceLocation) return buildBaseResult();
+
+      try {
+        const pathNodes = await driveService.getNodePath({
+          nodeId: resourceLocation.parentNodeId,
+          groupId,
+        });
+        const parentPathNode = pathNodes[pathNodes.length - 1];
+        if (parentPathNode?.id !== resourceLocation.parentNodeId) {
+          return buildBaseResult();
+        }
+
+        const childrenByParent = new Map<string, DriveNode[]>([[rootNode.id, rootChildren]]);
+        for (const pathNode of pathNodes) {
+          if (pathNode.type !== 'folder') continue;
+          const children = await driveService.listNodeChildren({
+            nodeId: pathNode.id,
+            groupId,
+          });
+          childrenByParent.set(pathNode.id, children);
+        }
+
+        const buildLocatedTree = (nodes: DriveNode[]): DataNode[] =>
+          buildChildrenData(nodes, nodeMap).map((treeNode) => {
+            const children = childrenByParent.get(String(treeNode.key));
+            return children ? { ...treeNode, children: buildLocatedTree(children) } : treeNode;
+          });
+        const parentChildren = childrenByParent.get(resourceLocation.parentNodeId) ?? [];
+        const locatedNode = resourceLocation.nodeId
+          ? parentChildren.find((node) => node.id === resourceLocation.nodeId)
+          : parentChildren.find(
+              (node) => isResourceNode(node) && node.resourceId === resourceLocation.resourceId
+            );
+        const selectedNode =
+          isResourceNode(locatedNode) && locatedNode.resourceId === resourceLocation.resourceId
+            ? locatedNode
+            : undefined;
+
+        return {
+          treeData: [fixedRoot, ...buildLocatedTree(rootChildren)],
+          nodeMap,
+          expandedKeys: pathNodes.filter((node) => node.type === 'folder').map((node) => node.id),
+          selectedKeys: selectedNode ? [selectedNode.id] : [],
+        };
+      } catch {
+        return buildBaseResult();
+      }
     },
     {
-      refreshDeps: [resolvedScope.rootId, resolvedScope.groupId],
-      onSuccess: (data) => {
-        setTreeData(data);
+      refreshDeps: [
+        scope.rootId,
+        groupId,
+        resourceLocation?.resourceId,
+        resourceLocation?.parentNodeId,
+        resourceLocation?.nodeId,
+      ],
+      onBefore: () => {
+        setSelectedKeys([]);
         setExpandedKeys([]);
+      },
+      onSuccess: (result) => {
+        setNodeMap(result.nodeMap);
+        setTreeData(result.treeData);
+        setExpandedKeys(result.expandedKeys);
+        setSelectedKeys(result.selectedKeys);
+      },
+      onError: (err) => {
+        setNodeMap(new Map());
+        setTreeData([]);
+        toast.danger(parseErrorMessage(err));
       },
     }
   );
@@ -215,19 +284,18 @@ function SidebarDrive() {
       await mountCreatedResource(resourceId, noteTarget);
       return {
         resourceId,
-        groupId: getDriveScopeGroupId(noteTarget.scope),
+        target: noteTarget,
       };
     },
     {
       ready: Boolean(noteTarget),
       refreshDeps: [noteTarget],
-      onSuccess: ({ resourceId, groupId: resourceGroupId }) => {
+      onSuccess: ({ resourceId, target }) => {
         setNoteTarget(null);
-        refreshTree();
         openInWorkspace({
           resourceId,
           resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
-          groupId: resourceGroupId,
+          driveLocation: { scope: target.scope, parentNodeId: target.id },
         });
       },
       onError: (err) => {
@@ -249,19 +317,18 @@ function SidebarDrive() {
       await mountCreatedResource(resourceId, target);
       return {
         resourceId,
-        groupId: getDriveScopeGroupId(target.scope),
+        target,
       };
     },
     {
       manual: true,
-      onSuccess: ({ resourceId, groupId: resourceGroupId }) => {
+      onSuccess: ({ resourceId, target }) => {
         setDrawioTarget(null);
         setDrawioNameError('');
-        refreshTree();
         openInWorkspace({
           resourceId,
           resourceType: WORKSPACE_RESOURCE_TYPE.DRAWIO,
-          groupId: resourceGroupId,
+          driveLocation: { scope: target.scope, parentNodeId: target.id },
         });
       },
       onError: (err) => {
@@ -278,11 +345,10 @@ function SidebarDrive() {
       try {
         await mountCreatedResource(resourceId, target);
         setSkillTarget(null);
-        refreshTree();
         openInWorkspace({
           resourceId,
           resourceType: WORKSPACE_RESOURCE_TYPE.SKILL,
-          groupId: getDriveScopeGroupId(target.scope),
+          driveLocation: { scope: target.scope, parentNodeId: target.id },
         });
       } catch (err) {
         toast.danger(parseErrorMessage(err));
@@ -292,16 +358,31 @@ function SidebarDrive() {
 
   const handleLoadData = async (treeNode: DataNode): Promise<void> => {
     const key = String(treeNode.key);
-    const node = nodeMapRef.current.get(key);
+    const node = nodeMap.get(key);
     if (!node || (node.type !== 'root' && node.type !== 'folder')) return;
-    const children = await loadChildren(node.id);
-    const childData = buildChildrenData(children);
-    setTreeData((prev) => replaceDriveTreeNodeChildren(prev, node.id, childData));
+    try {
+      const children = await driveService.listNodeChildren({
+        nodeId: node.id,
+        groupId: getDriveScopeGroupId(node.scope),
+      });
+      const childNodeMap = new Map<string, DriveNode>();
+      const childData = buildChildrenData(children, childNodeMap);
+      setNodeMap((currentNodeMap) => {
+        const nextNodeMap = new Map(currentNodeMap);
+        childNodeMap.forEach((childNode, childNodeId) => {
+          nextNodeMap.set(childNodeId, childNode);
+        });
+        return nextNodeMap;
+      });
+      setTreeData((prev) => replaceDriveTreeNodeChildren(prev, node.id, childData));
+    } catch (err) {
+      toast.danger(parseErrorMessage(err));
+    }
   };
 
   const handleSelect = (_keys: React.Key[], info: { node: DataNode }): void => {
     const key = String(info.node.key);
-    const node = nodeMapRef.current.get(key);
+    const node = nodeMap.get(key);
     if (!node || (node.type !== 'resource' && node.type !== 'link')) return;
     setSelectedKeys([key]);
     if (!node.resourceId) return;
@@ -309,6 +390,11 @@ function SidebarDrive() {
       resourceId: node.resourceId,
       resourceType: node.resourceType,
       resourceName: node.title,
+      driveLocation: {
+        scope: node.scope,
+        nodeId: node.id,
+        parentNodeId: node.parentId,
+      },
     });
   };
 
@@ -347,7 +433,7 @@ function SidebarDrive() {
         <NewFolderNodeModal
           isOpen={Boolean(createFolderParent)}
           parentId={createFolderParent.id}
-          groupId={resolvedScope.groupId}
+          groupId={groupId}
           parentLabel={getDriveNodeLabel(createFolderParent)}
           existingFolderNames={existingFolderNames}
           onOpenChange={(open) => {
@@ -414,7 +500,7 @@ function SidebarDrive() {
       <RenameNodeModal
         isOpen={Boolean(renameTarget)}
         node={renameTarget}
-        groupId={resolvedScope.groupId}
+        groupId={groupId}
         onOpenChange={(open) => {
           if (!open) setRenameTarget(null);
         }}
@@ -423,7 +509,7 @@ function SidebarDrive() {
       <DeleteNodeModal
         isOpen={Boolean(deleteTarget)}
         node={deleteTarget}
-        groupId={resolvedScope.groupId}
+        groupId={groupId}
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}

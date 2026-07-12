@@ -10,7 +10,7 @@ const IS_MAC = navigator.platform.toLowerCase().includes('mac');
 const SHORTCUT_LABEL = IS_MAC ? '⌘+K' : 'Ctrl+K';
 
 /** 工具栏图标按钮触发器 + 受控 Modal；监听 ctrl/⌘+K 打开 */
-function GlobalSearchBox({ className }: GlobalSearchBoxProps) {
+function GlobalSearchBox({ className, scope }: GlobalSearchBoxProps) {
   const [open, setOpen] = useState(false);
 
   useKeyPress(
@@ -33,7 +33,7 @@ function GlobalSearchBox({ className }: GlobalSearchBoxProps) {
         搜索
         <Kbd>{SHORTCUT_LABEL}</Kbd>
       </Button>
-      <SearchModal isOpen={open} onOpenChange={setOpen} />
+      <SearchModal isOpen={open} scope={scope} onOpenChange={setOpen} />
     </>
   );
 }

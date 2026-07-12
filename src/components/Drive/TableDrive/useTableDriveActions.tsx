@@ -12,6 +12,7 @@ import { useNewNoteStore } from '@/components/Note/_store/useNewNoteStore';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import CreateSkillModal from '@/components/Skill/CreateSkillModal';
 import { useDocumentService, useDriveService, useNoteService, useResourceService } from '@/domains';
+import type { DriveNodeScope } from '@/domains/Drive';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
@@ -25,7 +26,7 @@ import type { CreateMenuItem } from './parts/CreateMenu/index.type';
 export interface UseTableDriveActionsParams {
   currentNodeId: string;
   currentRows: DriveTableRow[];
-  groupId?: string;
+  scope: DriveNodeScope;
   actions?: TableDriveActionConfig;
   refresh: () => void;
   onUploadSuccess?: () => void;
@@ -61,14 +62,15 @@ const DEFAULT_TOOLBAR_CONFIG: Required<NonNullable<TableDriveActionConfig['toolb
 export function useTableDriveActions({
   currentNodeId,
   currentRows,
-  groupId,
+  scope,
   actions,
   refresh,
   onUploadSuccess,
   targetTagId,
   isTrashView = false,
 }: UseTableDriveActionsParams): UseTableDriveActionsReturn {
-  const openInWorkspace = useOpenInWorkspace(groupId);
+  const openInWorkspace = useOpenInWorkspace();
+  const groupId = scope.type === 'group' ? scope.groupId : undefined;
   const noteService = useNoteService();
   const driveService = useDriveService();
   const documentService = useDocumentService();
@@ -150,6 +152,7 @@ export function useTableDriveActions({
         openInWorkspace({
           resourceId,
           resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
+          driveLocation: { scope, parentNodeId: currentNodeId },
         });
       },
       onError: (err) => {
@@ -180,6 +183,7 @@ export function useTableDriveActions({
         openInWorkspace({
           resourceId,
           resourceType: WORKSPACE_RESOURCE_TYPE.DRAWIO,
+          driveLocation: { scope, parentNodeId: currentNodeId },
         });
       },
       onError: (err) => {
@@ -198,13 +202,14 @@ export function useTableDriveActions({
           openInWorkspace({
             resourceId,
             resourceType: WORKSPACE_RESOURCE_TYPE.SKILL,
+            driveLocation: { scope, parentNodeId: currentNodeId },
           });
         } catch (err) {
           toast.danger(parseErrorMessage(err));
         }
       })();
     },
-    [mountCreatedResource, openInWorkspace, refresh]
+    [currentNodeId, mountCreatedResource, openInWorkspace, refresh, scope]
   );
 
   const ModalHost = useMemo(
@@ -381,11 +386,12 @@ export function useTableDriveActions({
       openInWorkspace({
         resourceId: pendingNewNoteId,
         resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
+        driveLocation: { scope, parentNodeId: currentNodeId },
       });
       return;
     }
     runCreateNote();
-  }, [creatingNote, groupId, openInWorkspace, runCreateNote]);
+  }, [creatingNote, currentNodeId, groupId, openInWorkspace, runCreateNote, scope]);
 
   const handleOpenDrawioModal = useCallback(() => {
     if (creatingDrawio) return;

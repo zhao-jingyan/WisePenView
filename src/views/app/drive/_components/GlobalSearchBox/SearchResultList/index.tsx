@@ -1,4 +1,3 @@
-import { useActiveDriveScopeStore } from '@/components/Drive/_store/useActiveDriveScopeStore';
 import { Empty, Spin } from '@/components/Feedback';
 import EntryIcon from '@/components/Icons/EntryIcon';
 import { useResourceService } from '@/domains';
@@ -62,11 +61,9 @@ function SearchHitRow({ item, active, flatIndex, onActivate, onOpen }: SearchHit
 }
 
 /** 单列表渲染 + 无限滚动 + 键盘导航；activeIndex 渲染期 clamp 规避 effect 内 setState */
-function SearchResultList({ keyword, onClose }: SearchResultListProps) {
+function SearchResultList({ keyword, scope, onClose }: SearchResultListProps) {
   const listRef = useRef<HTMLDivElement>(null);
-  // 继承当前 Drive 的 groupId，避免搜索跳转后把侧边栏上下文切回个人空间
-  const groupId = useActiveDriveScopeStore((state) => state.groupId);
-  const openInWorkspace = useOpenInWorkspace(groupId);
+  const openInWorkspace = useOpenInWorkspace();
   const resourceService = useResourceService();
   const trimmed = keyword.trim();
 
@@ -120,6 +117,7 @@ function SearchResultList({ keyword, onClose }: SearchResultListProps) {
       resourceId: item.resourceId,
       resourceType: item.resourceType,
       resourceName: item.resourceName,
+      driveLocation: { scope },
     });
   };
 

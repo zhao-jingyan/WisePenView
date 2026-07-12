@@ -90,11 +90,11 @@ const normalizeNode = (node: LegacyNode): DriveNode | null => {
       childrenIds: node.childrenIds ?? [],
     };
   }
-  if (node.type === 'resource' && node.resourceId) {
+  if (node.type === 'resource' && node.resourceId && node.parentId) {
     return {
       id: node.id,
       type: 'resource',
-      parentId: node.parentId ?? null,
+      parentId: node.parentId,
       scope: buildDriveNodeScope(),
       resourceId: node.resourceId,
       title: node.title ?? '未命名文件',
@@ -106,11 +106,11 @@ const normalizeNode = (node: LegacyNode): DriveNode | null => {
       folderTagId: node.tagId ?? node.parentId ?? '',
     };
   }
-  if (node.type === 'link' && node.resourceId) {
+  if (node.type === 'link' && node.resourceId && node.parentId) {
     return {
       id: node.id,
       type: 'link',
-      parentId: node.parentId ?? null,
+      parentId: node.parentId,
       scope: buildDriveNodeScope(),
       resourceId: node.resourceId,
       title: node.title ?? '未命名文件',
