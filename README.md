@@ -1,6 +1,6 @@
 # WisePenView
 
-WisePenView 前端项目，基于 React、Vite、TypeScript、HeroUI 与 Ant Design。项目处于 HeroUI 与 AntD 迁移期，新增基础交互控件优先使用 HeroUI，旧 AntD 代码按任务渐进收敛。
+WisePenView 前端项目，基于 React、Vite、TypeScript、HeroUI 与 Shadcn。
 
 开发规约入口见 `AGENT.md`，专题规约位于 `docs/agent/`。
 
