@@ -1,36 +1,28 @@
 import { Copy } from 'lucide-react';
 import { useState } from 'react';
-import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom';
+import { isRouteErrorResponse, useLocation, useNavigate, useRouteError } from 'react-router-dom';
 
 import { ResultState } from '@/components/Feedback';
 import LandingNavbar from '@/layouts/Home/_components/LandingNavbar';
 import ResourceNotFound from '@/views/app/error/ResourceNotFound';
 import { Button, toast, Tooltip } from '@heroui/react';
+import { buildErrorDetail } from './errorDetail';
 import styles from './style.module.less';
 
 interface AppErrorInfo {
   status: 'error' | 'warning' | '404' | '403' | '500' | 'success' | 'info';
   title: string;
   subTitle: string;
-  detail?: string;
 }
 
 const buildAppErrorInfo = (error: unknown): AppErrorInfo => {
   if (isRouteErrorResponse(error)) {
     const title = error.status >= 500 ? '出错啦' : `请求异常 (${error.status})`;
     const subTitle = error.statusText || '页面加载失败，请稍后重试。';
-    const detail =
-      typeof error.data === 'string'
-        ? error.data
-        : error.data && typeof error.data === 'object'
-          ? JSON.stringify(error.data)
-          : undefined;
-
     return {
       status: error.status >= 500 ? '500' : 'warning',
       title,
       subTitle,
-      detail,
     };
   }
 
@@ -39,7 +31,6 @@ const buildAppErrorInfo = (error: unknown): AppErrorInfo => {
       status: '500',
       title: '出错啦',
       subTitle: '页面发生了意外错误，请刷新后重试。',
-      detail: error.message,
     };
   }
 
@@ -52,6 +43,7 @@ const buildAppErrorInfo = (error: unknown): AppErrorInfo => {
 
 function AppError() {
   const navigate = useNavigate();
+  const location = useLocation();
   const error = useRouteError();
   const [detailOpen, setDetailOpen] = useState(false);
   // 路由未命中抛出的 404 走专用 ResourceNotFound 页，避免通用错误壳与业务 404 语义混淆
@@ -60,15 +52,11 @@ function AppError() {
   }
 
   const errorInfo = buildAppErrorInfo(error);
-  const hasErrorDetail = Boolean(errorInfo.detail);
+  const errorDetail = buildErrorDetail(error, location.pathname);
 
   const handleCopyDetail = async () => {
-    if (!errorInfo.detail) {
-      return;
-    }
-
     try {
-      await navigator.clipboard.writeText(errorInfo.detail);
+      await navigator.clipboard.writeText(errorDetail);
       toast.success('错误详情已复制');
     } catch {
       toast.danger('复制失败，请手动复制');
@@ -98,41 +86,39 @@ function AppError() {
             </div>
           }
         >
-          {hasErrorDetail ? (
-            <div className={styles.errorCollapse}>
-              <div className={styles.errorCollapseHeader}>
-                <button
-                  type="button"
-                  className={styles.errorCollapseToggle}
-                  aria-expanded={detailOpen}
-                  onClick={() => setDetailOpen((open) => !open)}
-                >
-                  查看错误详情
-                </button>
-                <Tooltip>
-                  <Tooltip.Trigger>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      isIconOnly
-                      aria-label="复制错误详情"
-                      onPress={handleCopyDetail}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <Copy />
-                    </Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>复制错误详情</Tooltip.Content>
-                </Tooltip>
-              </div>
-              {detailOpen ? (
-                <div className={styles.errorDetailPanel}>
-                  <pre className={styles.errorDetail}>{errorInfo.detail}</pre>
-                  <span className={styles.contactTip}>如问题持续，请复制错误详情并联系开发者</span>
-                </div>
-              ) : null}
+          <div className={styles.errorCollapse}>
+            <div className={styles.errorCollapseHeader}>
+              <button
+                type="button"
+                className={styles.errorCollapseToggle}
+                aria-expanded={detailOpen}
+                onClick={() => setDetailOpen((open) => !open)}
+              >
+                查看错误详情
+              </button>
+              <Tooltip>
+                <Tooltip.Trigger>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    isIconOnly
+                    aria-label="复制错误详情"
+                    onPress={handleCopyDetail}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <Copy />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>复制错误详情</Tooltip.Content>
+              </Tooltip>
             </div>
-          ) : null}
+            {detailOpen ? (
+              <div className={styles.errorDetailPanel}>
+                <pre className={styles.errorDetail}>{errorDetail}</pre>
+                <span className={styles.contactTip}>如问题持续，请复制错误详情并联系开发者</span>
+              </div>
+            ) : null}
+          </div>
         </ResultState>
       </main>
 
