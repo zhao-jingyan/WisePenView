@@ -68,7 +68,6 @@ export type OnlyOfficeEditorConfig = Config;
 export interface OnlyOfficeEditorConfigResponse {
   sessionId?: string;
   config?: OnlyOfficeEditorConfig | null;
-  documentServerPublicUrl?: string | null;
 }
 
 /** DocumentService：文档上传、重试转换、删除（路径与当前后端 DocumentController 一致） */

@@ -35,7 +35,6 @@ export type OnlyOfficeEditorConfig = Config;
 export interface OnlyOfficeEditorConfigApiResponse {
   sessionId?: string;
   config?: OnlyOfficeEditorConfig | null;
-  documentServerPublicUrl?: string | null;
 }
 
 interface DocumentUploadMetaApiResponse {

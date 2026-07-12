@@ -3,11 +3,12 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
-const REQUIRED_CLIENT_URL_KEYS = ['VITE_API_BASE_URL', 'VITE_NOTE_COLLAB_WS_URL'] as const;
-const OPTIONAL_CLIENT_URL_KEYS = [
-  'VITE_DRAWIO_EMBED_URL',
+const REQUIRED_CLIENT_URL_KEYS = [
+  'VITE_API_BASE_URL',
+  'VITE_NOTE_COLLAB_WS_URL',
   'VITE_ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL',
 ] as const;
+const OPTIONAL_CLIENT_URL_KEYS = ['VITE_DRAWIO_EMBED_URL'] as const;
 const NO_TRAILING_SLASH_URL_KEYS = new Set<string>([
   'VITE_API_BASE_URL',
   'VITE_NOTE_COLLAB_WS_URL',

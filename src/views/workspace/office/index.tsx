@@ -2,7 +2,6 @@ import { ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL } from '@/apis/clientUrls';
 import { ResultState, Spin } from '@/components/Feedback';
 import EntryIcon from '@/components/Icons/EntryIcon';
 import { useDocumentService, useResourceService } from '@/domains';
-import type { OnlyOfficeEditorConfigResponse } from '@/domains/Document';
 import { RESOURCE_TYPE } from '@/domains/Resource';
 import {
   useWorkspaceLayoutConfig,
@@ -43,21 +42,6 @@ interface OfficeEditorHostProps {
 
 interface OfficeViewProps {
   resourceId?: string;
-}
-
-function resolveDocumentServerUrl(response: OnlyOfficeEditorConfigResponse): string {
-  const documentServerUrl =
-    response.documentServerPublicUrl || ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL;
-  if (!documentServerUrl) {
-    throw new Error('ONLYOFFICE Document Server 地址未配置');
-  }
-  return documentServerUrl;
-}
-
-function assertDocumentServerUrl(documentServerUrl: string): void {
-  if (!documentServerUrl.trim()) {
-    throw new Error('ONLYOFFICE Document Server 地址为空');
-  }
 }
 
 function OfficeToolbarTitle({ resourceName, resourceType }: OfficeToolbarTitleProps) {
@@ -116,8 +100,6 @@ function OfficeEditorHost({
     () => `onlyoffice-editor-${resourceId.replace(/[^a-z0-9_-]/gi, '-')}`,
     [resourceId]
   );
-
-  assertDocumentServerUrl(documentServerUrl);
 
   return (
     <div className={styles.editorHost}>
@@ -249,7 +231,6 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
 
   const resourceName = data.docInfo.resourceInfo.resourceName;
   const resourceType = data.docInfo.resourceInfo.resourceType;
-  const documentServerUrl = resolveDocumentServerUrl(data.editorConfig);
 
   return (
     <OfficeLayoutConfig
@@ -263,7 +244,7 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
         <OfficeEditorHost
           key={`${resourceId}-${data.editorConfig.sessionId ?? 'session'}`}
           config={data.editorConfig.config}
-          documentServerUrl={documentServerUrl}
+          documentServerUrl={ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL}
           resourceId={resourceId}
           onReady={handleEditorReady}
           onError={handleEditorError}

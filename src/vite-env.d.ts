@@ -9,8 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_NOTE_COLLAB_WS_URL: string;
   // 可选：DrawIO 编辑器入口 URL，未配置时使用官方 embed.diagrams.net
   readonly VITE_DRAWIO_EMBED_URL?: string;
-  // 可选：后端未返回时使用的 ONLYOFFICE Document Server 前端访问地址
-  readonly VITE_ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL?: string;
+  // ONLYOFFICE Document Server 前端访问地址
+  readonly VITE_ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL: string;
 }
 
 interface ImportMeta {
