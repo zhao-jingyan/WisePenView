@@ -112,7 +112,7 @@ function AppLayout() {
           minSize={sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_MIN_WIDTH}
           maxSize={sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_MAX_WIDTH}
           groupResizeBehavior="preserve-pixel-size"
-          className={clsx(styles.leftSider, sidebarCollapsed && styles.leftSiderCollapsed)}
+          className={styles.leftSider}
           aria-label="应用侧边栏"
           aria-hidden={sidebarCollapsed ? true : undefined}
           onResize={handleSidebarResize}

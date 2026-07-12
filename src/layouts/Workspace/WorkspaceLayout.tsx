@@ -274,7 +274,7 @@ function WorkspaceLayout() {
         minSize={sidebarCollapsed ? 0 : WORKSPACE_LEFT_SIDEBAR_MIN_WIDTH}
         maxSize={sidebarCollapsed ? 0 : WORKSPACE_LEFT_SIDEBAR_MAX_WIDTH}
         groupResizeBehavior="preserve-pixel-size"
-        className={clsx(styles.leftSider, sidebarCollapsed && styles.leftSiderCollapsed)}
+        className={styles.leftSider}
         aria-label="资源侧边栏"
         aria-hidden={sidebarCollapsed ? true : undefined}
         onResize={handleLeftSidebarResize}
