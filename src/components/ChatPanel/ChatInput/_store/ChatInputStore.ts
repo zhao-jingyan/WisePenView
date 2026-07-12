@@ -5,7 +5,7 @@ import {
   type CapabilityToolOption,
   type ChatAgentOption,
 } from '@/domains/Chat';
-import type { SkillSummary } from '@/domains/Resource';
+import type { ResourceSkillSummary } from '@/domains/Resource';
 import { createContext, useContext } from 'react';
 import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
@@ -19,7 +19,7 @@ import type {
 export const DEFAULT_PERSONAL_AGENT = buildDefaultPersonalAgent();
 
 function buildSkillSelection(
-  skill: SkillSummary,
+  skill: ResourceSkillSummary,
   options?: { sourceAgent?: ChatAgentOption | null; external?: boolean }
 ): CapabilitySkillSelection {
   const sourceAgent = options?.sourceAgent;
@@ -89,7 +89,7 @@ interface ChatInputActions {
   removeTool: (toolId: string) => void;
   replaceAgentIfMissing: (fallbackAgent: ChatAgentOption) => void;
   replaceExternalSkills: (
-    selected: Array<{ skill: SkillSummary; sourceAgent: ChatAgentOption | null }>
+    selected: Array<{ skill: ResourceSkillSummary; sourceAgent: ChatAgentOption | null }>
   ) => void;
   setAttachmentOpen: (open: boolean) => void;
   setAvailableModels: (models: Model[]) => void;
@@ -104,7 +104,7 @@ interface ChatInputActions {
   setSelectedModelId: (modelId: string | null) => void;
   setSkillMenuOpen: (open: boolean) => void;
   setValue: (value: string) => void;
-  toggleSkill: (skill: SkillSummary, sourceAgent: ChatAgentOption) => void;
+  toggleSkill: (skill: ResourceSkillSummary, sourceAgent: ChatAgentOption) => void;
   toggleTool: (tool: CapabilityToolOption) => void;
 }
 

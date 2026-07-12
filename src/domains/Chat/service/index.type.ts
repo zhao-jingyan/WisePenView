@@ -1,5 +1,5 @@
 import type { Group, IGroupService } from '@/domains/Group';
-import type { IResourceService, SkillSummary } from '@/domains/Resource';
+import type { IResourceService, ResourceSkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '../entity/agent';
 import type { CapabilityToolOption } from '../mapper/capabilityPicker.mapper';
 import type { SkillScopeTreeGroup } from '../mapper/skillScope.mapper';
@@ -69,13 +69,13 @@ export interface ChatServiceDeps {
 
 export interface ChatWorkspace {
   groups: Group[];
-  skills: SkillSummary[];
+  skills: ResourceSkillSummary[];
   personalAgents: ChatAgentOption[];
   groupAgents: ChatAgentOption[];
 }
 
 export interface ChatInputCapabilityOptions {
-  primarySkills: SkillSummary[];
+  primarySkills: ResourceSkillSummary[];
   otherSkillGroups: SkillScopeTreeGroup[];
   tools: CapabilityToolOption[];
 }
@@ -96,7 +96,7 @@ export interface IChatService {
   renameSession(params: RenameSessionRequest): Promise<ChatSession>;
   deleteSession(params: DeleteSessionRequest): Promise<void>;
   listSessions(params?: ListSessionsRequest): Promise<PageResult<ChatSession>>;
-  listHistoryMessages(params: ListHistoryMessagesRequest): Promise<PageResult<MessageResponse>>;
+  listHistoryMessages(params: ListHistoryMessagesRequest): Promise<PageResult<ChatMessage>>;
   getTools(): Promise<ToolOption[]>;
   uploadAttachment(params: UploadAttachmentParams): Promise<UploadAttachmentResult>;
 }
@@ -113,13 +113,13 @@ export interface CreateSessionRequest {
   title?: string;
 }
 
-/** 会话实体（与 SessionResponse 对齐） */
+/** 会话实体 */
 export interface ChatSession {
   id: string;
-  user_id: string;
+  userId: string;
   title: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** 删除会话请求参数 */
@@ -144,7 +144,7 @@ export interface ListHistoryMessagesRequest {
 export type MessageRole = 'user' | 'assistant';
 
 /** 历史消息分片 */
-export interface MessagePartResponse {
+export interface ChatMessagePart {
   type: string;
   text: string | null;
   state: string | null;
@@ -153,16 +153,15 @@ export interface MessagePartResponse {
   output: unknown;
 }
 
-/** 历史消息实体（与 MessageResponse 对齐） */
-export interface MessageResponse {
+/** 历史消息实体 */
+export interface ChatMessage {
   id: string;
   role: MessageRole;
-  model_id?: number | string | null;
+  modelId?: string;
   content?: string;
-  parts?: MessagePartResponse[];
-  tool_calls?: unknown[] | null;
+  parts?: ChatMessagePart[];
+  toolCalls?: unknown[];
   createdAt?: string;
-  created_at?: string;
 }
 
 /** 分页返回结构 */

@@ -4,7 +4,7 @@ import Tree from '@/components/Tree';
 import { useChatService } from '@/domains';
 import type { ChatAgentOption } from '@/domains/Chat';
 import { buildOtherSkillTreeGroups } from '@/domains/Chat';
-import type { SkillSummary } from '@/domains/Resource';
+import type { ResourceSkillSummary } from '@/domains/Resource';
 import { parseErrorMessage } from '@/utils/error';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
@@ -43,7 +43,10 @@ function OtherSkillModalContent() {
   const rawGroups = data?.otherSkillGroups;
 
   const { skillMap, treeData } = useMemo(() => {
-    const mapping = new Map<string, { skill: SkillSummary; sourceAgent: ChatAgentOption | null }>();
+    const mapping = new Map<
+      string,
+      { skill: ResourceSkillSummary; sourceAgent: ChatAgentOption | null }
+    >();
     const groups = buildOtherSkillTreeGroups(rawGroups ?? [], currentAgent);
     const data: TreeDataNode[] = groups.map((group) => {
       return {
@@ -78,7 +81,7 @@ function OtherSkillModalContent() {
 
   const handleConfirm = () => {
     const selected = selectedKeys.map((key) => skillMap.get(String(key))).filter(Boolean) as Array<{
-      skill: SkillSummary;
+      skill: ResourceSkillSummary;
       sourceAgent: ChatAgentOption | null;
     }>;
     replaceExternalSkills(selected);

@@ -19,7 +19,7 @@ const SESSION_PAGE_SIZE = 20;
 const getSessionTitle = (session: ChatSession): string => session.title.trim() || '未命名对话';
 
 const getSessionTime = (session: ChatSession): string =>
-  formatTimestampToDateTime(session.updated_at || session.created_at) || '暂无时间';
+  formatTimestampToDateTime(session.updatedAt || session.createdAt) || '暂无时间';
 
 function ChatSessionBar({ activeSessionId, onClose, onSelectSession }: ChatSessionBarProps) {
   const chatService = useChatService();

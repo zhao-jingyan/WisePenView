@@ -11,9 +11,10 @@ import {
   buildAdvancedSkillTreeGroups,
   getPrimarySkillsForAgent,
 } from '../mapper/skillScope.mapper';
-import { mapResourceItemToSkillSummary } from '../mapper/workspace.mapper';
+import { mapResourceItemToResourceSkillSummary } from '../mapper/workspace.mapper';
 import type {
   ChatInputCapabilityOptions,
+  ChatMessage,
   ChatModel,
   ChatServiceDeps,
   ChatSession,
@@ -24,7 +25,6 @@ import type {
   IChatService,
   ListHistoryMessagesRequest,
   ListSessionsRequest,
-  MessageResponse,
   PageResult,
   RenameSessionRequest,
   ToolOption,
@@ -84,10 +84,13 @@ const fetchAllSkills = async (
   const [personalResult, ...groupResults] = results;
 
   return [
-    ...(personalResult?.list ?? []).map((item) => mapResourceItemToSkillSummary(item)),
+    ...(personalResult?.list ?? []).map((item) => mapResourceItemToResourceSkillSummary(item)),
     ...groups.flatMap((group, i) =>
       (groupResults[i]?.list ?? []).map((item) =>
-        mapResourceItemToSkillSummary(item, { groupId: group.groupId, groupName: group.groupName })
+        mapResourceItemToResourceSkillSummary(item, {
+          groupId: group.groupId,
+          groupName: group.groupName,
+        })
       )
     ),
   ];
@@ -212,7 +215,7 @@ const listSessions = async (params?: ListSessionsRequest): Promise<PageResult<Ch
 
 const listHistoryMessages = async (
   params: ListHistoryMessagesRequest
-): Promise<PageResult<MessageResponse>> => {
+): Promise<PageResult<ChatMessage>> => {
   const query = ChatServicesMap.mapListHistoryMessagesRequest(params);
   const payload = await ChatSessionApi.listHistoryMessages(query);
   return ChatServicesMap.mapListHistoryMessagesFromApi(payload);

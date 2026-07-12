@@ -6,19 +6,21 @@ import type {
   ListModelsApiResponse,
   ListSessionsApiRequest,
   ListSessionsApiResponse,
+  MessagePartResponse as MessagePartApiResponse,
   ModelProviderMappingResponse,
   RenameSessionApiRequest,
   RenameSessionApiResponse,
 } from '../apis/ChatApi.type';
 import { MODEL_TYPE } from '../enum/model';
 import type {
+  ChatMessage,
+  ChatMessagePart,
   ChatModel,
   ChatModelProviderOption,
   ChatSession,
   CreateSessionRequest,
   ListHistoryMessagesRequest,
   ListSessionsRequest,
-  MessageResponse,
   PageResult,
   RenameSessionRequest,
 } from '../service/index.type';
@@ -187,7 +189,11 @@ const mapCreateSessionRequest = (params?: CreateSessionRequest): CreateSessionAp
 };
 
 const mapSessionFromApi = (data: CreateSessionApiResponse): ChatSession => ({
-  ...data,
+  id: data.id,
+  userId: data.user_id,
+  title: data.title,
+  createdAt: data.created_at,
+  updatedAt: data.updated_at,
 });
 
 const mapCreateSessionFromApi = (data: CreateSessionApiResponse): ChatSession =>
@@ -229,11 +235,34 @@ const mapListHistoryMessagesRequest = (
   ...(params.size !== undefined ? { size: params.size } : {}),
 });
 
+const mapMessagePartFromApi = (data: MessagePartApiResponse): ChatMessagePart => ({
+  type: data.type,
+  text: data.text,
+  state: data.state,
+  toolCallId: data.toolCallId,
+  input: data.input,
+  output: data.output,
+});
+
+const mapMessageFromApi = (data: ListHistoryMessagesApiResponse['list'][number]): ChatMessage => {
+  const createdAt = data.createdAt ?? data.created_at;
+
+  return {
+    id: data.id,
+    role: data.role,
+    ...(data.model_id != null ? { modelId: String(data.model_id) } : {}),
+    ...(data.content !== undefined ? { content: data.content } : {}),
+    ...(data.parts !== undefined ? { parts: data.parts.map(mapMessagePartFromApi) } : {}),
+    ...(data.tool_calls != null ? { toolCalls: data.tool_calls } : {}),
+    ...(createdAt !== undefined ? { createdAt } : {}),
+  };
+};
+
 const mapListHistoryMessagesFromApi = (
   data: ListHistoryMessagesApiResponse
-): PageResult<MessageResponse> => {
+): PageResult<ChatMessage> => {
   return {
-    list: data.list,
+    list: data.list.map(mapMessageFromApi),
     total: data.total,
     page: data.page,
     size: data.size,

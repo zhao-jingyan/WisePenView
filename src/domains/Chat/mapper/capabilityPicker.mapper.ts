@@ -1,5 +1,5 @@
 import type { SkillScopeTreeGroup } from '@/domains/Chat/mapper/skillScope.mapper';
-import type { SkillSummary } from '@/domains/Resource';
+import type { ResourceSkillSummary } from '@/domains/Resource';
 
 export interface CapabilityToolOption {
   toolId: string;
@@ -14,7 +14,7 @@ interface CapabilityPickerItem {
   label: string;
   checked?: boolean;
   sourceText?: string;
-  skill?: SkillSummary;
+  skill?: ResourceSkillSummary;
   tool?: CapabilityToolOption;
 }
 
@@ -36,7 +36,7 @@ export interface CapabilitySkillSelection {
 }
 
 interface BuildCapabilityPickerSectionsInput {
-  primarySkills: SkillSummary[];
+  primarySkills: ResourceSkillSummary[];
   selectedSkills: CapabilitySkillSelection[];
   selectedTools: CapabilityToolOption[];
   toolOptions: CapabilityToolOption[];

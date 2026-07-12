@@ -1,4 +1,4 @@
-import type { MessageResponse } from '@/domains/Chat';
+import type { ChatMessage } from '@/domains/Chat';
 import type { Message, MessageRole, Model } from './index.type';
 
 export const HISTORY_PAGE_SIZE = 100;
@@ -181,9 +181,7 @@ export const parseLiveMessage = (message: unknown): ParsedLiveMessage => {
   return { content, reasoningContent, errorMessage, toolContent };
 };
 
-export const parseHistoryToolCalls = (
-  toolCalls: MessageResponse['tool_calls']
-): string | undefined => {
+export const parseHistoryToolCalls = (toolCalls: ChatMessage['toolCalls']): string | undefined => {
   if (!Array.isArray(toolCalls) || toolCalls.length === 0) return undefined;
   const toolNames: string[] = [];
   toolCalls.forEach((item) => {
@@ -192,31 +190,23 @@ export const parseHistoryToolCalls = (
   return toolNames.length > 0 ? toolNames.join('\n') : undefined;
 };
 
-export const normalizeModelId = (modelId: MessageResponse['model_id']): string | undefined => {
-  if (modelId == null) return undefined;
-  return String(modelId);
-};
-
 export interface MapHistoryMessageContext {
   modelMetaMap: Record<string, ModelMeta>;
   currentModel: Model | null;
 }
 
-export const mapHistoryMessage = (
-  message: MessageResponse,
-  ctx: MapHistoryMessageContext
-): Message => {
+export const mapHistoryMessage = (message: ChatMessage, ctx: MapHistoryMessageContext): Message => {
   const parsedMessage = parseLiveMessage(message);
   const errorMessage = parsedMessage.errorMessage.trim();
-  const historyModelId = normalizeModelId(message.model_id);
+  const historyModelId = message.modelId;
   const modelMetaFromMap = historyModelId ? ctx.modelMetaMap[historyModelId] : undefined;
   return {
     id: message.id,
     role: mapRole(message.role),
     content: parsedMessage.content || errorMessage || '',
     reasoningContent: parsedMessage.reasoningContent || undefined,
-    toolContent: parsedMessage.toolContent || parseHistoryToolCalls(message.tool_calls),
-    createAt: toTimestamp(message.createdAt || message.created_at),
+    toolContent: parsedMessage.toolContent || parseHistoryToolCalls(message.toolCalls),
+    createAt: toTimestamp(message.createdAt),
     meta: {
       provider: modelMetaFromMap?.provider || ctx.currentModel?.provider || 'openai',
       modelId: historyModelId || ctx.currentModel?.modelId,

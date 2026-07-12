@@ -1,9 +1,9 @@
-import type { ResourceItem, SkillSummary } from '@/domains/Resource';
+import type { ResourceItem, ResourceSkillSummary } from '@/domains/Resource';
 
-export const mapResourceItemToSkillSummary = (
+export const mapResourceItemToResourceSkillSummary = (
   item: ResourceItem,
   group?: { groupId: string; groupName: string }
-): SkillSummary => ({
+): ResourceSkillSummary => ({
   skillId: item.resourceId,
   displayName: item.resourceName,
   description: '',

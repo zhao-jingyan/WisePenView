@@ -3,8 +3,9 @@ export type {
   ResourceIconType,
   ResourceItem,
   ResourceTagBind,
+  ResourceTagInfo,
 } from './entity/resource';
-export type { SkillScopeType, SkillSummary } from './entity/skill';
+export type { ResourceSkillSummary, SkillScopeType } from './entity/skill';
 export {
   RESOURCE_ACTION,
   RESOURCE_PERMISSION_ACTION_ORDER,

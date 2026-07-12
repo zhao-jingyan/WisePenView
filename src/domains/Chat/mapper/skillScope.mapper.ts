@@ -1,12 +1,12 @@
 import type { Group } from '@/domains/Group';
-import type { SkillSummary } from '@/domains/Resource';
+import type { ResourceSkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '../entity/agent';
 import { buildAgentFromSkillTreeGroup } from './agent.mapper';
 
 export interface SkillScopeTreeGroup {
   key: string;
   label: string;
-  skills: SkillSummary[];
+  skills: ResourceSkillSummary[];
 }
 
 interface OtherSkillTreeGroup extends SkillScopeTreeGroup {
@@ -21,7 +21,7 @@ const getSkillTreeGroupLabel = (agent: ChatAgentOption | null | undefined): stri
 
 const buildCurrentAgentSkillTreeGroup = (
   agent: ChatAgentOption | null | undefined,
-  skills: SkillSummary[]
+  skills: ResourceSkillSummary[]
 ): SkillScopeTreeGroup => ({
   key: getSkillTreeGroupKey(agent),
   label: getSkillTreeGroupLabel(agent),
@@ -29,7 +29,7 @@ const buildCurrentAgentSkillTreeGroup = (
 });
 
 const isSkillInAgentScope = (
-  skill: SkillSummary,
+  skill: ResourceSkillSummary,
   agent: ChatAgentOption | null | undefined
 ): boolean => {
   // Agent 有明确 Skill 列表时，按 skillId 精确匹配
@@ -43,17 +43,17 @@ const isSkillInAgentScope = (
 };
 
 export const getPrimarySkillsForAgent = (
-  skills: SkillSummary[],
+  skills: ResourceSkillSummary[],
   agent: ChatAgentOption | null | undefined
-): SkillSummary[] => skills.filter((skill) => isSkillInAgentScope(skill, agent));
+): ResourceSkillSummary[] => skills.filter((skill) => isSkillInAgentScope(skill, agent));
 
 export const buildAdvancedSkillTreeGroups = (
-  skills: SkillSummary[],
+  skills: ResourceSkillSummary[],
   groups: Group[],
   currentAgent?: ChatAgentOption | null,
-  currentAgentSkills: SkillSummary[] = []
+  currentAgentSkills: ResourceSkillSummary[] = []
 ): SkillScopeTreeGroup[] => {
-  const groupSkillMap = new Map<string, SkillSummary[]>();
+  const groupSkillMap = new Map<string, ResourceSkillSummary[]>();
   skills
     .filter((skill) => skill.scopeType === 'GROUP' && skill.groupId)
     .forEach((skill) => {

@@ -1,9 +1,9 @@
 import type {
+  ChatMessage,
   ChatSession,
   IChatService,
   ListHistoryMessagesRequest,
   ListSessionsRequest,
-  MessageResponse,
   PageResult,
   ToolOption,
   UploadAttachmentParams,
@@ -148,28 +148,28 @@ let mockSessionSerial = 3;
 let mockSessions: ChatSession[] = [
   {
     id: 'mock-session-1',
-    user_id: 'mock-user',
+    userId: 'mock-user',
     title: '项目需求讨论',
-    created_at: '2026-04-08T09:00:00Z',
-    updated_at: '2026-04-08T09:00:00Z',
+    createdAt: '2026-04-08T09:00:00Z',
+    updatedAt: '2026-04-08T09:00:00Z',
   },
   {
     id: 'mock-session-2',
-    user_id: 'mock-user',
+    userId: 'mock-user',
     title: '接口联调记录',
-    created_at: '2026-04-07T10:00:00Z',
-    updated_at: '2026-04-07T10:00:00Z',
+    createdAt: '2026-04-07T10:00:00Z',
+    updatedAt: '2026-04-07T10:00:00Z',
   },
   {
     id: 'mock-session-3',
-    user_id: 'mock-user',
+    userId: 'mock-user',
     title: '代码评审',
-    created_at: '2026-04-06T11:00:00Z',
-    updated_at: '2026-04-06T11:00:00Z',
+    createdAt: '2026-04-06T11:00:00Z',
+    updatedAt: '2026-04-06T11:00:00Z',
   },
 ];
 
-const buildMockHistoryMessages = (sessionId: string, total: number): MessageResponse[] => {
+const buildMockHistoryMessages = (sessionId: string, total: number): ChatMessage[] => {
   return Array.from({ length: total }, (_, index) => {
     const messageNo = index + 1;
     const messageSeq = String(messageNo).padStart(4, '0');
@@ -179,23 +179,22 @@ const buildMockHistoryMessages = (sessionId: string, total: number): MessageResp
       MOCK_HISTORY_BASE_TS + index * MOCK_HISTORY_INTERVAL_MS
     ).toISOString();
 
-    const role: MessageResponse['role'] = isUser ? 'user' : 'assistant';
+    const role: ChatMessage['role'] = isUser ? 'user' : 'assistant';
 
     return {
       id: `${sessionId}-msg-${messageSeq}`,
       role,
-      model_id: isUser ? null : 'mock-system-1',
+      ...(isUser ? {} : { modelId: 'mock-system-1' }),
       content: isUser
         ? `【${sessionId}】第 ${round} 轮：请解释一下这个需求，并给出步骤。`
         : `【${sessionId}】第 ${round} 轮回复：已整理需求背景、约束条件与执行步骤。`,
-      tool_calls: null,
-      created_at: createdAt,
+      createdAt,
     };
   });
 };
 
-let mockHistoryMessagesBySessionId: Record<string, MessageResponse[]> = mockSessions.reduce<
-  Record<string, MessageResponse[]>
+let mockHistoryMessagesBySessionId: Record<string, ChatMessage[]> = mockSessions.reduce<
+  Record<string, ChatMessage[]>
 >((acc, session) => {
   acc[session.id] = buildMockHistoryMessages(session.id, MOCK_HISTORY_SIZE);
   return acc;
@@ -206,10 +205,10 @@ const createSession: IChatService['createSession'] = async (params) => {
   const now = nowIso();
   const session: ChatSession = {
     id: `mock-session-${mockSessionSerial}`,
-    user_id: 'mock-user',
+    userId: 'mock-user',
     title: params?.title?.trim() ? params.title : 'New Chat',
-    created_at: now,
-    updated_at: now,
+    createdAt: now,
+    updatedAt: now,
   };
   mockSessions = [session, ...mockSessions];
   mockHistoryMessagesBySessionId = {
@@ -224,10 +223,10 @@ const renameSession: IChatService['renameSession'] = async (params) => {
   const target = mockSessions.find((session) => session.id === params.sessionId);
   const renamed: ChatSession = {
     id: params.sessionId,
-    user_id: target?.user_id ?? 'mock-user',
+    userId: target?.userId ?? 'mock-user',
     title: params.newTitle?.trim() ? params.newTitle : 'New Chat',
-    created_at: target?.created_at ?? now,
-    updated_at: now,
+    createdAt: target?.createdAt ?? now,
+    updatedAt: now,
   };
 
   mockSessions = mockSessions.map((session) =>
@@ -248,7 +247,7 @@ const listSessions: IChatService['listSessions'] = async (params?: ListSessionsR
   const start = (page - 1) * size;
   const end = start + size;
   const sortedSessions = [...mockSessions].sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
   const total = sortedSessions.length;
   const list = sortedSessions.slice(start, end);
