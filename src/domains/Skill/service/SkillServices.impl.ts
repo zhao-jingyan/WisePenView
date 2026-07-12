@@ -1,11 +1,10 @@
 import type { IResourceService } from '@/domains/Resource';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '@/domains/Resource';
 import type { IUserService } from '@/domains/User';
+import { createOssStsClientManager } from '@/domains/_shared/ossStsClient';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
-import OSS from 'ali-oss';
 import { SkillApi } from '../apis/SkillApi';
-import type { RSkillAssetStsTokenResponse } from '../apis/SkillApi.type';
 import { SkillServicesMap } from '../mapper/SkillServices.map';
 import type {
   ISkillService,
@@ -19,17 +18,13 @@ interface SkillServicesDeps {
   userService: IUserService;
 }
 
-type SkillAssetStsToken = NonNullable<RSkillAssetStsTokenResponse['data']>;
-
-interface SkillAssetClientCache {
-  client: OSS;
-  expiresAt: number;
-}
-
-const STS_REFRESH_BUFFER_MS = 60_000;
-const DEFAULT_STS_EXPIRES_IN_MS = 55 * 60_000;
 const DEFAULT_UPLOAD_CONCURRENCY = 4;
 const DEFAULT_UPLOAD_INIT_BATCH_SIZE = 12;
+
+interface SkillAssetClientKey {
+  resourceId: string;
+  targetVersion?: number;
+}
 
 function buildUploadBody(params: UploadSkillAssetRequest): Blob {
   if (params.content instanceof Blob) return params.content;
@@ -44,34 +39,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function resolveStsExpiresAt(expiration?: string): number {
-  if (!expiration) return Date.now() + DEFAULT_STS_EXPIRES_IN_MS;
-  const expiresAt = Date.parse(expiration);
-  return Number.isFinite(expiresAt) ? expiresAt : Date.now() + DEFAULT_STS_EXPIRES_IN_MS;
-}
-
-function buildOssClient(token: SkillAssetStsToken): OSS {
-  if (
-    !token.accessKeyId ||
-    !token.accessKeySecret ||
-    !token.securityToken ||
-    !token.bucket ||
-    (!token.region && !token.endpoint)
-  ) {
-    throw new Error('技能文件访问凭证不完整');
-  }
-
-  return new OSS({
-    region: token.region,
-    endpoint: token.endpoint,
-    bucket: token.bucket,
-    accessKeyId: token.accessKeyId,
-    accessKeySecret: token.accessKeySecret,
-    stsToken: token.securityToken,
-    secure: true,
-  });
-}
-
 function isTextReadable(value: unknown): value is { text: () => Promise<string> } {
   return isRecord(value) && typeof value.text === 'function';
 }
@@ -83,22 +50,6 @@ async function stringifyOssContent(content: unknown): Promise<string> {
   if (content instanceof Blob) return content.text();
   if (isTextReadable(content)) return content.text();
   return content == null ? '' : String(content);
-}
-
-function isOssAuthExpiredError(err: unknown): boolean {
-  if (!isRecord(err)) return false;
-  const status = err.status ?? err.statusCode;
-  const code = typeof err.code === 'string' ? err.code : '';
-  return (
-    status === 403 ||
-    status === '403' ||
-    code === 'SecurityTokenExpired' ||
-    code === 'InvalidAccessKeyId'
-  );
-}
-
-function buildAssetClientCacheKey(resourceId: string, targetVersion?: number): string {
-  return `${resourceId}:${targetVersion ?? 'published'}`;
 }
 
 async function runWithConcurrency<T, R>(
@@ -124,41 +75,23 @@ async function runWithConcurrency<T, R>(
 
 export const createSkillServices = (deps: SkillServicesDeps): ISkillService => {
   const { resourceService, userService } = deps;
-  const assetClientCache = new Map<string, SkillAssetClientCache>();
-
-  const getAssetClient = async (
-    resourceId: string,
-    targetVersion?: number,
-    forceRefresh = false
-  ) => {
-    const cacheKey = buildAssetClientCacheKey(resourceId, targetVersion);
-    const cached = assetClientCache.get(cacheKey);
-    if (!forceRefresh && cached && cached.expiresAt - STS_REFRESH_BUFFER_MS > Date.now()) {
-      return cached.client;
-    }
-
-    const token = await SkillApi.getSkillAssetStsToken({ resourceId, targetVersion });
-    if (!token) {
-      throw new Error('获取技能文件访问凭证失败');
-    }
-
-    const client = buildOssClient(token);
-    assetClientCache.set(cacheKey, {
-      client,
-      expiresAt: resolveStsExpiresAt(token.expiration),
-    });
-    return client;
-  };
+  const assetClientManager = createOssStsClientManager<SkillAssetClientKey>({
+    loadToken: ({ resourceId, targetVersion }) =>
+      SkillApi.getSkillAssetStsToken({ resourceId, targetVersion }),
+    resolveCacheKey: ({ resourceId, targetVersion }) =>
+      `${resourceId}:${targetVersion ?? 'published'}`,
+    invalidCredentialMessage: '技能文件访问凭证不完整',
+  });
 
   const readAssetContent = async (
     resourceId: string,
     objectKey: string,
-    targetVersion?: number,
-    forceRefresh = false
+    targetVersion?: number
   ) => {
-    const client = await getAssetClient(resourceId, targetVersion, forceRefresh);
-    const result = await client.get(objectKey);
-    return stringifyOssContent(result.content);
+    return assetClientManager.runWithClient({ resourceId, targetVersion }, async (client) => {
+      const result = await client.get(objectKey);
+      return stringifyOssContent(result.content);
+    });
   };
 
   const getSkillSummaries = async (groupId?: string) => {
@@ -238,12 +171,7 @@ export const createSkillServices = (deps: SkillServicesDeps): ISkillService => {
     if (!objectKey) {
       throw new Error('技能文件缺少 objectKey');
     }
-    try {
-      return await readAssetContent(resourceId, objectKey, targetVersion);
-    } catch (err) {
-      if (!isOssAuthExpiredError(err)) throw err;
-      return readAssetContent(resourceId, objectKey, targetVersion, true);
-    }
+    return readAssetContent(resourceId, objectKey, targetVersion);
   };
 
   const deleteAssets = async (resourceId: string, draftVersion: number, assetIds: string[]) => {
