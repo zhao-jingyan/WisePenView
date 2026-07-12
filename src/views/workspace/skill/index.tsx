@@ -31,7 +31,13 @@ import ResourcePermissionControl from '../_components/ResourcePermissionControl'
 
 import SkillSaveQueueDock from './_components/SkillSaveQueueDock';
 import type { SkillSaveQueueItem } from './_components/SkillSaveQueueDock/index.type';
+import type { UnsavedSkillChangesMode } from './_components/UnsavedSkillChangesModal';
 import UnsavedSkillChangesModal from './_components/UnsavedSkillChangesModal';
+import type { SkillWorkspaceSavePhase } from './_hooks/useSkillWorkspaceController';
+import {
+  resolveSkillWorkspaceSavePhase,
+  useSkillWorkspaceController,
+} from './_hooks/useSkillWorkspaceController';
 import styles from './style.module.less';
 import {
   clearSkillDraftCache,
@@ -51,10 +57,8 @@ interface SkillLayoutConfigProps {
 
 interface SkillToolbarTitleProps {
   title?: string;
-  saveStatus?: SkillSaveStatus;
+  saveStatus?: SkillWorkspaceSavePhase;
 }
-
-type SkillSaveStatus = 'saved' | 'dirty' | 'saving';
 
 interface SaveAssetOptions {
   refresh?: boolean;
@@ -243,14 +247,6 @@ function collectFileNodes(nodes: SkillFileNode[]): SkillFileNode[] {
 
 function collectLocalAssetNodes(nodes: SkillFileNode[]): SkillFileNode[] {
   return collectFileNodes(nodes).filter(isLocalAssetNode);
-}
-
-function recoverInterruptedSaveQueueItems(items: SkillSaveQueueItem[]): SkillSaveQueueItem[] {
-  return items.map((item) =>
-    item.phase === 'preparing' || item.phase === 'uploading'
-      ? { ...item, phase: 'failed', errorMessage: '上次保存被中断，请重新保存' }
-      : item
-  );
 }
 
 function findFileByPathAndName(
@@ -597,10 +593,11 @@ function SkillLayoutConfig({ children, config }: SkillLayoutConfigProps) {
   return <>{children}</>;
 }
 
-function formatSaveStatus(status?: SkillSaveStatus): string | null {
+function formatSaveStatus(status?: SkillWorkspaceSavePhase): string | null {
   if (status === 'dirty') return '有未保存修改';
   if (status === 'saving') return '保存中...';
-  if (status === 'saved') return '已经保存到云端';
+  if (status === 'failed') return '保存失败';
+  if (status === 'clean') return '已经保存到云端';
   return null;
 }
 
@@ -617,7 +614,7 @@ function SkillToolbarTitle({ title, saveStatus }: SkillToolbarTitleProps) {
         {saveStatusText ? (
           <span
             className={`${styles.toolbarSaveStatus} ${
-              saveStatus === 'dirty' ? styles.toolbarSaveStatusDirty : ''
+              saveStatus === 'dirty' || saveStatus === 'failed' ? styles.toolbarSaveStatusDirty : ''
             }`}
           >
             {saveStatusText}
@@ -745,27 +742,45 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     editorContent: string;
     savedContent: string;
   } | null>(null);
-  const [localFiles, setLocalFiles] = useState<SkillFileNode[]>([]);
-  const [selectedFileId, setSelectedFileId] = useState('');
-  const [selectedTreeNodeId, setSelectedTreeNodeId] = useState('');
-  const [editing, setEditing] = useState(false);
-  const [editorContent, setEditorContent] = useState('');
-  const [savedContent, setSavedContent] = useState('');
-  const [viewingVersion, setViewingVersion] = useState<number | null>(null);
+  const { state: workspaceState, actions: workspaceActions } = useSkillWorkspaceController();
+  const {
+    files: localFiles,
+    selectedFileId,
+    selectedTreeNodeId,
+    editing,
+    editorContent,
+    savedContent,
+    viewingVersion,
+    saveQueueItems,
+    configName,
+    configDescription,
+    savedConfigName,
+    savedConfigDescription,
+    pendingIntent,
+  } = workspaceState;
+  const {
+    setFiles: setLocalFiles,
+    setSelectedFileId,
+    setSelectedTreeNodeId,
+    setEditing,
+    setEditorContent,
+    setSavedContent,
+    setViewingVersion,
+    setSaveQueueItems,
+    setConfigName,
+    setConfigDescription,
+    setSavedConfigName,
+    setSavedConfigDescription,
+    setPendingIntent,
+    initialize: initializeWorkspace,
+    restoreDraft,
+    discardLocalChanges,
+  } = workspaceActions;
   const [pendingCreate, setPendingCreate] = useState<SkillPendingCreate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SkillFileNode | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(!resourceId);
-  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
-  const [pendingFileSwitchId, setPendingFileSwitchId] = useState('');
-  const [pendingVersionSwitch, setPendingVersionSwitch] = useState<number | null>(null);
   const [isTreeDragOver, setIsTreeDragOver] = useState(false);
-  const [saveQueueItems, setSaveQueueItems] = useState<SkillSaveQueueItem[]>([]);
   const [draftCacheReady, setDraftCacheReady] = useState(false);
-  const [configName, setConfigName] = useState('');
-  const [configDescription, setConfigDescription] = useState('');
-  const [savedConfigName, setSavedConfigName] = useState('');
-  const [savedConfigDescription, setSavedConfigDescription] = useState('');
-  const [pendingConfigSwitch, setPendingConfigSwitch] = useState(false);
 
   const invalidateDraftCacheWrites = useCallback(() => {
     draftCacheWriteVersionRef.current += 1;
@@ -825,18 +840,8 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
 
     invalidateDraftCacheWrites();
     setDraftCacheReady(false);
-    setLocalFiles(skill.files);
-    setViewingVersion(skill.draftVersion);
+    initializeWorkspace(skill);
     setPendingCreate(null);
-    setSelectedTreeNodeId('');
-    setEditing(false);
-    setPendingVersionSwitch(null);
-    setPendingConfigSwitch(false);
-    setSaveQueueItems([]);
-    setConfigName(skill.skillName);
-    setConfigDescription(skill.description);
-    setSavedConfigName(skill.skillName);
-    setSavedConfigDescription(skill.description);
 
     void loadSkillDraftCache(skill.resourceId)
       .then((snapshot) => {
@@ -852,12 +857,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
               savedContent: snapshot.savedContent,
             }
           : null;
-        setLocalFiles(snapshot.files);
-        setViewingVersion(snapshot.viewingVersion ?? skill.draftVersion);
-        setSelectedFileId(snapshot.selectedFileId);
-        setSelectedTreeNodeId(snapshot.selectedTreeNodeId);
-        setSaveQueueItems(recoverInterruptedSaveQueueItems(snapshot.saveQueueItems));
-        setEditing(true);
+        restoreDraft(snapshot, skill);
         setDraftCacheReady(true);
         toast.warning('已恢复上次未保存的 Skill 草稿');
       })
@@ -868,7 +868,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     return () => {
       disposed = true;
     };
-  }, [invalidateDraftCacheWrites, skill]);
+  }, [initializeWorkspace, invalidateDraftCacheWrites, restoreDraft, skill]);
 
   const activeFiles = localFiles;
   const isConfigSelected = selectedTreeNodeId === SKILL_CONFIG_NODE_ID;
@@ -978,7 +978,19 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const hasUnsavedSkillChanges =
     canEdit && (isDirty || hasUnsavedLocalAssets || hasFailedSaveItems);
   const hasUnsafeNavigation = hasUnsavedSkillChanges || isConfigDirty || isSaveQueueActive;
+  const hasRecoverableDraft = hasUnsavedSkillChanges || isConfigDirty;
   const navigationBlocker = useBlocker(hasUnsafeNavigation);
+
+  /**
+   * React Router 只在导航实际被阻塞后暴露目标位置，因此此处把外部 blocker 状态同步为唯一页面 intent。
+   */
+  useEffectForce(() => {
+    if (navigationBlocker.state === 'blocked') {
+      setPendingIntent({ type: 'leave' });
+    } else if (pendingIntent?.type === 'leave') {
+      setPendingIntent(null);
+    }
+  }, [navigationBlocker.state, pendingIntent?.type, setPendingIntent]);
 
   useBeforeUnload(
     useCallback(
@@ -996,7 +1008,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
    * 未保存的 Skill 草稿包含本地文件与 Blob，必须用 IndexedDB 才能在强制刷新后恢复。
    */
   useEffectForce(() => {
-    if (!skill || !draftCacheReady || !canEdit || !hasUnsavedSkillChanges) return;
+    if (!skill || !draftCacheReady || !canEdit || !hasRecoverableDraft) return;
     const cacheWriteVersion = draftCacheWriteVersionRef.current;
     const timer = window.setTimeout(() => {
       if (draftCacheWriteVersionRef.current !== cacheWriteVersion) return;
@@ -1016,6 +1028,10 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         savedContent,
         viewingVersion,
         saveQueueItems,
+        configName,
+        configDescription,
+        savedConfigName,
+        savedConfigDescription,
         updatedAt: Date.now(),
       };
       void saveSkillDraftCache(snapshot)
@@ -1037,12 +1053,16 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     return () => window.clearTimeout(timer);
   }, [
     canEdit,
+    configDescription,
+    configName,
     draftCacheReady,
     editorContent,
-    hasUnsavedSkillChanges,
+    hasRecoverableDraft,
     localFiles,
     saveQueueItems,
     savedContent,
+    savedConfigDescription,
+    savedConfigName,
     selectedFile,
     selectedFileId,
     selectedTreeNodeId,
@@ -1054,9 +1074,9 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
    * 草稿已回到干净状态时清理恢复缓存，避免下次进入页面恢复过期内容。
    */
   useEffectForce(() => {
-    if (!skill || !draftCacheReady || hasUnsavedSkillChanges) return;
+    if (!skill || !draftCacheReady || hasRecoverableDraft) return;
     void clearDraftCache(skill.resourceId);
-  }, [clearDraftCache, draftCacheReady, hasUnsavedSkillChanges, skill]);
+  }, [clearDraftCache, draftCacheReady, hasRecoverableDraft, skill]);
 
   const versionItems = useMemo(() => {
     if (!skill) return [];
@@ -1116,7 +1136,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         setSelectedFileId(nodeId);
       }
     },
-    [activeFiles]
+    [activeFiles, setSelectedFileId, setSelectedTreeNodeId]
   );
 
   const applyConfigSelection = useCallback(() => {
@@ -1124,27 +1144,17 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     setSelectedFileId('');
     setPendingCreate(null);
     setEditing(false);
-  }, []);
+  }, [setEditing, setSelectedFileId, setSelectedTreeNodeId]);
 
   const resetConfigDraft = useCallback(() => {
     setConfigName(savedConfigName);
     setConfigDescription(savedConfigDescription);
-  }, [savedConfigDescription, savedConfigName]);
+  }, [savedConfigDescription, savedConfigName, setConfigDescription, setConfigName]);
 
   const discardLocalSkillChanges = useCallback(() => {
-    setEditorContent(savedContent);
-    resetConfigDraft();
-    setSaveQueueItems([]);
     setPendingCreate(null);
-    setPendingFileSwitchId('');
-    setPendingConfigSwitch(false);
-    setEditing(false);
-    if (skill) {
-      setLocalFiles(skill.files);
-      setSelectedFileId('');
-      setSelectedTreeNodeId('');
-    }
-  }, [resetConfigDraft, savedContent, skill]);
+    if (skill) discardLocalChanges(skill);
+  }, [discardLocalChanges, skill]);
 
   const handleConfigSelect = () => {
     if (isSaveQueueActive) {
@@ -1153,7 +1163,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     }
     if (isConfigSelected) return;
     if (isDirty) {
-      setPendingConfigSwitch(true);
+      setPendingIntent({ type: 'switchConfig' });
       return;
     }
     applyConfigSelection();
@@ -1172,14 +1182,14 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     if (!node) return;
     if (isConfigSelected && isConfigDirty) {
       if (node.kind === 'file') {
-        setPendingFileSwitchId(node.id);
+        setPendingIntent({ type: 'switchFile', fileId: node.id });
         return;
       }
       toast.warning('请先更新或重置配置后再切换目录');
       return;
     }
     if (node.kind === 'file' && node.id !== selectedFileId && isDirty) {
-      setPendingFileSwitchId(node.id);
+      setPendingIntent({ type: 'switchFile', fileId: node.id });
       return;
     }
     applyTreeSelection(nodeId);
@@ -1300,7 +1310,9 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
           if (!assetId) return;
           setSelectedFileId((prev) => (prev === result.clientId ? assetId : prev));
           setSelectedTreeNodeId((prev) => (prev === result.clientId ? assetId : prev));
-          setPendingFileSwitchId((prev) => (prev === result.clientId ? assetId : prev));
+          if (pendingIntent?.type === 'switchFile' && pendingIntent.fileId === result.clientId) {
+            setPendingIntent({ type: 'switchFile', fileId: assetId });
+          }
         });
 
         const selectedTarget = currentSelectedFileId ? targetById.get(currentSelectedFileId) : null;
@@ -1374,7 +1386,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       }
       await runSaveTargetsAsync(targets, options);
     },
-    [runSaveTargetsAsync]
+    [runSaveTargetsAsync, setSaveQueueItems]
   );
 
   const { loading: configLoading, runAsync: runUpdateConfigAsync } = useRequest(
@@ -1445,7 +1457,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         setViewingVersion(params[0]);
         setLocalFiles(data.files);
         setSaveQueueItems([]);
-        setPendingVersionSwitch(null);
+        setPendingIntent(null);
         setEditing(false);
       },
       onError: (err) => {
@@ -1512,7 +1524,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       return;
     }
     if (hasUnsavedSkillChanges || isConfigDirty || isLocalAssetId(mainSkillFile.id)) {
-      setPublishConfirmOpen(true);
+      setPendingIntent({ type: 'publish' });
       return;
     }
     runPublish();
@@ -1525,12 +1537,13 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     isDirty,
     isSaveQueueActive,
     runPublish,
+    setPendingIntent,
   ]);
 
   const handleSaveAndPublish = async () => {
     try {
       await savePendingChanges({ refresh: false, showToast: false });
-      setPublishConfirmOpen(false);
+      setPendingIntent(null);
       runPublish();
     } catch {
       // useRequest 已统一 toast 错误信息。
@@ -1541,12 +1554,12 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     discardLocalSkillChanges();
     if (skill) void clearDraftCache(skill.resourceId);
     if (hasSavedConfigMissing) {
-      setPublishConfirmOpen(false);
+      setPendingIntent(null);
       toast.warning('发布前需要填写 Config 中的 name 和 description');
       if (!isDirty) applyConfigSelection();
       return;
     }
-    setPublishConfirmOpen(false);
+    setPendingIntent(null);
     runPublish();
   };
 
@@ -1554,6 +1567,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     if (navigationBlocker.state === 'blocked') {
       navigationBlocker.reset();
     }
+    setPendingIntent(null);
   };
 
   const handleDiscardAndLeave = async () => {
@@ -1573,16 +1587,8 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     }
   };
 
-  const handleCancelFileSwitch = () => {
-    setPendingFileSwitchId('');
-  };
-
-  const handleCancelConfigSwitch = () => {
-    setPendingConfigSwitch(false);
-  };
-
   const handleDiscardAndSwitchConfig = () => {
-    setPendingConfigSwitch(false);
+    setPendingIntent(null);
     setEditorContent(savedContent);
     setEditing(false);
     applyConfigSelection();
@@ -1591,7 +1597,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const handleSaveAndSwitchConfig = async () => {
     try {
       await saveCurrentFile({ refresh: false, showToast: false });
-      setPendingConfigSwitch(false);
+      setPendingIntent(null);
       applyConfigSelection();
     } catch {
       // useRequest 已统一 toast 错误信息。
@@ -1599,8 +1605,8 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   };
 
   const handleDiscardAndSwitchFile = () => {
-    const nextFileId = pendingFileSwitchId;
-    setPendingFileSwitchId('');
+    const nextFileId = pendingIntent?.type === 'switchFile' ? pendingIntent.fileId : '';
+    setPendingIntent(null);
     if (isConfigSelected) {
       resetConfigDraft();
     } else {
@@ -1611,7 +1617,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   };
 
   const handleSaveAndSwitchFile = async () => {
-    const nextFileId = pendingFileSwitchId;
+    const nextFileId = pendingIntent?.type === 'switchFile' ? pendingIntent.fileId : '';
     if (!nextFileId) return;
     try {
       if (isConfigSelected) {
@@ -1619,7 +1625,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       } else {
         await saveCurrentFile({ refresh: false, showToast: false });
       }
-      setPendingFileSwitchId('');
+      setPendingIntent(null);
       applyTreeSelection(nextFileId);
       setEditing(false);
     } catch {
@@ -1635,32 +1641,28 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         return;
       }
       if (hasUnsafeNavigation) {
-        setPendingVersionSwitch(version);
+        setPendingIntent({ type: 'switchVersion', version });
         return;
       }
       runSwitchVersion(version);
     },
-    [hasUnsafeNavigation, isSaveQueueActive, runSwitchVersion, viewingVersion]
+    [hasUnsafeNavigation, isSaveQueueActive, runSwitchVersion, setPendingIntent, viewingVersion]
   );
 
-  const handleCancelVersionSwitch = () => {
-    setPendingVersionSwitch(null);
-  };
-
   const handleDiscardAndSwitchVersion = () => {
-    const nextVersion = pendingVersionSwitch;
-    setPendingVersionSwitch(null);
+    const nextVersion = pendingIntent?.type === 'switchVersion' ? pendingIntent.version : null;
+    setPendingIntent(null);
     discardLocalSkillChanges();
     if (skill) void clearDraftCache(skill.resourceId);
     if (nextVersion != null) runSwitchVersion(nextVersion);
   };
 
   const handleSaveAndSwitchVersion = async () => {
-    const nextVersion = pendingVersionSwitch;
+    const nextVersion = pendingIntent?.type === 'switchVersion' ? pendingIntent.version : null;
     if (nextVersion == null) return;
     try {
       await savePendingChanges({ refresh: false, showToast: false });
-      setPendingVersionSwitch(null);
+      setPendingIntent(null);
       runSwitchVersion(nextVersion);
     } catch {
       // useRequest 已统一 toast 错误信息。
@@ -1674,19 +1676,19 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       return;
     }
     setEditing(true);
-  }, [editing, savedContent]);
+  }, [editing, savedContent, setEditing, setEditorContent]);
 
   const selectNewLocalFile = useCallback(
     (fileId: string) => {
       if (isDirty) {
-        setPendingFileSwitchId(fileId);
+        setPendingIntent({ type: 'switchFile', fileId });
         return;
       }
       setSelectedFileId(fileId);
       setSelectedTreeNodeId(fileId);
       setEditing(true);
     },
-    [isDirty]
+    [isDirty, setEditing, setPendingIntent, setSelectedFileId, setSelectedTreeNodeId]
   );
 
   const { loading: moveLoading, run: runMoveFile } = useRequest(
@@ -1916,6 +1918,44 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     setSelectedFileId('');
   };
 
+  const pendingIntentMode: UnsavedSkillChangesMode | null = pendingIntent?.type ?? null;
+  const pendingIntentLoading =
+    saveLoading ||
+    (pendingIntent?.type !== 'switchConfig' && configLoading) ||
+    (pendingIntent?.type === 'publish' && publishLoading);
+
+  const handleCancelPendingIntent = () => {
+    if (pendingIntent?.type === 'leave') {
+      handleCancelLeave();
+      return;
+    }
+    setPendingIntent(null);
+  };
+
+  const handleDiscardPendingIntent = () => {
+    if (pendingIntent?.type === 'publish') handleDiscardAndPublish();
+    if (pendingIntent?.type === 'leave') void handleDiscardAndLeave();
+    if (pendingIntent?.type === 'switchFile') handleDiscardAndSwitchFile();
+    if (pendingIntent?.type === 'switchConfig') handleDiscardAndSwitchConfig();
+    if (pendingIntent?.type === 'switchVersion') handleDiscardAndSwitchVersion();
+  };
+
+  const handleConfirmPendingIntent = () => {
+    if (pendingIntent?.type === 'publish') void handleSaveAndPublish();
+    if (pendingIntent?.type === 'leave') void handleSaveAndLeave();
+    if (pendingIntent?.type === 'switchFile') void handleSaveAndSwitchFile();
+    if (pendingIntent?.type === 'switchConfig') void handleSaveAndSwitchConfig();
+    if (pendingIntent?.type === 'switchVersion') void handleSaveAndSwitchVersion();
+  };
+
+  const savePhase = resolveSkillWorkspaceSavePhase({
+    isFileDirty: isDirty,
+    isConfigDirty,
+    hasUnsavedLocalAssets,
+    saveQueueItems,
+    isSaving: saveLoading || configLoading || isSaveQueueActive,
+  });
+
   const handleCloseCreateModal = (open: boolean) => {
     setCreateModalOpen(open);
     if (!open && !resourceId) {
@@ -1927,18 +1967,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     () => ({
       header: {
         inlineTitle: (
-          <SkillToolbarTitle
-            title={skill?.title}
-            saveStatus={
-              canEdit
-                ? saveLoading || configLoading || isSaveQueueActive
-                  ? 'saving'
-                  : hasSaveableChanges || isConfigDirty
-                    ? 'dirty'
-                    : 'saved'
-                : undefined
-            }
-          />
+          <SkillToolbarTitle title={skill?.title} saveStatus={canEdit ? savePhase : undefined} />
         ),
         extra: skill ? (
           <div className={styles.topBarActions}>
@@ -2021,11 +2050,11 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       handleToggleEditing,
       handleVersionSelect,
       hasSaveableChanges,
-      isConfigDirty,
       isSaveQueueActive,
       moveLoading,
       publishLoading,
       refreshSkill,
+      savePhase,
       saveLoading,
       skill,
       versionItems,
@@ -2244,44 +2273,12 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       />
 
       <UnsavedSkillChangesModal
-        isOpen={publishConfirmOpen}
-        mode="publish"
-        isLoading={saveLoading || configLoading || publishLoading}
-        onCancel={() => setPublishConfirmOpen(false)}
-        onDiscard={handleDiscardAndPublish}
-        onConfirm={() => void handleSaveAndPublish()}
-      />
-      <UnsavedSkillChangesModal
-        isOpen={navigationBlocker.state === 'blocked'}
-        mode="leave"
-        isLoading={saveLoading || configLoading}
-        onCancel={handleCancelLeave}
-        onDiscard={handleDiscardAndLeave}
-        onConfirm={() => void handleSaveAndLeave()}
-      />
-      <UnsavedSkillChangesModal
-        isOpen={Boolean(pendingFileSwitchId)}
-        mode="switchFile"
-        isLoading={saveLoading || configLoading}
-        onCancel={handleCancelFileSwitch}
-        onDiscard={handleDiscardAndSwitchFile}
-        onConfirm={() => void handleSaveAndSwitchFile()}
-      />
-      <UnsavedSkillChangesModal
-        isOpen={pendingConfigSwitch}
-        mode="switchConfig"
-        isLoading={saveLoading}
-        onCancel={handleCancelConfigSwitch}
-        onDiscard={handleDiscardAndSwitchConfig}
-        onConfirm={() => void handleSaveAndSwitchConfig()}
-      />
-      <UnsavedSkillChangesModal
-        isOpen={pendingVersionSwitch != null}
-        mode="switchVersion"
-        isLoading={saveLoading || configLoading}
-        onCancel={handleCancelVersionSwitch}
-        onDiscard={handleDiscardAndSwitchVersion}
-        onConfirm={() => void handleSaveAndSwitchVersion()}
+        isOpen={pendingIntentMode != null}
+        mode={pendingIntentMode ?? 'leave'}
+        isLoading={pendingIntentLoading}
+        onCancel={handleCancelPendingIntent}
+        onDiscard={handleDiscardPendingIntent}
+        onConfirm={handleConfirmPendingIntent}
       />
 
       <input

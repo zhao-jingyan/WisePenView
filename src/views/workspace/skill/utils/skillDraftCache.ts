@@ -18,6 +18,10 @@ export interface SkillDraftCacheSnapshot {
   savedContent: string;
   viewingVersion: number | null;
   saveQueueItems: SkillSaveQueueItem[];
+  configName?: string;
+  configDescription?: string;
+  savedConfigName?: string;
+  savedConfigDescription?: string;
   updatedAt: number;
 }
 

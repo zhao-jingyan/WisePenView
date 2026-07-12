@@ -1,7 +1,7 @@
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
 import { Button } from '@heroui/react';
 
-type UnsavedSkillChangesMode =
+export type UnsavedSkillChangesMode =
   'publish' | 'leave' | 'switchFile' | 'switchConfig' | 'switchVersion';
 
 interface UnsavedSkillChangesModalProps {
