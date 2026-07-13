@@ -9,12 +9,12 @@ import type {
 } from '@/domains/Note';
 import type { ResourceAction } from '@/domains/Resource';
 import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
-import {
-  useWorkspaceLayoutConfig,
-  type WorkspaceLayoutConfig,
-} from '@/layouts/Workspace/WorkspaceOutletContext';
 import { parseErrorMessage } from '@/utils/error';
-import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
+import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
+import {
+  useResourceHostLayoutConfig,
+  type ResourceHostLayoutConfig,
+} from '@/views/workspace/ResourceHostContext';
 import { Button, toast } from '@heroui/react';
 import { useEventListener, useRequest, useUnmount, useUpdateEffect } from 'ahooks';
 import { History, Save } from 'lucide-react';
@@ -171,7 +171,7 @@ function DrawioLayoutConfig({
   titleMeta?: ReactNode;
   actions?: ReactNode;
 }) {
-  const frameConfig = useMemo<WorkspaceLayoutConfig>(
+  const frameConfig = useMemo<ResourceHostLayoutConfig>(
     () => ({
       className: styles.container,
       header: {
@@ -181,7 +181,7 @@ function DrawioLayoutConfig({
           resourceIconType: 'drawio',
           currentActions,
           copyVersion,
-          permissionResourceType: WORKSPACE_RESOURCE_TYPE.DRAWIO,
+          permissionResourceType: RESOURCE_KIND.DRAWIO,
           ownerId,
           onPermissionSuccess,
           titleMeta,
@@ -200,7 +200,7 @@ function DrawioLayoutConfig({
       titleMeta,
     ]
   );
-  useWorkspaceLayoutConfig(frameConfig);
+  useResourceHostLayoutConfig(frameConfig);
 
   return <>{children}</>;
 }
@@ -607,7 +607,7 @@ function DrawioView({ resourceId }: DrawioViewProps) {
   }
 
   const resourceType = data.noteInfoDisplay.resourceInfo?.resourceType?.trim().toLowerCase();
-  if (resourceType !== WORKSPACE_RESOURCE_TYPE.DRAWIO) {
+  if (resourceType !== RESOURCE_KIND.DRAWIO) {
     return (
       <DrawioLayoutConfig resourceId={resourceId}>
         <div className={styles.middleOverlay}>

@@ -15,7 +15,7 @@ import { useDocumentService, useDriveService, useNoteService, useResourceService
 import type { DriveNodeScope } from '@/domains/Drive';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
-import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
+import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
@@ -151,7 +151,7 @@ export function useTableDriveActions({
         refresh();
         openInWorkspace({
           resourceId,
-          resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
+          resourceType: RESOURCE_KIND.NOTE,
           driveLocation: { scope, parentNodeId: currentNodeId },
         });
       },
@@ -182,7 +182,7 @@ export function useTableDriveActions({
         refresh();
         openInWorkspace({
           resourceId,
-          resourceType: WORKSPACE_RESOURCE_TYPE.DRAWIO,
+          resourceType: RESOURCE_KIND.DRAWIO,
           driveLocation: { scope, parentNodeId: currentNodeId },
         });
       },
@@ -201,7 +201,7 @@ export function useTableDriveActions({
           refresh();
           openInWorkspace({
             resourceId,
-            resourceType: WORKSPACE_RESOURCE_TYPE.SKILL,
+            resourceType: RESOURCE_KIND.SKILL,
             driveLocation: { scope, parentNodeId: currentNodeId },
           });
         } catch (err) {
@@ -385,7 +385,7 @@ export function useTableDriveActions({
     if (!groupId && pendingNewNoteId) {
       openInWorkspace({
         resourceId: pendingNewNoteId,
-        resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
+        resourceType: RESOURCE_KIND.NOTE,
         driveLocation: { scope, parentNodeId: currentNodeId },
       });
       return;

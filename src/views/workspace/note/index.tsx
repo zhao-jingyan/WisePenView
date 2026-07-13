@@ -38,18 +38,15 @@ import { isCommentVisibilityPrivileged } from '@/domains/Resource';
 import type { User } from '@/domains/User';
 import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
-import {
-  useWorkspaceLayoutConfig,
-  type WorkspaceLayoutConfig,
-} from '@/layouts/Workspace/WorkspaceOutletContext';
-import { useWorkspaceChatProtocolStore } from '@/layouts/Workspace/_store/useWorkspaceChatProtocolStore';
 import { parseErrorMessage } from '@/utils/error';
-import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
-import { Alert, Button, Switch, ToggleButton, Tooltip, toast } from '@heroui/react';
+import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
 import {
-  createNoteSelectionChatContext,
-  createNoteWorkspaceChatStateProvider,
-} from './NoteWorkspaceChatProtocol';
+  useResourceHostChatContextActions,
+  useResourceHostLayoutConfig,
+  type ResourceHostLayoutConfig,
+} from '@/views/workspace/ResourceHostContext';
+import { Alert, Button, Switch, ToggleButton, Tooltip, toast } from '@heroui/react';
+import { createNoteChatStateProvider, createNoteSelectionChatContext } from './NoteChatProtocol';
 import NoteInfoBar from './_components/NoteInfoBar';
 import NoteTitle from './_components/NoteTitle';
 import type { NoteTitleHandle, NoteTitleSaveStatus } from './_components/NoteTitle/index.type';
@@ -132,7 +129,7 @@ function formatNoteSaveStatus(status: NoteHeaderSaveStatus): string {
 
 function NoteLayoutConfig({ children }: { children: ReactNode }) {
   const frameConfig = useMemo(() => ({ className: styles.pageWrap }), []);
-  useWorkspaceLayoutConfig(frameConfig);
+  useResourceHostLayoutConfig(frameConfig);
 
   return <>{children}</>;
 }
@@ -144,7 +141,7 @@ function NoteViewConnected({
 }: NoteViewConnectedProps) {
   const aiDiffDisplayMode = useAiDiffDisplayStore((state) => state.displayMode);
   const setAiDiffDisplayMode = useAiDiffDisplayStore((state) => state.setDisplayMode);
-  const setWorkspaceChatContext = useWorkspaceChatProtocolStore((state) => state.setContext);
+  const { setChatContext } = useResourceHostChatContextActions();
   const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
   const titleEditorRef = useRef<NoteTitleHandle>(null);
   const mainScrollRef = useRef<HTMLDivElement>(null);
@@ -315,7 +312,7 @@ function NoteViewConnected({
 
   const noteChatStateProvider = useMemo(
     () =>
-      createNoteWorkspaceChatStateProvider({
+      createNoteChatStateProvider({
         resourceId,
         syncStatus: status,
         getClientStateVector: getNoteClientStateVector,
@@ -325,12 +322,12 @@ function NoteViewConnected({
 
   const handleAskAi = useCallback(
     (selection: NoteSelectionSnapshot) => {
-      setWorkspaceChatContext(createNoteSelectionChatContext(resourceId, selection));
+      setChatContext(createNoteSelectionChatContext(resourceId, selection));
     },
-    [resourceId, setWorkspaceChatContext]
+    [resourceId, setChatContext]
   );
 
-  const workspaceFrameConfig = useMemo<WorkspaceLayoutConfig>(
+  const resourceHostConfig = useMemo<ResourceHostLayoutConfig>(
     () => ({
       className: styles.pageWrap,
       chatStateProvider: noteChatStateProvider,
@@ -341,7 +338,7 @@ function NoteViewConnected({
           resourceIconType: 'note',
           currentActions: noteInfoDisplay.resourceInfo?.currentActions,
           copyVersion: noteInfoDisplay.version,
-          permissionResourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
+          permissionResourceType: RESOURCE_KIND.NOTE,
           ownerId: noteInfoDisplay.ownerId,
           onPermissionSuccess: onRefreshNoteInfo,
           isDisabled: showFullPageSpin,
@@ -475,7 +472,7 @@ function NoteViewConnected({
       toggleResourceAsideMode,
     ]
   );
-  useWorkspaceLayoutConfig(workspaceFrameConfig);
+  useResourceHostLayoutConfig(resourceHostConfig);
 
   return (
     <>

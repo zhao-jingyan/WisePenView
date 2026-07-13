@@ -26,7 +26,7 @@ import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useSidebarDriveExpansionStore } from '@/layouts/_common/Sidebar/DriveSidebar/_store/useSidebarDriveExpansionStore';
 import { useWorkspaceNavigationStore } from '@/layouts/Workspace/_store/useWorkspaceNavigationStore';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
-import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
+import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useMemo, useState } from 'react';
@@ -320,7 +320,7 @@ function SidebarDrive() {
         setNoteTarget(null);
         openInWorkspace({
           resourceId,
-          resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
+          resourceType: RESOURCE_KIND.NOTE,
           driveLocation: { scope: target.scope, parentNodeId: target.id },
         });
       },
@@ -353,7 +353,7 @@ function SidebarDrive() {
         setDrawioNameError('');
         openInWorkspace({
           resourceId,
-          resourceType: WORKSPACE_RESOURCE_TYPE.DRAWIO,
+          resourceType: RESOURCE_KIND.DRAWIO,
           driveLocation: { scope: target.scope, parentNodeId: target.id },
         });
       },
@@ -373,7 +373,7 @@ function SidebarDrive() {
         setSkillTarget(null);
         openInWorkspace({
           resourceId,
-          resourceType: WORKSPACE_RESOURCE_TYPE.SKILL,
+          resourceType: RESOURCE_KIND.SKILL,
           driveLocation: { scope: target.scope, parentNodeId: target.id },
         });
       } catch (err) {

@@ -1,13 +1,13 @@
+import {
+  buildResourceOpenState,
+  createResourceChatProviderKey,
+  type ResourceChatContext,
+  type ResourceChatStateProvider,
+  type ResourceOpenChatState,
+} from '@/components/ChatPanel/ResourceChatProtocol';
 import type { ChatFrontendState } from '@/domains/Chat';
 import type { NoteSelectionSnapshot, NoteSessionStatus, SelectedNoteScope } from '@/domains/Note';
-import {
-  buildWorkspaceOpenResourceState,
-  createWorkspaceChatProviderKey,
-  type WorkspaceChatContext,
-  type WorkspaceChatStateProvider,
-  type WorkspaceOpenResourceChatState,
-} from '@/layouts/Workspace/WorkspaceChatProtocol';
-import { WORKSPACE_RESOURCE_TYPE, WORKSPACE_VIEWER } from '@/utils/navigation/workspaceRoute';
+import { RESOURCE_KIND, RESOURCE_VIEWER } from '@/utils/navigation/resourceTarget';
 
 const NOTE_AI_DIFF_SKILL_ID = 'wisepen-note-ai-diff';
 const NOTE_AI_DIFF_TOOL_NAMES = ['read_note_aixml', 'apply_current_note_ai_diff_plan'];
@@ -33,8 +33,8 @@ type NoteClientStateVectorChatState = ChatFrontendState<'note_client_state_vecto
   disabled: true;
 };
 
-export type NoteChatFrontendState =
-  | WorkspaceOpenResourceChatState
+type NoteChatFrontendState =
+  | ResourceOpenChatState
   | NoteClientStateVectorChatState
   | ChatFrontendState<'selected_text', string>
   | ChatFrontendState<'selected_note_scope', NoteSelectedScopeStateValue>;
@@ -42,9 +42,8 @@ export type NoteChatFrontendState =
 function createNoteChatResource(resourceId: string) {
   return {
     resourceId,
-    resourceType: WORKSPACE_RESOURCE_TYPE.NOTE,
-    viewer: WORKSPACE_VIEWER.NOTE,
-    editorType: 'note',
+    resourceType: RESOURCE_KIND.NOTE,
+    viewer: RESOURCE_VIEWER.NOTE,
   } as const;
 }
 
@@ -67,15 +66,15 @@ function mapSelectedNoteScope(scope: SelectedNoteScope): NoteSelectedScopeStateV
   };
 }
 
-export function createNoteWorkspaceChatStateProvider(params: {
+export function createNoteChatStateProvider(params: {
   resourceId: string;
   syncStatus: NoteSessionStatus;
   getClientStateVector: () => string | undefined;
-}): WorkspaceChatStateProvider<NoteChatFrontendState> {
+}): ResourceChatStateProvider<NoteChatFrontendState> {
   const resource = createNoteChatResource(params.resourceId);
 
   return {
-    key: createWorkspaceChatProviderKey(resource),
+    key: createResourceChatProviderKey(resource),
     getBlockedReason: () =>
       params.syncStatus === 'connected'
         ? undefined
@@ -83,7 +82,7 @@ export function createNoteWorkspaceChatStateProvider(params: {
     getStates: () => {
       const stateVector = params.getClientStateVector();
       const states: NoteChatFrontendState[] = [
-        buildWorkspaceOpenResourceState(resource),
+        buildResourceOpenState(resource),
         ...(stateVector
           ? [{ key: 'note_client_state_vector', value: stateVector, disabled: true } as const]
           : []),
@@ -98,7 +97,7 @@ export function createNoteWorkspaceChatStateProvider(params: {
 export function createNoteSelectionChatContext(
   resourceId: string,
   selection: NoteSelectionSnapshot
-): WorkspaceChatContext<NoteChatFrontendState> {
+): ResourceChatContext<NoteChatFrontendState> {
   const resource = createNoteChatResource(resourceId);
   const selectedText = selection.text.trim();
   const states: NoteChatFrontendState[] = [
@@ -109,7 +108,7 @@ export function createNoteSelectionChatContext(
   ];
 
   return {
-    providerKey: createWorkspaceChatProviderKey(resource),
+    providerKey: createResourceChatProviderKey(resource),
     preview: selectedText,
     states,
   };

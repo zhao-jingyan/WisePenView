@@ -2,9 +2,9 @@ import { ResultState, Spin } from '@/components/Feedback';
 import PdfViewer from '@/components/PdfViewer/index';
 import { useDocumentService, useResourceService } from '@/domains';
 import type { ResourceAction } from '@/domains/Resource';
-import { useWorkspaceLayoutConfig } from '@/layouts/Workspace/WorkspaceOutletContext';
 import { parseErrorMessage } from '@/utils/error';
-import { WORKSPACE_RESOURCE_TYPE } from '@/utils/navigation/workspaceRoute';
+import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
+import { useResourceHostLayoutConfig } from '@/views/workspace/ResourceHostContext';
 import { Button } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useMemo, useState, type ReactNode } from 'react';
@@ -40,7 +40,7 @@ function PdfLayoutConfig({
               resourceName,
               resourceType,
               currentActions: resourceInfoActions,
-              permissionResourceType: WORKSPACE_RESOURCE_TYPE.FILE,
+              permissionResourceType: RESOURCE_KIND.FILE,
               ownerId,
               onPermissionSuccess,
             },
@@ -49,7 +49,7 @@ function PdfLayoutConfig({
     }),
     [onPermissionSuccess, ownerId, resourceId, resourceInfoActions, resourceName, resourceType]
   );
-  useWorkspaceLayoutConfig(frameConfig);
+  useResourceHostLayoutConfig(frameConfig);
 
   return <>{children}</>;
 }

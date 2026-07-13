@@ -34,7 +34,7 @@ function ChatPanel({
   fullWidth = false,
   showHeader = true,
   onNewChat,
-  workspaceChat,
+  resourceChat,
   showCollapseButton = true,
 }: ChatPanelProps) {
   const navigate = useNavigate();
@@ -49,9 +49,9 @@ function ChatPanel({
   const currentSessionTitle = useCurrentChatSessionStore((state) => state.currentSessionTitle);
   const setCurrentSession = useCurrentChatSessionStore((state) => state.setCurrentSession);
   const clearCurrentSession = useCurrentChatSessionStore((state) => state.clearCurrentSession);
-  const workspaceStateProvider = workspaceChat?.provider;
-  const workspaceChatContext = workspaceChat?.context;
-  const clearWorkspaceChatContext = workspaceChat?.clearContext;
+  const resourceStateProvider = resourceChat?.provider;
+  const resourceChatContext = resourceChat?.context;
+  const clearResourceChatContext = resourceChat?.clearContext;
 
   const [currentModel, setCurrentModel] = useState<Model | null>(null);
   const [sessionBarOpen, setSessionBarOpen] = useState(false);
@@ -129,7 +129,7 @@ function ChatPanel({
   }, [currentSessionId, hasRenderableChatContent, requestChatSessionHistoryRefresh]);
 
   const sending = status === 'submitted' || status === 'streaming';
-  const hasWorkspaceChatContext = Boolean(workspaceChatContext);
+  const hasResourceChatContext = Boolean(resourceChatContext);
   const panelTitle = currentSessionTitle || '新对话';
 
   const ensureChatSession = async (): Promise<string> => {
@@ -162,7 +162,7 @@ function ChatPanel({
     } catch (error) {
       const errorMessage = parseErrorMessage(error);
       if (isSessionInvalidMessage(errorMessage)) {
-        clearWorkspaceChatContext?.();
+        clearResourceChatContext?.();
         clearCurrentSession();
         setHistoryMessages([]);
         setHistoryPage(1);
@@ -201,12 +201,12 @@ function ChatPanel({
   const handleSend = async (text: string, opts?: SendOptions) => {
     const targetModel = opts?.model ?? currentModel;
     if (!targetModel) return;
-    const sendBlockedReason = workspaceStateProvider?.getBlockedReason?.();
+    const sendBlockedReason = resourceStateProvider?.getBlockedReason?.();
     if (sendBlockedReason) {
       toast.warning(sendBlockedReason);
       return;
     }
-    if (workspaceChatContext && workspaceChatContext.providerKey !== workspaceStateProvider?.key) {
+    if (resourceChatContext && resourceChatContext.providerKey !== resourceStateProvider?.key) {
       toast.warning('所选上下文属于其他资源，请移除后在当前资源中重新选择');
       return;
     }
@@ -227,27 +227,27 @@ function ChatPanel({
       providerId: targetModel.providerId,
       sessionId: targetSessionId,
       frontendStates: [
-        ...(workspaceStateProvider?.getStates() ?? []),
-        ...(workspaceChatContext?.states ?? []),
+        ...(resourceStateProvider?.getStates() ?? []),
+        ...(resourceChatContext?.states ?? []),
       ],
       selectedResources: opts?.activeDocRefs,
       uploadedAttachments: opts?.activeAttachments,
       onDemandSkillIds: opts?.selectedSkills?.map((skill) => skill.skillId),
       allowToolNames: [
-        ...(workspaceStateProvider?.allowToolNames ?? []),
+        ...(resourceStateProvider?.allowToolNames ?? []),
         ...(opts?.selectedTools?.map((tool) => tool.toolId) ?? []),
       ],
-      forceEnabledSkillIds: [...(workspaceStateProvider?.forceEnabledSkillIds ?? [])],
+      forceEnabledSkillIds: [...(resourceStateProvider?.forceEnabledSkillIds ?? [])],
     });
 
     await sendPromise;
-    if (hasWorkspaceChatContext) {
-      clearWorkspaceChatContext?.(workspaceChatContext);
+    if (hasResourceChatContext) {
+      clearResourceChatContext?.(resourceChatContext);
     }
   };
 
   const handleClearContext = () => {
-    clearWorkspaceChatContext?.();
+    clearResourceChatContext?.();
   };
 
   const handleCollapsePanel = () => {
@@ -268,7 +268,7 @@ function ChatPanel({
   };
 
   const handleSelectSession = (session: ChatSession) => {
-    clearWorkspaceChatContext?.();
+    clearResourceChatContext?.();
     setCurrentSession({ id: session.id, title: session.title });
     clearNewChatSessionStore();
     setChatPanelDraftOpen(false);
@@ -279,7 +279,7 @@ function ChatPanel({
   };
 
   const handleNewChat = () => {
-    clearWorkspaceChatContext?.();
+    clearResourceChatContext?.();
     setSessionBarOpen(false);
     if (onNewChat) {
       onNewChat();
@@ -370,7 +370,7 @@ function ChatPanel({
                   onSend={handleSend}
                   getUploadSessionId={ensureChatSession}
                   sending={sending}
-                  contextPreview={workspaceChatContext?.preview}
+                  contextPreview={resourceChatContext?.preview}
                   onClearContext={handleClearContext}
                 />
               </div>
