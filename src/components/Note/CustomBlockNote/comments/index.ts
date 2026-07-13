@@ -27,7 +27,6 @@ export {
   type PendingCommentSelection,
 } from './core/pendingCommentReference';
 
-export { useActiveCommentUser } from './hooks/useActiveCommentUser';
 export { useCommentSettingsSync } from './hooks/useCommentSettingsSync';
 export { useInlineCommentsSync } from './hooks/useInlineCommentsSync';
 export { useSyncCommentDocumentMarks } from './hooks/useSyncCommentDocumentMarks';

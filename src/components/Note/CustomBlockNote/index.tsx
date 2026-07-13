@@ -4,7 +4,6 @@ import { useImageService, useResourceService } from '@/domains';
 import { assertImageProxyUploadLimit } from '@/domains/Image';
 import type { AiDiffDisplayMode, SelectedNoteScope } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, computeNoteBodyContentHash } from '@/domains/Note';
-import type { User } from '@/domains/User';
 import {
   createClientError,
   FRONTEND_CLIENT_ERROR,
@@ -46,7 +45,6 @@ import {
   resolveActiveCommentUserProfile,
   resolveBlockNoteCommentUsers,
   syncDomSelectionToProseMirror,
-  useActiveCommentUser,
   useFormulaComments,
   useInlineCommentsSync,
   useSyncCommentDocumentMarks,
@@ -111,7 +109,7 @@ function buildSelectedNoteScope(editor: CustomBlockNoteEditor): SelectedNoteScop
   return { type: 'blockRange', startBlockId, endBlockId };
 }
 
-function CustomBlockNoteEditor({
+function CustomBlockNote({
   resourceId,
   collaboration: { doc, provider, user: collaborationUser, ready: collaborationReady },
   state: { aiDiffDisplayMode, readOnly, blockLocalDocWrites },
@@ -124,7 +122,7 @@ function CustomBlockNoteEditor({
     uiEnabled: commentsUiEnabled,
     authorizable: commentsAuthorizable,
     writable: commentsWritable,
-    userId: commentUserId,
+    actor: commentUser,
     usersById: commentUsersById,
     documentRole: commentDocumentRole = 'editor',
     visibilityPrivileged: isCommentVisibilityPrivileged,
@@ -141,9 +139,8 @@ function CustomBlockNoteEditor({
     aiBulkActions: aiBulkActionsPortalContainer,
   },
   onAiDiffBodyContentHashChange,
-  commentUser,
   ref,
-}: CustomBlockNoteProps & { commentUser: User | null; ref?: Ref<NoteBodyEditorHandle> }) {
+}: CustomBlockNoteProps & { ref?: Ref<NoteBodyEditorHandle> }) {
   const imageService = useImageService();
   const resourceService = useResourceService();
   const setCurrentSelection = useNoteEditorSelectionStore((state) => state.setCurrentSelection);
@@ -201,7 +198,7 @@ function CustomBlockNoteEditor({
   const threadsYMap = getBlockNoteThreadsYMap(doc);
   const commentUsersYMap = getBlockNoteCommentUsersYMap(doc);
   const { activeCommentUserId, activeCommentUsername, activeCommentAvatarUrl } =
-    resolveActiveCommentUserProfile(commentUser, commentUserId);
+    resolveActiveCommentUserProfile(commentUser ?? null);
   const activeCommentUserIdLatest = useLatest(activeCommentUserId);
   const commentResolverContextLatest = useLatest({
     activeCommentUserId,
@@ -850,21 +847,6 @@ function CustomBlockNoteEditor({
         </AiDiffDisplayModeProvider>
       </NoteEditorReadOnlyProvider>
     </div>
-  );
-}
-
-function CustomBlockNote(props: CustomBlockNoteProps & { ref?: Ref<NoteBodyEditorHandle> }) {
-  const { ref, comments, ...rest } = props;
-  const commentUser = useActiveCommentUser(comments.enabled);
-
-  return (
-    <CustomBlockNoteEditor
-      key={rest.resourceId}
-      {...rest}
-      comments={comments}
-      ref={ref}
-      commentUser={commentUser}
-    />
   );
 }
 

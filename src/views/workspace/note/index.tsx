@@ -603,7 +603,7 @@ function NoteViewConnected({
                         uiEnabled: isConnected && noteInfoDisplay.commentsEnabled,
                         authorizable: noteInfoDisplay.canEditComments,
                         writable: isConnected && noteInfoDisplay.canEditComments,
-                        userId: currentUser?.id,
+                        actor: currentUser,
                         usersById: noteInfoDisplay.authorsById,
                         visibilityPrivileged: canManageCommentVisibility,
                         collaboratorVisibility: commentSettings.collaboratorVisibility,

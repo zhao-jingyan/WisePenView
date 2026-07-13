@@ -7,6 +7,7 @@ import type {
   NoteSelectionSnapshot,
   WisepenProvider,
 } from '@/domains/Note';
+import type { User } from '@/domains/User';
 import type { BlockNoteCommentDocumentRole } from './comments/comments.types';
 import type { CollaboratorCommentVisibility } from './comments/core/commentSettings';
 
@@ -64,7 +65,8 @@ export interface NoteCommentsConfig {
   authorizable: boolean;
   /** 当前是否允许创建/回复/解决批注（通常需已连接且具备权限） */
   writable: boolean;
-  userId?: string;
+  /** 页面已加载的当前用户，作为批注 actor；不在编辑器内重复请求。 */
+  actor?: User;
   usersById?: NoteCommentUserDisplayRecord;
   documentRole?: BlockNoteCommentDocumentRole;
   visibilityPrivileged: boolean;
