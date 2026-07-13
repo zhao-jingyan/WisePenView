@@ -558,6 +558,7 @@ function NoteViewConnected({
                       provider={provider}
                       collaborationUser={collaborationUser}
                       aiDiffDisplayMode={aiDiffDisplayMode}
+                      collaborationReady={isConnected}
                       readOnly={isEditorReadOnly}
                       blockLocalDocWrites={blockLocalDocWrites}
                       onOutlineChange={setOutlineItems}

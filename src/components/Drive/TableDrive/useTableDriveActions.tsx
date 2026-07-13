@@ -9,6 +9,10 @@ import {
 } from '@/components/Drive/Modals';
 import { FormField, Input } from '@/components/Input';
 import { useNewNoteStore } from '@/components/Note/_store/useNewNoteStore';
+import {
+  MARKDOWN_NOTE_FILE_ACCEPT,
+  useMarkdownNoteImport,
+} from '@/components/Note/useMarkdownNoteImport';
 import AppFormDialog from '@/components/Overlay/AppFormDialog';
 import CreateSkillModal from '@/components/Skill/CreateSkillModal';
 import { useDocumentService, useDriveService, useNoteService, useResourceService } from '@/domains';
@@ -135,6 +139,24 @@ export function useTableDriveActions({
     onUploadSuccess?.();
   }, [onUploadSuccess, refresh]);
 
+  const {
+    fileInputRef: markdownFileInputRef,
+    importing: importingMarkdownNote,
+    openFilePicker: openMarkdownFilePicker,
+    handleFileChange: handleMarkdownFileChange,
+  } = useMarkdownNoteImport({
+    mountCreatedResource,
+    onSuccess: ({ resourceId, title }) => {
+      refresh();
+      openInWorkspace({
+        resourceId,
+        resourceType: RESOURCE_KIND.NOTE,
+        resourceName: title,
+        driveLocation: { scope, parentNodeId: currentNodeId },
+      });
+    },
+  });
+
   const { loading: creatingNote, run: runCreateNote } = useRequest(
     async () => {
       const { resourceId } = await noteService.createNote({ title: '未命名笔记' });
@@ -215,6 +237,13 @@ export function useTableDriveActions({
   const ModalHost = useMemo(
     () => (
       <>
+        <input
+          ref={markdownFileInputRef}
+          type="file"
+          accept={MARKDOWN_NOTE_FILE_ACCEPT}
+          onChange={handleMarkdownFileChange}
+          hidden
+        />
         {newFolderOpen ? (
           <NewFolderNodeModal
             isOpen={newFolderOpen}
@@ -336,7 +365,9 @@ export function useTableDriveActions({
       existingFolderNames,
       groupId,
       handleCreateSkillSuccess,
+      handleMarkdownFileChange,
       handleUploadSuccess,
+      markdownFileInputRef,
       newFolderOpen,
       refresh,
       resourcePermissionTarget,
@@ -413,6 +444,9 @@ export function useTableDriveActions({
         case 'note':
           handleCreateNote();
           break;
+        case 'importNote':
+          openMarkdownFilePicker();
+          break;
         case 'drawio':
           handleOpenDrawioModal();
           break;
@@ -429,6 +463,7 @@ export function useTableDriveActions({
       handleOpenDrawioModal,
       handleOpenSkillModal,
       openNewFolder,
+      openMarkdownFilePicker,
       openUploadDocument,
     ]
   );
@@ -460,6 +495,11 @@ export function useTableDriveActions({
     }
     if (canCreateInCurrentFolder && toolbarConfig.canCreateNote) {
       items.push({ id: 'note', label: '新建笔记', disabled: creatingNote });
+      items.push({
+        id: 'importNote',
+        label: '导入笔记',
+        disabled: importingMarkdownNote,
+      });
     }
     if (canCreateInCurrentFolder && toolbarConfig.canCreateSkill) {
       items.push({ id: 'skill', label: '新建 Skill' });
@@ -472,6 +512,7 @@ export function useTableDriveActions({
     canCreateInCurrentFolder,
     creatingDrawio,
     creatingNote,
+    importingMarkdownNote,
     showCreateMenu,
     showUploadDocument,
     toolbarConfig.canCreateDrawio,

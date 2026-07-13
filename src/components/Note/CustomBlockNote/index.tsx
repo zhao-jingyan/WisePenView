@@ -1,4 +1,5 @@
 import { useNewNoteStore } from '@/components/Note/_store/useNewNoteStore';
+import { usePendingNoteImportStore } from '@/components/Note/_store/usePendingNoteImportStore';
 import { useImageService, useResourceService } from '@/domains';
 import { assertImageProxyUploadLimit } from '@/domains/Image';
 import type { AiDiffDisplayMode, SelectedNoteScope } from '@/domains/Note';
@@ -129,6 +130,7 @@ function CustomBlockNoteEditor({
   provider,
   collaborationUser,
   aiDiffDisplayMode,
+  collaborationReady,
   readOnly = false,
   blockLocalDocWrites = false,
   onOutlineChange,
@@ -452,6 +454,37 @@ function CustomBlockNoteEditor({
       window.requestAnimationFrame(activateWriteGuard);
     }
   });
+
+  const applyPendingMarkdownImport = useMemoizedFn(() => {
+    if (!collaborationReady) {
+      return;
+    }
+
+    const pendingImport = usePendingNoteImportStore.getState().pendingByResourceId[resourceId];
+    if (!pendingImport) {
+      return;
+    }
+
+    try {
+      const blocks = editor.tryParseMarkdownToBlocks(pendingImport.markdown);
+      if (blocks.length > 0) {
+        editor.replaceBlocks(editor.document, blocks);
+      }
+      usePendingNoteImportStore.getState().removePendingImport(resourceId);
+      toast.success(`已导入 ${pendingImport.sourceFileName}`);
+    } catch (error) {
+      usePendingNoteImportStore.getState().removePendingImport(resourceId);
+      toast.danger(`Markdown 导入失败：${parseErrorMessage(error)}`);
+    }
+  });
+
+  useMount(() => {
+    applyPendingMarkdownImport();
+  });
+
+  useUpdateEffect(() => {
+    applyPendingMarkdownImport();
+  }, [collaborationReady, resourceId]);
 
   useUpdateEffect(() => {
     if (!blockLocalDocWrites) {

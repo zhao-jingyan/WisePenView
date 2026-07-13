@@ -31,6 +31,8 @@ export interface CustomBlockNoteProps {
   provider: WisepenProvider;
   collaborationUser: NoteCollaborationUser;
   aiDiffDisplayMode: AiDiffDisplayMode;
+  /** 协同 provider 已完成首次服务端同步，此后才允许写入待导入正文 */
+  collaborationReady: boolean;
   /** UI/editable：连接中或无 EDIT 时为 true */
   readOnly?: boolean;
   /**
