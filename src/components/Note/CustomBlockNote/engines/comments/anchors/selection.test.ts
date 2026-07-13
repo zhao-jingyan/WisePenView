@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { notePluginRegistry } from '../../../noteEditor';
+import { notePluginRegistry } from '../../../noteEditorComposition';
 import {
   isCommentableSelection,
   isDocumentThreadRangeAllowed,

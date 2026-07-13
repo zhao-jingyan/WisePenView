@@ -2,7 +2,7 @@ import { CommentMark } from '@blocknote/core/comments';
 import type { Mark as PmMark, MarkType as PmMarkType, Node as PmNode } from '@tiptap/pm/model';
 
 import { WISEPEN_COMMENT_MARK_SYNC_META } from '../../../engines/comments/anchors/range';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import type { FormulaThreadPosition } from './formulaAnchor';
 
 function formulaMarkExists(

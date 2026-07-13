@@ -4,7 +4,7 @@ import type * as Y from 'yjs';
 import type { Doc } from 'yjs';
 
 import type { NotePluginRegistry } from '../../../content/types';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import { CONTENT_COMMENT_YJS_ORIGIN, getContentCommentAnchorStores } from '../anchors/content';
 import type { PendingCommentSelection } from '../anchors/pending';
 import {

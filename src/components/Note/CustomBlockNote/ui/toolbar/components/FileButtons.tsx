@@ -1,4 +1,4 @@
-import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditor';
+import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditorComposition';
 import { Popover } from '@/components/Overlay';
 import { blockHasType, editorHasBlockWithType } from '@blocknote/core';
 import { useBlockNoteEditor, useEditorState } from '@blocknote/react';

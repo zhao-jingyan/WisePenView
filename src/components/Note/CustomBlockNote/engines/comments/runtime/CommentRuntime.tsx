@@ -2,7 +2,7 @@
 import { createContext, createElement, use, type ReactNode } from 'react';
 
 import type { NoteCommentAnchor } from '../../../content/types';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 
 export interface ContentCommentTarget {
   ownerId: string;

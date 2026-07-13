@@ -1,5 +1,5 @@
 import { useNoteEditorReadOnlyContext } from '@/components/Note/CustomBlockNote/engines/editor/readOnly';
-import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditor';
+import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditorComposition';
 import {
   isTableCellSelection,
   mapTableCell,

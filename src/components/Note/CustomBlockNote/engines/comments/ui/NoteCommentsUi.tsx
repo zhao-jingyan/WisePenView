@@ -10,7 +10,7 @@ import type { WisePenCommentAuthorInfo } from '@/components/CommentsSidebar';
 import { ResizableCommentsSidebar } from '@/components/CommentsSidebar';
 import type { NoteCommentUserDisplayRecord } from '@/domains/Note';
 import type { NoteCommentPosition, NotePluginRegistry } from '../../../content/types';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import {
   getContentCommentAnchorStores,
   isContentCommentSyncing,

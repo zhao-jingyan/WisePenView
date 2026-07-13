@@ -49,7 +49,7 @@ CustomBlockNote/
 │   │   └── stripEscape.ts
 │   ├── markdown/
 │   └── print/
-├── noteEditor.ts
+├── noteEditorComposition.ts
 ├── index.type.ts
 ├── index.tsx
 └── style.module.less
@@ -61,7 +61,7 @@ CustomBlockNote/
 - `content/` 放 plugin 契约、registry 和内容 projection 基础设施；
 - `engines/` 放 Markdown、print、editor、collaboration、AI Diff、comments 等跨内容类型编排；
 - Comment engine 只管理 thread、权限、可见性、range selection、持久化调度和通用 UI；
-- `noteEditor.ts` 是唯一组合入口，负责装配 plugin tree、runtime extensions 与最终 schema；
+- `noteEditorComposition.ts` 是唯一组合入口，负责装配 plugin tree、runtime extensions 与最终 schema；
 - 根目录只保留组件入口、组件 props/style 与组合根，不放横切实现；
 - 测试与对应实现放在同一目录。
 

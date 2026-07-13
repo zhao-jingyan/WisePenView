@@ -10,7 +10,7 @@ import {
 import * as Y from 'yjs';
 
 import type { NotePluginRegistry } from '../../../content/types';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import { getRootDomSelection } from '../../editor/dom';
 import { getBlockNoteThreadsYMap, isThreadActive } from '../threads/yjs';
 import { getHiddenThreadIdsForUser, type ThreadVisibilityScope } from '../visibility/filter';

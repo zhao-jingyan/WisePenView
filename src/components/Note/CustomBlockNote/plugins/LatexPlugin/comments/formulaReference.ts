@@ -1,7 +1,7 @@
 import type { Node as PmNode } from '@tiptap/pm/model';
 import type { EditorView } from '@tiptap/pm/view';
 
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import { INLINE_MATH_PM_TYPE, type FormulaThreadAnchor } from './anchor';
 import { resolveFormulaThreadPosition } from './formulaAnchor';
 

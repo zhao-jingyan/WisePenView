@@ -4,7 +4,7 @@ import { useCallback, useRef, useState, type RefObject } from 'react';
 import type { Doc } from 'yjs';
 
 import type { NotePluginRegistry } from '../../../content/types';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import {
   findContentCommentAnchor,
   persistContentCommentAnchor,

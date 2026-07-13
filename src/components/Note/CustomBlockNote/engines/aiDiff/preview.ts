@@ -1,7 +1,7 @@
 import type { NoteAiDiffPreviewData } from '@/domains/Note';
 import type * as Y from 'yjs';
 import type { NoteAiContentPayload } from '../../content/types';
-import type { CustomBlockNoteEditor } from '../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
 
 import { hashNoteBlockForAiDiff } from './projection';
 import { getAiContentStore } from './store';

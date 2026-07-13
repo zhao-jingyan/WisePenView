@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { AI_DIFF_DISPLAY_MODE } from '@/domains/Note';
 import type { NoteAiContentPayload } from '../../content/types';
-import { notePluginRegistry } from '../../noteEditor';
+import { notePluginRegistry } from '../../noteEditorComposition';
 import { hashNoteBlockForAiDiff } from '../aiDiff/projection';
 import { projectNoteBlocksForMarkdown } from './markdownExport';
 

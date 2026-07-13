@@ -8,7 +8,7 @@ import type {
   NoteContentPlugin,
   NotePluginRegistry,
 } from '../../../content/types';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import {
   getBlockNoteThreadReferencesYMap,
   getBlockNoteThreadsYMap,

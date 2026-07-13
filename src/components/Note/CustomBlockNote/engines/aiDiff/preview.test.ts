@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
 import { NOTE_AI_DIFF_PREVIEW_MOCK } from '@/domains/Note/mock/aiDiffPreview.mockdata';
-import { blockNoteSchema, notePluginRegistry } from '../../noteEditor';
+import { blockNoteSchema, notePluginRegistry } from '../../noteEditorComposition';
 import { initializeAiDiffPreview } from './preview';
 import { readAllAiContent } from './store';
 

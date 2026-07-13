@@ -3,7 +3,7 @@ import type {
   NoteCommentEditor,
   NoteCommentFacet,
 } from '../../../content/types';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import {
   getFormulaThreadAnchorsYMap,
   isSameFormulaThreadAnchor,

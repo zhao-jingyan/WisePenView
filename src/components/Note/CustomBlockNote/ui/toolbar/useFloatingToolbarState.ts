@@ -4,7 +4,7 @@ import { useMount, useUnmount } from 'ahooks';
 import { useRef, useState } from 'react';
 
 import { getRootDomSelection } from '@/components/Note/CustomBlockNote/engines/editor/dom';
-import type { CustomBlockNoteEditor } from '@/components/Note/CustomBlockNote/noteEditor';
+import type { CustomBlockNoteEditor } from '@/components/Note/CustomBlockNote/noteEditorComposition';
 
 type FloatingToolbarState = {
   visible: boolean;

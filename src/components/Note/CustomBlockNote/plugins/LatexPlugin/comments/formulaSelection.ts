@@ -1,6 +1,6 @@
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import type { FormulaThreadAnchor } from './anchor';
 import { resolveFormulaThreadPosition } from './formulaAnchor';
 

@@ -5,7 +5,7 @@ import type * as Y from 'yjs';
 import type { AiDiffDisplayMode } from '@/domains/Note';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import type { NotePluginRegistry } from '../../content/types';
-import type { CustomBlockNoteEditor } from '../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
 import { applyNoteAiDiffAction } from './action';
 import type { NoteAiDiffActionRequest } from './runtime';
 import { syncAiDiffRuntimeState } from './runtime';

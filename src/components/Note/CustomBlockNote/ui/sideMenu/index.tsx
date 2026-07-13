@@ -4,12 +4,12 @@ import {
   exportNoteFullHtml,
   exportNoteMarkdown,
 } from '@/components/Note/CustomBlockNote/engines/markdown/markdownExport';
-import type { CustomBlockNoteEditor } from '@/components/Note/CustomBlockNote/noteEditor';
+import type { CustomBlockNoteEditor } from '@/components/Note/CustomBlockNote/noteEditorComposition';
 import {
   blockNoteSchema,
   createDefaultNoteBlock,
   notePluginRegistry,
-} from '@/components/Note/CustomBlockNote/noteEditor';
+} from '@/components/Note/CustomBlockNote/noteEditorComposition';
 import {
   applyBlockTypeToBlocks,
   blockMatchesBlockTypeItem,

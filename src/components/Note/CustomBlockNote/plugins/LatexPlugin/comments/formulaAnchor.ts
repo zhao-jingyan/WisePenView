@@ -1,6 +1,6 @@
 import type { Node as PmNode } from '@tiptap/pm/model';
 
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import { INLINE_MATH_PM_TYPE, type FormulaThreadAnchor } from './anchor';
 
 const BLOCK_CONTAINER_TYPE = 'blockContainer';

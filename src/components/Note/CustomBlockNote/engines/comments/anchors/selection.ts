@@ -1,5 +1,5 @@
 import type { NoteCommentFacet, NotePluginRegistry } from '../../../content/types';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import { hasAiDiffForBlockInEditorState } from '../../aiDiff/runtime';
 
 function getCommentsPolicy(

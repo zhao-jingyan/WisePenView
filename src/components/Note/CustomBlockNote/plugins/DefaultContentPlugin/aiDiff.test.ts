@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { hashNoteBlockForAiDiff } from '../../engines/aiDiff/projection';
-import { notePluginRegistry } from '../../noteEditor';
+import { notePluginRegistry } from '../../noteEditorComposition';
 
 describe('DefaultContentPlugin AI Diff', () => {
   it('由 paragraph owner 解析 native candidate', () => {

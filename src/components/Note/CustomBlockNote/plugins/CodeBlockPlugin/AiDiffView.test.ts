@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { describe, expect, it } from 'vitest';
 
-import { notePluginRegistry } from '../../noteEditor';
+import { notePluginRegistry } from '../../noteEditorComposition';
 
 describe('CodeBlockPlugin AiDiffView', () => {
   it('使用原生代码块 DOM 契约渲染语言和内容', () => {

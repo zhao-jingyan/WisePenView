@@ -4,7 +4,7 @@ import type { Doc } from 'yjs';
 
 import type { WisepenProvider } from '@/domains/Note';
 import type { NotePluginRegistry } from '../../../content/types';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import { getBlockNoteThreadsYMap } from '../threads/yjs';
 import type { CollaboratorCommentVisibility } from '../visibility/document';
 import type { ThreadVisibilityScope } from '../visibility/filter';

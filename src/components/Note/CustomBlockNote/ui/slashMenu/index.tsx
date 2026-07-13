@@ -4,7 +4,7 @@ import type { DefaultReactSuggestionItem, SuggestionMenuProps } from '@blocknote
 import { SuggestionMenuController } from '@blocknote/react';
 import { ListBox, ListBoxItem } from '@heroui/react';
 import type { NoteContentPlugin } from '../../content/types';
-import type { CustomBlockNoteEditor } from '../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
 import {
   NOTE_EDITOR_HIDDEN_DEFAULT_SLASH_MENU_KEY_SET,
   getNoteSlashMenuItems,

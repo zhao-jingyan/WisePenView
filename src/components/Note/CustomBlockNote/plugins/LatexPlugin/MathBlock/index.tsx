@@ -15,7 +15,7 @@ import 'katex/dist/katex.min.css';
 import type { NoteCommentAnchor } from '../../../content/types';
 import { useNoteCommentRuntime } from '../../../engines/comments/runtime/CommentRuntime';
 import { useNoteEditorReadOnlyContext } from '../../../engines/editor/readOnly';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 import { MATH_BLOCK_COMMENT_OWNER_ID } from '../comments/anchor';
 import { formatFormulaReferenceText } from '../comments/formulaReference';
 import { LatexFormulaCommentButton } from '../comments/LatexFormulaCommentButton';

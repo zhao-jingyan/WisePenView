@@ -1,5 +1,5 @@
 import type { MouseEvent as ReactMouseEvent } from 'react';
-import type { CustomBlockNoteEditor } from '../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
 import type { NoteBlock } from '../editorMenus/utils';
 export {
   isRecord,

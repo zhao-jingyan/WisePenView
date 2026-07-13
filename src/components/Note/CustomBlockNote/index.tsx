@@ -61,7 +61,7 @@ import {
   collectNoteEditorProps,
   notePluginRegistry,
   type CustomBlockNoteEditor,
-} from './noteEditor';
+} from './noteEditorComposition';
 import styles from './style.module.less';
 import NoteSideMenu from './ui/sideMenu';
 import NoteSlashMenu from './ui/slashMenu';

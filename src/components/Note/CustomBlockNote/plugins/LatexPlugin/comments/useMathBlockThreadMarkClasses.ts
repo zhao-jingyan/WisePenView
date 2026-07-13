@@ -7,7 +7,7 @@ import type {
   ContentCommentTarget,
   NoteCommentRuntime,
 } from '../../../engines/comments/runtime/CommentRuntime';
-import type { CustomBlockNoteEditor } from '../../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
 
 type UseMathBlockCommentHighlightOptions = {
   commentEditor: CustomBlockNoteEditor;

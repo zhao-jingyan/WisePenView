@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import type { NoteAiContentPayload } from '../../content/types';
-import { notePluginRegistry } from '../../noteEditor';
+import { notePluginRegistry } from '../../noteEditorComposition';
 import { applyNoteAiDiffAction } from './action';
 import { hashNoteBlockForAiDiff } from './projection';
 import { getAiContentStore, readBlockAiContent } from './store';

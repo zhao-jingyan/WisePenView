@@ -5,7 +5,7 @@ import type {
   NoteAiDiffBlockMutation,
   NotePluginRegistry,
 } from '../../content/types';
-import type { CustomBlockNoteEditor } from '../../noteEditor';
+import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
 import { stableStringify } from './stableValue';
 import {
   AI_DIFF_ACTION_ORIGIN,

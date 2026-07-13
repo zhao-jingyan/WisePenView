@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { hashNoteBlockForAiDiff } from '../../engines/aiDiff/projection';
-import { notePluginRegistry } from '../../noteEditor';
+import { notePluginRegistry } from '../../noteEditorComposition';
 
 describe('LatexPlugin AI Diff', () => {
   it('MathBlock owner 直接比较 expression candidate', () => {

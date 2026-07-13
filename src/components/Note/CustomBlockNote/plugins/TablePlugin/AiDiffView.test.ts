@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { describe, expect, it } from 'vitest';
 
-import { notePluginRegistry } from '../../noteEditor';
+import { notePluginRegistry } from '../../noteEditorComposition';
 
 describe('TablePlugin AiDiffView', () => {
   it('保留表头、列宽、合并单元格和单元格样式', () => {

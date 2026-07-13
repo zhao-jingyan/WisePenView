@@ -7,7 +7,7 @@ import {
   getContentCommentAnchorStores,
   persistContentCommentAnchor,
 } from '../../../engines/comments/anchors/content';
-import { notePluginRegistry } from '../../../noteEditor';
+import { notePluginRegistry } from '../../../noteEditorComposition';
 import { INLINE_MATH_COMMENT_OWNER_ID, MATH_BLOCK_COMMENT_OWNER_ID } from './anchor';
 
 function anchor(value: Record<string, unknown>): NoteCommentAnchor {
