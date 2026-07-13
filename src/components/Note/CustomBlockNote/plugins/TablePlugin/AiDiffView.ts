@@ -1,4 +1,5 @@
 import type { NotePluginRegistry } from '../../content/types';
+import styles from './style.module.less';
 
 interface TableCellLike {
   content: unknown[];
@@ -80,17 +81,18 @@ export function TableAiDiffView(
   registry: NotePluginRegistry
 ): HTMLElement {
   const root = document.createElement('div');
-  root.className = 'bn-block-content';
+  root.className = `bn-block-content ${styles.tableView}`;
   root.dataset.contentType = 'table';
 
   const blockProps = isRecord(candidate.props) ? candidate.props : {};
   applyColorAttribute(root, 'textColor', blockProps.textColor);
 
   const tableWrapper = document.createElement('div');
-  tableWrapper.className = 'tableWrapper';
+  tableWrapper.className = `tableWrapper ${styles.tableWrapper}`;
   const tableWrapperInner = document.createElement('div');
   tableWrapperInner.className = 'tableWrapper-inner';
   const table = document.createElement('table');
+  table.className = styles.table;
   const content = readTableContent(candidate);
   if (!content) {
     tableWrapperInner.appendChild(table);

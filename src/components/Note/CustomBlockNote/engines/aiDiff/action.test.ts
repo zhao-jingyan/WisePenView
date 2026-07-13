@@ -126,6 +126,71 @@ describe('AI Diff action', () => {
     expect(readBlockAiContent(doc, block.id)).not.toBeNull();
   });
 
+  it('按展示 hunk 接受后重锚定 sidecar，并继续接受剩余修改', () => {
+    const doc = new Y.Doc();
+    const { block, editor } = createEditor();
+    block.content = [{ type: 'text', text: '团队将在月底完成首次复盘。', styles: {} }];
+    const baseHash = hashNoteBlockForAiDiff(block);
+    setBlockAiContent(doc, block.id, {
+      revision: 'r-granular',
+      baseHash,
+      operation: 'update',
+      candidate: {
+        props: {},
+        content: [{ type: 'text', text: '团队仍将在月底完成最终复盘。', styles: {} }],
+      },
+    });
+
+    expect(
+      applyNoteAiDiffAction({
+        doc,
+        editor: editor as never,
+        registry: notePluginRegistry,
+        blockId: block.id,
+        revision: 'r-granular',
+        baseHash,
+        action: 'accept',
+        target: { kind: 'text-hunk', index: 0 },
+      })
+    ).toBe('applied');
+    expect(block.content).toEqual([
+      { type: 'text', text: '团队仍将在月底完成首次复盘。', styles: {} },
+    ]);
+
+    const remaining = readBlockAiContent(doc, block.id);
+    expect(remaining?.baseHash).toBe(hashNoteBlockForAiDiff(block));
+    expect(remaining?.baseHash).not.toBe(baseHash);
+    expect(
+      applyNoteAiDiffAction({
+        doc,
+        editor: editor as never,
+        registry: notePluginRegistry,
+        blockId: block.id,
+        revision: 'r-granular',
+        baseHash,
+        action: 'accept',
+        target: { kind: 'text-hunk', index: 0 },
+      })
+    ).toBe('stale');
+
+    expect(
+      applyNoteAiDiffAction({
+        doc,
+        editor: editor as never,
+        registry: notePluginRegistry,
+        blockId: block.id,
+        revision: 'r-granular',
+        baseHash: remaining?.baseHash,
+        action: 'accept',
+        target: { kind: 'text-hunk', index: 0 },
+      })
+    ).toBe('applied');
+    expect(block.content).toEqual([
+      { type: 'text', text: '团队仍将在月底完成最终复盘。', styles: {} },
+    ]);
+    expect(readBlockAiContent(doc, block.id)).toBeNull();
+  });
+
   it('由 block owner 决定 create 拒绝与 delete 接受都删除 native block', () => {
     for (const [operation, action, candidate] of [
       ['create', 'discard', { props: {}, content: [{ type: 'text', text: '新增', styles: {} }] }],

@@ -56,6 +56,7 @@ describe('DefaultContentPlugin AI Diff', () => {
   });
 
   it('普通自然段以词句粒度渲染局部修改', () => {
+    const actionTargets: unknown[] = [];
     const comparison = notePluginRegistry.blockPlugins.get('paragraph')?.aiDiff?.renderComparison?.(
       {
         type: 'paragraph',
@@ -67,7 +68,15 @@ describe('DefaultContentPlugin AI Diff', () => {
         props: {},
         content: [{ type: 'text', text: '团队仍将在月底完成最终复盘。', styles: {} }],
       },
-      notePluginRegistry
+      notePluginRegistry,
+      {
+        renderAcceptAction: (target) => {
+          actionTargets.push(target);
+          const button = document.createElement('button');
+          button.dataset.testAcceptHunk = 'true';
+          return button;
+        },
+      }
     );
 
     expect(comparison?.dataset.aiDiffGranularity).toBe('word');
@@ -81,6 +90,11 @@ describe('DefaultContentPlugin AI Diff', () => {
     ).toContain('最终');
     expect(comparison?.textContent).toContain('团队');
     expect(comparison?.querySelectorAll('[data-ai-diff-hunk="true"]')).toHaveLength(2);
+    expect(comparison?.querySelectorAll('[data-test-accept-hunk="true"]')).toHaveLength(2);
+    expect(actionTargets).toEqual([
+      { kind: 'text-hunk', index: 0 },
+      { kind: 'text-hunk', index: 1 },
+    ]);
   });
 
   it('只有 block 属性变化时不启用词级对比', () => {

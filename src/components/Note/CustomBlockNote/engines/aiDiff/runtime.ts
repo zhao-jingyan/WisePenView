@@ -9,6 +9,8 @@ import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
 import type {
   NoteAiContentPayload,
   NoteAiDiffAction,
+  NoteAiDiffActionTarget,
+  NoteAiDiffComparisonContext,
   NotePluginRegistry,
   NoteRuntimeExtension,
 } from '../../content/types';
@@ -17,7 +19,9 @@ import styles from './style.module.less';
 export interface NoteAiDiffActionRequest {
   blockId: string;
   revision: string;
+  baseHash: string;
   action: NoteAiDiffAction;
+  target?: NoteAiDiffActionTarget;
 }
 
 interface AiDiffRuntimeMeta {
@@ -61,6 +65,7 @@ function buildActionButton(
 
 function createReviewWidget(params: {
   blockId: string;
+  contentType: string;
   payload: NoteAiContentPayload;
   current: Record<string, unknown> | null;
   candidate: Record<string, unknown> | null;
@@ -71,11 +76,13 @@ function createReviewWidget(params: {
   renderCandidate: (candidate: Record<string, unknown>) => HTMLElement;
   renderComparison?: (
     current: Record<string, unknown>,
-    candidate: Record<string, unknown>
+    candidate: Record<string, unknown>,
+    context?: NoteAiDiffComparisonContext
   ) => HTMLElement;
 }): HTMLElement {
   const {
     blockId,
+    contentType,
     payload,
     current,
     candidate,
@@ -90,6 +97,7 @@ function createReviewWidget(params: {
   root.className = styles.review;
   root.contentEditable = 'false';
   root.dataset.aiDiffReview = blockId;
+  root.dataset.aiDiffContentType = contentType;
 
   if (candidate) {
     const candidateRoot = document.createElement('div');
@@ -100,8 +108,28 @@ function createReviewWidget(params: {
       : displayMode === AI_DIFF_DISPLAY_MODE.COMPARE
         ? styles.candidate
         : styles.candidatePlain;
+    const comparisonContext =
+      granularComparison && !stale && actionsEnabled && onAction
+        ? {
+            renderAcceptAction: (target: NoteAiDiffActionTarget) =>
+              buildActionButton(
+                '接受',
+                `${styles.accept} ${styles.hunkAccept}`,
+                {
+                  blockId,
+                  revision: payload.revision,
+                  baseHash: payload.baseHash,
+                  action: 'accept',
+                  target,
+                },
+                onAction
+              ),
+          }
+        : undefined;
     candidateRoot.appendChild(
-      granularComparison ? renderComparison(current, candidate) : renderCandidate(candidate)
+      granularComparison
+        ? renderComparison(current, candidate, comparisonContext)
+        : renderCandidate(candidate)
     );
     root.appendChild(candidateRoot);
   }
@@ -119,7 +147,12 @@ function createReviewWidget(params: {
           buildActionButton(
             '撤销',
             styles.discard,
-            { blockId, revision: payload.revision, action: 'discard' },
+            {
+              blockId,
+              revision: payload.revision,
+              baseHash: payload.baseHash,
+              action: 'discard',
+            },
             onAction
           )
         );
@@ -129,7 +162,12 @@ function createReviewWidget(params: {
         buildActionButton(
           '保留',
           styles.accept,
-          { blockId, revision: payload.revision, action: 'accept' },
+          {
+            blockId,
+            revision: payload.revision,
+            baseHash: payload.baseHash,
+            action: 'accept',
+          },
           onAction
         )
       );
@@ -137,7 +175,12 @@ function createReviewWidget(params: {
         buildActionButton(
           '撤销',
           styles.discard,
-          { blockId, revision: payload.revision, action: 'discard' },
+          {
+            blockId,
+            revision: payload.revision,
+            baseHash: payload.baseHash,
+            action: 'discard',
+          },
           onAction
         )
       );
@@ -244,6 +287,7 @@ function buildDecorations(params: {
           () =>
             createReviewWidget({
               blockId,
+              contentType: block.type,
               payload,
               current: projection.current,
               candidate: projection.candidate,
@@ -254,11 +298,12 @@ function buildDecorations(params: {
               renderCandidate: (candidate) => aiDiff.renderCandidate(candidate, registry),
               renderComparison:
                 hasGranularComparison && aiDiff.renderComparison
-                  ? (current, candidate) => aiDiff.renderComparison!(current, candidate, registry)
+                  ? (current, candidate, context) =>
+                      aiDiff.renderComparison!(current, candidate, registry, context)
                   : undefined,
             }),
           {
-            key: `ai-diff:${blockId}:${payload.revision}:${runtime.displayMode}`,
+            key: `ai-diff:${blockId}:${payload.revision}:${payload.baseHash}:${runtime.displayMode}`,
             side: 1,
             stopEvent: () => true,
           }

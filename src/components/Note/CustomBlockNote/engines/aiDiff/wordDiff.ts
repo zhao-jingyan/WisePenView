@@ -6,6 +6,10 @@ export type AiDiffTextSegment = {
 export type AiDiffTextHunk = {
   mode: 'outside' | 'hunk';
   segments: AiDiffTextSegment[];
+  originFrom: number;
+  originTo: number;
+  replacementFrom: number;
+  replacementTo: number;
 };
 
 type Token = { value: string };
@@ -290,8 +294,22 @@ export function buildAiDiffTextHunks(origin: string, replacement: string): AiDif
   if (changedTokenRatio(segments) > HIGH_CHANGE_RATIO) {
     segments = buildLinearFallback(oldTokens, newTokens);
   }
-  return mergeNearbyChanges(segments, DEFAULT_MERGE_OPTIONS).map((hunk) => ({
-    mode: hunk.mode,
-    segments: hunk.segments.map(({ kind, text }) => ({ kind, text })),
-  }));
+  let originOffset = 0;
+  let replacementOffset = 0;
+  return mergeNearbyChanges(segments, DEFAULT_MERGE_OPTIONS).map((hunk) => {
+    const originFrom = originOffset;
+    const replacementFrom = replacementOffset;
+    for (const current of hunk.segments) {
+      if (current.kind !== 'insert') originOffset += current.text.length;
+      if (current.kind !== 'delete') replacementOffset += current.text.length;
+    }
+    return {
+      mode: hunk.mode,
+      segments: hunk.segments.map(({ kind, text }) => ({ kind, text })),
+      originFrom,
+      originTo: originOffset,
+      replacementFrom,
+      replacementTo: replacementOffset,
+    };
+  });
 }

@@ -60,6 +60,27 @@ export function clearBlockAiContent(
   return result;
 }
 
+export function rebaseBlockAiContent(
+  doc: Y.Doc,
+  blockId: string,
+  expectedRevision: string,
+  expectedBaseHash: string,
+  baseHash: string
+): AiContentMutationResult {
+  let result: AiContentMutationResult = 'missing';
+  doc.transact(() => {
+    const current = readBlockAiContent(doc, blockId);
+    if (!current) return;
+    if (current.revision !== expectedRevision || current.baseHash !== expectedBaseHash) {
+      result = 'stale';
+      return;
+    }
+    getAiContentStore(doc).set(blockId, { ...current, baseHash });
+    result = 'applied';
+  }, AI_DIFF_ACTION_ORIGIN);
+  return result;
+}
+
 export function clearAiContentEntries(doc: Y.Doc, blockIds: readonly string[]): void {
   doc.transact(() => {
     const store = getAiContentStore(doc);

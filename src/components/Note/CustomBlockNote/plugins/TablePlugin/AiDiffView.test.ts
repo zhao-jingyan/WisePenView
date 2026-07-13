@@ -42,6 +42,8 @@ describe('TablePlugin AiDiffView', () => {
     );
 
     expect(preview?.matches('.bn-block-content[data-content-type="table"]')).toBe(true);
+    expect(preview?.classList.length).toBeGreaterThan(1);
+    expect(preview?.querySelector('.tableWrapper')?.classList.length).toBeGreaterThan(1);
     expect(preview?.dataset.textColor).toBe('blue');
     expect(
       [...(preview?.querySelectorAll('col') ?? [])].map((column) => column.getAttribute('style'))

@@ -1,5 +1,10 @@
 import { projectInlinePlainText } from '../../content/projection';
-import type { NoteBlockAiDiff, NoteInlineAiDiff, NotePluginRegistry } from '../../content/types';
+import type {
+  NoteAiDiffComparisonContext,
+  NoteBlockAiDiff,
+  NoteInlineAiDiff,
+  NotePluginRegistry,
+} from '../../content/types';
 import {
   resolveNoteAiDiffBlock,
   resolveNoteAiDiffBlockAction,
@@ -7,6 +12,7 @@ import {
 import { stableStringify } from '../../engines/aiDiff/stableValue';
 import styles from '../../engines/aiDiff/style.module.less';
 import { buildAiDiffTextHunks } from '../../engines/aiDiff/wordDiff';
+import { acceptInlineTextHunk, acceptInlineTextRange } from './inlineDiff';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -47,7 +53,8 @@ function inlineContentEquals(
 function renderRichTextComparison(
   current: Record<string, unknown>,
   candidate: Record<string, unknown>,
-  registry: NotePluginRegistry
+  registry: NotePluginRegistry,
+  context?: NoteAiDiffComparisonContext
 ): HTMLElement {
   const root = document.createElement('span');
   root.className = styles.inlineComparison;
@@ -56,6 +63,7 @@ function renderRichTextComparison(
     projectInlinePlainText(current.content, registry),
     projectInlinePlainText(candidate.content, registry)
   );
+  let hunkIndex = 0;
   for (const hunk of hunks) {
     if (hunk.mode === 'outside') {
       root.append(hunk.segments.map((segment) => segment.text).join(''));
@@ -64,6 +72,7 @@ function renderRichTextComparison(
     const hunkRoot = document.createElement('span');
     hunkRoot.className = styles.inlineHunk;
     hunkRoot.dataset.aiDiffHunk = 'true';
+    hunkRoot.dataset.aiDiffHunkIndex = String(hunkIndex);
     for (const segment of hunk.segments) {
       const span = document.createElement('span');
       span.textContent = segment.text;
@@ -72,7 +81,20 @@ function renderRichTextComparison(
       if (segment.kind === 'insert') span.className = styles.inlineAdd;
       hunkRoot.appendChild(span);
     }
+    if (
+      context &&
+      current.type === 'paragraph' &&
+      acceptInlineTextRange({
+        current: current.content,
+        candidate: candidate.content,
+        hunk,
+        registry,
+      })
+    ) {
+      hunkRoot.appendChild(context.renderAcceptAction({ kind: 'text-hunk', index: hunkIndex }));
+    }
     root.appendChild(hunkRoot);
+    hunkIndex += 1;
   }
   return root;
 }
@@ -130,6 +152,30 @@ export const richTextBlockAiDiff: NoteBlockAiDiff = {
   },
   apply(_block, aiContent, action) {
     return resolveNoteAiDiffBlockAction(aiContent, action, 'inline');
+  },
+  applyGranular(block, aiContent, action, target, registry) {
+    if (
+      block.type !== 'paragraph' ||
+      action !== 'accept' ||
+      target.kind !== 'text-hunk' ||
+      aiContent.operation !== 'update'
+    ) {
+      return null;
+    }
+    const projection = resolveNoteAiDiffBlock(block, aiContent);
+    if (!projection?.current || !projection.candidate) return null;
+    const content = acceptInlineTextHunk({
+      current: projection.current.content,
+      candidate: projection.candidate.content,
+      hunkIndex: target.index,
+      registry,
+    });
+    if (!content) return null;
+    return {
+      kind: 'update',
+      props: isRecord(projection.current.props) ? projection.current.props : {},
+      content,
+    };
   },
 };
 

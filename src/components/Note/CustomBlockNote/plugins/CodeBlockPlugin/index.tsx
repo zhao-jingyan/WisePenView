@@ -8,7 +8,7 @@ import {
   resolveNoteAiDiffBlock,
   resolveNoteAiDiffBlockAction,
 } from '../../engines/aiDiff/projection';
-import { CodeBlockAiDiffView } from './AiDiffView';
+import { CodeBlockAiDiffComparisonView, CodeBlockAiDiffView } from './AiDiffView';
 import { CodeBlockToolbar } from './CodeBlockToolbar';
 import { getCodeBlockLanguageOptions } from './language';
 
@@ -131,6 +131,7 @@ export const codeBlockPlugin = {
   aiDiff: {
     resolve: resolveNoteAiDiffBlock,
     renderCandidate: CodeBlockAiDiffView,
+    renderComparison: CodeBlockAiDiffComparisonView,
     apply(_block, aiContent, action) {
       return resolveNoteAiDiffBlockAction(aiContent, action, 'inline');
     },

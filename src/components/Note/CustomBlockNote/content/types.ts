@@ -57,6 +57,12 @@ interface NoteMarkdownExportProjection {
 
 export type NoteAiDiffAction = 'accept' | 'discard';
 
+export type NoteAiDiffActionTarget = { kind: 'text-hunk'; index: number };
+
+export interface NoteAiDiffComparisonContext {
+  renderAcceptAction: (target: NoteAiDiffActionTarget) => HTMLElement;
+}
+
 interface NoteAiContentCandidate {
   props: Record<string, unknown>;
   content: unknown;
@@ -150,7 +156,8 @@ export interface NoteBlockAiDiff {
   renderComparison?: (
     current: Record<string, unknown>,
     candidate: Record<string, unknown>,
-    registry: NotePluginRegistry
+    registry: NotePluginRegistry,
+    context?: NoteAiDiffComparisonContext
   ) => HTMLElement;
   shouldRenderComparison?: (
     current: Record<string, unknown>,
@@ -163,6 +170,13 @@ export interface NoteBlockAiDiff {
     action: NoteAiDiffAction,
     registry: NotePluginRegistry
   ) => NoteAiDiffBlockMutation;
+  applyGranular?: (
+    block: Record<string, unknown>,
+    aiContent: NoteAiContentPayload,
+    action: NoteAiDiffAction,
+    target: NoteAiDiffActionTarget,
+    registry: NotePluginRegistry
+  ) => NoteAiDiffBlockMutation | null;
 }
 
 export type NoteMarkdownImportSegment =

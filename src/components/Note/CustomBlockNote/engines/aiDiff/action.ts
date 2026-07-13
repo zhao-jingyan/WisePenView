@@ -2,10 +2,12 @@ import type * as Y from 'yjs';
 
 import type {
   NoteAiDiffAction,
+  NoteAiDiffActionTarget,
   NoteAiDiffBlockMutation,
   NotePluginRegistry,
 } from '../../content/types';
 import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+import { hashNoteBlockForAiDiff } from './projection';
 import { stableStringify } from './stableValue';
 import {
   AI_DIFF_ACTION_ORIGIN,
@@ -13,6 +15,7 @@ import {
   clearBlockAiContent,
   readAllAiContent,
   readBlockAiContent,
+  rebaseBlockAiContent,
 } from './store';
 
 type ApplyAiDiffActionResult = 'applied' | 'missing' | 'stale' | 'unsupported';
@@ -72,12 +75,14 @@ export function applyNoteAiDiffAction(params: {
   registry: NotePluginRegistry;
   blockId: string;
   revision: string;
+  baseHash?: string;
   action: NoteAiDiffAction;
+  target?: NoteAiDiffActionTarget;
 }): ApplyAiDiffActionResult {
-  const { doc, editor, registry, blockId, revision, action } = params;
+  const { doc, editor, registry, blockId, revision, baseHash, action, target } = params;
   const payload = readBlockAiContent(doc, blockId);
   if (!payload) return 'missing';
-  if (payload.revision !== revision) return 'stale';
+  if (payload.revision !== revision || (baseHash && payload.baseHash !== baseHash)) return 'stale';
 
   const block = findBlockById(editor.document, blockId);
   if (!block || typeof block.type !== 'string') return 'missing';
@@ -87,7 +92,10 @@ export function applyNoteAiDiffAction(params: {
   const projection = aiDiff.resolve(block, payload, registry);
   if (!projection) return 'unsupported';
   if (projection.stale && (action === 'accept' || payload.operation === 'create')) return 'stale';
-  const mutation = aiDiff.apply(block, payload, action, registry);
+  const mutation = target
+    ? aiDiff.applyGranular?.(block, payload, action, target, registry)
+    : aiDiff.apply(block, payload, action, registry);
+  if (!mutation || (target && mutation.kind !== 'update')) return 'unsupported';
 
   let result: ApplyAiDiffActionResult = 'applied';
   doc.transact(() => {
@@ -106,6 +114,14 @@ export function applyNoteAiDiffAction(params: {
     assertMutationApplied(editor, blockId, mutation);
     if (mutation.kind === 'remove') {
       clearAiContentEntries(doc, collectBlockIds(block));
+    } else if (target) {
+      const nextBlock = findBlockById(editor.document, blockId);
+      if (!nextBlock) throw new Error(`AI Diff block 局部更新后不存在：${blockId}`);
+      const nextBaseHash = hashNoteBlockForAiDiff(nextBlock);
+      const rebasedPayload = { ...payload, baseHash: nextBaseHash };
+      result = aiDiff.resolve(nextBlock, rebasedPayload, registry)
+        ? rebaseBlockAiContent(doc, blockId, revision, payload.baseHash, nextBaseHash)
+        : clearBlockAiContent(doc, blockId, revision);
     } else {
       result = clearBlockAiContent(doc, blockId, revision);
     }

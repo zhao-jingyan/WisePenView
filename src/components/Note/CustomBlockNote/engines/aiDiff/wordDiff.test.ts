@@ -22,6 +22,20 @@ describe('AI Diff 词句分段', () => {
     expect(hunks.flatMap((hunk) => hunk.segments).map((segment) => segment.kind)).toEqual(
       expect.arrayContaining(['equal', 'delete', 'insert'])
     );
+    for (const hunk of hunks) {
+      expect(origin.slice(hunk.originFrom, hunk.originTo)).toBe(
+        hunk.segments
+          .filter((segment) => segment.kind !== 'insert')
+          .map((segment) => segment.text)
+          .join('')
+      );
+      expect(replacement.slice(hunk.replacementFrom, hunk.replacementTo)).toBe(
+        hunk.segments
+          .filter((segment) => segment.kind !== 'delete')
+          .map((segment) => segment.text)
+          .join('')
+      );
+    }
   });
 
   it('在句子边界拆分相邻修改', () => {

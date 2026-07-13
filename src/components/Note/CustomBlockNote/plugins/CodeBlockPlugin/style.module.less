@@ -1,0 +1,83 @@
+.codeBlockView {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.readOnlyLanguage {
+  border-color: transparent !important;
+  background: transparent !important;
+  cursor: default !important;
+  pointer-events: none;
+}
+
+.plainCode {
+  display: block;
+}
+
+.lineList {
+  display: block;
+  width: calc(100% + 40px);
+  min-width: max-content;
+  margin: 0 -20px;
+}
+
+.diffLine {
+  display: grid;
+  grid-template-columns: 20px 44px minmax(0, 1fr);
+  align-items: center;
+  min-height: 22px;
+  line-height: 22px;
+}
+
+.lineMarker,
+.lineNumber {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  box-sizing: border-box;
+  color: var(--text-disabled);
+  font-family: inherit;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  line-height: 22px;
+  user-select: none;
+}
+
+.lineMarker {
+  justify-content: center;
+  padding-right: 3px;
+  font-weight: 700;
+}
+
+.lineNumber {
+  justify-content: flex-end;
+  padding-right: 8px;
+  border-right: 1px solid color-mix(in srgb, var(--border-light) 72%, transparent);
+}
+
+.lineContent {
+  display: block;
+  min-width: 0;
+  min-height: 22px;
+  padding: 0 20px 0 var(--space-sm);
+  line-height: 22px;
+  white-space: pre;
+}
+
+.deleteLine {
+  background: color-mix(in srgb, var(--error-soft) 78%, transparent);
+}
+
+.deleteLine .lineMarker {
+  color: var(--error);
+}
+
+.insertLine {
+  background: color-mix(in srgb, var(--success-soft) 82%, transparent);
+}
+
+.insertLine .lineMarker {
+  color: var(--success);
+}
