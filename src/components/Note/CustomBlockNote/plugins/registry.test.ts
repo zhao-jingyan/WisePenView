@@ -151,6 +151,38 @@ describe('createNotePluginRegistry', () => {
     expect(registry.runtimeExtensions).toEqual([runtime]);
   });
 
+  it('校验 AI Diff runtime 的 plain text owner adapter 唯一且存在', () => {
+    const requiresText: NoteRuntimeExtension = {
+      id: 'ai-diff-runtime',
+      requiresAiDiffText: true,
+    };
+    expect(() =>
+      createNotePluginRegistry(bundle([blockPlugin('base', 'base')]), [requiresText])
+    ).toThrow('Note AI Diff runtime 缺少 plain text owner adapter');
+
+    const first = inlinePlugin('first-text', 'firstText');
+    first.capabilities = {
+      ...defaultCapabilities,
+      aiDiff: { support: 'inherited', profile: 'testText' },
+    };
+    first.aiDiff.generatedText = {
+      read: () => undefined,
+      create: () => ({ type: 'firstText' }),
+    };
+    const second = inlinePlugin('second-text', 'secondText');
+    second.capabilities = {
+      ...defaultCapabilities,
+      aiDiff: { support: 'inherited', profile: 'testText' },
+    };
+    second.aiDiff.generatedText = {
+      read: () => undefined,
+      create: () => ({ type: 'secondText' }),
+    };
+    expect(() => createNotePluginRegistry(bundle([first, second]))).toThrow(
+      'Note AI Diff plain text adapter 存在多个 owner：second-text'
+    );
+  });
+
   it('去重并组合内容 owner 与 Runtime extension 的打印样式', () => {
     const owner = blockPlugin('base', 'base');
     owner.capabilities = { ...defaultCapabilities, print: { support: 'custom' } };

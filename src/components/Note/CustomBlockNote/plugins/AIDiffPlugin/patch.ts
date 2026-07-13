@@ -25,18 +25,6 @@ type LinkInlineContent = {
   href: string;
   content: TextInlineContent[];
 };
-type InlineMathContent = {
-  type: 'inlineMath';
-  props: {
-    expression: string;
-    autoOpenEdit?: boolean;
-    aiDiffType?: string;
-    aiDiffKey?: string;
-    aiDiffOrigin?: string;
-    aiDiffReplace?: string;
-  };
-};
-
 export type NoteInlineContentLike =
   | TextInlineContent
   | AiDiffInlineContent
@@ -45,7 +33,6 @@ export type NoteInlineContentLike =
   | AiLinkAddInlineContent
   | AiLinkDeleteInlineContent
   | LinkInlineContent
-  | InlineMathContent
   | Record<string, unknown>;
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue };
@@ -92,9 +79,18 @@ export type AiGeneratedBlock = {
   children?: unknown;
 };
 
-type AiGeneratedInlineText = { type: 'text'; text: string; styles?: Record<string, string> };
-type AiGeneratedInlineCreate = { type: 'AI-Create'; text: string; styles?: Record<string, string> };
-type AiGeneratedInlineDelete = { type: 'AI-Delete'; text: string; styles?: Record<string, string> };
+type AiGeneratedInlineCreate = {
+  type: 'AI-Create';
+  text: string;
+  styles?: Record<string, string>;
+  normalizedKey?: string;
+};
+type AiGeneratedInlineDelete = {
+  type: 'AI-Delete';
+  text: string;
+  styles?: Record<string, string>;
+  normalizedKey?: string;
+};
 type AiGeneratedInlineEdit = {
   type: 'AI-Edit';
   old_text?: string;
@@ -102,17 +98,7 @@ type AiGeneratedInlineEdit = {
   text_old?: string;
   text_new?: string;
   styles?: Record<string, string>;
-};
-type AiGeneratedInlineMath = {
-  type: 'inlineMath';
-  props?: Record<string, JsonValue>;
-};
-type AiGeneratedInlineLink = {
-  type: 'link';
-  href?: string;
-  content?: unknown;
-  aiDiffType?: string;
-  aiDiffKey?: string;
+  normalizedKey?: string;
 };
 
 function toStringOrEmpty(v: unknown): string {
@@ -126,32 +112,30 @@ function toJsonProps(v: unknown): Record<string, JsonValue> {
 
 function isAiGeneratedInline(
   v: unknown
-): v is
-  | AiGeneratedInlineText
-  | AiGeneratedInlineCreate
-  | AiGeneratedInlineDelete
-  | AiGeneratedInlineEdit {
+): v is AiGeneratedInlineCreate | AiGeneratedInlineDelete | AiGeneratedInlineEdit {
   if (!isRecord(v)) return false;
   const t = v['type'];
-  if (t === 'text') return typeof v['text'] === 'string';
   if (t === 'AI-Create') return typeof v['text'] === 'string';
   if (t === 'AI-Delete') return typeof v['text'] === 'string';
   if (t === 'AI-Edit') return true;
   return false;
 }
 
-function isAiGeneratedInlineMath(v: unknown): v is AiGeneratedInlineMath {
-  if (!isRecord(v)) return false;
-  if (v['type'] !== 'inlineMath') return false;
-  const props = v['props'];
-  return props === undefined || isRecord(props);
-}
-
-function isAiGeneratedInlineLink(v: unknown): v is AiGeneratedInlineLink {
-  if (!isRecord(v)) return false;
-  if (v['type'] !== 'link') return false;
-  const content = v['content'];
-  return Array.isArray(content);
+function normalizeGeneratedInlineNode(
+  inline: Record<string, unknown>,
+  key: string,
+  registry: NotePluginRegistry
+): readonly Record<string, unknown>[] | null {
+  const type = toStringOrEmpty(inline.type);
+  const owner = registry.inlinePlugins.get(type);
+  const normalizeGenerated = owner?.aiDiff.normalizeGenerated;
+  const text = registry.aiDiffText;
+  if (!normalizeGenerated || !text) return null;
+  return normalizeGenerated(inline, {
+    key,
+    text,
+    normalizeInline: (child, childKey) => normalizeGeneratedInlineNode(child, childKey, registry),
+  });
 }
 
 function resolveAiGeneratedEditText(item: AiGeneratedInlineEdit): {
@@ -165,99 +149,77 @@ function resolveAiGeneratedEditText(item: AiGeneratedInlineEdit): {
 }
 
 function normalizeAiGeneratedInlineContent(
-  content: unknown
-):
-  | (
-      | AiGeneratedInlineText
-      | AiGeneratedInlineCreate
-      | AiGeneratedInlineDelete
-      | AiGeneratedInlineEdit
-      | AiGeneratedInlineLink
-      | AiGeneratedInlineMath
-    )[]
-  | null {
+  content: unknown,
+  keyPrefix: string,
+  registry: NotePluginRegistry
+): Record<string, unknown>[] | null {
   if (content == null) return [];
   if (!Array.isArray(content)) return null;
 
-  const out: Array<
-    | AiGeneratedInlineText
-    | AiGeneratedInlineCreate
-    | AiGeneratedInlineDelete
-    | AiGeneratedInlineEdit
-    | AiGeneratedInlineLink
-    | AiGeneratedInlineMath
-  > = [];
+  const text = registry.aiDiffText;
+  if (!text) return null;
+  const out: Record<string, unknown>[] = [];
 
-  for (const item of content) {
-    if (isAiGeneratedInlineLink(item)) {
-      out.push(item);
+  for (let index = 0; index < content.length; index += 1) {
+    const item = content[index];
+    if (!isRecord(item)) return null;
+    const key = `${keyPrefix}:c${index + 1}`;
+    if (!isAiGeneratedInline(item)) {
+      const normalized = normalizeGeneratedInlineNode(item, key, registry);
+      if (!normalized) return null;
+      out.push(...normalized);
       continue;
     }
-    if (isAiGeneratedInlineMath(item)) {
-      out.push(item);
-      continue;
-    }
-    if (!isAiGeneratedInline(item)) return null;
     if (item.type !== 'AI-Edit') {
-      out.push(item);
+      out.push({ ...item, normalizedKey: key });
       continue;
     }
 
     const origin = toStringOrEmpty(item.old_text) || toStringOrEmpty(item.text_old);
     const replace = toStringOrEmpty(item.new_text) || toStringOrEmpty(item.text_new);
     const units = buildAiEditJsonUnits(origin, replace);
-    for (const unit of units) {
+    for (let unitIndex = 0; unitIndex < units.length; unitIndex += 1) {
+      const unit = units[unitIndex];
       if (unit.type === 'plain') {
         if (unit.text.length === 0) continue;
-        out.push({
-          type: 'text',
-          text: unit.text,
-          styles: isRecord(item.styles) ? (item.styles as Record<string, string>) : {},
-        });
+        out.push(
+          text.create({
+            text: unit.text,
+            styles: isRecord(item.styles) ? (item.styles as Record<string, string>) : {},
+          })
+        );
       } else {
         out.push({
           type: 'AI-Edit',
           old_text: unit.origin,
           new_text: unit.replace,
           styles: isRecord(item.styles) ? (item.styles as Record<string, string>) : {},
+          normalizedKey: `${key}.${unitIndex + 1}`,
         });
       }
     }
   }
 
-  const mergedText = mergeAdjacentAiGeneratedText(out);
-  return mergeAiEditChains(mergedText);
+  const mergedText = mergeAdjacentAiGeneratedText(out, registry);
+  return mergeAiEditChains(mergedText, registry);
 }
 
 function mergeAdjacentAiGeneratedText(
-  nodes: readonly (
-    | AiGeneratedInlineText
-    | AiGeneratedInlineCreate
-    | AiGeneratedInlineDelete
-    | AiGeneratedInlineEdit
-    | AiGeneratedInlineLink
-    | AiGeneratedInlineMath
-  )[]
-): (
-  | AiGeneratedInlineText
-  | AiGeneratedInlineCreate
-  | AiGeneratedInlineDelete
-  | AiGeneratedInlineEdit
-  | AiGeneratedInlineLink
-  | AiGeneratedInlineMath
-)[] {
-  const merged: Array<
-    | AiGeneratedInlineText
-    | AiGeneratedInlineCreate
-    | AiGeneratedInlineDelete
-    | AiGeneratedInlineEdit
-    | AiGeneratedInlineLink
-    | AiGeneratedInlineMath
-  > = [];
+  nodes: readonly Record<string, unknown>[],
+  registry: NotePluginRegistry
+): Record<string, unknown>[] {
+  const text = registry.aiDiffText;
+  if (!text) return [...nodes];
+  const merged: Record<string, unknown>[] = [];
   for (const node of nodes) {
     const last = merged[merged.length - 1];
-    if (node.type === 'text' && last?.type === 'text') {
-      last.text += node.text;
+    const currentText = text.read(node);
+    const lastText = last ? text.read(last) : undefined;
+    if (currentText && lastText) {
+      merged[merged.length - 1] = text.create({
+        text: lastText.text + currentText.text,
+        styles: lastText.styles,
+      });
       continue;
     }
     merged.push(node);
@@ -266,22 +228,9 @@ function mergeAdjacentAiGeneratedText(
 }
 
 function mergeAiEditChains(
-  nodes: readonly (
-    | AiGeneratedInlineText
-    | AiGeneratedInlineCreate
-    | AiGeneratedInlineDelete
-    | AiGeneratedInlineEdit
-    | AiGeneratedInlineLink
-    | AiGeneratedInlineMath
-  )[]
-): (
-  | AiGeneratedInlineText
-  | AiGeneratedInlineCreate
-  | AiGeneratedInlineDelete
-  | AiGeneratedInlineEdit
-  | AiGeneratedInlineLink
-  | AiGeneratedInlineMath
-)[] {
+  nodes: readonly Record<string, unknown>[],
+  registry: NotePluginRegistry
+): Record<string, unknown>[] {
   // Keep the chain merge slightly looser than the base hunk split, but only across
   // very short shared bridges so separate edits are less likely to be over-merged.
   const mergeOptions = {
@@ -291,14 +240,7 @@ function mergeAiEditChains(
     breakOnSentenceEnd: false,
     breakOnClauseBoundary: false,
   };
-  const merged: Array<
-    | AiGeneratedInlineText
-    | AiGeneratedInlineCreate
-    | AiGeneratedInlineDelete
-    | AiGeneratedInlineEdit
-    | AiGeneratedInlineLink
-    | AiGeneratedInlineMath
-  > = [];
+  const merged: Record<string, unknown>[] = [];
 
   const isSentenceEndChar = (ch: string): boolean => '。！？；'.includes(ch) || '.?!'.includes(ch);
   const segmentEndsWithSentencePunctuation = (text: string): boolean => {
@@ -323,7 +265,7 @@ function mergeAiEditChains(
   let i = 0;
   while (i < nodes.length) {
     const current = nodes[i];
-    if (current.type !== 'AI-Edit') {
+    if (!isAiGeneratedInline(current) || current.type !== 'AI-Edit') {
       merged.push(current);
       i += 1;
       continue;
@@ -339,12 +281,13 @@ function mergeAiEditChains(
     while (cursor + 1 < nodes.length) {
       const shared = nodes[cursor];
       const next = nodes[cursor + 1];
-      if (shared.type !== 'text' || next.type !== 'AI-Edit') break;
-      if (!canMergeAcrossSharedText(shared.text, mergedVisibleLen)) break;
+      const sharedText = registry.aiDiffText?.read(shared)?.text;
+      if (!sharedText || !isAiGeneratedInline(next) || next.type !== 'AI-Edit') break;
+      if (!canMergeAcrossSharedText(sharedText, mergedVisibleLen)) break;
       const nextOldText =
-        oldText + shared.text + (toStringOrEmpty(next.old_text) || toStringOrEmpty(next.text_old));
+        oldText + sharedText + (toStringOrEmpty(next.old_text) || toStringOrEmpty(next.text_old));
       const nextNewText =
-        newText + shared.text + (toStringOrEmpty(next.new_text) || toStringOrEmpty(next.text_new));
+        newText + sharedText + (toStringOrEmpty(next.new_text) || toStringOrEmpty(next.text_new));
       const nextVisibleLen = Math.max(nextOldText.length, nextNewText.length);
       if (nextVisibleLen > mergeOptions.maxMergedLength) break;
       oldText = nextOldText;
@@ -358,11 +301,12 @@ function mergeAiEditChains(
       old_text: oldText,
       new_text: newText,
       styles,
+      normalizedKey: current.normalizedKey,
     });
     i = cursor;
   }
 
-  return mergeAdjacentAiGeneratedText(merged);
+  return mergeAdjacentAiGeneratedText(merged, registry);
 }
 
 function aiGeneratedMathProps(
@@ -377,7 +321,7 @@ function aiGeneratedMathProps(
     };
   }
 
-  const aiItem = content.find((item) => isAiGeneratedInline(item) && item.type !== 'text');
+  const aiItem = content.find(isAiGeneratedInline);
   if (!aiItem || !isAiGeneratedInline(aiItem)) {
     return {
       ...rawProps,
@@ -422,10 +366,10 @@ function aiGeneratedMathProps(
 }
 
 export const richTextBlockAiDiff: NoteBlockAiDiff = {
-  normalizeGenerated({ props, content, keyPrefix }) {
-    const normalized = normalizeAiGeneratedInlineContent(content);
+  normalizeGenerated({ props, content, keyPrefix }, registry) {
+    const normalized = normalizeAiGeneratedInlineContent(content, keyPrefix, registry);
     if (!normalized) return null;
-    const mapped = aiGeneratedInlineToInlineContentArray(normalized, keyPrefix);
+    const mapped = aiGeneratedInlineToInlineContentArray(normalized);
     return mapped ? { props, content: mapped } : null;
   },
   applyAll(block, action, registry) {
@@ -512,7 +456,7 @@ function aiGeneratedBlocksToBlockNoteBlocksInner(
     const children = raw['children'];
 
     const keyPrefix = `${seed}:${path}:${id}:${idx}`;
-    const projection = owner.aiDiff.normalizeGenerated({ props, content, keyPrefix });
+    const projection = owner.aiDiff.normalizeGenerated({ props, content, keyPrefix }, registry);
     if (!projection) return null;
     const mappedChildren = aiGeneratedBlocksToBlockNoteBlocksInner(
       Array.isArray(children) ? children : [],
@@ -533,42 +477,19 @@ function aiGeneratedBlocksToBlockNoteBlocksInner(
   return out;
 }
 
-function aiGeneratedInlineToInlineContentArray(
-  content: unknown,
-  keyPrefix: string
-): NoteInlineContentLike[] | null {
+function aiGeneratedInlineToInlineContentArray(content: unknown): NoteInlineContentLike[] | null {
   if (content == null) return [];
   if (!Array.isArray(content)) return null;
   const nodes: NoteInlineContentLike[] = [];
-  let serial = 0;
-
-  for (let idx = 0; idx < content.length; idx += 1) {
-    const item = content[idx];
-    if (isAiGeneratedInlineLink(item)) {
-      const aiDiffType = toStringOrEmpty(item.aiDiffType);
-      const nextKey =
-        aiDiffType === 'create' || aiDiffType === 'delete' ? `${keyPrefix}:c${++serial}` : '';
-      nodes.push(mapAiGeneratedInlineLink(item, nextKey));
-      continue;
-    }
-    if (isAiGeneratedInlineMath(item)) {
-      serial += 1;
-      const key = `${keyPrefix}:c${serial}`;
-      nodes.push(mapAiGeneratedInlineMath(item, key));
-      continue;
-    }
-    if (!isAiGeneratedInline(item)) return null;
-    if (item.type === 'text') {
-      nodes.push({
-        type: 'text',
-        text: toStringOrEmpty(item.text),
-        styles: isRecord(item.styles) ? (item.styles as Record<string, string>) : {},
-      });
+  for (const item of content) {
+    if (!isRecord(item)) return null;
+    if (!isAiGeneratedInline(item)) {
+      nodes.push(item);
       continue;
     }
 
-    serial += 1;
-    const key = `${keyPrefix}:c${serial}`;
+    const key = toStringOrEmpty(item.normalizedKey);
+    if (!key) return null;
     if (item.type === 'AI-Create') {
       nodes.push({ type: 'ai-add', props: { text: toStringOrEmpty(item.text), key } });
       continue;
@@ -596,66 +517,6 @@ function aiGeneratedInlineToInlineContentArray(
   return mergeAdjacentText(nodes);
 }
 
-function mapAiGeneratedInlineMath(
-  item: AiGeneratedInlineMath,
-  fallbackKey: string
-): InlineMathContent {
-  const props = toJsonProps(item.props);
-  const aiDiffKey = toStringOrEmpty(props['aiDiffKey']) || fallbackKey;
-  const aiDiffType = toStringOrEmpty(props['aiDiffType']);
-  const aiDiffOrigin = toStringOrEmpty(props['aiDiffOrigin']);
-  const aiDiffReplace = toStringOrEmpty(props['aiDiffReplace']);
-  const expression =
-    toStringOrEmpty(props['expression']) ||
-    (aiDiffType === 'create'
-      ? aiDiffReplace
-      : aiDiffType === 'delete'
-        ? aiDiffOrigin
-        : aiDiffReplace || aiDiffOrigin);
-
-  return {
-    type: 'inlineMath',
-    props: {
-      expression,
-      autoOpenEdit: Boolean(props['autoOpenEdit']),
-      aiDiffType,
-      aiDiffKey,
-      aiDiffOrigin,
-      aiDiffReplace,
-    },
-  };
-}
-
-function mapAiGeneratedInlineLink(
-  item: AiGeneratedInlineLink,
-  fallbackKey: string
-): LinkInlineContent | AiLinkAddInlineContent | AiLinkDeleteInlineContent {
-  const text = extractAiGeneratedLinkText(item.content);
-  const href = toStringOrEmpty(item.href);
-  const aiDiffType = toStringOrEmpty(item.aiDiffType);
-  const key = toStringOrEmpty(item.aiDiffKey) || fallbackKey;
-
-  if (aiDiffType === 'create') {
-    return {
-      type: 'ai-link-add',
-      props: { text, href, content: JSON.stringify(mapAiGeneratedLinkContent(item.content)), key },
-    };
-  }
-
-  if (aiDiffType === 'delete') {
-    return {
-      type: 'ai-link-delete',
-      props: { text, href, content: JSON.stringify(mapAiGeneratedLinkContent(item.content)), key },
-    };
-  }
-
-  return {
-    type: 'link',
-    href,
-    content: mapAiGeneratedLinkContent(item.content),
-  };
-}
-
 function mapAiGeneratedLinkContent(content: unknown): TextInlineContent[] {
   if (!Array.isArray(content)) {
     return [];
@@ -679,12 +540,6 @@ function mapAiGeneratedLinkContent(content: unknown): TextInlineContent[] {
     });
   }
   return out;
-}
-
-function extractAiGeneratedLinkText(content: unknown): string {
-  return mapAiGeneratedLinkContent(content)
-    .map((item) => item.text)
-    .join('');
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -738,11 +593,6 @@ export function applyAiDiffActionForKey(
   const changeIndex = nodes.findIndex((n) => {
     const t = getType(n);
     const props = getProps(n);
-    if (t === 'inlineMath') {
-      return (
-        props?.['aiDiffKey'] === key && AI_DIFF_PROP_TYPES.has(getPropString(props, 'aiDiffType'))
-      );
-    }
     if (!t || !AI_DIFF_INLINE_TYPES.has(t)) {
       return false;
     }
@@ -752,16 +602,6 @@ export function applyAiDiffActionForKey(
 
   const changeType = getType(nodes[changeIndex]);
   const changeProps = getProps(nodes[changeIndex]) ?? {};
-  if (changeType === 'inlineMath') {
-    const action = applyAiDiffActionToProps(changeProps, mode);
-    if (action.kind === 'none') return null;
-    const out = nodes.flatMap((node, index) => {
-      if (index !== changeIndex) return [node as NoteInlineContentLike];
-      if (action.kind === 'remove') return [];
-      return [{ ...(node as Record<string, unknown>), props: action.props }];
-    });
-    return mergeAdjacentText(out);
-  }
   const replacement = changeType ? resolveAiInlineReplacement(changeType, changeProps, mode) : [];
 
   const out: NoteInlineContentLike[] = [];

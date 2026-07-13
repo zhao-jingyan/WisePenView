@@ -84,6 +84,7 @@ export function createNotePluginRegistry(
   const sortedRuntimeExtensions = sortByDependencies(runtimeExtensions, seenIds);
   const blockPlugins = new Map<string, NoteBlockPlugin>();
   const inlinePlugins = new Map<string, NoteInlinePlugin>();
+  let aiDiffText: NotePluginRegistry['aiDiffText'];
 
   for (const plugin of sortedContentPlugins) {
     const executableCapabilities = [
@@ -113,6 +114,16 @@ export function createNotePluginRegistry(
       );
     }
     owners.set(plugin.type, plugin as never);
+    if (plugin.kind === 'inline' && plugin.aiDiff.generatedText) {
+      if (aiDiffText) {
+        throw new Error(`Note AI Diff plain text adapter 存在多个 owner：${plugin.id}`);
+      }
+      aiDiffText = plugin.aiDiff.generatedText;
+    }
+  }
+
+  if (sortedRuntimeExtensions.some((extension) => extension.requiresAiDiffText) && !aiDiffText) {
+    throw new Error('Note AI Diff runtime 缺少 plain text owner adapter');
   }
 
   return {
@@ -120,6 +131,7 @@ export function createNotePluginRegistry(
     contentPlugins: sortedContentPlugins,
     blockPlugins,
     inlinePlugins,
+    aiDiffText,
     runtimeExtensions: sortedRuntimeExtensions,
   };
 }

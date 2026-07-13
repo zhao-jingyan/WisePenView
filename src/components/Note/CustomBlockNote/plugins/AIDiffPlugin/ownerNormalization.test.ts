@@ -69,6 +69,80 @@ describe('aiGeneratedBlocksToBlockNoteBlocks', () => {
     ]);
   });
 
+  it('由 link 与 inlineMath owner 恢复普通生成内容', () => {
+    const result = aiGeneratedBlocksToBlockNoteBlocks(
+      [
+        {
+          id: 'paragraph-owners',
+          type: 'paragraph',
+          props: {},
+          content: [
+            {
+              type: 'link',
+              href: '/docs',
+              content: [{ type: 'text', text: '文档', styles: { bold: 'true' } }],
+            },
+            {
+              type: 'inlineMath',
+              props: {
+                expression: 'x^2',
+                aiDiffType: 'edit',
+                aiDiffOrigin: 'x',
+                aiDiffReplace: 'x^2',
+              },
+            },
+          ],
+          children: [],
+        },
+      ],
+      notePluginRegistry
+    );
+
+    expect(result).toEqual([
+      {
+        id: 'paragraph-owners',
+        type: 'paragraph',
+        props: {},
+        content: [
+          {
+            type: 'link',
+            href: '/docs',
+            content: [{ type: 'text', text: '文档', styles: { bold: 'true' } }],
+          },
+          {
+            type: 'inlineMath',
+            props: {
+              expression: 'x^2',
+              autoOpenEdit: false,
+              aiDiffType: 'edit',
+              aiDiffKey: expect.stringContaining(':c2'),
+              aiDiffOrigin: 'x',
+              aiDiffReplace: 'x^2',
+            },
+          },
+        ],
+        children: [],
+      },
+    ]);
+  });
+
+  it('普通生成 inline 没有 owner adapter 时整体失败', () => {
+    expect(
+      aiGeneratedBlocksToBlockNoteBlocks(
+        [
+          {
+            id: 'paragraph-unknown-inline',
+            type: 'paragraph',
+            props: {},
+            content: [{ type: 'unknown-inline', props: {} }],
+            children: [],
+          },
+        ],
+        notePluginRegistry
+      )
+    ).toBeNull();
+  });
+
   it.each(['codeBlock', 'table', 'unknown'])('拒绝没有 AI Diff owner 实现的 %s 块', (type) => {
     expect(
       aiGeneratedBlocksToBlockNoteBlocks(

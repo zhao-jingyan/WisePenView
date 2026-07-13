@@ -68,6 +68,25 @@ export interface NoteAiDiffGeneratedBlockProjection {
 
 export type NoteAiDiffAction = 'accept' | 'discard';
 
+export interface NoteAiDiffTextValue {
+  text: string;
+  styles: Record<string, string>;
+}
+
+export interface NoteAiDiffTextAdapter {
+  read: (inline: Record<string, unknown>) => NoteAiDiffTextValue | undefined;
+  create: (value: NoteAiDiffTextValue) => Record<string, unknown>;
+}
+
+export interface NoteAiDiffGeneratedInlineContext {
+  key: string;
+  text: NoteAiDiffTextAdapter;
+  normalizeInline: (
+    inline: Record<string, unknown>,
+    key: string
+  ) => readonly Record<string, unknown>[] | null;
+}
+
 export interface NoteInlineAiDiff {
   isPresent: (inline: Record<string, unknown>) => boolean;
   isVisible: (inline: Record<string, unknown>, mode: AiDiffDisplayMode) => boolean;
@@ -75,6 +94,11 @@ export interface NoteInlineAiDiff {
     inline: Record<string, unknown>,
     action: NoteAiDiffAction
   ) => readonly Record<string, unknown>[] | undefined;
+  normalizeGenerated?: (
+    inline: Record<string, unknown>,
+    context: NoteAiDiffGeneratedInlineContext
+  ) => readonly Record<string, unknown>[] | null;
+  generatedText?: NoteAiDiffTextAdapter;
 }
 
 export interface NoteInlineComments {
@@ -103,7 +127,8 @@ export interface NoteBlockAiDiff {
     registry: NotePluginRegistry
   ) => string;
   normalizeGenerated: (
-    input: NoteAiDiffGeneratedBlockInput
+    input: NoteAiDiffGeneratedBlockInput,
+    registry: NotePluginRegistry
   ) => NoteAiDiffGeneratedBlockProjection | null;
   applyAll: (
     block: Record<string, unknown>,
@@ -203,6 +228,7 @@ export type NoteContentPlugin = NoteBlockPlugin | NoteInlinePlugin;
 export type NotePluginNode = NotePluginBundle | NoteContentPlugin;
 
 export interface NoteRuntimeExtension extends NotePluginNodeBase {
+  requiresAiDiffText?: boolean;
   print?: NotePrintContribution;
   extensions?: (context: NotePluginRuntimeContext) => ExtensionFactoryInstance[];
   editorProps?: () => Partial<EditorProps>;
@@ -217,5 +243,6 @@ export interface NotePluginRegistry {
   contentPlugins: readonly NoteContentPlugin[];
   blockPlugins: ReadonlyMap<string, NoteBlockPlugin>;
   inlinePlugins: ReadonlyMap<string, NoteInlinePlugin>;
+  aiDiffText?: NoteAiDiffTextAdapter;
   runtimeExtensions: readonly NoteRuntimeExtension[];
 }

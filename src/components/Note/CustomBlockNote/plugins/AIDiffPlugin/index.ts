@@ -322,6 +322,7 @@ function deleteRangesAndMaybeRemoveEmptyBlock(params: {
 
 export const aiDiffRuntimeExtension = {
   id: 'ai-diff.runtime',
+  requiresAiDiffText: true,
   dependencies: [
     'ai-diff.inline.diff',
     'ai-diff.inline.add',
