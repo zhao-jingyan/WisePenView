@@ -31,6 +31,7 @@ import type {
 import {
   AI_DIFF_DISPLAY_MODE,
   AI_DIFF_DISPLAY_MODE_LABELS,
+  encodeNoteClientContentSignature,
   encodeNoteClientStateVector,
   useNoteSession,
 } from '@/domains/Note';
@@ -154,6 +155,8 @@ function NoteViewConnected({
   const [isCommentHistoryOpen, setIsCommentHistoryOpen] = useState(false);
   const [outlineItems, setOutlineItems] = useState<NoteOutlineItem[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | undefined>(undefined);
+  const [aiBulkActionsPortalContainer, setAiBulkActionsPortalContainer] =
+    useState<HTMLDivElement | null>(null);
   const [commentsSidebarHostElement, setCommentsSidebarHostElement] = useState<HTMLElement | null>(
     null
   );
@@ -180,7 +183,6 @@ function NoteViewConnected({
     actorUserId: currentUser?.id,
     enabled: !shouldWaitCurrentUser,
   });
-  const getNoteClientStateVector = useCallback(() => encodeNoteClientStateVector(doc), [doc]);
   const resourceAsideMode = useNoteResourceAsideStore(
     (state) => state.modeByResourceId[resourceId] ?? DEFAULT_NOTE_RESOURCE_ASIDE_MODE
   );
@@ -200,6 +202,22 @@ function NoteViewConnected({
   const middleOverlayText =
     status === 'connecting' && !idbSynced ? '正在连接笔记服务...' : '正在加载用户信息...';
   const fallbackNoteTitle = noteInfoDisplay.noteTitle;
+  const [aiDiffBodyContentHash, setAiDiffBodyContentHash] = useState<string | undefined>(
+    undefined
+  );
+  const handleAiDiffBodyContentHashChange = useCallback(
+    (hash: string | undefined) => setAiDiffBodyContentHash(hash),
+    []
+  );
+  const noteClientContentSignature = useMemo(
+    () =>
+      aiDiffBodyContentHash
+        ? encodeNoteClientContentSignature({ bodyHash: aiDiffBodyContentHash })
+        : undefined,
+    [aiDiffBodyContentHash]
+  );
+  const isNoteClientContentSignaturePending = !aiDiffBodyContentHash;
+  const getNoteClientStateVector = useCallback(() => encodeNoteClientStateVector(doc), [doc]);
   const resourceName = useResourceDisplayName(resourceId, fallbackNoteTitle, '未命名笔记');
   const headerSaveStatus = resolveNoteHeaderSaveStatus(saveStatus, titleSaveStatus);
   const saveStatusText = formatNoteSaveStatus(headerSaveStatus);
@@ -316,8 +334,16 @@ function NoteViewConnected({
         resourceId,
         syncStatus: status,
         getClientStateVector: getNoteClientStateVector,
+        isClientContentSignaturePending: isNoteClientContentSignaturePending,
+        clientContentSignature: noteClientContentSignature,
       }),
-    [getNoteClientStateVector, resourceId, status]
+    [
+      getNoteClientStateVector,
+      isNoteClientContentSignaturePending,
+      noteClientContentSignature,
+      resourceId,
+      status,
+    ]
   );
 
   const handleAskAi = useCallback(
@@ -482,7 +508,7 @@ function NoteViewConnected({
             isOutlineOpen ? styles.contentRowOutlineOpen : styles.contentRowOutlineCollapsed
           }`}
         >
-          <div className={styles.mainPanel}>
+          <div className={styles.mainPanel} ref={setAiBulkActionsPortalContainer}>
             <div
               className={`${styles.mainCol} ${isMainScrolling ? styles.mainColScrolling : ''}`}
               ref={mainScrollRef}
@@ -554,6 +580,8 @@ function NoteViewConnected({
                       commentsSidebarPortalContainer={commentsSidebarHostElement}
                       commentHistoryOpen={isCommentHistoryOpen}
                       onCommentHistoryOpenChange={setIsCommentHistoryOpen}
+                      aiBulkActionsPortalContainer={aiBulkActionsPortalContainer}
+                      onAiDiffBodyContentHashChange={handleAiDiffBodyContentHashChange}
                     />
                   ) : null}
                 </div>
