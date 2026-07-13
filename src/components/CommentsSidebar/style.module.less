@@ -12,6 +12,44 @@
   padding: 8px;
 }
 
+.resizablePanel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--comments-sidebar-width, 300px);
+  min-width: 280px;
+  height: 100%;
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--separator);
+  background: var(--surface);
+  overflow: visible;
+}
+
+.resizablePanelResizing {
+  user-select: none;
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 8px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 3;
+
+  &:hover,
+  .resizablePanelResizing & {
+    background: var(--accent-soft-hover);
+  }
+}
+
 .threadCard,
 .threadCardSelected {
   position: relative;

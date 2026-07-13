@@ -6,7 +6,7 @@ import {
   findContentCommentAnchor,
   getContentCommentAnchorStores,
   persistContentCommentAnchor,
-} from '../../../engines/comments/core/contentCommentAnchors';
+} from '../../../engines/comments/anchors/content';
 import { notePluginRegistry } from '../../../noteEditor';
 import { INLINE_MATH_COMMENT_OWNER_ID, MATH_BLOCK_COMMENT_OWNER_ID } from './anchor';
 

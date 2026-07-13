@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 
 import popoverStyles from '../InlineMath/style.module.less';
 
-export interface LatexEditPopoverProps {
+interface LatexEditPopoverProps {
   /** 为 true 时挂载到 document.body */
   visible: boolean;
   position: { top: number; left: number; width: number } | null;

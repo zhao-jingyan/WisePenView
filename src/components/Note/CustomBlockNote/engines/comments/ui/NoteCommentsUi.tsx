@@ -1,34 +1,27 @@
 import type { CommentData } from '@blocknote/core/comments';
 import { FloatingComposerController } from '@blocknote/react';
-import { useMemoizedFn, useMount, useUnmount, useUpdateEffect } from 'ahooks';
+import { useMemoizedFn, useMount, useUnmount } from 'ahooks';
 import { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type * as Y from 'yjs';
 import type { Doc } from 'yjs';
 
 import type { WisePenCommentAuthorInfo } from '@/components/CommentsSidebar';
+import { ResizableCommentsSidebar } from '@/components/CommentsSidebar';
 import type { NoteCommentUserDisplayRecord } from '@/domains/Note';
 import type { NoteCommentPosition, NotePluginRegistry } from '../../../content/types';
 import type { CustomBlockNoteEditor } from '../../../noteEditor';
-import type { CollaboratorCommentVisibility } from '../core/commentSettings';
-import {
-  getBlockNoteCommentUsersYMap,
-  getBlockNoteThreadsYMap,
-} from '../core/commentThreadConstants';
-import {
-  isPlaceholderCommentUserId,
-  normalizeAvatarUrl,
-  syncCommentUserProfileToYMap,
-} from '../core/commentUserProfile';
 import {
   getContentCommentAnchorStores,
   isContentCommentSyncing,
   isContentCommentYjsTransaction,
-} from '../core/contentCommentAnchors';
-import { getThreadComments } from '../core/threadReferenceText';
-import type { ThreadVisibilityContext } from '../core/threadVisibility';
+} from '../anchors/content';
+import { getThreadComments } from '../threads/presentation';
+import { isPlaceholderCommentUserId, normalizeAvatarUrl } from '../threads/users';
+import { getBlockNoteCommentUsersYMap, getBlockNoteThreadsYMap } from '../threads/yjs';
+import type { CollaboratorCommentVisibility } from '../visibility/document';
+import type { ThreadVisibilityScope } from '../visibility/filter';
 import CommentHistoryModal from './CommentHistoryModal';
-import { CommentsSidebarPanel } from './CommentsSidebarPanel';
 import commentStyles from './commentStyles.module.less';
 import { CustomThreadsSidebar } from './threadsSidebar/CustomThreadsSidebar';
 
@@ -70,7 +63,6 @@ type NoteCommentsUiProps = {
   editor: CustomBlockNoteEditor;
   doc: Doc;
   registry: NotePluginRegistry;
-  commentsEnabled: boolean;
   commentsWritable: boolean;
   commentUserId: string;
   commentUsername: string;
@@ -81,7 +73,7 @@ type NoteCommentsUiProps = {
   sidebarCollapsed: boolean;
   sidebarWidth: number;
   onSidebarWidthChange: (width: number) => void;
-  sidebarPortalContainer?: HTMLElement | null;
+  sidebarPortalContainer: HTMLElement | null;
   commentHistoryOpen: boolean;
   onCommentHistoryOpenChange: (open: boolean) => void;
   localThreadReferenceTexts: ReadonlyMap<string, string>;
@@ -93,7 +85,6 @@ export function NoteCommentsUi({
   editor,
   doc,
   registry,
-  commentsEnabled,
   commentsWritable,
   commentUserId,
   commentUsername,
@@ -116,7 +107,7 @@ export function NoteCommentsUi({
   const commentUsersYMap = getBlockNoteCommentUsersYMap(doc);
   const detachListenersRef = useRef<(() => void) | null>(null);
 
-  const visibilityContext: ThreadVisibilityContext = {
+  const visibilityScope: ThreadVisibilityScope = {
     currentUserId: commentUserId,
     isPrivileged: isCommentVisibilityPrivileged,
     collaboratorVisibility,
@@ -174,15 +165,6 @@ export function NoteCommentsUi({
   });
 
   useMount(() => {
-    if (!commentsEnabled) {
-      return;
-    }
-
-    syncCommentUserProfileToYMap(commentUsersYMap, commentUserId, {
-      username: commentUsername,
-      avatarUrl: commentAvatarUrl,
-    });
-
     const handleTransaction = (transaction: Y.Transaction) => {
       if (isContentCommentYjsTransaction(transaction.origin)) {
         return;
@@ -193,7 +175,7 @@ export function NoteCommentsUi({
       if (!threadsChanged && !anchorsChanged) {
         return;
       }
-      if (isContentCommentSyncing) {
+      if (isContentCommentSyncing(doc)) {
         return;
       }
       onBumpThreadsSidebar();
@@ -206,23 +188,9 @@ export function NoteCommentsUi({
     };
   });
 
-  useUpdateEffect(() => {
-    if (!commentsEnabled) {
-      return;
-    }
-    syncCommentUserProfileToYMap(commentUsersYMap, commentUserId, {
-      username: commentUsername,
-      avatarUrl: commentAvatarUrl,
-    });
-  }, [commentAvatarUrl, commentUserId, commentUsername, commentUsersYMap, commentsEnabled]);
-
   useUnmount(() => {
     detachListenersRef.current?.();
   });
-
-  if (!commentsEnabled) {
-    return null;
-  }
 
   const historySidebar = (
     <CustomThreadsSidebar
@@ -230,7 +198,7 @@ export function NoteCommentsUi({
       doc={doc}
       localThreadReferenceTexts={localThreadReferenceTexts}
       contentThreadPositions={contentThreadPositions}
-      visibilityContext={visibilityContext}
+      visibilityScope={visibilityScope}
       filter="resolved"
       sort="recent-activity"
       maxCommentsBeforeCollapse={5}
@@ -241,27 +209,25 @@ export function NoteCommentsUi({
     />
   );
   const sidebarPanel = !sidebarCollapsed ? (
-    <CommentsSidebarPanel width={sidebarWidth} onWidthChange={onSidebarWidthChange}>
+    <ResizableCommentsSidebar width={sidebarWidth} onWidthChange={onSidebarWidthChange}>
       <CustomThreadsSidebar
         editor={editor}
         doc={doc}
         localThreadReferenceTexts={localThreadReferenceTexts}
         contentThreadPositions={contentThreadPositions}
-        visibilityContext={visibilityContext}
+        visibilityScope={visibilityScope}
         filter="open"
         sort="position"
         maxCommentsBeforeCollapse={5}
         actionsEnabled={commentsWritable}
         resolveCommentAuthor={resolveCommentAuthor}
       />
-    </CommentsSidebarPanel>
+    </ResizableCommentsSidebar>
   ) : null;
   const renderedSidebarPanel =
-    sidebarPortalContainer === undefined
-      ? sidebarPanel
-      : sidebarPortalContainer && sidebarPanel
-        ? createPortal(sidebarPanel, sidebarPortalContainer)
-        : null;
+    sidebarPortalContainer && sidebarPanel
+      ? createPortal(sidebarPanel, sidebarPortalContainer)
+      : null;
 
   return (
     <>

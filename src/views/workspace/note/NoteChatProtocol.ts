@@ -40,7 +40,7 @@ type NoteClientContentSignatureChatState = ChatFrontendState<
   disabled: true;
 };
 
-export type NoteChatFrontendState =
+type NoteChatFrontendState =
   | ResourceOpenChatState
   | NoteClientStateVectorChatState
   | NoteClientContentSignatureChatState

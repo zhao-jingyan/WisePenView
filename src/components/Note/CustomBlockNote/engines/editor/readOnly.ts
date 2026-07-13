@@ -3,7 +3,7 @@ import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 import { createContext, use } from 'react';
 import { ySyncPluginKey } from 'y-prosemirror';
 
-import { isWisePenCommentMarkSyncTransaction } from '../comments/core/commentDocumentMarks';
+import { isWisePenCommentMarkSyncTransaction } from '../comments/anchors/range';
 
 const NoteEditorReadOnlyContext = createContext(false);
 

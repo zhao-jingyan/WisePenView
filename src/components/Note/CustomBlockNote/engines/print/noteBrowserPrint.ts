@@ -3,7 +3,7 @@ import type { NotePluginRegistry } from '../../content/types';
 import type { CustomBlockNoteEditor } from '../../noteEditor';
 import { getProseMirrorRoot } from '../editor/dom';
 
-export interface PrintNotePdfOptions {
+interface PrintNotePdfOptions {
   /** 文档 `<title>` 与无 titleRoot 时的合成 h1 文案 */
   title?: string;
   /** 克隆自 NoteTitle 的 ProseMirror 根；有则不再插入合成 h1 */

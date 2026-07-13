@@ -2,13 +2,10 @@ import { MessageSquare } from 'lucide-react';
 import type { RefObject } from 'react';
 
 import type { NoteCommentAnchor } from '../../../content/types';
-import { useNoteCommentRuntime } from '../../../engines/comments/core/commentRuntimeContext';
+import { useNoteCommentRuntime } from '../../../engines/comments/runtime/CommentRuntime';
 import { INLINE_MATH_COMMENT_OWNER_ID, MATH_BLOCK_COMMENT_OWNER_ID } from './anchor';
-import {
-  captureInlineMathAnchor,
-  formatFormulaReferenceText,
-  type FormulaCommentKind,
-} from './latexCommentSupport';
+import { captureInlineMathAnchor } from './formulaAnchor';
+import { formatFormulaReferenceText, type FormulaCommentKind } from './formulaReference';
 import styles from './latexFormulaCommentButton.module.less';
 
 type LatexFormulaCommentButtonProps = {

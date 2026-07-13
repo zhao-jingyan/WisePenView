@@ -5,7 +5,7 @@ import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
 import { registerStore } from '@/store/lifecycle';
 import { createStoreJSONStorage } from '@/store/persistence';
 
-export const DEFAULT_AI_DIFF_DISPLAY_MODE = AI_DIFF_DISPLAY_MODE.COMPARE;
+const DEFAULT_AI_DIFF_DISPLAY_MODE = AI_DIFF_DISPLAY_MODE.COMPARE;
 
 type AiDiffDisplayState = {
   displayMode: AiDiffDisplayMode;

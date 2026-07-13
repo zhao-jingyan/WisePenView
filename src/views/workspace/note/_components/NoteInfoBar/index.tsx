@@ -1,7 +1,11 @@
 import { Avatar, Separator } from '@heroui/react';
 
-import type { NoteInfoBarProps } from './index.type';
+import type { NoteInfoDisplayData } from '@/domains/Note';
 import styles from './style.module.less';
+
+interface NoteInfoBarProps {
+  noteInfoDisplay: NoteInfoDisplayData;
+}
 
 const getAvatarText = (name: string): string => {
   const displayName = name.trim();
@@ -9,8 +13,8 @@ const getAvatarText = (name: string): string => {
 };
 
 function NoteInfoBar({ noteInfoDisplay }: NoteInfoBarProps) {
-  const authors = noteInfoDisplay?.authors ?? [];
-  const lastEditedAtText = noteInfoDisplay?.lastEditedAtText ?? '暂无';
+  const authors = noteInfoDisplay.authors;
+  const lastEditedAtText = noteInfoDisplay.lastEditedAtText;
   const hasAuthors = authors.length > 0;
   const authorNamesText = authors.map((author) => author.name).join(', ');
 

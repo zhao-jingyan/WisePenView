@@ -8,7 +8,7 @@ import { inlineMathMarkdownImport, mathBlockMarkdownImport } from './markdownImp
 import { createMathBlockSpec } from './MathBlock';
 import { createMathSlashMenuItem } from './slashMenuItem';
 
-export const mathBlockPlugin = {
+const mathBlockPlugin = {
   kind: 'block',
   id: MATH_BLOCK_COMMENT_OWNER_ID,
   type: 'math',
@@ -59,7 +59,7 @@ export const mathBlockPlugin = {
   aiDiff: mathBlockAiDiff,
 } satisfies NoteBlockPlugin;
 
-export const inlineMathPlugin = {
+const inlineMathPlugin = {
   kind: 'inline',
   id: INLINE_MATH_COMMENT_OWNER_ID,
   type: 'inlineMath',

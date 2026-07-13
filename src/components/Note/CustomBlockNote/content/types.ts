@@ -33,20 +33,20 @@ export interface NoteContentCapabilityDeclarations {
   print: NoteCapabilityDeclaration;
 }
 
-export interface NoteBlockProjection {
+interface NoteBlockProjection {
   plainText?: (block: Record<string, unknown>, registry: NotePluginRegistry) => string;
   outlineLevel?: (block: Record<string, unknown>) => number | undefined;
 }
 
-export interface NoteInlineProjection {
+interface NoteInlineProjection {
   plainText: (inline: Record<string, unknown>, registry: NotePluginRegistry) => string;
 }
 
-export interface NoteMarkdownExportContext {
+interface NoteMarkdownExportContext {
   aiDiffDisplayMode: AiDiffDisplayMode;
 }
 
-export interface NoteMarkdownExportProjection {
+interface NoteMarkdownExportProjection {
   project: (
     node: Record<string, unknown>,
     context: NoteMarkdownExportContext
@@ -57,7 +57,7 @@ export interface NoteMarkdownExportProjection {
 
 export type NoteAiDiffAction = 'accept' | 'discard';
 
-export interface NoteAiContentCandidate {
+interface NoteAiContentCandidate {
   props: Record<string, unknown>;
   content: unknown;
 }
@@ -187,13 +187,13 @@ export interface NoteSideMenuAction {
   selected?: boolean;
 }
 
-export interface NoteSideMenuState {
+interface NoteSideMenuState {
   variant?: 'standard' | 'structured';
   attributes?: Readonly<Record<string, string | undefined>>;
   actions?: readonly NoteSideMenuAction[];
 }
 
-export interface NoteBlockSideMenu {
+interface NoteBlockSideMenu {
   icon?: LucideIcon;
   inspect?: (block: Record<string, unknown>) => NoteSideMenuState;
   apply?: (
@@ -202,14 +202,14 @@ export interface NoteBlockSideMenu {
   ) => { type?: string; props?: Record<string, unknown>; content?: unknown } | null;
 }
 
-export type NoteBlockContentModel = 'inline' | 'table' | 'none';
+type NoteBlockContentModel = 'inline' | 'table' | 'none';
 
-export interface NoteBlockInsertion {
+interface NoteBlockInsertion {
   default?: boolean;
   createEmpty: () => Record<string, unknown>;
 }
 
-export interface NoteBlockInputRules {
+interface NoteBlockInputRules {
   inlineMathDollar?: boolean;
 }
 
@@ -264,7 +264,7 @@ export interface NoteRuntimeExtension extends NotePluginNodeBase {
   editorProps?: (context: NotePluginRuntimeContext) => Partial<EditorProps>;
 }
 
-export interface NotePluginRuntimeContext {
+interface NotePluginRuntimeContext {
   registry: NotePluginRegistry;
 }
 

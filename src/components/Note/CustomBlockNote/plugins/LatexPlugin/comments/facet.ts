@@ -10,13 +10,10 @@ import {
   parseFormulaThreadAnchor,
   type FormulaThreadAnchor,
 } from './anchor';
-import { getFormulaCommentReferenceText } from './formulaCommentReference';
-import {
-  applyFormulaThreadMark,
-  getFormulaAnchorReferenceText,
-  resolveFormulaThreadPosition,
-  selectFormulaThreadAnchor,
-} from './latexCommentSupport';
+import { resolveFormulaThreadPosition } from './formulaAnchor';
+import { applyFormulaThreadMark } from './formulaMark';
+import { getFormulaAnchorReferenceText, getFormulaCommentReferenceText } from './formulaReference';
+import { selectFormulaThreadAnchor } from './formulaSelection';
 
 function createFormulaAnchorFacet(kind: FormulaThreadAnchor['kind']) {
   const parse = (value: unknown): NoteCommentAnchor | null => {

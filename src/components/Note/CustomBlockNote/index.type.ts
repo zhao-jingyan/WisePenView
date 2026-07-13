@@ -1,6 +1,5 @@
 import type { Doc } from 'yjs';
 
-import type { NoteOutlineItem } from '@/components/Note/NoteOutline/index.type';
 import type {
   AiDiffDisplayMode,
   NoteCommentUserDisplayRecord,
@@ -8,8 +7,9 @@ import type {
   WisepenProvider,
 } from '@/domains/Note';
 import type { User } from '@/domains/User';
-import type { BlockNoteCommentDocumentRole } from './engines/comments/comments.types';
-import type { CollaboratorCommentVisibility } from './engines/comments/core/commentSettings';
+import type { NoteOutlineItem } from './content/outline';
+import type { BlockNoteCommentDocumentRole } from './engines/comments/threads/auth';
+import type { CollaboratorCommentVisibility } from './engines/comments/visibility/document';
 
 export interface NoteBodyEditorHandle {
   focus: () => void;
@@ -20,7 +20,7 @@ export interface NoteBodyEditorHandle {
   exportMarkdown: () => NoteMarkdownArtifact;
 }
 
-export interface NoteMarkdownArtifact {
+interface NoteMarkdownArtifact {
   content: string;
   mimeType: 'text/markdown;charset=utf-8';
   extension: 'md';
@@ -31,7 +31,7 @@ export interface NoteCollaborationUser {
   color: string;
 }
 
-export interface NoteCollaborationBinding {
+interface NoteCollaborationBinding {
   doc: Doc;
   provider: WisepenProvider;
   user: NoteCollaborationUser;
@@ -39,7 +39,7 @@ export interface NoteCollaborationBinding {
   ready: boolean;
 }
 
-export interface NoteEditorState {
+interface NoteEditorState {
   aiDiffDisplayMode: AiDiffDisplayMode;
   /** UI/editable：连接中或无 EDIT 时为 true */
   readOnly: boolean;
@@ -52,19 +52,20 @@ export interface NoteEditorState {
 
 export type NoteCommentsStatus =
   | { kind: 'disabled' }
-  | { kind: 'connecting'; authorizable: boolean }
+  | { kind: 'connecting'; hasWritePermission: boolean }
   | { kind: 'readOnly' }
   | { kind: 'writable' };
 
-export interface NoteCommentsConfig {
-  /** 连接中仍挂载 schema，并保留服务端 authorizable 供 threadStoreAuth 初始化。 */
+interface NoteCommentsConfig {
+  /** 连接中仍挂载 schema，并保留服务端写权限供线程权限初始化。 */
   status: NoteCommentsStatus;
   /** 页面已加载的当前用户，作为批注 actor；不在编辑器内重复请求。 */
   actor?: User;
   usersById?: NoteCommentUserDisplayRecord;
-  documentRole?: BlockNoteCommentDocumentRole;
+  documentRole: BlockNoteCommentDocumentRole;
   visibilityPrivileged: boolean;
   collaboratorVisibility: CollaboratorCommentVisibility;
+  onOpen: () => void;
   sidebar: {
     collapsed: boolean;
     width: number;
@@ -76,7 +77,7 @@ export interface NoteCommentsConfig {
   };
 }
 
-export interface NotePortalContainers {
+interface NotePortalContainers {
   commentsSidebar: HTMLElement | null;
   aiBulkActions: HTMLElement | null;
 }

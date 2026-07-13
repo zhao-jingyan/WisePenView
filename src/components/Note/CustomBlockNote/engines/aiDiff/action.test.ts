@@ -5,7 +5,11 @@ import type { NoteAiContentPayload } from '../../content/types';
 import { notePluginRegistry } from '../../noteEditor';
 import { applyNoteAiDiffAction } from './action';
 import { hashNoteBlockForAiDiff } from './projection';
-import { readBlockAiContent, setBlockAiContent } from './store';
+import { getAiContentStore, readBlockAiContent } from './store';
+
+function setBlockAiContent(doc: Y.Doc, blockId: string, payload: NoteAiContentPayload): void {
+  getAiContentStore(doc).set(blockId, payload);
+}
 
 function createEditor() {
   const block = {

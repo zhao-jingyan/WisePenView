@@ -5,15 +5,15 @@ import { useState } from 'react';
 
 import type {
   ContentCommentTarget,
-  NoteCommentRuntimeContextValue,
-} from '../../../engines/comments/core/commentRuntimeContext';
+  NoteCommentRuntime,
+} from '../../../engines/comments/runtime/CommentRuntime';
 import type { CustomBlockNoteEditor } from '../../../noteEditor';
 
 type UseMathBlockCommentHighlightOptions = {
   commentEditor: CustomBlockNoteEditor;
   target: ContentCommentTarget;
   revisionKey: string;
-  comments: NoteCommentRuntimeContextValue | null;
+  comments: NoteCommentRuntime | null;
 };
 
 /** math 块无法挂 PM CommentMark，用与 bn-thread-mark 同色值由组件样式承担高亮 */

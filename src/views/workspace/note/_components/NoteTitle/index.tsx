@@ -4,7 +4,7 @@ import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
 import { useCreateBlockNote } from '@blocknote/react';
 import { useMemoizedFn, useMount, useUnmount, useUpdateEffect } from 'ahooks';
-import React, { useImperativeHandle, useMemo, useRef, type Ref } from 'react';
+import { useImperativeHandle, useRef, type KeyboardEvent, type Ref } from 'react';
 
 import { useNewNoteStore } from '@/components/Note/_store/useNewNoteStore';
 import { getProseMirrorRoot } from '@/components/Note/CustomBlockNote/engines/editor/dom';
@@ -12,8 +12,25 @@ import { useNoteService } from '@/domains';
 
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
-import type { NoteTitleHandle, NoteTitleProps, NoteTitleSaveStatus } from './index.type';
 import styles from './style.module.less';
+
+export interface NoteTitleHandle {
+  /** 当前标题编辑区纯文本，空则“未命名笔记”。 */
+  getPlainTitle: () => string;
+  /** 标题 BlockNote 的 ProseMirror 根 DOM，供打印克隆。 */
+  getProseMirrorRoot: () => HTMLElement | null;
+}
+
+export type NoteTitleSaveStatus = 'saving' | 'saved' | 'failed';
+
+interface NoteTitleProps {
+  id: string;
+  initialContent: string;
+  onEnterKey: () => void;
+  focusOnMount: boolean;
+  readOnly: boolean;
+  onSaveStatusChange: (status: NoteTitleSaveStatus) => void;
+}
 
 /** 与 Pipeline 一致的防抖时长（ms） */
 const TITLE_DEBOUNCE_MS = 500;
@@ -66,7 +83,7 @@ function NoteTitle({
   initialContent,
   onEnterKey,
   focusOnMount,
-  readOnly = false,
+  readOnly,
   onSaveStatusChange,
   ref,
 }: NoteTitleProps & { ref?: Ref<NoteTitleHandle> }) {
@@ -78,23 +95,15 @@ function NoteTitle({
   const beforeChangeCleanupRef = useRef<(() => void) | null>(null);
   const readOnlyRef = useRef(readOnly);
   const saveVersionRef = useRef(0);
-  const emitSaveStatus = useMemoizedFn((status: NoteTitleSaveStatus) => {
-    onSaveStatusChange?.(status);
-  });
+  const emitSaveStatus = useMemoizedFn(onSaveStatusChange);
 
   useUpdateEffect(() => {
     latestIdRef.current = id;
     readOnlyRef.current = readOnly;
   }, [id, readOnly]);
 
-  /** 标题初始值由上层传入（未就绪时回退为空 H1） */
-  const initialTitleBlocks = useMemo(
-    () => toHeadingBlockFromTitle(initialContent),
-    [initialContent]
-  );
-
   const editor = useCreateBlockNote({
-    initialContent: initialTitleBlocks,
+    initialContent: toHeadingBlockFromTitle(initialContent),
     dictionary: {
       ...zh,
       placeholders: {
@@ -147,44 +156,40 @@ function NoteTitle({
 
       if (!readOnlyRef.current) {
         const currentId = latestIdRef.current;
-        if (currentId) {
-          saveVersionRef.current += 1;
-          const saveVersion = saveVersionRef.current;
-          emitSaveStatus('saving');
-          if (titleDebounceTimerRef.current) {
-            clearTimeout(titleDebounceTimerRef.current);
-            titleDebounceTimerRef.current = null;
-          }
-          titleDebounceTimerRef.current = setTimeout(() => {
-            titleDebounceTimerRef.current = null;
-            const block = editor.document[0];
-            const raw = getBlockPlainText(block as { content?: unknown[] } | undefined);
-            const nextTitle = raw.trim() || '未命名笔记';
-            void noteService.syncTitle({ resourceId: currentId, newName: nextTitle }).then(
-              () => {
-                if (saveVersion === saveVersionRef.current) {
-                  emitSaveStatus('saved');
-                }
-              },
-              (error: unknown) => {
-                if (saveVersion === saveVersionRef.current) {
-                  emitSaveStatus('failed');
-                }
-                toast.danger(parseErrorMessage(error));
-              }
-            );
-          }, TITLE_DEBOUNCE_MS);
+        saveVersionRef.current += 1;
+        const saveVersion = saveVersionRef.current;
+        emitSaveStatus('saving');
+        if (titleDebounceTimerRef.current) {
+          clearTimeout(titleDebounceTimerRef.current);
+          titleDebounceTimerRef.current = null;
         }
+        titleDebounceTimerRef.current = setTimeout(() => {
+          titleDebounceTimerRef.current = null;
+          const block = editor.document[0];
+          const raw = getBlockPlainText(block as { content?: unknown[] } | undefined);
+          const nextTitle = raw.trim() || '未命名笔记';
+          void noteService.syncTitle({ resourceId: currentId, newName: nextTitle }).then(
+            () => {
+              if (saveVersion === saveVersionRef.current) {
+                emitSaveStatus('saved');
+              }
+            },
+            (error: unknown) => {
+              if (saveVersion === saveVersionRef.current) {
+                emitSaveStatus('failed');
+              }
+              toast.danger(parseErrorMessage(error));
+            }
+          );
+        }, TITLE_DEBOUNCE_MS);
       }
 
       const currentId = latestIdRef.current;
-      if (currentId != null && currentId !== '') {
-        const newNoteState = useNewNoteStore.getState();
-        if (newNoteState.newNoteResourceId === currentId) {
-          const raw = getBlockPlainText(firstBlock as { content?: unknown[] } | undefined);
-          if (raw.trim()) {
-            newNoteState.markNewNoteDirty(currentId);
-          }
+      const newNoteState = useNewNoteStore.getState();
+      if (newNoteState.newNoteResourceId === currentId) {
+        const raw = getBlockPlainText(firstBlock as { content?: unknown[] } | undefined);
+        if (raw.trim()) {
+          newNoteState.markNewNoteDirty(currentId);
         }
       }
     });
@@ -239,23 +244,22 @@ function NoteTitle({
     }
   });
 
-  // 关注点迁移
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
-      onEnterKey?.();
-      return;
-    }
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.shiftKey && e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();
       return;
     }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      onEnterKey();
+      return;
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       e.stopPropagation();
-      onEnterKey?.();
+      onEnterKey();
       return;
     }
     if (e.key === 'ArrowRight') {
@@ -272,7 +276,7 @@ function NoteTitle({
         if (range.toString().length === 0) {
           e.preventDefault();
           e.stopPropagation();
-          onEnterKey?.();
+          onEnterKey();
         }
       } catch {
         // 无法判断是否在末尾时忽略

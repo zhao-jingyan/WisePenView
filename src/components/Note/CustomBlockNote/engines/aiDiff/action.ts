@@ -15,7 +15,7 @@ import {
   readBlockAiContent,
 } from './store';
 
-export type ApplyAiDiffActionResult = 'applied' | 'missing' | 'stale' | 'unsupported';
+type ApplyAiDiffActionResult = 'applied' | 'missing' | 'stale' | 'unsupported';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;

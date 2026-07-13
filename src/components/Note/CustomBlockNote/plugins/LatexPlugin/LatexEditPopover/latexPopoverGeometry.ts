@@ -1,6 +1,6 @@
 /** 与 InlineMath / MathBlock 浮层定位共用的几何计算（不含 React） */
 
-export const LATEX_POPOVER_MARGIN = 8;
+const LATEX_POPOVER_MARGIN = 8;
 export const LATEX_POPOVER_RAF_MAX_RETRIES = 30;
 
 /** 插件刚插入节点时首帧 rect 常为 0，不可用于定位 */
@@ -8,7 +8,7 @@ export function isLatexPopoverAnchorMeasurable(r: DOMRect): boolean {
   return r.width >= 2 && r.height >= 2;
 }
 
-export interface LatexPopoverPlacementOptions {
+interface LatexPopoverPlacementOptions {
   minWidth: number;
   maxWidth: number;
   estHeight: number;
@@ -16,7 +16,7 @@ export interface LatexPopoverPlacementOptions {
   margin?: number;
 }
 
-export interface LatexPopoverPlacement {
+interface LatexPopoverPlacement {
   top: number;
   left: number;
   width: number;

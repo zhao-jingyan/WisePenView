@@ -10,17 +10,15 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import 'katex/dist/katex.min.css';
 import type { NoteCommentAnchor } from '../../../content/types';
-import { useNoteCommentRuntime } from '../../../engines/comments/core/commentRuntimeContext';
+import { useNoteCommentRuntime } from '../../../engines/comments/runtime/CommentRuntime';
 import { useNoteEditorReadOnlyContext } from '../../../engines/editor/readOnly';
 import {
   INLINE_MATH_COMMENT_OWNER_ID,
   INLINE_MATH_PM_TYPE,
   type FormulaThreadAnchor,
 } from '../comments/anchor';
-import {
-  captureInlineMathAnchor,
-  formatFormulaReferenceText,
-} from '../comments/latexCommentSupport';
+import { captureInlineMathAnchor } from '../comments/formulaAnchor';
+import { formatFormulaReferenceText } from '../comments/formulaReference';
 import { LatexFormulaCommentButton } from '../comments/LatexFormulaCommentButton';
 import { renderKatexInto } from '../katexRender';
 import { LatexEditPopover } from '../LatexEditPopover';

@@ -5,9 +5,14 @@ import type {
   StyleSchema,
 } from '@blocknote/core';
 
-import type { NoteOutlineItem } from '@/components/Note/NoteOutline/index.type';
 import { projectBlockPlainText } from './projection';
 import type { NotePluginRegistry } from './types';
+
+export interface NoteOutlineItem {
+  id: string;
+  level: number;
+  text: string;
+}
 
 type FlatBlockSnapshot = {
   id: string;

@@ -2,16 +2,16 @@ import type * as Y from 'yjs';
 
 import type { NoteAiContentPayload } from '../../content/types';
 
-export const AI_CONTENT_STORE_MAP = 'ai-content-store';
+const AI_CONTENT_STORE_MAP = 'ai-content-store';
 export const AI_DIFF_ACTION_ORIGIN = Symbol('ai-diff-action');
 
-export type AiContentMutationResult = 'applied' | 'missing' | 'stale';
+type AiContentMutationResult = 'applied' | 'missing' | 'stale';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-export function isNoteAiContentPayload(value: unknown): value is NoteAiContentPayload {
+function isNoteAiContentPayload(value: unknown): value is NoteAiContentPayload {
   if (!isRecord(value)) return false;
   if (typeof value.revision !== 'string' || !value.revision) return false;
   if (typeof value.baseHash !== 'string' || !value.baseHash) return false;
@@ -38,34 +38,6 @@ export function readAllAiContent(doc: Y.Doc): ReadonlyMap<string, NoteAiContentP
   getAiContentStore(doc).forEach((value, blockId) => {
     if (isNoteAiContentPayload(value)) result.set(blockId, value);
   });
-  return result;
-}
-
-export function setBlockAiContent(
-  doc: Y.Doc,
-  blockId: string,
-  payload: NoteAiContentPayload
-): void {
-  doc.transact(() => getAiContentStore(doc).set(blockId, payload), AI_DIFF_ACTION_ORIGIN);
-}
-
-export function replaceBlockAiContent(
-  doc: Y.Doc,
-  blockId: string,
-  expectedRevision: string,
-  payload: NoteAiContentPayload
-): AiContentMutationResult {
-  let result: AiContentMutationResult = 'missing';
-  doc.transact(() => {
-    const current = readBlockAiContent(doc, blockId);
-    if (!current) return;
-    if (current.revision !== expectedRevision) {
-      result = 'stale';
-      return;
-    }
-    getAiContentStore(doc).set(blockId, payload);
-    result = 'applied';
-  }, AI_DIFF_ACTION_ORIGIN);
   return result;
 }
 

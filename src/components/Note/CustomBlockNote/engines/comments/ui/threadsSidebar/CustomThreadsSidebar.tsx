@@ -12,30 +12,27 @@ import {
   type WisePenSidebarThread,
 } from '@/components/CommentsSidebar';
 import type { CustomBlockNoteEditor } from '../../../../noteEditor';
-import { getBlockNoteThreadsYMap } from '../../core/commentThreadConstants';
 import {
   buildTextCommentBody,
   buildThreadSnapshot,
   extractPlainTextFromCommentBody,
-} from '../../core/inlineCommentThreadStore';
+} from '../../threads/RemoteCommentThreadStore';
 import {
   filterThreadsByResolvedState,
   getThreadReferenceText,
   sortCommentThreads,
   type ThreadPosition,
   type ThreadResolvedFilter,
-} from '../../core/threadReferenceText';
-import {
-  filterThreadsByVisibility,
-  type ThreadVisibilityContext,
-} from '../../core/threadVisibility';
+} from '../../threads/presentation';
+import { getBlockNoteThreadsYMap } from '../../threads/yjs';
+import { filterThreadsByVisibility, type ThreadVisibilityScope } from '../../visibility/filter';
 
 type CustomThreadsSidebarProps = {
   editor: CustomBlockNoteEditor;
   doc: Doc;
   localThreadReferenceTexts: ReadonlyMap<string, string>;
   contentThreadPositions?: Map<string, ThreadPosition>;
-  visibilityContext: ThreadVisibilityContext;
+  visibilityScope: ThreadVisibilityScope;
   filter?: ThreadResolvedFilter;
   sort?: 'position' | 'recent-activity' | 'oldest';
   maxCommentsBeforeCollapse?: number;
@@ -76,7 +73,7 @@ export function CustomThreadsSidebar({
   doc,
   localThreadReferenceTexts,
   contentThreadPositions = new Map(),
-  visibilityContext,
+  visibilityScope,
   filter = 'open',
   sort = 'position',
   maxCommentsBeforeCollapse,
@@ -126,7 +123,7 @@ export function CustomThreadsSidebar({
     }
   });
 
-  const visibleThreads = filterThreadsByVisibility(threads.values(), visibilityContext);
+  const visibleThreads = filterThreadsByVisibility(threads.values(), visibilityScope);
   const resolvedFiltered = filterThreadsByResolvedState(visibleThreads, filter);
   const sortedThreads = sortCommentThreads(resolvedFiltered, sort, mergedThreadPositions);
   const filteredAndSortedThreads = sortedThreads.map((thread) => ({
@@ -143,7 +140,7 @@ export function CustomThreadsSidebar({
     mapThreadToSidebarThread(
       thread,
       referenceText,
-      visibilityContext.currentUserId,
+      visibilityScope.currentUserId,
       resolveCommentAuthor
     )
   );

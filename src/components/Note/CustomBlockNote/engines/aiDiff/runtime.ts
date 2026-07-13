@@ -242,7 +242,7 @@ function buildDecorations(params: {
   return DecorationSet.create(doc, decorations);
 }
 
-export function createAiDiffRuntimeExtension(registry: NotePluginRegistry) {
+function createAiDiffRuntimeExtension(registry: NotePluginRegistry) {
   return createExtension(({ editor }) => ({
     key: 'noteAiDiffRuntime',
     prosemirrorPlugins: [

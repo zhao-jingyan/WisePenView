@@ -16,19 +16,7 @@ import '@blocknote/mantine/style.css';
 import { useCreateBlockNote } from '@blocknote/react';
 import { toast } from '@heroui/react';
 import { useLatest, useMemoizedFn, useMount, useUnmount, useUpdateEffect } from 'ahooks';
-import clsx from 'clsx';
-import {
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type Ref,
-} from 'react';
-import NoteSideMenu from '../NoteSideMenu';
-import NoteSlashMenu from '../NoteSlashMenu';
-import NoteTableHandles from '../NoteTableHandles';
-import NoteToolbar from '../NoteToolbar';
+import { useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import { buildOutlineProjection, resolveActiveHeadingId } from './content/outline';
 import { AiDiffBulkActions } from './engines/aiDiff/BulkActions';
 import { AI_DIFF_ACTION_ORIGIN, getAiContentStore } from './engines/aiDiff/store';
@@ -42,7 +30,6 @@ import {
 import {
   buildCommentsExtension,
   capturePendingCommentSelection,
-  commentStyles,
   getBlockNoteCommentUsersYMap,
   getBlockNoteThreadsYMap,
   isCommentableSelection,
@@ -50,15 +37,15 @@ import {
   NoteCommentsUi,
   resolveActiveCommentUserProfile,
   resolveBlockNoteCommentUsers,
+  resolveNoteCommentsRuntimeState,
   syncDomSelectionToProseMirror,
   useContentComments,
-  useInlineCommentsSync,
+  useRemoteCommentSync,
   useSyncCommentDocumentMarks,
   type PendingCommentReference,
   type PendingCommentSelection,
 } from './engines/comments';
-import { resolveNoteCommentsRuntimePolicy } from './engines/comments/core/commentPolicy';
-import { syncCommentUserProfileToYMap } from './engines/comments/core/commentUserProfile';
+import { syncCommentUserProfileToYMap } from './engines/comments/threads/users';
 import {
   createNoteReadOnlyFilterExtension,
   NoteEditorReadOnlyProvider,
@@ -75,6 +62,10 @@ import {
   type CustomBlockNoteEditor,
 } from './noteEditor';
 import styles from './style.module.less';
+import NoteSideMenu from './ui/sideMenu';
+import NoteSlashMenu from './ui/slashMenu';
+import NoteTableHandles from './ui/tableHandles';
+import NoteToolbar from './ui/toolbar';
 
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;
 type BlockNoteCollaborationConfig = NonNullable<CreateBlockNoteOptions['collaboration']>;
@@ -87,10 +78,7 @@ type YCursorExtensionHandle = {
 };
 
 const AI_DIFF_TRACKED_ORIGINS = [AI_DIFF_ACTION_ORIGIN] as const;
-
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null;
-}
+const NOTE_EDITOR_PROPS = collectNoteEditorProps(notePluginRegistry);
 
 function buildSelectedNoteScope(editor: CustomBlockNoteEditor): SelectedNoteScope | null {
   const selectedBlocks = editor.getSelection()?.blocks;
@@ -113,9 +101,10 @@ function CustomBlockNote({
     status: commentsStatus,
     actor: commentUser,
     usersById: commentUsersById,
-    documentRole: commentDocumentRole = 'editor',
+    documentRole: commentDocumentRole,
     visibilityPrivileged: isCommentVisibilityPrivileged,
     collaboratorVisibility,
+    onOpen: onOpenComments,
     sidebar: {
       collapsed: commentsSidebarCollapsed,
       width: commentsSidebarWidth,
@@ -133,9 +122,9 @@ function CustomBlockNote({
   const {
     enabled: commentsEnabled,
     uiEnabled: commentsUiEnabled,
-    authorizable: commentsAuthorizable,
-    writable: commentsWritable,
-  } = resolveNoteCommentsRuntimePolicy(commentsStatus);
+    hasWritePermission: hasCommentWritePermission,
+    canWrite: commentsWritable,
+  } = resolveNoteCommentsRuntimeState(commentsStatus);
   const imageService = useImageService();
   const resourceService = useResourceService();
   const newNoteBodyOnChangeCleanupRef = useRef<(() => void) | null>(null);
@@ -177,13 +166,10 @@ function CustomBlockNote({
   /** 与 reference 分离：applyPendingCommentReference 会在 createThread 时清空 reference，但 mark 仍需选区 */
   const pendingCommentSelectionRef = useRef<PendingCommentSelection | null>(null);
   const editorRef = useRef<CustomBlockNoteEditor | null>(null);
-  const aiDiffBodyContentHashRef = useRef<string | undefined>(undefined);
   const aiDiffBodyContentHashTimerRef = useRef<number | null>(null);
   const commitPendingReferenceForThreadRef = useRef<(threadId: string) => void>(() => undefined);
-  const rememberPendingCommentReferenceRef = useRef<() => void>(() => undefined);
   const noteFragment = useNoteYjsFragment(doc);
-  const aiContentStore = useMemo(() => getAiContentStore(doc), [doc]);
-  const showCommentsUi = commentsUiEnabled;
+  const aiContentStore = getAiContentStore(doc);
   const threadsYMap = getBlockNoteThreadsYMap(doc);
   const commentUsersYMap = getBlockNoteCommentUsersYMap(doc);
   const { activeCommentUserId, activeCommentUsername, activeCommentAvatarUrl } =
@@ -212,7 +198,7 @@ function CustomBlockNote({
     commentsEnabled,
   ]);
 
-  useInlineCommentsSync({
+  useRemoteCommentSync({
     enabled: commentsEnabled,
     resourceId,
     threadsYMap,
@@ -230,9 +216,8 @@ function CustomBlockNote({
         buildCommentsExtension({
           registry: notePluginRegistry,
           resourceId,
-          activeCommentUserId,
           getActiveCommentUserId: () => activeCommentUserIdLatest.current,
-          commentsAuthorizable,
+          hasWritePermission: hasCommentWritePermission,
           isCommentVisibilityPrivileged,
           commentDocumentRole,
           threadsYMap,
@@ -251,7 +236,7 @@ function CustomBlockNote({
             commitPendingReferenceForThreadRef.current(threadId);
           },
           canAddThreadToDocument: (editor) => isCommentableSelection(editor, notePluginRegistry),
-          inlineCommentDataSource: {
+          remoteCommentDataSource: {
             listInlineComments: resourceService.listInlineComments,
             createInlineComment: resourceService.createInlineComment,
             addInlineCommentItem: resourceService.addInlineCommentItem,
@@ -264,10 +249,9 @@ function CustomBlockNote({
     }
     return extensions;
   }, [
-    activeCommentUserId,
     commentDocumentRole,
     commentsEnabled,
-    commentsAuthorizable,
+    hasCommentWritePermission,
     isCommentVisibilityPrivileged,
     resourceId,
     resourceService,
@@ -277,8 +261,6 @@ function CustomBlockNote({
     activeCommentUserIdLatest,
     commentResolverContextLatest,
   ]);
-  const editorProps = useMemo(() => collectNoteEditorProps(notePluginRegistry), []);
-
   const editor = useCreateBlockNote({
     schema: blockNoteSchema,
     dictionary: zh,
@@ -287,7 +269,7 @@ function CustomBlockNote({
     uploadFile,
     extensions: editorExtensions,
     _tiptapOptions: {
-      editorProps,
+      editorProps: NOTE_EDITOR_PROPS,
     },
     collaboration: {
       provider: provider as BlockNoteCollaborationConfig['provider'],
@@ -304,12 +286,10 @@ function CustomBlockNote({
 
   const refreshAiDiffBodyContentHash = useMemoizedFn(() => {
     const nextHash = computeNoteBodyContentHash(editor.document);
-    aiDiffBodyContentHashRef.current = nextHash;
     onAiDiffBodyContentHashChange?.(nextHash);
   });
 
   const scheduleAiDiffBodyContentHashRefresh = useMemoizedFn(() => {
-    aiDiffBodyContentHashRef.current = undefined;
     onAiDiffBodyContentHashChange?.(undefined);
     if (aiDiffBodyContentHashTimerRef.current !== null) {
       window.clearTimeout(aiDiffBodyContentHashTimerRef.current);
@@ -355,14 +335,6 @@ function CustomBlockNote({
     undoManager,
     onPresenceChange: onAiDiffPresenceChange,
   });
-
-  useUpdateEffect(() => {
-    try {
-      editor.prosemirrorView.setProps(editorProps);
-    } catch {
-      void 0;
-    }
-  }, [editorProps, editor]);
 
   useMount(() => {
     let writeGuardActivated = false;
@@ -461,7 +433,6 @@ function CustomBlockNote({
     editor,
     doc,
     registry: notePluginRegistry,
-    resourceId,
     commentsEnabled,
     commentsWritable,
     readOnly,
@@ -470,17 +441,16 @@ function CustomBlockNote({
     collaboratorVisibility,
     pendingCommentReferenceRef,
     pendingCommentSelectionRef,
+    onOpenComments,
   });
 
   useMount(() => {
     commitPendingReferenceForThreadRef.current = commitPendingReferenceForThread;
-    rememberPendingCommentReferenceRef.current = rememberPendingCommentReference;
   });
 
   useUpdateEffect(() => {
     commitPendingReferenceForThreadRef.current = commitPendingReferenceForThread;
-    rememberPendingCommentReferenceRef.current = rememberPendingCommentReference;
-  }, [commitPendingReferenceForThread, rememberPendingCommentReference]);
+  }, [commitPendingReferenceForThread]);
 
   useSyncCommentDocumentMarks({
     editor,
@@ -494,25 +464,6 @@ function CustomBlockNote({
     onAfterDocumentMarksSync: bumpContentState,
   });
 
-  useUpdateEffect(() => {
-    if (!commentsEnabled || !commentsWritable) {
-      return;
-    }
-    const extension = editor.getExtension('comments') as
-      { startPendingComment?: () => void } | undefined;
-    if (!extension?.startPendingComment) {
-      return;
-    }
-    const originalStartPendingComment = extension.startPendingComment.bind(extension);
-    extension.startPendingComment = () => {
-      rememberPendingCommentReferenceRef.current();
-      originalStartPendingComment();
-    };
-    return () => {
-      extension.startPendingComment = originalStartPendingComment;
-    };
-  }, [commentsEnabled, commentsWritable, editor]);
-
   useImperativeHandle(
     ref,
     () => ({
@@ -523,29 +474,8 @@ function CustomBlockNote({
         try {
           editor.setTextCursorPosition(id, 'start');
           editor.focus();
-          const view = (
-            editor as unknown as {
-              prosemirrorView?: { state?: { tr?: unknown }; dispatch?: unknown };
-            }
-          ).prosemirrorView;
-          const canScroll =
-            typeof view?.dispatch === 'function' &&
-            view?.state &&
-            isRecord(view.state) &&
-            'tr' in view.state &&
-            isRecord(view.state.tr) &&
-            typeof (view.state.tr as { scrollIntoView?: unknown }).scrollIntoView === 'function';
-          if (canScroll) {
-            window.requestAnimationFrame(() => {
-              try {
-                (view.dispatch as (tr: unknown) => void)(
-                  (view.state as { tr: { scrollIntoView: () => unknown } }).tr.scrollIntoView()
-                );
-              } catch {
-                void 0;
-              }
-            });
-          }
+          const view = editor.prosemirrorView;
+          window.requestAnimationFrame(() => view.dispatch(view.state.tr.scrollIntoView()));
         } catch {
           editor.focus();
         }
@@ -629,21 +559,8 @@ function CustomBlockNote({
     !blockLocalDocWrites &&
     aiDiffDisplayMode === AI_DIFF_DISPLAY_MODE.COMPARE;
 
-  const hasInlineCommentsSidebar =
-    showCommentsUi && !commentsSidebarCollapsed && commentsSidebarPortalContainer === undefined;
-  const editorShellStyle = hasInlineCommentsSidebar
-    ? ({ ['--comments-sidebar-width' as string]: `${commentsSidebarWidth}px` } as CSSProperties)
-    : undefined;
   return (
-    <div
-      className={clsx(
-        styles.editorShell,
-        showCommentsUi && commentStyles.editorShellWithComments,
-        hasInlineCommentsSidebar && commentStyles.withCommentsSidebar
-      )}
-      style={editorShellStyle}
-      onKeyDownCapture={onKeyDownCapture}
-    >
+    <div className={styles.editorShell} onKeyDownCapture={onKeyDownCapture}>
       <AiDiffBulkActions
         doc={doc}
         editor={editor}
@@ -655,7 +572,7 @@ function CustomBlockNote({
       <NoteEditorReadOnlyProvider value={readOnly}>
         <NoteCommentRuntimeProvider {...runtimeProviderProps}>
           <BlockNoteView
-            className={commentStyles.bodyBlockNoteView}
+            className="bodyBlockNoteView"
             editor={editor}
             theme="light"
             formattingToolbar={false}
@@ -677,12 +594,11 @@ function CustomBlockNote({
             <NoteSlashMenu editor={editor} plugins={notePluginRegistry.contentPlugins} />
             <NoteSideMenu plugins={notePluginRegistry.contentPlugins} />
             <NoteTableHandles />
-            {showCommentsUi ? (
+            {commentsUiEnabled ? (
               <NoteCommentsUi
                 editor={editor}
                 doc={doc}
                 registry={notePluginRegistry}
-                commentsEnabled={commentsEnabled}
                 commentsWritable={commentsWritable}
                 commentUserId={activeCommentUserId}
                 commentUsername={activeCommentUsername}
