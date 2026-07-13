@@ -14,19 +14,26 @@ export type FlatBlockSnapshot = {
   outline: boolean;
 };
 
+export interface NoteOutlineProjection {
+  items: NoteOutlineItem[];
+  flatBlocks: FlatBlockSnapshot[];
+}
+
 function toBlockRecord(block: unknown): Record<string, unknown> {
   return typeof block === 'object' && block !== null ? (block as Record<string, unknown>) : {};
 }
 
-export function buildOutlineItemsFromEditor<
+export function buildOutlineProjection<
   BSchema extends BlockSchema,
   ISchema extends InlineContentSchema,
   SSchema extends StyleSchema,
->(editor: BlockNoteEditor<BSchema, ISchema, SSchema>): NoteOutlineItem[] {
+>(editor: BlockNoteEditor<BSchema, ISchema, SSchema>): NoteOutlineProjection {
   const items: NoteOutlineItem[] = [];
+  const flatBlocks: FlatBlockSnapshot[] = [];
   editor.forEachBlock((block) => {
     const owner = notePluginRegistry.blockPlugins.get(block.type);
     const level = owner?.projection?.outlineLevel?.(toBlockRecord(block));
+    flatBlocks.push({ id: block.id, outline: level !== undefined });
     if (level === undefined) return true;
 
     items.push({
@@ -36,21 +43,7 @@ export function buildOutlineItemsFromEditor<
     });
     return true;
   });
-  return items;
-}
-
-export function buildFlatBlocksFromEditor<
-  BSchema extends BlockSchema,
-  ISchema extends InlineContentSchema,
-  SSchema extends StyleSchema,
->(editor: BlockNoteEditor<BSchema, ISchema, SSchema>): FlatBlockSnapshot[] {
-  const flat: FlatBlockSnapshot[] = [];
-  editor.forEachBlock((block) => {
-    const owner = notePluginRegistry.blockPlugins.get(block.type);
-    flat.push({ id: block.id, outline: Boolean(owner?.projection?.outlineLevel) });
-    return true;
-  });
-  return flat;
+  return { items, flatBlocks };
 }
 
 export function resolveActiveHeadingId(

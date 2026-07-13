@@ -2,7 +2,7 @@ import { useNewNoteStore } from '@/components/Note/_store/useNewNoteStore';
 import { usePendingNoteImportStore } from '@/components/Note/_store/usePendingNoteImportStore';
 import { useImageService, useResourceService } from '@/domains';
 import { assertImageProxyUploadLimit } from '@/domains/Image';
-import type { AiDiffDisplayMode, SelectedNoteScope } from '@/domains/Note';
+import type { AiDiffDisplayMode, NoteSelectionSnapshot, SelectedNoteScope } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, computeNoteBodyContentHash } from '@/domains/Note';
 import {
   createClientError,
@@ -27,7 +27,6 @@ import {
   type Ref,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { useNoteEditorSelectionStore } from '../_store/useNoteEditorSelectionStore';
 import NoteSideMenu from '../NoteSideMenu';
 import NoteSlashMenu from '../NoteSlashMenu';
 import NoteTableHandles from '../NoteTableHandles';
@@ -61,11 +60,7 @@ import {
   useNoteYjsUndoManager,
 } from './hooks';
 import type { CustomBlockNoteProps, NoteBodyEditorHandle } from './index.type';
-import {
-  buildFlatBlocksFromEditor,
-  buildOutlineItemsFromEditor,
-  resolveActiveHeadingId,
-} from './Outline';
+import { buildOutlineProjection, resolveActiveHeadingId } from './Outline';
 import {
   collectNoteEditorExtensions,
   collectNoteEditorProps,
@@ -147,13 +142,9 @@ function CustomBlockNote({
   } = resolveNoteCommentsRuntimePolicy(commentsStatus);
   const imageService = useImageService();
   const resourceService = useResourceService();
-  const setCurrentSelection = useNoteEditorSelectionStore((state) => state.setCurrentSelection);
-  const clearCurrentSelection = useNoteEditorSelectionStore((state) => state.clearCurrentSelection);
-  const currentSelection = useNoteEditorSelectionStore(
-    (state) => state.currentSelectionByResourceId[resourceId]
-  );
   const newNoteBodyOnChangeCleanupRef = useRef<(() => void) | null>(null);
-  const flatBlocksRef = useRef<ReturnType<typeof buildFlatBlocksFromEditor>>([]);
+  const selectionSnapshotRef = useRef<NoteSelectionSnapshot | undefined>(undefined);
+  const flatBlocksRef = useRef<ReturnType<typeof buildOutlineProjection>['flatBlocks']>([]);
   const [pmWriteGuardReady, setPmWriteGuardReady] = useState(false);
   const effectiveBlockLocalDocWrites = blockLocalDocWrites && pmWriteGuardReady;
   const shouldBlockLocalDocWrites = useMemoizedFn(() => blockLocalDocWrites && pmWriteGuardReady);
@@ -419,6 +410,13 @@ function CustomBlockNote({
       setPmWriteGuardReady(true);
     };
 
+    const syncOutlineProjection = () => {
+      if (!onOutlineChange && !onActiveHeadingChange) return;
+      const projection = buildOutlineProjection(editor);
+      flatBlocksRef.current = projection.flatBlocks;
+      onOutlineChange?.(projection.items);
+    };
+
     newNoteBodyOnChangeCleanupRef.current = editor.onChange(() => {
       activateWriteGuard();
       scheduleAiDiffBodyContentHashRefresh();
@@ -432,19 +430,10 @@ function CustomBlockNote({
       }
       syncAiDiffPresence();
 
-      const needOutline = Boolean(onOutlineChange);
-      const needFlatBlocks = Boolean(onActiveHeadingChange);
-      if (needOutline || needFlatBlocks) {
-        const items = needOutline ? buildOutlineItemsFromEditor(editor) : [];
-        const flat = needFlatBlocks ? buildFlatBlocksFromEditor(editor) : [];
-        if (needFlatBlocks) {
-          flatBlocksRef.current = flat;
-        }
-        if (needOutline) {
-          onOutlineChange?.(items);
-        }
-      }
+      syncOutlineProjection();
     });
+
+    syncOutlineProjection();
 
     if (hasBlockLocalDocWritesProp()) {
       window.requestAnimationFrame(activateWriteGuard);
@@ -497,7 +486,6 @@ function CustomBlockNote({
       window.clearTimeout(aiDiffBodyContentHashTimerRef.current);
       aiDiffBodyContentHashTimerRef.current = null;
     }
-    clearCurrentSelection(resourceId);
   });
 
   const {
@@ -635,7 +623,10 @@ function CustomBlockNote({
   const onKeyDownCapture = useNoteCaptureKeyEvent({ provider, undoManager, readOnly });
 
   const handleSelectionChange = () => {
-    setCurrentSelection(resourceId, editor.getSelectedText(), buildSelectedNoteScope(editor));
+    selectionSnapshotRef.current = {
+      text: editor.getSelectedText(),
+      scope: buildSelectedNoteScope(editor),
+    };
     if (commentsEnabled && commentsWritable && isCommentableSelection(editor, notePluginRegistry)) {
       const selection = capturePendingCommentSelection(editor);
       if (selection) {
@@ -661,7 +652,8 @@ function CustomBlockNote({
   };
 
   const handleAskAi = () => {
-    const selectedText = editor.getSelectedText().trim() || currentSelection?.text.trim() || '';
+    const selectedText =
+      editor.getSelectedText().trim() || selectionSnapshotRef.current?.text.trim() || '';
     if (!selectedText) {
       toast.info('请先选中一段文字再问 AI');
       return;
@@ -669,7 +661,7 @@ function CustomBlockNote({
 
     onAskAi({
       text: selectedText,
-      scope: buildSelectedNoteScope(editor) ?? currentSelection?.scope ?? null,
+      scope: buildSelectedNoteScope(editor) ?? selectionSnapshotRef.current?.scope ?? null,
     });
   };
 

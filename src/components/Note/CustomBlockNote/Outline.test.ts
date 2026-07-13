@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildOutlineItemsFromEditor, resolveActiveHeadingId } from './Outline';
+import { buildOutlineProjection, resolveActiveHeadingId } from './Outline';
 
 describe('Note outline projection', () => {
   it('通过 inline owner 聚合标题文本', () => {
@@ -23,9 +23,10 @@ describe('Note outline projection', () => {
       },
     };
 
-    expect(buildOutlineItemsFromEditor(editor as never)).toEqual([
-      { id: 'heading-1', level: 2, text: '算法 文档x^2 新增' },
-    ]);
+    expect(buildOutlineProjection(editor as never)).toEqual({
+      items: [{ id: 'heading-1', level: 2, text: '算法 文档x^2 新增' }],
+      flatBlocks: [{ id: 'heading-1', outline: true }],
+    });
   });
 
   it('根据 owner 的 outline capability 回溯活动标题', () => {
