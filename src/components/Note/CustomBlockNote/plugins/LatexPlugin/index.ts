@@ -1,11 +1,9 @@
-import { atomicAiDiffMarkdownExport } from '../AIDiffPlugin/ownerExport';
-import { atomicInlineAiDiff } from '../AIDiffPlugin/ownerPresence';
-import { mathBlockAiDiff } from '../AIDiffPlugin/patch';
 import type { NoteBlockPlugin, NoteInlinePlugin, NotePluginBundle } from '../types';
+import { inlineMathAiDiff, mathAiDiffMarkdownExport, mathBlockAiDiff } from './aiDiff';
 import { inlineMathContentSpec } from './InlineMath';
 import { createInlineMathDollarExtension } from './InlineMath/inlineMathDollarExtension';
-import { createMathBlockSpec } from './MathBlock';
 import { inlineMathMarkdownImport, mathBlockMarkdownImport } from './markdownImport';
+import { createMathBlockSpec } from './MathBlock';
 import { createMathSlashMenuItem } from './slashMenuItem';
 
 export const mathBlockPlugin = {
@@ -51,7 +49,7 @@ export const mathBlockPlugin = {
   },
   markdownImport: mathBlockMarkdownImport,
   markdownExport: {
-    ...atomicAiDiffMarkdownExport,
+    ...mathAiDiffMarkdownExport,
     renderMarkdown(block) {
       const props =
         typeof block.props === 'object' && block.props !== null
@@ -87,8 +85,8 @@ export const inlineMathPlugin = {
     },
   },
   markdownImport: inlineMathMarkdownImport,
-  markdownExport: atomicAiDiffMarkdownExport,
-  aiDiff: atomicInlineAiDiff,
+  markdownExport: mathAiDiffMarkdownExport,
+  aiDiff: inlineMathAiDiff,
   comments: { documentThreads: 'dedicated', hideFormattingToolbar: true },
 } satisfies NoteInlinePlugin;
 

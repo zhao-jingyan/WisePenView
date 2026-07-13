@@ -1,4 +1,4 @@
-import { aiDiffPlugin, aiDiffRuntimeExtension } from './AIDiffPlugin';
+import { aiChangePlugin } from './AiChangePlugin';
 import { codeBlockPlugin } from './CodeBlockPlugin';
 import { commonRuntimeExtension } from './CommonPlugin';
 import { defaultContentPlugin } from './DefaultContentPlugin';
@@ -12,12 +12,13 @@ import {
   createNotePluginRegistry,
   createNoteReadOnlyFilterExtension,
 } from './registry';
+import { aiDiffRuntimeExtension } from './runtime/aiDiff';
 import type { NotePluginBundle } from './types';
 
 const notePluginTree = {
   kind: 'bundle',
   id: 'note',
-  children: [defaultContentPlugin, codeBlockPlugin, tablePlugin, latexPlugin, aiDiffPlugin],
+  children: [defaultContentPlugin, codeBlockPlugin, tablePlugin, latexPlugin, aiChangePlugin],
 } satisfies NotePluginBundle;
 
 export const notePluginRegistry = createNotePluginRegistry(notePluginTree, [
@@ -28,7 +29,7 @@ export const notePluginRegistry = createNotePluginRegistry(notePluginTree, [
 export { isCommentableSelection, shouldHideNoteFormattingToolbar } from './commentsPolicy';
 export { exportNoteFullHtml, exportNoteMarkdown } from './markdownExport';
 export { importNoteMarkdown } from './markdownImport';
-export { hasAiDiffContentFromEditor } from './presence';
+export { hasAiDiffContentFromEditor } from './runtime/aiDiff/presence';
 export {
   collectNoteEditorExtensions,
   collectNoteEditorProps,

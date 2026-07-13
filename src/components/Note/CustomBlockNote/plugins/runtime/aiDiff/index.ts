@@ -6,23 +6,9 @@ import type { EditorProps, EditorView } from '@tiptap/pm/view';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
-import { shouldFoldAiDiffInlineContent } from '../presence';
-import { createDefaultNoteBlock } from '../registry';
-import type {
-  NoteInlinePlugin,
-  NotePluginBundle,
-  NotePluginRegistry,
-  NoteRuntimeExtension,
-} from '../types';
-import {
-  aiAddInlineContentSpec,
-  aiDeleteInlineContentSpec,
-  aiDiffInlineContentSpec,
-  aiLinkAddInlineContentSpec,
-  aiLinkDeleteInlineContentSpec,
-} from './inlineContentSpecs';
-import { createAiDiffSyntaxMarkdownExport } from './ownerExport';
-import { createSyntaxInlineAiDiff } from './ownerPresence';
+import { createDefaultNoteBlock } from '../../registry';
+import type { NotePluginRegistry, NoteRuntimeExtension } from '../../types';
+import { shouldFoldAiDiffInlineContent } from './presence';
 
 const aiDiffBlockFoldPluginKey = new PluginKey('AIDiffBlockFold');
 
@@ -252,8 +238,8 @@ export function syncAiDiffBlockFoldDisplayMode(
   );
 }
 
-function isAiDiffChangeNodeName(name: string): boolean {
-  return name === 'ai-diff' || name === 'ai-add' || name === 'ai-delete';
+function isAiDiffChangeNodeName(name: string, registry: NotePluginRegistry): boolean {
+  return registry.inlinePlugins.get(name)?.aiDiff.reviewChange === true;
 }
 
 function isBlockContainerEffectivelyEmpty(node: PMNode): boolean {
@@ -328,13 +314,6 @@ function deleteRangesAndMaybeRemoveEmptyBlock(params: {
 export const aiDiffRuntimeExtension = {
   id: 'ai-diff.runtime',
   requiresAiDiffText: true,
-  dependencies: [
-    'ai-diff.inline.diff',
-    'ai-diff.inline.add',
-    'ai-diff.inline.delete',
-    'ai-diff.inline.link-add',
-    'ai-diff.inline.link-delete',
-  ],
   print: {
     styles: [
       `.note-print-body [data-ai-diff-block-display-hidden='true'],
@@ -345,7 +324,7 @@ export const aiDiffRuntimeExtension = {
     ],
   },
   extensions: ({ registry }) => [createAiDiffBlockFoldExtension(registry)()],
-  editorProps: () => {
+  editorProps: ({ registry }) => {
     const props: Partial<EditorProps> = {
       handleDOMEvents: {
         // 拦截处理 Backspace 和 Delete 键按下事件
@@ -361,7 +340,7 @@ export const aiDiffRuntimeExtension = {
             const name = node.type.name;
             const from = selection.from;
             const to = selection.to;
-            if (!isAiDiffChangeNodeName(name)) return false;
+            if (!isAiDiffChangeNodeName(name, registry)) return false;
             event.preventDefault();
             deleteRangesAndMaybeRemoveEmptyBlock({ view, ranges: [{ from, to }], probePos: from });
             return true;
@@ -375,7 +354,7 @@ export const aiDiffRuntimeExtension = {
               const beforeNode = $pos.nodeBefore;
               if (!beforeNode) return false;
               const name = beforeNode.type.name;
-              if (!isAiDiffChangeNodeName(name)) return false;
+              if (!isAiDiffChangeNodeName(name, registry)) return false;
 
               const from = pos - beforeNode.nodeSize;
               const to = pos;
@@ -391,7 +370,7 @@ export const aiDiffRuntimeExtension = {
             const afterNode = $pos.nodeAfter;
             if (!afterNode) return false;
             const name = afterNode.type.name;
-            if (!isAiDiffChangeNodeName(name)) return false;
+            if (!isAiDiffChangeNodeName(name, registry)) return false;
 
             const from = pos;
             const to = pos + afterNode.nodeSize;
@@ -407,91 +386,3 @@ export const aiDiffRuntimeExtension = {
     return props;
   },
 } satisfies NoteRuntimeExtension;
-
-function createAiDiffInlinePlugin(params: {
-  id: string;
-  type: string;
-  spec: NoteInlinePlugin['spec'];
-  plainText: (props: Record<string, unknown>) => string;
-}): NoteInlinePlugin {
-  return {
-    kind: 'inline',
-    id: params.id,
-    type: params.type,
-    spec: params.spec,
-    capabilities: {
-      markdownImport: { support: 'unsupported', reason: 'AI Diff 语法节点不从 Markdown 导入' },
-      markdownExport: { support: 'custom' },
-      aiDiff: { support: 'custom' },
-      projection: { support: 'custom' },
-      print: { support: 'custom' },
-    },
-    print: {
-      styles: [
-        `.note-print-body [class*='aiActionsRoot'],
-.note-print-body [class*='aiActionsAnchor'],
-.note-print-body [class*='aiDiffInlineStrategyHidden'] {
-  display: none !important;
-  visibility: hidden !important;
-  max-width: 0 !important;
-  max-height: 0 !important;
-  overflow: hidden !important;
-}`,
-      ],
-    },
-    projection: {
-      plainText: (inline) => {
-        const props =
-          typeof inline.props === 'object' && inline.props !== null
-            ? (inline.props as Record<string, unknown>)
-            : {};
-        return params.plainText(props);
-      },
-    },
-    markdownExport: createAiDiffSyntaxMarkdownExport(params.type),
-    aiDiff: createSyntaxInlineAiDiff(params.type),
-    comments: { documentThreads: 'unsupported' },
-  };
-}
-
-export const aiDiffPlugin = {
-  kind: 'bundle',
-  id: 'ai-diff',
-  children: [
-    createAiDiffInlinePlugin({
-      id: 'ai-diff.inline.diff',
-      type: 'ai-diff',
-      spec: aiDiffInlineContentSpec,
-      plainText: (props) =>
-        typeof props.replace === 'string'
-          ? props.replace
-          : typeof props.origin === 'string'
-            ? props.origin
-            : '',
-    }),
-    createAiDiffInlinePlugin({
-      id: 'ai-diff.inline.add',
-      type: 'ai-add',
-      spec: aiAddInlineContentSpec,
-      plainText: (props) => (typeof props.text === 'string' ? props.text : ''),
-    }),
-    createAiDiffInlinePlugin({
-      id: 'ai-diff.inline.delete',
-      type: 'ai-delete',
-      spec: aiDeleteInlineContentSpec,
-      plainText: (props) => (typeof props.text === 'string' ? props.text : ''),
-    }),
-    createAiDiffInlinePlugin({
-      id: 'ai-diff.inline.link-add',
-      type: 'ai-link-add',
-      spec: aiLinkAddInlineContentSpec,
-      plainText: (props) => (typeof props.text === 'string' ? props.text : ''),
-    }),
-    createAiDiffInlinePlugin({
-      id: 'ai-diff.inline.link-delete',
-      type: 'ai-link-delete',
-      spec: aiLinkDeleteInlineContentSpec,
-      plainText: (props) => (typeof props.text === 'string' ? props.text : ''),
-    }),
-  ],
-} satisfies NotePluginBundle;

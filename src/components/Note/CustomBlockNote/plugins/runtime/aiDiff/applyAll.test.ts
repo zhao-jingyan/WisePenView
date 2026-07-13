@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { notePluginRegistry } from '..';
+import { notePluginRegistry } from '../..';
 import { applyAllNoteAiDiffActions } from './applyAll';
 
 describe('applyAllNoteAiDiffActions', () => {

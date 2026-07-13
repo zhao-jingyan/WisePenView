@@ -252,7 +252,7 @@ export function collectNoteEditorProps(registry: NotePluginRegistry): Partial<Ed
   const seenScalarKeys = new Map<string, string>();
 
   contributors.forEach((contributor) => {
-    const props = contributor.editorProps?.();
+    const props = contributor.editorProps?.({ registry });
     if (!props) return;
     for (const key of Object.keys(props) as Array<keyof EditorProps>) {
       const value = props[key];

@@ -1,5 +1,5 @@
 import type { CustomBlockNoteEditor } from '../blockNoteSchema';
-import { hasAiDiffInBlock } from './presence';
+import { hasAiDiffInBlock } from './runtime/aiDiff/presence';
 import type { NoteContentComments, NotePluginRegistry } from './types';
 
 function getCommentsPolicy(

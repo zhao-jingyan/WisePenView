@@ -6,7 +6,7 @@ import type {
 } from '@blocknote/core';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
-import type { NotePluginRegistry } from './types';
+import type { NotePluginRegistry } from '../../types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;

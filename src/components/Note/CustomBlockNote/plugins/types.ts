@@ -65,6 +65,27 @@ export interface NoteAiDiffGeneratedBlockProjection {
   content?: unknown;
 }
 
+export interface NoteAiDiffProtocolBlockInput {
+  props: Record<string, unknown>;
+  content: unknown;
+  aiContent: unknown;
+  hasExplicitAiContent: boolean;
+}
+
+export interface NoteAiDiffProtocolInline {
+  kind: 'text' | 'atom';
+  normalize: (inline: Record<string, unknown>) => unknown;
+  visibleText: (inline: Record<string, unknown>) => string;
+  plain: (inline: Record<string, unknown>) => readonly Record<string, unknown>[];
+  create: (inline: Record<string, unknown>) => readonly Record<string, unknown>[];
+  delete: (inline: Record<string, unknown>) => readonly Record<string, unknown>[];
+  edit: (
+    origin: Record<string, unknown>,
+    replace: Record<string, unknown>
+  ) => readonly Record<string, unknown>[] | null;
+  editText?: (origin: string, replace: string) => readonly Record<string, unknown>[];
+}
+
 export type NoteAiDiffAction = 'accept' | 'discard';
 
 export interface NoteAiDiffTextValue {
@@ -87,6 +108,7 @@ export interface NoteAiDiffGeneratedInlineContext {
 }
 
 export interface NoteInlineAiDiff {
+  reviewChange?: boolean;
   isPresent: (inline: Record<string, unknown>) => boolean;
   isVisible: (inline: Record<string, unknown>, mode: AiDiffDisplayMode) => boolean;
   apply: (
@@ -98,6 +120,7 @@ export interface NoteInlineAiDiff {
     context: NoteAiDiffGeneratedInlineContext
   ) => readonly Record<string, unknown>[] | null;
   generatedText?: NoteAiDiffTextAdapter;
+  protocol?: NoteAiDiffProtocolInline;
 }
 
 export interface NoteContentComments {
@@ -126,6 +149,10 @@ export interface NoteBlockAiDiff {
     mode: AiDiffDisplayMode,
     registry: NotePluginRegistry
   ) => string;
+  normalizeProtocol: (
+    input: NoteAiDiffProtocolBlockInput,
+    registry: NotePluginRegistry
+  ) => NoteAiDiffGeneratedBlockProjection | null;
   normalizeGenerated: (
     input: NoteAiDiffGeneratedBlockInput,
     registry: NotePluginRegistry
@@ -207,7 +234,7 @@ interface NoteContentPluginBase extends NotePluginNodeBase {
   comments: NoteContentComments;
   print?: NotePrintContribution;
   extensions?: (context: NotePluginRuntimeContext) => ExtensionFactoryInstance[];
-  editorProps?: () => Partial<EditorProps>;
+  editorProps?: (context: NotePluginRuntimeContext) => Partial<EditorProps>;
   slashMenu?: (ctx: { editor: PluginEditor }) => DefaultReactSuggestionItem[];
 }
 
@@ -245,7 +272,7 @@ export interface NoteRuntimeExtension extends NotePluginNodeBase {
   requiresAiDiffText?: boolean;
   print?: NotePrintContribution;
   extensions?: (context: NotePluginRuntimeContext) => ExtensionFactoryInstance[];
-  editorProps?: () => Partial<EditorProps>;
+  editorProps?: (context: NotePluginRuntimeContext) => Partial<EditorProps>;
 }
 
 export interface NotePluginRuntimeContext {

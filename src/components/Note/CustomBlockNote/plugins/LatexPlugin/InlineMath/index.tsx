@@ -15,8 +15,8 @@ import {
   type FormulaThreadAnchor,
 } from '../../../comments/core/commentThreadConstants';
 import { useNoteEditorReadOnlyContext } from '../../../editorReadOnly';
-import { useAiDiffDisplayModeContext } from '../../AIDiffPlugin/displayModeContext';
-import aiDiffStyles from '../../AIDiffPlugin/style.module.less';
+import { useAiDiffDisplayModeContext } from '../../runtime/aiDiff/displayModeContext';
+import aiDiffStyles from '../../runtime/aiDiff/style.module.less';
 import { useLatexComment } from '../comments/latexCommentContext';
 import { captureInlineMathAnchor } from '../comments/latexCommentSupport';
 import { LatexFormulaCommentButton } from '../comments/LatexFormulaCommentButton';

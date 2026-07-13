@@ -3,11 +3,11 @@ import { useEffectForce } from '@/hooks/useEffectForce';
 import { useCallback, useRef } from 'react';
 import type * as Y from 'yjs';
 
-import type { CustomBlockNoteEditor } from '../../blockNoteSchema';
+import type { CustomBlockNoteEditor } from '../../../../blockNoteSchema';
+import type { NotePluginRegistry } from '../../../types';
+import { normalizeAiGeneratedBlocks } from '../normalizeGeneratedBlocks';
 import { hasAiDiffInBlock } from '../presence';
-import type { NotePluginRegistry } from '../types';
-import { aiGeneratedBlocksToBlockNoteBlocks } from './patch';
-import { aiProtoBlocksToAiGeneratedBlocks } from './proto';
+import { aiProtoBlocksToAiGeneratedBlocks } from '../protocol';
 import {
   AI_CONTENT_STORE_MAP,
   AI_DIFF_NORMALIZATION_ORIGIN,
@@ -15,7 +15,7 @@ import {
   readAiContentProtoBlocks,
   removeAiContentPayloads,
   writeMappedBlock,
-} from './yjsAdapter';
+} from './adapter';
 
 interface NormalizationAwareness {
   clientID: number;
@@ -67,10 +67,8 @@ export function useAiDiffNormalization(params: {
         cleanupOnlyIds.add(id);
         continue;
       }
-      const generated = aiProtoBlocksToAiGeneratedBlocks([protoBlock]);
-      const mapped = generated
-        ? aiGeneratedBlocksToBlockNoteBlocks(generated, registry)?.[0]
-        : null;
+      const generated = aiProtoBlocksToAiGeneratedBlocks([protoBlock], registry);
+      const mapped = generated ? normalizeAiGeneratedBlocks(generated, registry)?.[0] : null;
       if (isRecord(mapped)) mappedBlocks.set(id, mapped);
     }
 

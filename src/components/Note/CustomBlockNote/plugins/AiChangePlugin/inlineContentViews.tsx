@@ -17,14 +17,14 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
 import { useNoteEditorReadOnlyContext } from '../../editorReadOnly';
-import { useAiDiffDisplayModeContext } from './displayModeContext';
+import { useAiDiffDisplayModeContext } from '../runtime/aiDiff/displayModeContext';
+import styles from '../runtime/aiDiff/style.module.less';
 import {
-  applyAiDiffActionForKey,
-  clearAiLinkInlineContentForKey,
-  editAiLinkInlineContentForKey,
+  applyAiChangeForKey,
+  clearAiLinkChangeForKey,
+  editAiLinkChangeForKey,
   isInlineContentEffectivelyEmpty,
-} from './patch';
-import styles from './style.module.less';
+} from './aiDiff';
 
 type AiDiffActionMode = 'accept' | 'discard'; // 用户对某条 diff 的动作：accept/discard
 type AiVisualMode = 'hidden' | 'plain' | 'compare'; // UI 呈现模式：隐藏占位/纯文本/对比
@@ -152,7 +152,7 @@ function useApplyAiDiffAction(
       if (!block || !isRecord(block)) return;
 
       const content = block['content'];
-      const next = applyAiDiffActionForKey(content, changeKey, mode); // 对 content 里匹配 changeKey 的片段应用 accept/discard，返回更新后的 content
+      const next = applyAiChangeForKey(content, changeKey, mode); // 对 content 里匹配 changeKey 的片段应用 accept/discard，返回更新后的 content
       if (!next) return; // 返回空表示不需要更新
       // 如果更新后block内容清空，则直接删除此block
       if (isInlineContentEffectivelyEmpty(next) && !blockHasNestedChildren(block)) {
@@ -306,7 +306,7 @@ function AiLinkToolbarEditButton({
     shellRef,
     useCallback(
       (content, key) =>
-        editAiLinkInlineContentForKey(content, key, {
+        editAiLinkChangeForKey(content, key, {
           href: validateUrl(currentUrl),
           text: currentText,
         }),
@@ -388,12 +388,7 @@ function AiLinkToolbarDeleteButton({
 }: AiLinkToolbarProps & { setToolbarOpen: (open: boolean) => void }) {
   const Components = useComponentsContext()!;
   const dict = useDictionary();
-  const clearLink = useUpdateAiInlineContent(
-    editor,
-    changeKey,
-    shellRef,
-    clearAiLinkInlineContentForKey
-  );
+  const clearLink = useUpdateAiInlineContent(editor, changeKey, shellRef, clearAiLinkChangeForKey);
 
   return (
     <Components.LinkToolbar.Button

@@ -7,10 +7,8 @@ import {
 } from '@blocknote/core';
 import { Image as ImageIcon } from 'lucide-react';
 
-import { plainLinkInlineAiDiff, plainTextInlineAiDiff } from '../AIDiffPlugin/ownerPresence';
-import { atomicPropsBlockAiDiff, richTextBlockAiDiff } from '../AIDiffPlugin/patch';
-import { shouldFoldAiDiffInlineContent } from '../presence';
 import { projectInlinePlainText } from '../projection';
+import { shouldFoldAiDiffInlineContent } from '../runtime/aiDiff/presence';
 import type {
   NoteBlockAiDiff,
   NoteBlockPlugin,
@@ -21,6 +19,12 @@ import type {
   NotePluginBundle,
   NotePrintContribution,
 } from '../types';
+import {
+  atomicPropsBlockAiDiff,
+  plainLinkInlineAiDiff,
+  plainTextInlineAiDiff,
+  richTextBlockAiDiff,
+} from './aiDiff';
 
 const DEFAULT_CAPABILITY: NoteCapabilityDeclaration = { support: 'default' };
 const UNSUPPORTED_AI_DIFF: NoteCapabilityDeclaration = {

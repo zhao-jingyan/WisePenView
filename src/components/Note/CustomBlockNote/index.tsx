@@ -69,11 +69,11 @@ import {
   isCommentableSelection,
   notePluginRegistry,
 } from './plugins';
-import { syncAiDiffBlockFoldDisplayMode } from './plugins/AIDiffPlugin';
-import { AiDiffBulkActions } from './plugins/AIDiffPlugin/BulkActions';
-import { AiDiffDisplayModeProvider } from './plugins/AIDiffPlugin/displayModeContext';
-import { useAiDiffNormalization } from './plugins/AIDiffPlugin/useAiDiffNormalization';
 import { printNotePdfViaBrowser, waitForEditorPaint } from './plugins/noteBrowserPrint';
+import { syncAiDiffBlockFoldDisplayMode } from './plugins/runtime/aiDiff';
+import { AiDiffBulkActions } from './plugins/runtime/aiDiff/BulkActions';
+import { AiDiffDisplayModeProvider } from './plugins/runtime/aiDiff/displayModeContext';
+import { useAiDiffNormalization } from './plugins/runtime/aiDiff/yjs/useAiDiffNormalization';
 import styles from './style.module.less';
 
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;

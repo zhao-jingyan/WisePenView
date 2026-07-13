@@ -1,5 +1,5 @@
-import type { CustomBlockNoteEditor } from '../../blockNoteSchema';
-import type { NoteAiDiffAction, NotePluginRegistry } from '../types';
+import type { CustomBlockNoteEditor } from '../../../blockNoteSchema';
+import type { NoteAiDiffAction, NotePluginRegistry } from '../../types';
 
 function blockHasNestedChildren(block: { children?: readonly unknown[] }): boolean {
   return Array.isArray(block.children) && block.children.length > 0;
