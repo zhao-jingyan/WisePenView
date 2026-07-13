@@ -52,6 +52,8 @@ describe('createNotePluginRegistry', () => {
     expect(notePluginRegistry.blockPlugins.get('codeBlock')?.id).toBe('codeBlock');
     expect(notePluginRegistry.blockPlugins.get('math')?.id).toBe('latex.block.math');
     expect(notePluginRegistry.inlinePlugins.get('inlineMath')?.id).toBe('latex.inline.inlineMath');
+    expect(notePluginRegistry.blockPlugins.get('math')?.markdownImport).toBeDefined();
+    expect(notePluginRegistry.inlinePlugins.get('inlineMath')?.markdownImport).toBeDefined();
   });
 
   it('展开 bundle 并按依赖稳定排序内容 owner', () => {
@@ -87,6 +89,25 @@ describe('createNotePluginRegistry', () => {
         ])
       )
     ).toThrow('Note 插件依赖存在环：first');
+  });
+
+  it('拒绝 Markdown 导入声明与 owner codec 不一致', () => {
+    const missingCodec = blockPlugin('missing-codec', 'missingCodec');
+    missingCodec.capabilities = {
+      ...defaultCapabilities,
+      markdownImport: { support: 'custom' },
+    };
+    expect(() => createNotePluginRegistry(bundle([missingCodec]))).toThrow(
+      'Note 插件 missing-codec 声明自定义 Markdown 导入但未提供 codec'
+    );
+
+    const undeclaredCodec = blockPlugin('undeclared-codec', 'undeclaredCodec');
+    undeclaredCodec.markdownImport = {
+      restore: () => undefined,
+    };
+    expect(() => createNotePluginRegistry(bundle([undeclaredCodec]))).toThrow(
+      'Note 插件 undeclared-codec 提供了 Markdown 导入 codec 但未声明 custom'
+    );
   });
 
   it('允许 Runtime extension 依赖内容 owner', () => {

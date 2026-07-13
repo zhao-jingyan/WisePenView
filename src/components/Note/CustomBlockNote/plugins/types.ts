@@ -85,6 +85,31 @@ export interface NoteBlockAiDiff {
   ) => NoteAiDiffBlockActionResult;
 }
 
+export type NoteMarkdownImportSegment =
+  { type: 'text'; text: string } | { type: 'token'; value: string };
+
+export interface NoteMarkdownImportContext {
+  createToken: (value: string) => string;
+  readExactToken: (text: string) => string | undefined;
+  splitTokens: (text: string) => NoteMarkdownImportSegment[];
+}
+
+export interface NoteMarkdownBlockImport {
+  prepare?: (markdown: string, context: NoteMarkdownImportContext) => string;
+  restore: (
+    block: Record<string, unknown>,
+    context: NoteMarkdownImportContext
+  ) => Record<string, unknown> | undefined;
+}
+
+export interface NoteMarkdownInlineImport {
+  prepare?: (markdown: string, context: NoteMarkdownImportContext) => string;
+  restore: (
+    inline: Record<string, unknown>,
+    context: NoteMarkdownImportContext
+  ) => readonly Record<string, unknown>[] | undefined;
+}
+
 interface NotePluginNodeBase {
   id: string;
   dependencies?: readonly string[];
@@ -102,6 +127,7 @@ export interface NoteBlockPlugin extends NoteContentPluginBase {
   kind: 'block';
   spec: BlockSpecs[string];
   projection?: NoteBlockProjection;
+  markdownImport?: NoteMarkdownBlockImport;
   markdownExport?: NoteMarkdownExportProjection;
   aiDiff?: NoteBlockAiDiff;
 }
@@ -110,6 +136,7 @@ export interface NoteInlinePlugin extends NoteContentPluginBase {
   kind: 'inline';
   spec: InlineContentSpec<InlineContentConfig>;
   projection?: NoteInlineProjection;
+  markdownImport?: NoteMarkdownInlineImport;
   markdownExport?: NoteMarkdownExportProjection;
 }
 

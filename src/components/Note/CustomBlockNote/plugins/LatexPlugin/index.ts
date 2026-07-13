@@ -4,6 +4,7 @@ import type { NoteBlockPlugin, NoteInlinePlugin, NotePluginBundle } from '../typ
 import { inlineMathContentSpec } from './InlineMath';
 import { inlineMathDollarExtension } from './InlineMath/inlineMathDollarExtension';
 import { createMathBlockSpec } from './MathBlock';
+import { inlineMathMarkdownImport, mathBlockMarkdownImport } from './markdownImport';
 import { createMathSlashMenuItem } from './slashMenuItem';
 
 export const mathBlockPlugin = {
@@ -12,7 +13,7 @@ export const mathBlockPlugin = {
   type: 'math',
   spec: createMathBlockSpec(),
   capabilities: {
-    markdownImport: { support: 'unsupported', reason: '当前没有公式块 Markdown parse' },
+    markdownImport: { support: 'custom' },
     markdownExport: { support: 'custom' },
     aiDiff: { support: 'custom' },
     comments: { support: 'custom' },
@@ -29,6 +30,7 @@ export const mathBlockPlugin = {
       return typeof props.expression === 'string' ? props.expression : '';
     },
   },
+  markdownImport: mathBlockMarkdownImport,
   markdownExport: atomicAiDiffMarkdownExport,
   aiDiff: mathBlockAiDiff,
 } satisfies NoteBlockPlugin;
@@ -39,7 +41,7 @@ export const inlineMathPlugin = {
   type: 'inlineMath',
   spec: inlineMathContentSpec,
   capabilities: {
-    markdownImport: { support: 'unsupported', reason: '当前没有行内公式 Markdown parse' },
+    markdownImport: { support: 'custom' },
     markdownExport: { support: 'custom' },
     aiDiff: { support: 'custom' },
     comments: { support: 'custom' },
@@ -56,6 +58,7 @@ export const inlineMathPlugin = {
       return typeof props.expression === 'string' ? props.expression : '';
     },
   },
+  markdownImport: inlineMathMarkdownImport,
   markdownExport: atomicAiDiffMarkdownExport,
 } satisfies NoteInlinePlugin;
 

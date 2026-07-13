@@ -373,36 +373,36 @@ interface NoteEditorRuntime {
 
 ### 7.1 Block types
 
-| Type             | Schema/Render             | MD Import                   | MD Export          | AI Diff                                 | Comments                           | Menu                             | Projection                          |
-| ---------------- | ------------------------- | --------------------------- | ------------------ | --------------------------------------- | ---------------------------------- | -------------------------------- | ----------------------------------- |
-| paragraph        | default                   | default                     | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text、empty                   |
-| heading          | default                   | default                     | default            | inherited rich text                     | inherited text selection           | custom levels/toggle             | plain text、outline、active heading |
-| quote            | default                   | default                     | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text                          |
-| bulletListItem   | default                   | default                     | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text                          |
-| numberedListItem | default                   | default                     | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text                          |
-| checkListItem    | default                   | default                     | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text                          |
-| toggleListItem   | default                   | default                     | default            | inherited rich text，含折叠占位逻辑     | inherited text selection           | custom transform/slash           | plain text                          |
-| codeBlock        | custom                    | default                     | default            | unsupported，当前映射明确排除           | partial，依赖默认 text selection   | custom toolbar/transform/slash   | plain text 待验证                   |
-| table            | default + custom handles  | default lossy               | default lossy      | unsupported，当前映射误收录且丢 content | partial，当前 selection 行为未建模 | custom toolbar/side menu/handles | plain text/empty 待定义             |
-| divider          | default                   | default                     | default            | n/a                                     | unsupported                        | default slash                    | empty                               |
-| image            | default + injected upload | default                     | default            | unsupported                             | unsupported                        | default slash/toolbar            | signature 字段待定义                |
-| file             | default                   | default                     | default            | unsupported                             | unsupported                        | slash 当前隐藏                   | signature 字段待定义                |
-| audio            | default                   | default                     | default            | unsupported                             | unsupported                        | slash 当前隐藏                   | signature 字段待定义                |
-| video            | default                   | default                     | default            | unsupported                             | unsupported                        | slash 当前隐藏                   | signature 字段待定义                |
-| math             | custom                    | unsupported，当前没有 parse | custom `$$` export | custom atomic                           | custom formula anchor              | custom slash/local toolbar       | expression、signature               |
+| Type             | Schema/Render             | MD Import                  | MD Export          | AI Diff                                 | Comments                           | Menu                             | Projection                          |
+| ---------------- | ------------------------- | -------------------------- | ------------------ | --------------------------------------- | ---------------------------------- | -------------------------------- | ----------------------------------- |
+| paragraph        | default                   | default                    | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text、empty                   |
+| heading          | default                   | default                    | default            | inherited rich text                     | inherited text selection           | custom levels/toggle             | plain text、outline、active heading |
+| quote            | default                   | default                    | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text                          |
+| bulletListItem   | default                   | default                    | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text                          |
+| numberedListItem | default                   | default                    | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text                          |
+| checkListItem    | default                   | default                    | default            | inherited rich text                     | inherited text selection           | custom transform/slash           | plain text                          |
+| toggleListItem   | default                   | default                    | default            | inherited rich text，含折叠占位逻辑     | inherited text selection           | custom transform/slash           | plain text                          |
+| codeBlock        | custom                    | default                    | default            | unsupported，当前映射明确排除           | partial，依赖默认 text selection   | custom toolbar/transform/slash   | plain text 待验证                   |
+| table            | default + custom handles  | default lossy              | default lossy      | unsupported，当前映射误收录且丢 content | partial，当前 selection 行为未建模 | custom toolbar/side menu/handles | plain text/empty 待定义             |
+| divider          | default                   | default                    | default            | n/a                                     | unsupported                        | default slash                    | empty                               |
+| image            | default + injected upload | default                    | default            | unsupported                             | unsupported                        | default slash/toolbar            | signature 字段待定义                |
+| file             | default                   | default                    | default            | unsupported                             | unsupported                        | slash 当前隐藏                   | signature 字段待定义                |
+| audio            | default                   | default                    | default            | unsupported                             | unsupported                        | slash 当前隐藏                   | signature 字段待定义                |
+| video            | default                   | default                    | default            | unsupported                             | unsupported                        | slash 当前隐藏                   | signature 字段待定义                |
+| math             | custom                    | custom `$$...$$` normalize | custom `$$` export | custom atomic                           | custom formula anchor              | custom slash/local toolbar       | expression、signature               |
 
 ### 7.2 Inline content types
 
-| Type           | Schema/Render | MD Import                            | MD Export              | AI Diff                   | Comments                 | Projection              |
-| -------------- | ------------- | ------------------------------------ | ---------------------- | ------------------------- | ------------------------ | ----------------------- |
-| text           | default       | default                              | default                | inherited text diff       | inherited text selection | text、styles signature  |
-| link           | default       | default                              | default                | custom create/delete/edit | inherited text selection | text、href、signature   |
-| inlineMath     | custom        | unsupported，当前没有 Markdown parse | custom `$...$` export  | custom atomic             | custom formula anchor    | expression、signature   |
-| ai-diff        | custom        | n/a                                  | project 后转 text      | custom syntax             | unsupported              | display text、signature |
-| ai-add         | custom        | n/a                                  | project 后转 text      | custom syntax             | unsupported              | display text、signature |
-| ai-delete      | custom        | n/a                                  | project 后转 text      | custom syntax             | unsupported              | display text、signature |
-| ai-link-add    | custom        | n/a                                  | project 后转 link/text | custom syntax             | unsupported              | text、href、signature   |
-| ai-link-delete | custom        | n/a                                  | project 后转 link/text | custom syntax             | unsupported              | text、href、signature   |
+| Type           | Schema/Render | MD Import                | MD Export              | AI Diff                   | Comments                 | Projection              |
+| -------------- | ------------- | ------------------------ | ---------------------- | ------------------------- | ------------------------ | ----------------------- |
+| text           | default       | default                  | default                | inherited text diff       | inherited text selection | text、styles signature  |
+| link           | default       | default                  | default                | custom create/delete/edit | inherited text selection | text、href、signature   |
+| inlineMath     | custom        | custom `$...$` normalize | custom `$...$` export  | custom atomic             | custom formula anchor    | expression、signature   |
+| ai-diff        | custom        | n/a                      | project 后转 text      | custom syntax             | unsupported              | display text、signature |
+| ai-add         | custom        | n/a                      | project 后转 text      | custom syntax             | unsupported              | display text、signature |
+| ai-delete      | custom        | n/a                      | project 后转 text      | custom syntax             | unsupported              | display text、signature |
+| ai-link-add    | custom        | n/a                      | project 后转 link/text | custom syntax             | unsupported              | text、href、signature   |
+| ai-link-delete | custom        | n/a                      | project 后转 link/text | custom syntax             | unsupported              | text、href、signature   |
 
 ### 7.3 当前保持的产品决策
 
@@ -414,6 +414,9 @@ interface NoteEditorRuntime {
 4. Markdown 和 PDF 默认导出 AI Diff 的旧文本视图；
 5. Slash menu 继续隐藏 file、audio、video；
 6. 默认 BlockNote Markdown codec 的 lossy 行为暂不改变，但需要 characterization test 固定当前结果。
+7. 公式导入先委托 BlockNote 默认 parser，再由 math/inlineMath owner 恢复自定义节点；行内代码、链接文本和转义美元符保持原义。
+
+当前 BlockNote lossy exporter 会把 MathBlock 的外部 HTML 压平为 `$$ expression $$`，多行 expression 会丢失换行。导入器同时识别独立 `$$` 围栏和该实际输出；多行导出的保真问题留在 Markdown export 切面解决，导入切面不增加第二套 exporter。
 
 ## 8. 测试策略
 
@@ -525,7 +528,7 @@ A-D 必须串行，由主任务完成。E1/E2 在共享契约稳定后可以使�
 以下问题不能由 fallback 或兼容层代替业务决定：
 
 1. `commentDocumentRole` 应由哪个后端权限或产品规则提供；该问题阻塞 comments 最终切换。
-2. `math` / `inlineMath` 是否要求 Markdown round-trip，以及 `$...$`、`$$...$$` 对应的目标节点；该问题不阻塞 owner/registry 样板，但阻塞 Markdown codec 定稿。
+2. `math` / `inlineMath` 要求 Markdown round-trip：`$...$` 映射 inlineMath，独立 `$$` 围栏和当前 exporter 的 `$$ expression $$` 映射 math；多行 MathBlock 的 lossy export 仍需在导出切面修复。
 3. audio/file/video 是否继续作为只读旧文档兼容类型保留在 schema；当前 slash 隐藏，编辑器上传口只接受 image。
 4. code/table 普通批注是否属于正式支持范围；当前 UI 没有明确排除，但没有类型契约。
 5. 服务端是否仍可能把 `AI-Create`、`AI-Delete`、`AI-Edit` 直接放入持久化 editor document；若不会，应删除 export/visibility 的遗留兼容分支。

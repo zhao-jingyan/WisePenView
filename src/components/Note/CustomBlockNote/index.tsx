@@ -73,6 +73,7 @@ import {
   collectNoteEditorProps,
   createNoteReadOnlyFilterExtension,
   exportNoteMarkdown,
+  importNoteMarkdown,
   notePluginRegistry,
 } from './plugins';
 import { syncAiDiffBlockFoldDisplayMode } from './plugins/AIDiffPlugin';
@@ -455,7 +456,7 @@ function CustomBlockNoteEditor({
     }
 
     try {
-      const blocks = editor.tryParseMarkdownToBlocks(pendingImport.markdown);
+      const blocks = importNoteMarkdown(editor, notePluginRegistry, pendingImport.markdown);
       if (blocks.length > 0) {
         editor.replaceBlocks(editor.document, blocks);
       }

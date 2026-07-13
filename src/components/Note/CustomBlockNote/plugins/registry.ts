@@ -86,6 +86,14 @@ export function createNotePluginRegistry(
   const inlinePlugins = new Map<string, NoteInlinePlugin>();
 
   for (const plugin of sortedContentPlugins) {
+    const markdownImportSupport = plugin.capabilities.markdownImport.support;
+    if (markdownImportSupport === 'custom' && !plugin.markdownImport) {
+      throw new Error(`Note 插件 ${plugin.id} 声明自定义 Markdown 导入但未提供 codec`);
+    }
+    if (markdownImportSupport !== 'custom' && plugin.markdownImport) {
+      throw new Error(`Note 插件 ${plugin.id} 提供了 Markdown 导入 codec 但未声明 custom`);
+    }
+
     const owners = plugin.kind === 'block' ? blockPlugins : inlinePlugins;
     const currentOwner = owners.get(plugin.type);
     if (currentOwner) {

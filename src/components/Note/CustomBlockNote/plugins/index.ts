@@ -28,6 +28,7 @@ export {
   exportNoteMarkdown,
   projectNoteBlocksForMarkdown,
 } from './markdownExport';
+export { importNoteMarkdown } from './markdownImport';
 export type {
   NoteBlockPlugin,
   NoteContentPlugin,
