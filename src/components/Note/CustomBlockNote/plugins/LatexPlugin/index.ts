@@ -3,7 +3,7 @@ import { atomicInlineAiDiff } from '../AIDiffPlugin/ownerPresence';
 import { mathBlockAiDiff } from '../AIDiffPlugin/patch';
 import type { NoteBlockPlugin, NoteInlinePlugin, NotePluginBundle } from '../types';
 import { inlineMathContentSpec } from './InlineMath';
-import { inlineMathDollarExtension } from './InlineMath/inlineMathDollarExtension';
+import { createInlineMathDollarExtension } from './InlineMath/inlineMathDollarExtension';
 import { createMathBlockSpec } from './MathBlock';
 import { inlineMathMarkdownImport, mathBlockMarkdownImport } from './markdownImport';
 import { createMathSlashMenuItem } from './slashMenuItem';
@@ -12,6 +12,7 @@ export const mathBlockPlugin = {
   kind: 'block',
   id: 'latex.block.math',
   type: 'math',
+  contentModel: 'none',
   spec: createMathBlockSpec(),
   capabilities: {
     markdownImport: { support: 'custom' },
@@ -75,7 +76,7 @@ export const inlineMathPlugin = {
     projection: { support: 'custom' },
     print: { support: 'default' },
   },
-  extensions: () => [inlineMathDollarExtension()],
+  extensions: ({ registry }) => [createInlineMathDollarExtension(registry)()],
   projection: {
     plainText: (inline) => {
       const props =

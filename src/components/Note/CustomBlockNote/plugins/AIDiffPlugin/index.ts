@@ -7,6 +7,7 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
 import { shouldFoldAiDiffInlineContent } from '../presence';
+import { createDefaultNoteBlock } from '../registry';
 import type {
   NoteInlinePlugin,
   NotePluginBundle,
@@ -217,7 +218,11 @@ const createAiDiffBlockFoldExtension = (registry: NotePluginRegistry) =>
 
               // 插入空 paragraph作为子块
               try {
-                const inserted = ed.insertBlocks([{ type: 'paragraph' }], refBlock, 'before');
+                const inserted = ed.insertBlocks(
+                  [createDefaultNoteBlock(registry)],
+                  refBlock,
+                  'before'
+                );
                 const firstInserted = inserted?.[0];
                 if (isRecord(firstInserted) && typeof firstInserted['id'] === 'string') {
                   ed.setTextCursorPosition(firstInserted['id'] as string, 'start');

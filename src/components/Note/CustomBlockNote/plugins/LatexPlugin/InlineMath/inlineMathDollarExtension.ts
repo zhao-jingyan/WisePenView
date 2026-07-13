@@ -6,6 +6,7 @@ import type {
 import { createExtension, getBlockInfo, inlineContentToNodes, nodeToBlock } from '@blocknote/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
+import type { NotePluginRegistry } from '../../types';
 
 /**
  * 行内内容的结构性类型：BlockNote 默认 inline content（text/link）+ 由本扩展插入的 inlineMath。
@@ -26,13 +27,6 @@ interface InlineMathContent {
 type NoteInlineContent = DefaultInlineContent | InlineMathContent;
 
 const inlineMathDollarPluginKey = new PluginKey('wisePenInlineMathDollar');
-
-const ALLOWED_BLOCK_TYPES = new Set([
-  'paragraph',
-  'bulletListItem',
-  'numberedListItem',
-  'checkListItem',
-]);
 
 function splitDoubleDollar(text: string): { before: string; expr: string; after: string } | null {
   const open = text.indexOf('$$');
@@ -94,106 +88,107 @@ function transformInlineContentOnce(content: NoteInlineContent[]): NoteInlineCon
   return null;
 }
 
-export const inlineMathDollarExtension = createExtension(({ editor }) => {
-  return {
-    key: 'wisePenInlineMathDollar',
-    prosemirrorPlugins: [
-      new Plugin({
-        key: inlineMathDollarPluginKey,
-        appendTransaction(transactions, _oldState, newState) {
-          if (!transactions.some((t) => t.docChanged)) {
-            return null;
-          }
-          if (transactions.some((t) => t.getMeta(inlineMathDollarPluginKey) === 'skip')) {
-            return null;
-          }
-
-          const replacements: Array<{
-            beforePos: number;
-            blockType: string;
-            blockProps: Record<string, boolean | number | string>;
-            content: NoteInlineContent[];
-          }> = [];
-
-          newState.doc.descendants((node, pos) => {
-            if (node.type.name !== 'blockContainer') {
-              return true;
+export const createInlineMathDollarExtension = (registry: NotePluginRegistry) =>
+  createExtension(({ editor }) => {
+    return {
+      key: 'wisePenInlineMathDollar',
+      prosemirrorPlugins: [
+        new Plugin({
+          key: inlineMathDollarPluginKey,
+          appendTransaction(transactions, _oldState, newState) {
+            if (!transactions.some((t) => t.docChanged)) {
+              return null;
+            }
+            if (transactions.some((t) => t.getMeta(inlineMathDollarPluginKey) === 'skip')) {
+              return null;
             }
 
-            const block = nodeToBlock(
-              node,
-              newState.schema,
-              editor.schema.blockSchema,
-              editor.schema.inlineContentSchema,
-              editor.schema.styleSchema
-            );
+            const replacements: Array<{
+              beforePos: number;
+              blockType: string;
+              blockProps: Record<string, boolean | number | string>;
+              content: NoteInlineContent[];
+            }> = [];
 
-            if (!ALLOWED_BLOCK_TYPES.has(block.type)) {
-              return true;
-            }
-            if (!Array.isArray(block.content)) {
-              return true;
-            }
+            newState.doc.descendants((node, pos) => {
+              if (node.type.name !== 'blockContainer') {
+                return true;
+              }
 
-            const transformed = transformInlineContentOnce(
-              block.content as unknown as NoteInlineContent[]
-            );
-            if (!transformed) {
-              return true;
-            }
+              const block = nodeToBlock(
+                node,
+                newState.schema,
+                editor.schema.blockSchema,
+                editor.schema.inlineContentSchema,
+                editor.schema.styleSchema
+              );
 
-            replacements.push({
-              beforePos: pos,
-              blockType: block.type,
-              blockProps: block.props,
-              content: transformed,
+              if (!registry.blockPlugins.get(block.type)?.inputRules?.inlineMathDollar) {
+                return true;
+              }
+              if (!Array.isArray(block.content)) {
+                return true;
+              }
+
+              const transformed = transformInlineContentOnce(
+                block.content as unknown as NoteInlineContent[]
+              );
+              if (!transformed) {
+                return true;
+              }
+
+              replacements.push({
+                beforePos: pos,
+                blockType: block.type,
+                blockProps: block.props,
+                content: transformed,
+              });
+              return true;
             });
-            return true;
-          });
 
-          if (replacements.length === 0) {
-            return null;
-          }
-
-          replacements.sort((a, b) => b.beforePos - a.beforePos);
-
-          let tr = newState.tr;
-          tr.setMeta(inlineMathDollarPluginKey, 'skip');
-
-          for (const rep of replacements) {
-            const node: PMNode | null = tr.doc.nodeAt(rep.beforePos);
-            if (!node || node.type.name !== 'blockContainer') {
-              continue;
-            }
-            const blockInfo = getBlockInfo({ posBeforeNode: rep.beforePos, node });
-            if (!blockInfo.isBlockContainer) {
-              continue;
+            if (replacements.length === 0) {
+              return null;
             }
 
-            const newNodeType = tr.doc.type.schema.nodes[rep.blockType];
-            const nodes = inlineContentToNodes(
-              rep.content as never,
-              tr.doc.type.schema,
-              rep.blockType,
-              editor.schema.styleSchema
-            );
+            replacements.sort((a, b) => b.beforePos - a.beforePos);
 
-            tr = tr.replaceWith(
-              blockInfo.blockContent.beforePos,
-              blockInfo.blockContent.afterPos,
-              newNodeType.createChecked(
-                {
-                  ...blockInfo.blockContent.node.attrs,
-                  ...rep.blockProps,
-                },
-                nodes
-              )
-            );
-          }
+            let tr = newState.tr;
+            tr.setMeta(inlineMathDollarPluginKey, 'skip');
 
-          return tr;
-        },
-      }),
-    ],
-  };
-});
+            for (const rep of replacements) {
+              const node: PMNode | null = tr.doc.nodeAt(rep.beforePos);
+              if (!node || node.type.name !== 'blockContainer') {
+                continue;
+              }
+              const blockInfo = getBlockInfo({ posBeforeNode: rep.beforePos, node });
+              if (!blockInfo.isBlockContainer) {
+                continue;
+              }
+
+              const newNodeType = tr.doc.type.schema.nodes[rep.blockType];
+              const nodes = inlineContentToNodes(
+                rep.content as never,
+                tr.doc.type.schema,
+                rep.blockType,
+                editor.schema.styleSchema
+              );
+
+              tr = tr.replaceWith(
+                blockInfo.blockContent.beforePos,
+                blockInfo.blockContent.afterPos,
+                newNodeType.createChecked(
+                  {
+                    ...blockInfo.blockContent.node.attrs,
+                    ...rep.blockProps,
+                  },
+                  nodes
+                )
+              );
+            }
+
+            return tr;
+          },
+        }),
+      ],
+    };
+  });

@@ -81,6 +81,7 @@ describe('Note AI Diff presence', () => {
       kind: 'block',
       id: 'test.block.paragraph',
       type: 'paragraph',
+      contentModel: 'inline',
       spec: defaultBlockSpecs.paragraph,
       capabilities: unsupportedCapabilities,
       comments: { documentThreads: 'unsupported' },

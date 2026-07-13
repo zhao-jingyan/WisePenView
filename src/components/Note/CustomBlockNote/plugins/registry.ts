@@ -85,6 +85,7 @@ export function createNotePluginRegistry(
   const blockPlugins = new Map<string, NoteBlockPlugin>();
   const inlinePlugins = new Map<string, NoteInlinePlugin>();
   let aiDiffText: NotePluginRegistry['aiDiffText'];
+  let defaultBlock: NotePluginRegistry['defaultBlock'];
 
   for (const plugin of sortedContentPlugins) {
     if (!plugin.comments) {
@@ -123,6 +124,12 @@ export function createNotePluginRegistry(
       }
       aiDiffText = plugin.aiDiff.generatedText;
     }
+    if (plugin.kind === 'block' && plugin.insertion?.default) {
+      if (defaultBlock) {
+        throw new Error(`Note 默认插入 block 存在多个 owner：${plugin.id}`);
+      }
+      defaultBlock = plugin.insertion;
+    }
   }
 
   if (sortedRuntimeExtensions.some((extension) => extension.requiresAiDiffText) && !aiDiffText) {
@@ -135,8 +142,16 @@ export function createNotePluginRegistry(
     blockPlugins,
     inlinePlugins,
     aiDiffText,
+    defaultBlock,
     runtimeExtensions: sortedRuntimeExtensions,
   };
+}
+
+export function createDefaultNoteBlock(registry: NotePluginRegistry): Record<string, unknown> {
+  if (!registry.defaultBlock) {
+    throw new Error('Note registry 缺少默认插入 block owner');
+  }
+  return registry.defaultBlock.createEmpty();
 }
 
 export function createNoteBlockNoteSchema(registry: NotePluginRegistry) {

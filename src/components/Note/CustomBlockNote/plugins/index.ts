@@ -7,6 +7,7 @@ import { tablePlugin } from './TablePlugin';
 import {
   collectNoteEditorExtensions,
   collectNoteEditorProps,
+  createDefaultNoteBlock,
   createNoteBlockNoteSchema,
   createNotePluginRegistry,
   createNoteReadOnlyFilterExtension,
@@ -31,6 +32,7 @@ export { hasAiDiffContentFromEditor } from './presence';
 export {
   collectNoteEditorExtensions,
   collectNoteEditorProps,
+  createDefaultNoteBlock,
   createNoteBlockNoteSchema,
   createNoteReadOnlyFilterExtension,
 };

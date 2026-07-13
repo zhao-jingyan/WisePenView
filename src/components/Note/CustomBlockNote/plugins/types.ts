@@ -185,6 +185,17 @@ export interface NoteBlockSideMenu {
   ) => { type?: string; props?: Record<string, unknown>; content?: unknown } | null;
 }
 
+export type NoteBlockContentModel = 'inline' | 'table' | 'none';
+
+export interface NoteBlockInsertion {
+  default?: boolean;
+  createEmpty: () => Record<string, unknown>;
+}
+
+export interface NoteBlockInputRules {
+  inlineMathDollar?: boolean;
+}
+
 interface NotePluginNodeBase {
   id: string;
   dependencies?: readonly string[];
@@ -203,6 +214,9 @@ interface NoteContentPluginBase extends NotePluginNodeBase {
 export interface NoteBlockPlugin extends NoteContentPluginBase {
   kind: 'block';
   spec: BlockSpecs[string];
+  contentModel: NoteBlockContentModel;
+  insertion?: NoteBlockInsertion;
+  inputRules?: NoteBlockInputRules;
   projection?: NoteBlockProjection;
   markdownImport?: NoteMarkdownBlockImport;
   markdownExport?: NoteMarkdownExportProjection;
@@ -244,5 +258,6 @@ export interface NotePluginRegistry {
   blockPlugins: ReadonlyMap<string, NoteBlockPlugin>;
   inlinePlugins: ReadonlyMap<string, NoteInlinePlugin>;
   aiDiffText?: NoteAiDiffTextAdapter;
+  defaultBlock?: NoteBlockInsertion;
   runtimeExtensions: readonly NoteRuntimeExtension[];
 }

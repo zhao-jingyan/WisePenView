@@ -2,6 +2,7 @@ import type { CustomBlockNoteEditor } from '@/components/Note/CustomBlockNote/bl
 import { blockNoteSchema } from '@/components/Note/CustomBlockNote/blockNoteSchema';
 import { useNoteEditorReadOnlyContext } from '@/components/Note/CustomBlockNote/editorReadOnly';
 import {
+  createDefaultNoteBlock,
   exportNoteFullHtml,
   exportNoteMarkdown,
   notePluginRegistry,
@@ -264,7 +265,11 @@ function CustomSideMenu({ plugins }: { plugins: readonly NoteContentPlugin[] }) 
 
   const insertSlashItemBelow = (item: DefaultReactSuggestionItem) => {
     editor.focus();
-    const insertedBlock = editor.insertBlocks([{ type: 'paragraph' }], block, 'after')[0];
+    const insertedBlock = editor.insertBlocks(
+      [createDefaultNoteBlock(notePluginRegistry) as NotePartialBlock],
+      block,
+      'after'
+    )[0];
     editor.setTextCursorPosition(insertedBlock);
     item.onItemClick();
     closeMenu();
@@ -278,7 +283,11 @@ function CustomSideMenu({ plugins }: { plugins: readonly NoteContentPlugin[] }) 
       return;
     }
 
-    const insertedBlock = editor.insertBlocks([{ type: 'paragraph' }], block, 'after')[0];
+    const insertedBlock = editor.insertBlocks(
+      [createDefaultNoteBlock(notePluginRegistry) as NotePartialBlock],
+      block,
+      'after'
+    )[0];
     editor.setTextCursorPosition(insertedBlock);
     suggestionMenu.openSuggestionMenu('/');
     closeMenu();

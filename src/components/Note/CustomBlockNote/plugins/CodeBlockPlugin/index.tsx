@@ -57,6 +57,7 @@ export const codeBlockPlugin = {
   kind: 'block',
   id: 'codeBlock',
   type: 'codeBlock',
+  contentModel: 'inline',
   spec: {
     ...baseCodeBlockSpec,
     implementation: {

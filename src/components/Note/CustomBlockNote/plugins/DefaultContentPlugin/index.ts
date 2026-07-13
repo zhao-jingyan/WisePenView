@@ -56,6 +56,9 @@ function createDefaultBlockPlugin(
     outline?: boolean;
     aiDiff?: NoteBlockPlugin['aiDiff'];
     comments?: NoteContentComments;
+    contentModel?: NoteBlockPlugin['contentModel'];
+    defaultInsertion?: boolean;
+    inlineMathDollar?: boolean;
     print?: NotePrintContribution;
     sideMenu?: NoteBlockPlugin['sideMenu'];
   } = {}
@@ -69,6 +72,11 @@ function createDefaultBlockPlugin(
     id: `default.block.${type}`,
     type,
     spec,
+    contentModel: options.contentModel ?? 'inline',
+    ...(options.defaultInsertion
+      ? { insertion: { default: true, createEmpty: () => ({ type }) } }
+      : {}),
+    ...(options.inlineMathDollar ? { inputRules: { inlineMathDollar: true } } : {}),
     capabilities,
     ...(options.aiDiff ? { aiDiff: options.aiDiff } : {}),
     ...(options.print ? { print: options.print } : {}),
@@ -196,6 +204,12 @@ export const defaultContentPlugin = {
           outline: type === 'heading',
           aiDiff: type === 'toggleListItem' ? toggleListItemAiDiff : richTextBlockAiDiff,
           comments: { documentThreads: 'range' },
+          defaultInsertion: type === 'paragraph',
+          inlineMathDollar:
+            type === 'paragraph' ||
+            type === 'bulletListItem' ||
+            type === 'numberedListItem' ||
+            type === 'checkListItem',
           ...(type === 'heading' ? { print: headingPrint } : {}),
           ...(type === 'quote' ? { print: quotePrint } : {}),
           ...(type === 'heading'
@@ -225,6 +239,7 @@ export const defaultContentPlugin = {
         },
         {
           aiDiff: atomicPropsBlockAiDiff,
+          contentModel: 'none',
           ...(type === 'audio' || type === 'image' || type === 'video'
             ? { print: atomicMediaPrint }
             : {}),

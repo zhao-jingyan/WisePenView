@@ -2,7 +2,11 @@ import { defaultBlockSpecs, defaultInlineContentSpecs } from '@blocknote/core';
 import { describe, expect, it } from 'vitest';
 
 import { notePluginRegistry } from '.';
-import { collectNotePrintStyles, createNotePluginRegistry } from './registry';
+import {
+  collectNotePrintStyles,
+  createDefaultNoteBlock,
+  createNotePluginRegistry,
+} from './registry';
 import type {
   NoteBlockPlugin,
   NoteContentCapabilityDeclarations,
@@ -24,6 +28,7 @@ function blockPlugin(id: string, type: string, dependencies?: readonly string[])
     kind: 'block',
     id,
     type,
+    contentModel: 'inline',
     dependencies,
     spec: defaultBlockSpecs.paragraph,
     capabilities: defaultCapabilities,
@@ -84,6 +89,20 @@ describe('createNotePluginRegistry', () => {
 
     expect(() => createNotePluginRegistry(bundle([missing]))).toThrow(
       'Note 插件 missing-comments 未声明 comments policy'
+    );
+  });
+
+  it('由唯一 block owner 提供默认插入块', () => {
+    const owner = blockPlugin('default-block', 'defaultBlock');
+    owner.insertion = { default: true, createEmpty: () => ({ type: 'defaultBlock' }) };
+    const registry = createNotePluginRegistry(bundle([owner]));
+
+    expect(createDefaultNoteBlock(registry)).toEqual({ type: 'defaultBlock' });
+
+    const second = blockPlugin('second-default', 'secondDefault');
+    second.insertion = { default: true, createEmpty: () => ({ type: 'secondDefault' }) };
+    expect(() => createNotePluginRegistry(bundle([owner, second]))).toThrow(
+      'Note 默认插入 block 存在多个 owner：second-default'
     );
   });
 

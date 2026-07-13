@@ -54,6 +54,7 @@ export const tablePlugin = {
   kind: 'block',
   id: 'table',
   type: 'table',
+  contentModel: 'table',
   spec: defaultBlockSpecs.table,
   capabilities: {
     markdownImport: { support: 'default' },
