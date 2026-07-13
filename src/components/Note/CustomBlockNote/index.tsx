@@ -422,8 +422,13 @@ function CustomBlockNoteEditor({
       activateWriteGuard();
       scheduleAiDiffBodyContentHashRefresh();
 
-      const isNoteEmpty = editor.blocksToMarkdownLossy().trim().length === 0;
-      useNewNoteStore.getState().syncNewNoteBodyFromEditor(resourceId, isNoteEmpty);
+      const newNoteState = useNewNoteStore.getState();
+      if (
+        newNoteState.newNoteResourceId === resourceId &&
+        editor.blocksToMarkdownLossy().trim().length > 0
+      ) {
+        newNoteState.markNewNoteDirty(resourceId);
+      }
       syncAiDiffPresence();
 
       const needOutline = Boolean(onOutlineChange);

@@ -179,9 +179,13 @@ function NoteTitle({
 
       const currentId = latestIdRef.current;
       if (currentId != null && currentId !== '') {
-        const raw = getBlockPlainText(firstBlock as { content?: unknown[] } | undefined);
-        const isTitleEmpty = raw.trim().length === 0;
-        useNewNoteStore.getState().syncNewNoteTitleFromEditor(currentId, isTitleEmpty);
+        const newNoteState = useNewNoteStore.getState();
+        if (newNoteState.newNoteResourceId === currentId) {
+          const raw = getBlockPlainText(firstBlock as { content?: unknown[] } | undefined);
+          if (raw.trim()) {
+            newNoteState.markNewNoteDirty(currentId);
+          }
+        }
       }
     });
 
