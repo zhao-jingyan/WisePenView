@@ -1,4 +1,5 @@
 import type { NoteAiDiffAction, NoteBlockAiDiff, NotePluginRegistry } from '../types';
+import { hasAtomicAiDiff } from './ownerPresence';
 import {
   buildAiEditJsonUnits,
   DEFAULT_MERGE_DIFF_HUNKS_OPTIONS,
@@ -444,6 +445,7 @@ export const atomicPropsBlockAiDiff: NoteBlockAiDiff = {
 };
 
 export const mathBlockAiDiff: NoteBlockAiDiff = {
+  isPresent: hasAtomicAiDiff,
   normalizeGenerated({ props, content, keyPrefix }) {
     const mappedProps = aiGeneratedMathProps(toJsonProps(props), content, keyPrefix);
     return mappedProps ? { props: mappedProps } : null;

@@ -38,6 +38,8 @@ function inlinePlugin(id: string, type: string): NoteInlinePlugin {
     type,
     spec: defaultInlineContentSpecs.text,
     capabilities: defaultCapabilities,
+    aiDiff: { isPresent: () => false },
+    comments: { canCreateDocumentThread: true },
   };
 }
 

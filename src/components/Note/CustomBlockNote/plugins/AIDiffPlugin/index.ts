@@ -16,6 +16,7 @@ import {
   aiLinkDeleteInlineContentSpec,
 } from './inlineContentSpecs';
 import { createAiDiffSyntaxMarkdownExport } from './ownerExport';
+import { syntaxInlineAiDiff } from './ownerPresence';
 
 const aiDiffBlockFoldPluginKey = new PluginKey('AIDiffBlockFold');
 
@@ -434,6 +435,8 @@ function createAiDiffInlinePlugin(params: {
       },
     },
     markdownExport: createAiDiffSyntaxMarkdownExport(params.type),
+    aiDiff: syntaxInlineAiDiff,
+    comments: { canCreateDocumentThread: false },
   };
 }
 

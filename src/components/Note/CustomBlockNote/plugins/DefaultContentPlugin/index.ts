@@ -6,6 +6,7 @@ import {
   type InlineContentSpec,
 } from '@blocknote/core';
 
+import { plainInlineAiDiff } from '../AIDiffPlugin/ownerPresence';
 import { atomicPropsBlockAiDiff, richTextBlockAiDiff } from '../AIDiffPlugin/patch';
 import { projectInlinePlainText } from '../projection';
 import type {
@@ -107,6 +108,8 @@ function createDefaultInlinePlugin(type: 'text' | 'link') {
         return projectInlinePlainText(inline.content, registry);
       },
     },
+    aiDiff: plainInlineAiDiff,
+    comments: { canCreateDocumentThread: true },
   } satisfies NoteInlinePlugin;
 }
 

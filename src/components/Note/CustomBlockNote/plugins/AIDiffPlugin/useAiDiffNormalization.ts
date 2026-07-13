@@ -4,6 +4,7 @@ import { useCallback, useRef } from 'react';
 import type * as Y from 'yjs';
 
 import type { CustomBlockNoteEditor } from '../../blockNoteSchema';
+import { hasAiDiffInBlock } from '../presence';
 import type { NotePluginRegistry } from '../types';
 import { aiGeneratedBlocksToBlockNoteBlocks } from './patch';
 import { aiProtoBlocksToAiGeneratedBlocks } from './proto';
@@ -15,14 +16,6 @@ import {
   removeAiContentPayloads,
   writeMappedBlock,
 } from './yjsAdapter';
-
-const AI_DIFF_INLINE_TYPES = new Set([
-  'ai-diff',
-  'ai-add',
-  'ai-delete',
-  'ai-link-add',
-  'ai-link-delete',
-]);
 
 interface NormalizationAwareness {
   clientID: number;
@@ -45,14 +38,6 @@ function findBlockById(blocks: readonly unknown[], id: string): unknown | null {
     }
   }
   return null;
-}
-
-function nodeHasAiDiff(node: unknown): boolean {
-  if (!isRecord(node)) return false;
-  if (typeof node.type === 'string' && AI_DIFF_INLINE_TYPES.has(node.type)) return true;
-  if (isRecord(node.props) && typeof node.props.aiDiffType === 'string') return true;
-  if (Array.isArray(node.content) && node.content.some(nodeHasAiDiff)) return true;
-  return Array.isArray(node.children) && node.children.some(nodeHasAiDiff);
 }
 
 export function useAiDiffNormalization(params: {
@@ -78,7 +63,7 @@ export function useAiDiffNormalization(params: {
     for (const protoBlock of protoBlocks) {
       const id = typeof protoBlock.id === 'string' ? protoBlock.id : '';
       if (!id) continue;
-      if (nodeHasAiDiff(findBlockById(editor.document, id))) {
+      if (hasAiDiffInBlock(findBlockById(editor.document, id), registry)) {
         cleanupOnlyIds.add(id);
         continue;
       }

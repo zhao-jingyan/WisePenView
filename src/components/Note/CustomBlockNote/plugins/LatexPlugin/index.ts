@@ -1,4 +1,5 @@
 import { atomicAiDiffMarkdownExport } from '../AIDiffPlugin/ownerExport';
+import { atomicInlineAiDiff } from '../AIDiffPlugin/ownerPresence';
 import { mathBlockAiDiff } from '../AIDiffPlugin/patch';
 import type { NoteBlockPlugin, NoteInlinePlugin, NotePluginBundle } from '../types';
 import { inlineMathContentSpec } from './InlineMath';
@@ -70,6 +71,8 @@ export const inlineMathPlugin = {
   },
   markdownImport: inlineMathMarkdownImport,
   markdownExport: atomicAiDiffMarkdownExport,
+  aiDiff: atomicInlineAiDiff,
+  comments: { canCreateDocumentThread: true },
 } satisfies NoteInlinePlugin;
 
 export const latexPlugin = {

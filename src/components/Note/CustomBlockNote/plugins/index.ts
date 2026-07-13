@@ -29,6 +29,7 @@ export {
   projectNoteBlocksForMarkdown,
 } from './markdownExport';
 export { importNoteMarkdown } from './markdownImport';
+export { hasAiDiffContentFromEditor, hasAiDiffInBlock } from './presence';
 export type {
   NoteBlockPlugin,
   NoteContentPlugin,

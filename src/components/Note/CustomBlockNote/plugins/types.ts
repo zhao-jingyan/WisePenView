@@ -67,6 +67,14 @@ export interface NoteAiDiffGeneratedBlockProjection {
 
 export type NoteAiDiffAction = 'accept' | 'discard';
 
+export interface NoteInlineAiDiff {
+  isPresent: (inline: Record<string, unknown>) => boolean;
+}
+
+export interface NoteInlineComments {
+  canCreateDocumentThread: boolean;
+}
+
 export type NoteAiDiffBlockActionResult =
   | { kind: 'none' }
   | { kind: 'remove' }
@@ -78,6 +86,7 @@ export type NoteAiDiffBlockActionResult =
     };
 
 export interface NoteBlockAiDiff {
+  isPresent?: (block: Record<string, unknown>) => boolean;
   normalizeGenerated: (
     input: NoteAiDiffGeneratedBlockInput
   ) => NoteAiDiffGeneratedBlockProjection | null;
@@ -140,6 +149,8 @@ export interface NoteInlinePlugin extends NoteContentPluginBase {
   projection?: NoteInlineProjection;
   markdownImport?: NoteMarkdownInlineImport;
   markdownExport?: NoteMarkdownExportProjection;
+  aiDiff: NoteInlineAiDiff;
+  comments: NoteInlineComments;
 }
 
 export interface NotePluginBundle extends NotePluginNodeBase {

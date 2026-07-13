@@ -33,7 +33,6 @@ import NoteSideMenu from '../NoteSideMenu';
 import NoteSlashMenu from '../NoteSlashMenu';
 import NoteTableHandles from '../NoteTableHandles';
 import NoteToolbar from '../NoteToolbar';
-import { hasAiDiffContentFromEditor } from './AiDiffPresence';
 import { blockNoteSchema, type CustomBlockNoteEditor } from './blockNoteSchema';
 import {
   buildCommentsExtension,
@@ -73,6 +72,7 @@ import {
   collectNoteEditorProps,
   createNoteReadOnlyFilterExtension,
   exportNoteMarkdown,
+  hasAiDiffContentFromEditor,
   importNoteMarkdown,
   notePluginRegistry,
 } from './plugins';
@@ -263,7 +263,7 @@ function CustomBlockNoteEditor({
           onThreadDocumentMarked: (threadId) => {
             commitPendingReferenceForThreadRef.current(threadId);
           },
-          canAddThreadToDocument: isCommentableSelection,
+          canAddThreadToDocument: (editor) => isCommentableSelection(editor, notePluginRegistry),
           inlineCommentDataSource: {
             listInlineComments: resourceService.listInlineComments,
             createInlineComment: resourceService.createInlineComment,
@@ -385,7 +385,7 @@ function CustomBlockNoteEditor({
   }, [editorProps, editor]);
 
   const syncAiDiffPresence = useCallback(() => {
-    const nextHasAiDiffContent = hasAiDiffContentFromEditor(editor);
+    const nextHasAiDiffContent = hasAiDiffContentFromEditor(editor, notePluginRegistry);
     if (lastAiDiffPresenceRef.current === nextHasAiDiffContent) {
       return;
     }
@@ -635,7 +635,7 @@ function CustomBlockNoteEditor({
 
   const handleSelectionChange = () => {
     setCurrentSelection(resourceId, editor.getSelectedText(), buildSelectedNoteScope(editor));
-    if (commentsEnabled && commentsWritable && isCommentableSelection(editor)) {
+    if (commentsEnabled && commentsWritable && isCommentableSelection(editor, notePluginRegistry)) {
       const selection = capturePendingCommentSelection(editor);
       if (selection) {
         pendingCommentSelectionRef.current = selection;
