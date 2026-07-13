@@ -61,7 +61,17 @@ export function isCommentableSelection(
   registry: NotePluginRegistry
 ): boolean {
   if (currentBlockRejectsDocumentThread(editor, registry)) return false;
-  const { from, to, empty } = editor.prosemirrorView.state.selection;
+  const { from, to, empty, $from } = editor.prosemirrorView.state.selection;
+  if (empty) {
+    const adjacentTypes = [$from.nodeAfter?.type.name, $from.nodeBefore?.type.name];
+    if (
+      adjacentTypes.some(
+        (type) => type && getCommentsPolicy(type, registry)?.documentThreads !== 'range'
+      )
+    ) {
+      return false;
+    }
+  }
   return empty || isDocumentThreadRangeAllowed(editor, registry, from, to);
 }
 

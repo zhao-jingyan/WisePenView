@@ -65,4 +65,14 @@ describe('Note comments owner policy', () => {
 
     expect(shouldHideNoteFormattingToolbar(editor as never, notePluginRegistry)).toBe(true);
   });
+
+  it('dedicated inline 的空文本选区不进入正文批注', () => {
+    const editor = editorWithPmTypes([]);
+    editor.prosemirrorView.state.selection.empty = true;
+    editor.prosemirrorView.state.selection.$from.nodeAfter = {
+      type: { name: 'inlineMath' },
+    } as never;
+
+    expect(isCommentableSelection(editor as never, notePluginRegistry)).toBe(false);
+  });
 });
