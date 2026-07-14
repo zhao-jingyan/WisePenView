@@ -70,6 +70,7 @@ export function useAiDiffSidecarRuntime(params: {
   const applyAction = useMemoizedFn((request: NoteAiDiffActionRequest) => {
     undoManager.stopCapturing();
     applyNoteAiDiffAction({ doc, editor, registry, ...request });
+    editor.focus();
     undoManager.stopCapturing();
   });
 
