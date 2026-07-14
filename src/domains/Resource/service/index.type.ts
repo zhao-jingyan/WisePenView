@@ -4,6 +4,8 @@
  */
 
 import type {
+  CommentPage,
+  CommentSortBy,
   ResourceAction,
   ResourceIconType,
   ResourceItem,
@@ -25,6 +27,13 @@ export interface ResourceListPage {
 
 /** ResourceService 接口：供依赖注入使用 */
 export interface IResourceService {
+  listComments(params: ListResourceCommentsRequest): Promise<CommentPage>;
+  listReplies(params: ListResourceRepliesRequest): Promise<CommentPage>;
+  createComment(params: CreateResourceCommentRequest): Promise<string>;
+  createReply(params: CreateResourceReplyRequest): Promise<string>;
+  deleteComment(params: CommentItemActionRequest): Promise<void>;
+  toggleCommentLike(params: CommentItemActionRequest): Promise<boolean>;
+  getCommentLikeIds(resourceId: string): Promise<ReadonlySet<string>>;
   getUserResources(params: GetUserResourcesRequest): Promise<ResourceListPage>;
   getGroupResources(params: GetGroupResourceRequest): Promise<ResourceListPage>;
   renameResource(params: RenameResourceRequest): Promise<void>;
@@ -61,6 +70,34 @@ export interface IResourceService {
   deleteInlineCommentItem(params: DeleteInlineCommentItemRequest): Promise<void>;
   /** 更新批注串解决状态 */
   changeInlineCommentResolveStatus(params: ChangeInlineCommentResolveStatusRequest): Promise<void>;
+}
+
+export interface ListResourceCommentsRequest {
+  resourceId: string;
+  sortBy: CommentSortBy;
+  page: number;
+  size: number;
+}
+
+export interface ListResourceRepliesRequest {
+  rootCommentId: string;
+  page: number;
+  size: number;
+}
+
+export interface CreateResourceCommentRequest {
+  resourceId: string;
+  content: string;
+  imageUrls?: string[];
+}
+
+export interface CreateResourceReplyRequest extends CreateResourceCommentRequest {
+  replyTo: string;
+}
+
+export interface CommentItemActionRequest {
+  resourceId: string;
+  commentId: string;
 }
 
 /** 全文搜索请求（对齐 GET /resource/search/globalSearchResources） */

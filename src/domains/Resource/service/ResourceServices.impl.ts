@@ -1,6 +1,7 @@
 import { DocumentApi } from '@/domains/Document/apis/DocumentApi';
 import { NoteApi } from '@/domains/Note/apis/NoteApi';
 import { SkillApi } from '@/domains/Skill/apis/SkillApi';
+import { ResourceCommentApi } from '../apis/CommentApi';
 import { ResourceInteractApi } from '../apis/InteractApi';
 import { ResourceInlineCommentApi, ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
@@ -13,6 +14,9 @@ import type {
   ChangeInlineCommentResolveStatusRequest,
   CreateInlineCommentRequest,
   DeleteInlineCommentItemRequest,
+  CommentItemActionRequest,
+  CreateResourceCommentRequest,
+  CreateResourceReplyRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
@@ -20,6 +24,8 @@ import type {
   InteractToggleLikeRequest,
   IResourceService,
   ListInlineCommentsRequest,
+  ListResourceCommentsRequest,
+  ListResourceRepliesRequest,
   MountResourcesToGroupTagRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
@@ -31,6 +37,29 @@ import type {
   UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,
 } from './index.type';
+
+const listComments = async (params: ListResourceCommentsRequest) =>
+  ResourceServicesMap.mapCommentPageFromApi(await ResourceCommentApi.listComments(params));
+
+const listReplies = async (params: ListResourceRepliesRequest) =>
+  ResourceServicesMap.mapCommentPageFromApi(await ResourceCommentApi.listReplies(params));
+
+const createComment = (params: CreateResourceCommentRequest): Promise<string> =>
+  ResourceCommentApi.createComment({ ...params, imageUrls: params.imageUrls ?? [] });
+
+const createReply = (params: CreateResourceReplyRequest): Promise<string> =>
+  ResourceCommentApi.createReply({ ...params, imageUrls: params.imageUrls ?? [] });
+
+const deleteComment = (params: CommentItemActionRequest): Promise<void> =>
+  ResourceCommentApi.deleteCommentItem(params);
+
+const toggleCommentLike = (params: CommentItemActionRequest): Promise<boolean> =>
+  ResourceCommentApi.toggleLike(params);
+
+const getCommentLikeIds = async (resourceId: string): Promise<ReadonlySet<string>> =>
+  ResourceServicesMap.mapCommentLikeIdsFromApi(
+    await ResourceInteractApi.getUserInteractionRecord({ resourceId })
+  );
 
 const GROUP_RESOURCE_SCAN_PAGE_SIZE = 200;
 
@@ -270,6 +299,13 @@ const changeInlineCommentResolveStatus = async (
 };
 
 export const createResourceServices = (): IResourceService => ({
+  listComments,
+  listReplies,
+  createComment,
+  createReply,
+  deleteComment,
+  toggleCommentLike,
+  getCommentLikeIds,
   getUserResources,
   getGroupResources,
   renameResource,

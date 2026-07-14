@@ -28,10 +28,27 @@ import {
   RESOURCE_ACTION,
 } from '@/domains/Resource';
 import { useResourceDisplayNameStore } from '../store/useResourceDisplayNameStore';
+import {
+  createMockComment,
+  createMockReply,
+  deleteMockComment,
+  getMockCommentLikeIds,
+  listMockComments,
+  listMockReplies,
+  toggleMockCommentLike,
+} from './commentMock';
 import mockdata from './mockdata.json';
 import { simulateGlobalSearch } from './searchMockData';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const listComments = listMockComments;
+const listReplies = listMockReplies;
+const createComment = createMockComment;
+const createReply = createMockReply;
+const deleteComment = deleteMockComment;
+const toggleCommentLike = toggleMockCommentLike;
+const getCommentLikeIds = getMockCommentLikeIds;
 
 const toResourceItem = (
   item: Omit<ResourceItem, 'ownerInfo'> & { ownerInfo?: ResourceItem['ownerInfo'] }
@@ -352,6 +369,13 @@ const changeInlineCommentResolveStatus = async (
 };
 
 export const ResourceServicesMock: IResourceService = {
+  listComments,
+  listReplies,
+  createComment,
+  createReply,
+  deleteComment,
+  toggleCommentLike,
+  getCommentLikeIds,
   getUserResources,
   getGroupResources,
   renameResource,

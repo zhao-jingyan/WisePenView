@@ -29,4 +29,6 @@ export interface GetUserInteractionRecordApiResponse {
   liked?: boolean | null;
   /** 用户评分 1-5；未评分则为 null */
   score?: number | null;
+  /** 当前用户已点赞的评论/回复 ID；后端已存在，前端在评论区使用 */
+  likedCommentIds?: string[] | null;
 }

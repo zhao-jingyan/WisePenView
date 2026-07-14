@@ -3,7 +3,7 @@
   "userInfo": {
     "nickname": "Mock User",
     "realName": "张三",
-    "avatar": "",
+    "avatar": "/src/assets/images/logo-icon.png",
     "identityType": "1",
     "username": "mockuser",
     "campusNo": "20300000000",
