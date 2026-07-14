@@ -24,7 +24,6 @@ import {
   AI_DIFF_DISPLAY_MODE,
   AI_DIFF_DISPLAY_MODE_LABELS,
   encodeNoteClientContentSignature,
-  encodeNoteClientStateVector,
   useNoteSession,
 } from '@/domains/Note';
 import { isCommentVisibilityPrivileged } from '@/domains/Resource';
@@ -222,7 +221,6 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
     [aiDiffBodyContentHash]
   );
   const isNoteClientContentSignaturePending = !aiDiffBodyContentHash;
-  const getNoteClientStateVector = useCallback(() => encodeNoteClientStateVector(doc), [doc]);
   const resourceName = useResourceDisplayName(resourceId, fallbackNoteTitle, '未命名笔记');
   const headerSaveStatus = resolveNoteHeaderSaveStatus(saveStatus, titleSaveStatus);
   const saveStatusText = formatNoteSaveStatus(headerSaveStatus);
@@ -338,17 +336,10 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
       createNoteChatStateProvider({
         resourceId,
         syncStatus: status,
-        getClientStateVector: getNoteClientStateVector,
         isClientContentSignaturePending: isNoteClientContentSignaturePending,
         clientContentSignature: noteClientContentSignature,
       }),
-    [
-      getNoteClientStateVector,
-      isNoteClientContentSignaturePending,
-      noteClientContentSignature,
-      resourceId,
-      status,
-    ]
+    [isNoteClientContentSignaturePending, noteClientContentSignature, resourceId, status]
   );
 
   const handleAskAi = useCallback(
