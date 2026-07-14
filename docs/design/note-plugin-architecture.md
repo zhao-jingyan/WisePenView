@@ -26,16 +26,14 @@ CustomBlockNote/
 │   ├── types.ts
 │   ├── registry.ts
 │   ├── projection.ts
-│   ├── outline.ts
-│   └── registry.test.ts
+│   └── outline.ts
 ├── engines/
 │   ├── aiDiff/
 │   │   ├── action.ts
 │   │   ├── projection.ts
 │   │   ├── runtime.ts
 │   │   ├── store.ts
-│   │   ├── useAiDiffSidecarRuntime.ts
-│   │   └── *.test.ts
+│   │   └── useAiDiffSidecarRuntime.ts
 │   ├── comments/
 │   │   ├── core/
 │   │   ├── hooks/
@@ -63,7 +61,6 @@ CustomBlockNote/
 - Comment engine 只管理 thread、权限、可见性、range selection、持久化调度和通用 UI；
 - `noteEditorComposition.ts` 是唯一组合入口，负责装配 plugin tree、runtime extensions 与最终 schema；
 - 根目录只保留组件入口、组件 props/style 与组合根，不放横切实现；
-- 测试与对应实现放在同一目录。
 
 ## 3. Plugin Tree 与 Registry
 
@@ -277,24 +274,7 @@ Markdown、HTML、PDF、clipboard 不能从 widget 读取新内容。
 
 COMPARE 没有可序列化的正文形态；导出时按 old snapshot 处理，除非调用方明确请求 NEW_ONLY。
 
-## 8. 测试边界
-
-必须覆盖：
-
-- registry 唯一 owner、capability 声明与实现一致；
-- 每个 block/inline owner 都提供 AI Diff；
-- payload 校验、sparse getter、revision mutation、observer cleanup；
-- update/create/delete projection 与 stale；
-- accept/discard 对正文和 sidecar 的事务语义；
-- text/link/inlineMath/math owner preview；
-- old/new Markdown snapshot；
-- schema 中不存在旧 `ai-*` type 和 math `aiDiff*` props；
-- comments facet 模式校验、owner anchor 解析与 engine dispatch；
-- typecheck、lint、build。
-
-旧协议测试不保留。它们应替换为相同产品行为在 native sidecar 模型下的测试，而不是继续保护已经删除的数据结构。
-
-## 9. 后续切面
+## 8. 后续切面
 
 在当前 block 级闭环稳定后，按同一结构逐步实现：
 
