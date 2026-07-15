@@ -9,7 +9,7 @@ Service 应负责：
 - 编排一个或多个 API 调用。
 - 调用 mapper 完成请求参数和响应数据转换。
 - 做必要的客户端业务校验。
-- 抛出 `Error` 或 `WisePenError`。
+- 抛出 `WisePenError`；客户端校验使用 `createClientError` 创建。
 - 管理领域内缓存、session 或跨请求状态，前提是职责清晰。
 
 Service 不应负责：
@@ -49,7 +49,9 @@ export const createXxxServices = (deps?: XxxServiceDeps): IXxxService => ({
 ## 三、错误处理
 
 - Service 只抛错，不做 UI 提示。
-- 客户端业务校验错误优先使用 `createClientError(code?, message?)`。
+- 客户端业务校验错误使用 `createClientError(code, meta?, cause?)`。
+- 主动创建的错误不得使用原生 `Error`；网络、HTTP、API 边界按来源创建 `WisePenError`。
+- 捕获已有错误仅为补充上下文时，应通过 `cause` 保留原异常；无需补充时直接向上抛出。
 - UI 层 catch 后使用 HeroUI `toast` 和 `parseErrorMessage(err)`。
 - `parseErrorMessage` 只接收一个 `unknown` 参数，不传 fallback 文案。
 

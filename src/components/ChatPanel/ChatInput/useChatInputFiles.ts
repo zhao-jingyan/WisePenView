@@ -5,7 +5,7 @@ import { ChatInputFileContext, type ChatInputFileContextValue } from './ChatInpu
 export function useChatInputFiles(): ChatInputFileContextValue {
   const context = useContext(ChatInputFileContext);
   if (!context) {
-    throw createClientError(FRONTEND_CLIENT_ERROR.VALIDATION, {
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
       reason: 'useChatInputFiles must be used within ChatInputFileProvider',
     });
   }

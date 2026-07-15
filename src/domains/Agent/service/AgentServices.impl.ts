@@ -1,4 +1,5 @@
 import type { IUserService } from '@/domains/User';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { computeFileMd5 } from '@/utils/oss/computeFileMd5';
 import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
 import { AgentApi } from '../apis/AgentApi';
@@ -22,7 +23,9 @@ const resolveAssetType = (name: string): string => {
 export const createAgentServices = ({ userService }: AgentServicesDeps): IAgentService => ({
   async createAgent(title, name, description) {
     const resourceId = await AgentApi.createAgent({ title, name, description });
-    if (!resourceId) throw new Error('创建 Agent 接口未返回资源 ID');
+    if (!resourceId) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.AGENT_CREATE_RESOURCE_ID_MISSING);
+    }
     return resourceId;
   },
   async getAgentDetail(resourceId, version) {
@@ -64,7 +67,9 @@ export const createAgentServices = ({ userService }: AgentServicesDeps): IAgentS
       ],
     });
     const ticket = response?.assetUploadTickets?.[0];
-    if (!ticket?.assetId) throw new Error('Agent 附件上传票据缺少 assetId');
+    if (!ticket?.assetId) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.AGENT_UPLOAD_ASSET_ID_MISSING);
+    }
     if (ticket.putUrl && ticket.callbackHeader) {
       await putOssPresignedUrl({
         putUrl: ticket.putUrl,

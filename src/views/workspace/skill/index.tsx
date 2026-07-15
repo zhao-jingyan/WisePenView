@@ -14,7 +14,7 @@ import { useInteractService, useSkillService } from '@/domains';
 import type { SkillFileNode, UploadSkillAssetResult } from '@/domains/Skill';
 import { SkillServicesMap } from '@/domains/Skill';
 import { useEffectForce } from '@/hooks/useEffectForce';
-import { parseErrorMessage } from '@/utils/error';
+import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
 import {
   useResourceHostContext,
@@ -1322,7 +1322,9 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       );
 
       if (failedResults.length > 0) {
-        throw new Error(`${failedResults.length} 个文件保存失败`);
+        throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_BATCH_SAVE_FAILED, {
+          failedCount: failedResults.length,
+        });
       }
 
       return { options, failedCount: 0 };
@@ -1364,7 +1366,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       const name = configName.trim();
       const description = configDescription.trim();
       if (!name || !description) {
-        throw new Error('请填写 Config 中的 name 和 description');
+        throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_CONFIG_REQUIRED);
       }
       await skillService.updateSkillInfo(skill.resourceId, name, description);
       return { name, description, options };
@@ -1672,15 +1674,15 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     }) => {
       if (!skill || !canEdit) return null;
       if (isSaveQueueActive) {
-        throw new Error('正在保存 Skill，请稍后再移动文件');
+        throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_SAVE_IN_PROGRESS);
       }
       if (isDirty) {
-        throw new Error('请先保存或放弃当前修改后再移动文件');
+        throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_UNSAVED_MOVE_BLOCKED);
       }
 
       const moveResult = moveTreeNode(activeFiles, dragId, dropId, dropPosition);
       if (!moveResult) {
-        throw new Error('无法移动到该位置，目标目录可能已有同名文件或文件夹');
+        throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_MOVE_CONFLICT);
       }
 
       const idMap = new Map(moveResult.idMap);
@@ -1692,7 +1694,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
       );
 
       if (missingContentFile) {
-        throw new Error('该文件内容尚未加载，暂时无法移动；请先重新保存该文件后再移动');
+        throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_CONTENT_NOT_LOADED);
       }
 
       const previousAssetIds: string[] = [];
@@ -1774,12 +1776,12 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
           findFileByPathAndName(activeFiles, file.path, file.name)
         );
         if (conflicts.length > 0) {
-          throw new Error(
-            `导入失败，已存在同路径文件：${conflicts
+          throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_ZIP_IMPORT_CONFLICT, {
+            fileNames: conflicts
               .slice(0, 3)
               .map((file) => file.name)
-              .join('、')}`
-          );
+              .join('、'),
+          });
         }
 
         const nextFiles = parsedFiles.map((file) => ({

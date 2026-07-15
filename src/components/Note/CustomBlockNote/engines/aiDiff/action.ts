@@ -1,3 +1,4 @@
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type * as Y from 'yjs';
 
 import type {
@@ -69,7 +70,9 @@ function updateBlock(
     update as Parameters<CustomBlockNoteEditor['updateBlock']>[1]
   ) as unknown as Record<string, unknown>;
   if (!updated) {
-    throw new Error(`AI Diff block 更新未生效：${String(block.id ?? '')}`);
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: `AI Diff block 更新未生效：${String(block.id ?? '')}`,
+    });
   }
   return updated;
 }

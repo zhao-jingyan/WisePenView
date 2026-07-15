@@ -1,6 +1,7 @@
 import { DocumentApi } from '@/domains/Document/apis/DocumentApi';
 import { NoteApi } from '@/domains/Note/apis/NoteApi';
 import { SkillApi } from '@/domains/Skill/apis/SkillApi';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { ResourceInlineCommentApi, ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
 import type { ResourceItem } from '../entity/resource';
@@ -171,7 +172,7 @@ const getPermissionResourceInfo = async (params: GetResourcePermissionOverviewRe
       );
     }
     case 'agent':
-      throw new Error('暂不支持配置 Agent 资源权限');
+      throw createClientError(FRONTEND_CLIENT_ERROR.RESOURCE_AGENT_PERMISSION_UNSUPPORTED);
   }
 };
 

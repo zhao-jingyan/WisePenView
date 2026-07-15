@@ -1,6 +1,11 @@
 import { useSpeechService } from '@/domains';
 import { XfyunSpeechRecognizer } from '@/domains/Speech';
-import { parseErrorMessage } from '@/utils/error';
+import {
+  createClientError,
+  FRONTEND_CLIENT_ERROR,
+  isWisePenError,
+  parseErrorMessage,
+} from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useRequest, useUnmount } from 'ahooks';
 import { useRef, useState } from 'react';
@@ -26,11 +31,23 @@ function stopStream(stream: MediaStream | null): void {
 
 function mapMicrophoneError(error: unknown): Error {
   if (error instanceof DOMException) {
-    if (error.name === 'NotAllowedError') return new Error('未获得麦克风权限');
-    if (error.name === 'NotFoundError') return new Error('未检测到可用的麦克风');
-    if (error.name === 'NotReadableError') return new Error('麦克风正被其他应用占用');
+    if (error.name === 'NotAllowedError') {
+      return createClientError(
+        FRONTEND_CLIENT_ERROR.MICROPHONE_PERMISSION_DENIED,
+        undefined,
+        error
+      );
+    }
+    if (error.name === 'NotFoundError') {
+      return createClientError(FRONTEND_CLIENT_ERROR.MICROPHONE_NOT_FOUND, undefined, error);
+    }
+    if (error.name === 'NotReadableError') {
+      return createClientError(FRONTEND_CLIENT_ERROR.MICROPHONE_BUSY, undefined, error);
+    }
   }
-  return error instanceof Error ? error : new Error('无法启动语音输入');
+  return isWisePenError(error)
+    ? error
+    : createClientError(FRONTEND_CLIENT_ERROR.VOICE_INPUT_START_FAILED, undefined, error);
 }
 
 export function useVoiceInput({ disabled }: UseVoiceInputOptions): VoiceInputProps {
@@ -56,10 +73,10 @@ export function useVoiceInput({ disabled }: UseVoiceInputOptions): VoiceInputPro
 
     try {
       if (!globalThis.isSecureContext) {
-        throw new Error('语音输入需要在 HTTPS 页面使用');
+        throw createClientError(FRONTEND_CLIENT_ERROR.VOICE_INPUT_HTTPS_REQUIRED);
       }
       if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error('当前浏览器不支持麦克风输入');
+        throw createClientError(FRONTEND_CLIENT_ERROR.VOICE_INPUT_UNSUPPORTED);
       }
 
       mediaStream = await navigator.mediaDevices.getUserMedia({

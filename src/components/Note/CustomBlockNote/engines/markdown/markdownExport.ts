@@ -6,6 +6,7 @@ import type {
 } from '@blocknote/core';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type { NotePluginRegistry } from '../../content/types';
 import { resolveNoteAiDiffBlock } from '../aiDiff/contentState';
 import { readAiContentFromEditorState } from '../aiDiff/runtime';
@@ -30,7 +31,11 @@ function projectInlineContent(
     }
     const type = typeof inline.type === 'string' ? inline.type : '';
     const owner = registry.inlinePlugins.get(type);
-    if (!owner) throw new Error(`Note inline type 缺少 owner：${type || 'unknown'}`);
+    if (!owner) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+        reason: `Note inline type 缺少 owner：${type || 'unknown'}`,
+      });
+    }
     const next = owner.markdownExport
       ? owner.markdownExport.project(inline, { aiDiffDisplayMode })
       : inline;
@@ -53,7 +58,11 @@ function projectBlock(
   if (!isRecord(block)) return null;
   const type = typeof block.type === 'string' ? block.type : '';
   const owner = registry.blockPlugins.get(type);
-  if (!owner) throw new Error(`Note block type 缺少 owner：${type || 'unknown'}`);
+  if (!owner) {
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: `Note block type 缺少 owner：${type || 'unknown'}`,
+    });
+  }
 
   const blockId = typeof block.id === 'string' ? block.id : '';
   const aiContent = aiContentByBlockId.get(blockId);

@@ -1,3 +1,4 @@
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { createContext, useContext } from 'react';
 
 export interface AppNavigationContextValue {
@@ -12,7 +13,9 @@ export const AppNavigationContext = createContext<AppNavigationContextValue | nu
 export const useAppNavigation = (): AppNavigationContextValue => {
   const context = useContext(AppNavigationContext);
   if (!context) {
-    throw new Error('useAppNavigation 必须在 AppNavigationLayout 内使用');
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: 'useAppNavigation 必须在 AppNavigationLayout 内使用',
+    });
   }
   return context;
 };

@@ -1,8 +1,13 @@
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { useContext } from 'react';
 import { ThemeContext, type ThemeContextValue } from './ThemeContextValue';
 
 export function useAppTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useAppTheme must be used within ThemeContextProvider');
+  if (!ctx) {
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: 'useAppTheme must be used within ThemeContextProvider',
+    });
+  }
   return ctx;
 }

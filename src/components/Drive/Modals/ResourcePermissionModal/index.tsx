@@ -17,7 +17,7 @@ import {
   type ResourcePermissionActionOption,
   type ResourcePermissionOverview,
 } from '@/domains/Resource';
-import { parseErrorMessage } from '@/utils/error';
+import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { Button, ListBox, toast, type Selection } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
@@ -67,7 +67,7 @@ function ResourcePermissionModal({
   } = useRequest(
     async (): Promise<ResourcePermissionModalData> => {
       if (!target || !groupId) {
-        throw new Error('缺少资源权限上下文');
+        throw createClientError(FRONTEND_CLIENT_ERROR.RESOURCE_PERMISSION_CONTEXT_MISSING);
       }
 
       const overview = await resourceService.getResourcePermissionOverview({

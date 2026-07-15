@@ -8,14 +8,23 @@ export function fileToBase64(file: File): Promise<{ mimeType: string; base64: st
       const [header, base64] = dataUrl.split(',');
       const mimeType = header.match(/data:(.+);base64/)?.[1] || file.type;
       if (!base64) {
-        reject(createClientError(FRONTEND_CLIENT_ERROR.VALIDATION, { reason: 'base64 解析失败' }));
+        reject(
+          createClientError(FRONTEND_CLIENT_ERROR.FILE_READ_FAILED, {
+            fileName: file.name,
+            reason: 'base64 解析失败',
+          })
+        );
         return;
       }
       resolve({ mimeType, base64 });
     };
     reader.onerror = () =>
       reject(
-        createClientError(FRONTEND_CLIENT_ERROR.VALIDATION, { reason: `读取 ${file.name} 失败` })
+        createClientError(
+          FRONTEND_CLIENT_ERROR.FILE_READ_FAILED,
+          { fileName: file.name },
+          reader.error
+        )
       );
     reader.readAsDataURL(file);
   });
@@ -34,7 +43,10 @@ export function generateThumbnail(file: File, size: number): Promise<string> {
       if (!ctx) {
         URL.revokeObjectURL(url);
         reject(
-          createClientError(FRONTEND_CLIENT_ERROR.VALIDATION, { reason: 'canvas 初始化失败' })
+          createClientError(FRONTEND_CLIENT_ERROR.IMAGE_THUMBNAIL_FAILED, {
+            fileName: file.name,
+            reason: 'canvas 初始化失败',
+          })
         );
         return;
       }
@@ -50,9 +62,11 @@ export function generateThumbnail(file: File, size: number): Promise<string> {
     img.onerror = () => {
       URL.revokeObjectURL(url);
       reject(
-        createClientError(FRONTEND_CLIENT_ERROR.VALIDATION, {
-          reason: `生成 ${file.name} 缩略图失败`,
-        })
+        createClientError(
+          FRONTEND_CLIENT_ERROR.IMAGE_THUMBNAIL_FAILED,
+          { fileName: file.name },
+          undefined
+        )
       );
     };
 

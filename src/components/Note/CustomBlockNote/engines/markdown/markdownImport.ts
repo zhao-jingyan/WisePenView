@@ -5,6 +5,7 @@ import type {
   StyleSchema,
 } from '@blocknote/core';
 
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type {
   NoteMarkdownImportContext,
   NoteMarkdownImportSegment,
@@ -97,7 +98,9 @@ function normalizeInlineContent(
     return candidates.map((candidate) => {
       const type = typeof candidate.type === 'string' ? candidate.type : '';
       if (!registry.inlinePlugins.has(type)) {
-        throw new Error(`Markdown 导入生成了未注册 inline type：${type || 'unknown'}`);
+        throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_MARKDOWN_IMPORT_INVALID, {
+          reason: `Markdown 导入生成了未注册 inline type：${type || 'unknown'}`,
+        });
       }
       return Array.isArray(candidate.content)
         ? {
@@ -115,7 +118,9 @@ function normalizeBlock(
   getContext: (ownerId: string) => NoteMarkdownImportContext
 ): Record<string, unknown> {
   if (!isRecord(value)) {
-    throw new Error('Markdown 导入生成了无效 block');
+    throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_MARKDOWN_IMPORT_INVALID, {
+      reason: 'Markdown 导入生成了无效 block',
+    });
   }
 
   let block: Record<string, unknown> = {
@@ -137,7 +142,9 @@ function normalizeBlock(
 
   const type = typeof block.type === 'string' ? block.type : '';
   if (!registry.blockPlugins.has(type)) {
-    throw new Error(`Markdown 导入生成了未注册 block type：${type || 'unknown'}`);
+    throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_MARKDOWN_IMPORT_INVALID, {
+      reason: `Markdown 导入生成了未注册 block type：${type || 'unknown'}`,
+    });
   }
   return block;
 }

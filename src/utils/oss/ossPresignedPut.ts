@@ -1,3 +1,5 @@
+import { FRONTEND_NETWORK_ERROR, WisePenError } from '@/utils/error';
+
 export interface OssPresignedPutParams {
   putUrl: string;
   body: Blob;
@@ -36,12 +38,21 @@ export const putOssPresignedUrl = (params: OssPresignedPutParams): Promise<void>
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve();
       } else {
-        reject(new Error(`OSS 上传失败: HTTP ${xhr.status}`));
+        reject(
+          new WisePenError({
+            code: FRONTEND_NETWORK_ERROR.HTTP,
+            source: 'http',
+            meta: { status: xhr.status },
+          })
+        );
       }
     };
-    xhr.onerror = () => reject(new Error('OSS 上传网络错误'));
-    xhr.ontimeout = () => reject(new Error('OSS 上传超时，请检查网络后重试'));
-    xhr.onabort = () => reject(new Error('OSS 上传已取消'));
+    xhr.onerror = () =>
+      reject(new WisePenError({ code: FRONTEND_NETWORK_ERROR.NETWORK, source: 'network' }));
+    xhr.ontimeout = () =>
+      reject(new WisePenError({ code: FRONTEND_NETWORK_ERROR.TIMEOUT, source: 'network' }));
+    xhr.onabort = () =>
+      reject(new WisePenError({ code: FRONTEND_NETWORK_ERROR.CANCELED, source: 'network' }));
     xhr.send(body);
   });
 };

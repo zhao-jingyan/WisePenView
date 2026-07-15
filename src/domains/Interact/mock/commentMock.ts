@@ -7,6 +7,7 @@ import type {
   ListRepliesRequest,
   ResourceComment,
 } from '@/domains/Interact';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 
 interface MockComment extends ResourceComment {
   rootCommentId?: string;
@@ -133,7 +134,7 @@ export async function createMockComment(params: CreateCommentRequest): Promise<s
 export async function createMockReply(params: CreateReplyRequest): Promise<string> {
   const comments = getComments(params.resourceId);
   const target = comments.find((item) => item.commentId === params.replyTo && !item.deleted);
-  if (!target) throw new Error('要回复的评论不存在');
+  if (!target) throw createClientError(FRONTEND_CLIENT_ERROR.INTERACT_COMMENT_NOT_FOUND);
   const rootCommentId = target.commentType === 'COMMENT' ? target.commentId : target.rootCommentId;
   const root = comments.find((item) => item.commentId === rootCommentId);
   if (root) root.replyCount += 1;
@@ -158,7 +159,9 @@ export async function createMockReply(params: CreateReplyRequest): Promise<strin
 export async function deleteMockComment(params: CommentItemActionRequest): Promise<void> {
   const comments = getComments(params.resourceId);
   const item = comments.find((comment) => comment.commentId === params.commentId);
-  if (!item || item.deleted) throw new Error('评论不存在');
+  if (!item || item.deleted) {
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERACT_COMMENT_NOT_FOUND);
+  }
   item.deleted = true;
   item.content = '';
   item.imageUrls = [];
@@ -172,7 +175,9 @@ export async function toggleMockCommentLike(params: CommentItemActionRequest): P
   const item = getComments(params.resourceId).find(
     (comment) => comment.commentId === params.commentId
   );
-  if (!item || item.deleted) throw new Error('评论不存在');
+  if (!item || item.deleted) {
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERACT_COMMENT_NOT_FOUND);
+  }
   const likedIds = likedIdsByResource.get(params.resourceId) ?? new Set<string>();
   likedIdsByResource.set(params.resourceId, likedIds);
   const liked = !likedIds.has(params.commentId);

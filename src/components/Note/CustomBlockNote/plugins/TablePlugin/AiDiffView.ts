@@ -1,3 +1,4 @@
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type { NotePluginRegistry } from '../../content/types';
 import styles from './style.module.less';
 
@@ -70,7 +71,11 @@ function renderTableCellContent(
   for (const inline of content) {
     if (!isRecord(inline) || typeof inline.type !== 'string') continue;
     const owner = registry.inlinePlugins.get(inline.type);
-    if (!owner) throw new Error(`AI Diff 表格候选缺少 inline owner：${inline.type}`);
+    if (!owner) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+        reason: `AI Diff 表格候选缺少 inline owner：${inline.type}`,
+      });
+    }
     paragraph.appendChild(owner.aiDiff.renderAiContent(inline, registry));
   }
   element.appendChild(paragraph);

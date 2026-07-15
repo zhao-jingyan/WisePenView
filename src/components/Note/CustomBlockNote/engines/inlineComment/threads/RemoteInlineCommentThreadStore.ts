@@ -17,6 +17,7 @@ import type {
   SetInlineCommentItemReactionRequest,
   UpdateInlineCommentItemRequest,
 } from '@/domains/Resource';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 
 type InlineCommentBody = CommentData['body'];
 
@@ -395,7 +396,7 @@ function updateThreadInMap(
 ): ThreadData {
   const current = getThreadDataFromMap(threadsYMap, threadId);
   if (!current) {
-    throw new Error('Thread not found');
+    throw createClientError(FRONTEND_CLIENT_ERROR.INLINE_COMMENT_THREAD_NOT_FOUND);
   }
   const next = updater(current);
   setThreadDataToMap(threadsYMap, next as PlainThreadRecord);
@@ -508,7 +509,7 @@ export class RemoteInlineCommentThreadStore extends ThreadStore {
   public getThread(threadId: string): ThreadData {
     const thread = getThreadDataFromMap(this.threadsYMap, threadId);
     if (!thread) {
-      throw new Error('Thread not found');
+      throw createClientError(FRONTEND_CLIENT_ERROR.INLINE_COMMENT_THREAD_NOT_FOUND);
     }
     return thread;
   }
@@ -546,7 +547,7 @@ export class RemoteInlineCommentThreadStore extends ThreadStore {
       (thread) => thread.inlineCommentId === createdInlineCommentId
     );
     if (!createdThreadFromApi) {
-      throw new Error('批注创建失败');
+      throw createClientError(FRONTEND_CLIENT_ERROR.INLINE_COMMENT_CREATE_FAILED);
     }
     const createdThread = mapInlineCommentThreadToThreadData(createdThreadFromApi);
     setThreadDataToMap(this.threadsYMap, createdThread);
@@ -635,7 +636,7 @@ export class RemoteInlineCommentThreadStore extends ThreadStore {
   }
 
   public async deleteThread(): Promise<void> {
-    throw new Error('当前后端暂不支持删除整条批注串');
+    throw createClientError(FRONTEND_CLIENT_ERROR.INLINE_COMMENT_THREAD_DELETE_UNSUPPORTED);
   }
 
   public async resolveThread(args: ResolveThreadOptions): Promise<void> {

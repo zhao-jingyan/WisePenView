@@ -17,6 +17,7 @@ import type { ISpeechService } from '@/domains/Speech';
 import type { ITagService } from '@/domains/Tag';
 import type { IUserService } from '@/domains/User';
 import type { IWalletService } from '@/domains/Wallet';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 
 import { ServicesContext } from './context';
 import type { ServicesContextValue } from './registry';
@@ -25,7 +26,9 @@ import type { ServicesContextValue } from './registry';
 function useServicesContext(): ServicesContextValue {
   const ctx = use(ServicesContext);
   if (!ctx) {
-    throw new Error('useServicesContext must be used within ServicesProvider');
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: 'useServicesContext must be used within ServicesProvider',
+    });
   }
   return ctx;
 }

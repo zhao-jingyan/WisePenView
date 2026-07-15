@@ -1,6 +1,8 @@
 import { ResourceServicesMap } from '@/domains/Resource/mapper/ResourceServices.map';
 import { normalizeUserDisplayBaseFromApi } from '@/domains/User/mapper/userEnum.mapper';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { normalizeId } from '@/utils/normalize/normalizeId';
+import { normalizeNonNegativeNumber } from '@/utils/normalize/normalizeNumber';
 import type {
   DocMetaInfoApiResponse,
   GetDocInfoApiResponse,
@@ -21,7 +23,7 @@ const mapDocMetaInfoFromApi = (
   uploadMeta: {
     ...data.uploadMeta,
     uploaderId: normalizeOptionalId(data.uploadMeta.uploaderId),
-    size: data.uploadMeta.size,
+    size: normalizeNonNegativeNumber(data.uploadMeta.size) ?? 0,
   },
 });
 
@@ -37,7 +39,7 @@ const readDocumentVersionInfoFromApi = (
   data: GetDocInfoApiResponse
 ): DocMetaInfoApiResponse & { version?: number } => {
   if (data.documentVersionInfo == null) {
-    throw new Error('文档版本信息为空');
+    throw createClientError(FRONTEND_CLIENT_ERROR.DOCUMENT_VERSION_INFO_MISSING);
   }
   return data.documentVersionInfo;
 };

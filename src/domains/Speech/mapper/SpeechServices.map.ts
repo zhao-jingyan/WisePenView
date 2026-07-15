@@ -1,3 +1,4 @@
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type {
   IssueRecognitionCredentialApiRequest,
   IssueRecognitionCredentialApiResponse,
@@ -11,7 +12,7 @@ function mapIssueRecognitionCredentialRequest(
   params: IssueRecognitionCredentialRequest
 ): IssueRecognitionCredentialApiRequest {
   if (!Number.isInteger(params.eosMs) || params.eosMs < 1000 || params.eosMs > 10000) {
-    throw new Error('语音识别静音结束时间必须在 1000-10000ms 之间');
+    throw createClientError(FRONTEND_CLIENT_ERROR.SPEECH_EOS_INVALID);
   }
   return { eos_ms: params.eosMs };
 }
@@ -21,18 +22,23 @@ function mapRecognitionCredentialFromApi(
   params: IssueRecognitionCredentialRequest
 ): SpeechRecognitionCredential {
   if (response.provider !== 'IFLYTEK') {
-    throw new Error(`暂不支持语音识别服务商: ${response.provider}`);
+    throw createClientError(FRONTEND_CLIENT_ERROR.SPEECH_PROVIDER_UNSUPPORTED, {
+      provider: response.provider,
+    });
   }
 
   const websocketUrlValue = response.credential.url;
   let websocketUrl: URL;
   try {
     websocketUrl = new URL(websocketUrlValue);
-  } catch {
-    throw new Error('语音识别凭证 URL 无效');
+  } catch (error) {
+    throw createClientError(FRONTEND_CLIENT_ERROR.SPEECH_CREDENTIAL_INVALID, undefined, error);
   }
   if (websocketUrl.protocol !== 'wss:' || websocketUrl.hostname !== 'iat-api.xfyun.cn') {
-    throw new Error('语音识别凭证地址不受支持');
+    throw createClientError(FRONTEND_CLIENT_ERROR.SPEECH_CREDENTIAL_INVALID, {
+      protocol: websocketUrl.protocol,
+      hostname: websocketUrl.hostname,
+    });
   }
 
   return {

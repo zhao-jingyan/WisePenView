@@ -122,6 +122,37 @@ const buildRestrictedImportsRule = ({
   return ['error', { paths, patterns }];
 };
 
+const projectRestrictedSyntaxRules = [
+  {
+    selector:
+      "TSTypeReference[typeName.type='TSQualifiedName'][typeName.left.name='React'][typeName.right.name='FC']",
+    message: '项目约定组件使用普通函数声明，请不要使用 React.FC / FC。',
+  },
+  {
+    selector: 'ExportAllDeclaration[source.value=/Services\\.impl(\\.[jt]sx?)?$/]',
+    message:
+      '禁止 re-export *Services.impl —— createXxxServices 工厂只能在 src/domains/_registry/registry.impl.ts 装配，index.ts 不得二次导出。',
+  },
+  {
+    selector: 'ExportNamedDeclaration[source.value=/Services\\.impl(\\.[jt]sx?)?$/]',
+    message:
+      '禁止 re-export *Services.impl —— createXxxServices 工厂只能在 src/domains/_registry/registry.impl.ts 装配，index.ts 不得二次导出。',
+  },
+];
+
+const nativeErrorRestrictedSyntaxRules = [
+  {
+    selector: "NewExpression[callee.name='Error']",
+    message:
+      '禁止直接创建原生 Error；客户端错误使用 createClientError，网络、HTTP、API 边界使用 WisePenError。',
+  },
+  {
+    selector: "CallExpression[callee.name='Error']",
+    message:
+      '禁止直接创建原生 Error；客户端错误使用 createClientError，网络、HTTP、API 边界使用 WisePenError。',
+  },
+];
+
 export default defineConfig([
   globalIgnores(['dist', 'src/components/_shadcn/**']),
   {
@@ -154,23 +185,17 @@ export default defineConfig([
             '项目约定禁止使用 useEffect，请改为事件驱动、显式回调或拆解为 ahooks 的 useMount、useUnmount、useUpdateEffect。',
         },
       ],
+      'no-restricted-syntax': ['error', ...projectRestrictedSyntaxRules],
+    },
+  },
+  {
+    // 客户端运行时代码统一创建 WisePenError，构建配置不属于该边界。
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
       'no-restricted-syntax': [
         'error',
-        {
-          selector:
-            "TSTypeReference[typeName.type='TSQualifiedName'][typeName.left.name='React'][typeName.right.name='FC']",
-          message: '项目约定组件使用普通函数声明，请不要使用 React.FC / FC。',
-        },
-        {
-          selector: 'ExportAllDeclaration[source.value=/Services\\.impl(\\.[jt]sx?)?$/]',
-          message:
-            '禁止 re-export *Services.impl —— createXxxServices 工厂只能在 src/domains/_registry/registry.impl.ts 装配，index.ts 不得二次导出。',
-        },
-        {
-          selector: 'ExportNamedDeclaration[source.value=/Services\\.impl(\\.[jt]sx?)?$/]',
-          message:
-            '禁止 re-export *Services.impl —— createXxxServices 工厂只能在 src/domains/_registry/registry.impl.ts 装配，index.ts 不得二次导出。',
-        },
+        ...projectRestrictedSyntaxRules,
+        ...nativeErrorRestrictedSyntaxRules,
       ],
     },
   },

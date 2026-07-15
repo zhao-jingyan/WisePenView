@@ -259,7 +259,7 @@ const uploadAttachment = async ({
     enable_library: Boolean(saveToLibrary),
   });
   if (!res?.put_url || !res.attachment_id) {
-    throw new Error('附件上传初始化失败');
+    throw createClientError(FRONTEND_CLIENT_ERROR.CHAT_ATTACHMENT_UPLOAD_INIT_FAILED);
   }
   await putOssPresignedUrl({
     putUrl: res.put_url,
@@ -272,18 +272,11 @@ const uploadAttachment = async ({
   };
 };
 
-export const createChatServices = (deps?: ChatServiceDeps): IChatService => ({
+export const createChatServices = (deps: ChatServiceDeps): IChatService => ({
   getModels,
-  getWorkspace: () =>
-    deps ? getWorkspace(deps) : Promise.reject(createClientError(FRONTEND_CLIENT_ERROR.VALIDATION)),
-  getChatInputAgents: () =>
-    deps
-      ? getChatInputAgents(deps)
-      : Promise.reject(createClientError(FRONTEND_CLIENT_ERROR.VALIDATION)),
-  getChatInputCapabilityOptions: (params) =>
-    deps
-      ? getChatInputCapabilityOptions(deps, params)
-      : Promise.reject(createClientError(FRONTEND_CLIENT_ERROR.VALIDATION)),
+  getWorkspace: () => getWorkspace(deps),
+  getChatInputAgents: () => getChatInputAgents(deps),
+  getChatInputCapabilityOptions: (params) => getChatInputCapabilityOptions(deps, params),
   createSession,
   setSessionAgent,
   renameSession,

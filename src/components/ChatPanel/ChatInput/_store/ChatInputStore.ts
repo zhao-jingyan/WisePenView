@@ -6,6 +6,7 @@ import {
   type ChatAgentOption,
 } from '@/domains/Chat';
 import type { ResourceSkillSummary } from '@/domains/Resource';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { createContext, useContext } from 'react';
 import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
@@ -320,7 +321,9 @@ export function selectChatInputSelectedModel(state: ChatInputStoreState): Model 
 export function useChatInputStoreApi(): ChatInputStoreApi {
   const store = useContext(ChatInputStoreContext);
   if (store == null) {
-    throw new Error('useChatInputStoreApi must be used within ChatInputStoreProvider');
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: 'useChatInputStoreApi must be used within ChatInputStoreProvider',
+    });
   }
   return store;
 }

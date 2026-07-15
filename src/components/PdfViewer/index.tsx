@@ -1,4 +1,5 @@
 import { buildApiUrl } from '@/apis/clientUrls';
+import { createClientError, FRONTEND_CLIENT_ERROR, isWisePenError } from '@/utils/error';
 import { PDFViewer as EmbedPdfViewer } from '@embedpdf/react-pdf-viewer';
 import { useMount, useUnmount } from 'ahooks';
 import clsx from 'clsx';
@@ -50,14 +51,18 @@ function PdfViewer({ resourceId, config, className, onLoadError }: PdfViewerProp
       const registry = await viewerRef.current.registry;
       const docManager = registry.getPlugin('document-manager')?.provides();
       if (!docManager) {
-        const err = new Error('PDF 文档管理器不可用');
+        const err = createClientError(FRONTEND_CLIENT_ERROR.PDF_MANAGER_UNAVAILABLE);
         onLoadError?.(err);
         return;
       }
       if (onDocumentErrorCleanupRef.current === null) {
         const cleanup = docManager.onDocumentError?.(({ error }) => {
           console.error('[PdfViewer] 文档事件错误:', error);
-          onLoadError?.(error ?? new Error('文档加载失败'));
+          onLoadError?.(
+            isWisePenError(error)
+              ? error
+              : createClientError(FRONTEND_CLIENT_ERROR.DOCUMENT_LOAD_FAILED, undefined, error)
+          );
         });
         if (typeof cleanup === 'function') {
           onDocumentErrorCleanupRef.current = cleanup;
@@ -84,7 +89,11 @@ function PdfViewer({ resourceId, config, className, onLoadError }: PdfViewerProp
         .setActiveSidebar('left', 'main', 'sidebar-panel', documentId, 'thumbnails');
     } catch (error) {
       console.error('[PdfViewer] 文档加载失败:', error);
-      onLoadError?.(error);
+      onLoadError?.(
+        isWisePenError(error)
+          ? error
+          : createClientError(FRONTEND_CLIENT_ERROR.DOCUMENT_LOAD_FAILED, undefined, error)
+      );
     }
   };
 

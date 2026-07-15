@@ -4,12 +4,7 @@ import { useImageService, useResourceService } from '@/domains';
 import { assertImageProxyUploadLimit } from '@/domains/Image';
 import type { AiDiffDisplayMode, NoteSelectionSnapshot, SelectedNoteScope } from '@/domains/Note';
 import { AI_DIFF_DISPLAY_MODE, computeNoteBodyContentHash } from '@/domains/Note';
-import {
-  createClientError,
-  FRONTEND_CLIENT_ERROR,
-  parseErrorMessage,
-  WisePenError,
-} from '@/utils/error';
+import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { zh } from '@blocknote/core/locales';
 import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
@@ -132,11 +127,7 @@ function CustomBlockNote({
   const hasBlockLocalDocWritesProp = useMemoizedFn(() => blockLocalDocWrites);
   const uploadFile = useMemoizedFn(async (file: File) => {
     if (readOnly) {
-      const err = new WisePenError({
-        code: FRONTEND_CLIENT_ERROR.VALIDATION,
-        source: 'client',
-        message: '当前笔记为只读，无法上传图片',
-      });
+      const err = createClientError(FRONTEND_CLIENT_ERROR.NOTE_READ_ONLY_IMAGE_UPLOAD);
       toast.danger(parseErrorMessage(err));
       throw err;
     }

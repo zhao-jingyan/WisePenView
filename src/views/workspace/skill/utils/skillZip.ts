@@ -1,3 +1,4 @@
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import JSZip from 'jszip';
 
 export interface ParsedSkillZipFile {
@@ -51,17 +52,21 @@ const TEXT_FILE_EXTENSIONS = new Set([
 
 function normalizeZipPath(rawPath: string): string {
   const trimmed = rawPath.trim();
-  if (!trimmed) throw new Error('压缩包中存在空路径文件');
-  if (trimmed.includes('\\')) throw new Error(`压缩包路径不支持反斜杠：${rawPath}`);
+  if (!trimmed) {
+    throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_ZIP_PATH_INVALID, { path: rawPath });
+  }
+  if (trimmed.includes('\\')) {
+    throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_ZIP_PATH_INVALID, { path: rawPath });
+  }
 
   const withoutLeadingSlash = trimmed.replace(/^\/+/, '');
   if (!withoutLeadingSlash || withoutLeadingSlash.endsWith('/')) {
-    throw new Error(`压缩包路径不合法：${rawPath}`);
+    throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_ZIP_PATH_INVALID, { path: rawPath });
   }
 
   const parts = withoutLeadingSlash.split('/');
   if (parts.some((part) => part === '' || part === '.' || part === '..')) {
-    throw new Error(`压缩包路径不安全：${rawPath}`);
+    throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_ZIP_PATH_UNSAFE, { path: rawPath });
   }
   return withoutLeadingSlash;
 }
@@ -95,7 +100,7 @@ function stripSingleTopFolder(entries: ZipEntryCandidate[], mainSkillFileName: s
 
 function validateZipEntries(entries: ZipEntryCandidate[], options: ParseSkillZipOptions) {
   if (entries.length === 0) {
-    throw new Error('skill.zip 中没有可导入的文件');
+    throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_ZIP_EMPTY);
   }
 
   const duplicatedPaths = new Set<string>();
@@ -106,10 +111,14 @@ function validateZipEntries(entries: ZipEntryCandidate[], options: ParseSkillZip
   }
 
   if (duplicatedPaths.size > 0) {
-    throw new Error(`zip 压缩包中存在重复文件：${[...duplicatedPaths].slice(0, 3).join('、')}`);
+    throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_ZIP_DUPLICATE_FILE, {
+      paths: [...duplicatedPaths].slice(0, 3).join('、'),
+    });
   }
   if (!entries.some((entry) => entry.entryPath === options.mainSkillFileName)) {
-    throw new Error(`zip 压缩包根目录必须包含大写的 ${options.mainSkillFileName}`);
+    throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_ZIP_MAIN_FILE_MISSING, {
+      fileName: options.mainSkillFileName,
+    });
   }
 }
 
@@ -132,7 +141,12 @@ export async function parseSkillZip(
   zipFile: File,
   options: ParseSkillZipOptions
 ): Promise<ParsedSkillZipFile[]> {
-  const zip = await JSZip.loadAsync(zipFile);
+  let zip: JSZip;
+  try {
+    zip = await JSZip.loadAsync(zipFile);
+  } catch (error) {
+    throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_ZIP_READ_FAILED, undefined, error);
+  }
   const candidates: ZipEntryCandidate[] = [];
 
   zip.forEach((relativePath, file) => {
@@ -147,16 +161,24 @@ export async function parseSkillZip(
 
   return Promise.all(
     entries.map(async (entry) => {
-      const contentBlob = await entry.file.async('blob');
-      const { name, path } = resolveParsedPath(entry.entryPath);
-      const content = isTextLikeFile(name) ? await contentBlob.text() : undefined;
-      return {
-        name,
-        path,
-        content,
-        contentBlob,
-        size: contentBlob.size,
-      };
+      try {
+        const contentBlob = await entry.file.async('blob');
+        const { name, path } = resolveParsedPath(entry.entryPath);
+        const content = isTextLikeFile(name) ? await contentBlob.text() : undefined;
+        return {
+          name,
+          path,
+          content,
+          contentBlob,
+          size: contentBlob.size,
+        };
+      } catch (error) {
+        throw createClientError(
+          FRONTEND_CLIENT_ERROR.SKILL_ZIP_READ_FAILED,
+          { path: entry.entryPath },
+          error
+        );
+      }
     })
   );
 }

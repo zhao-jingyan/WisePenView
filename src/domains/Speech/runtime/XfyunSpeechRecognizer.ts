@@ -1,3 +1,9 @@
+import {
+  createClientError,
+  FRONTEND_CLIENT_ERROR,
+  isWisePenError,
+  type WisePenError,
+} from '@/utils/error';
 import type { SpeechRecognitionCredential } from '../service/index.type';
 import { XfyunResultAssembler } from './XfyunResultAssembler';
 
@@ -44,11 +50,14 @@ function encodeBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-function readProviderError(payload: UnknownRecord): Error | null {
+function readProviderError(payload: UnknownRecord): WisePenError | null {
   if (payload.code === 0) return null;
   const code = typeof payload.code === 'number' ? payload.code : 'unknown';
   const message = typeof payload.message === 'string' ? payload.message : '未知错误';
-  return new Error(`讯飞语音识别失败 (${code}): ${message}`);
+  return createClientError(FRONTEND_CLIENT_ERROR.SPEECH_PROVIDER_FAILED, {
+    providerCode: code,
+    providerMessage: message,
+  });
 }
 
 export class XfyunSpeechRecognizer {
@@ -74,7 +83,7 @@ export class XfyunSpeechRecognizer {
 
   start(): Promise<void> {
     if (recognitionActive) {
-      return Promise.reject(new Error('已有语音识别正在进行'));
+      return Promise.reject(createClientError(FRONTEND_CLIENT_ERROR.SPEECH_ALREADY_ACTIVE));
     }
     recognitionActive = true;
     this.ownsActiveSlot = true;
@@ -89,12 +98,17 @@ export class XfyunSpeechRecognizer {
         this.socket = socket;
         socket.onopen = () => void this.handleSocketOpen();
         socket.onmessage = (event) => this.handleSocketMessage(event);
-        socket.onerror = () => this.fail(new Error('无法连接语音识别服务'));
+        socket.onerror = () =>
+          this.fail(createClientError(FRONTEND_CLIENT_ERROR.SPEECH_CONNECTION_FAILED));
         socket.onclose = () => {
-          if (!this.terminated) this.fail(new Error('语音识别连接已断开'));
+          if (!this.terminated) {
+            this.fail(createClientError(FRONTEND_CLIENT_ERROR.SPEECH_CONNECTION_CLOSED));
+          }
         };
       } catch (error) {
-        this.fail(error instanceof Error ? error : new Error('无法创建语音识别连接'));
+        this.fail(
+          createClientError(FRONTEND_CLIENT_ERROR.SPEECH_CONNECTION_FAILED, undefined, error)
+        );
       }
     });
   }
@@ -106,7 +120,7 @@ export class XfyunSpeechRecognizer {
     this.releaseAudioCapture();
     this.sendEndFrame();
     this.finishTimer = window.setTimeout(
-      () => this.fail(new Error('语音识别结束响应超时')),
+      () => this.fail(createClientError(FRONTEND_CLIENT_ERROR.SPEECH_FINISH_TIMEOUT)),
       FINISH_TIMEOUT_MS
     );
   }
@@ -116,7 +130,7 @@ export class XfyunSpeechRecognizer {
     const reject = this.startReject;
     this.releaseAll();
     this.setState('idle');
-    reject?.(new Error('语音识别已取消'));
+    reject?.(createClientError(FRONTEND_CLIENT_ERROR.SPEECH_CANCELED));
   }
 
   private async handleSocketOpen(): Promise<void> {
@@ -124,7 +138,7 @@ export class XfyunSpeechRecognizer {
       const audioContext = new AudioContext();
       this.audioContext = audioContext;
       if (audioContext.sampleRate < IFLYTEK_AUDIO_CONFIG.sampleRate) {
-        throw new Error('当前设备采样率低于语音识别要求');
+        throw createClientError(FRONTEND_CLIENT_ERROR.SPEECH_SAMPLE_RATE_UNSUPPORTED);
       }
       await audioContext.audioWorklet.addModule(this.options.processorModuleUrl);
       if (this.terminated) return;
@@ -159,14 +173,20 @@ export class XfyunSpeechRecognizer {
       this.startResolve = null;
       this.startReject = null;
     } catch (error) {
-      this.fail(error instanceof Error ? error : new Error('无法启动麦克风音频处理'));
+      this.fail(
+        isWisePenError(error)
+          ? error
+          : createClientError(FRONTEND_CLIENT_ERROR.SPEECH_START_FAILED, undefined, error)
+      );
     }
   }
 
   private handleSocketMessage(event: MessageEvent): void {
     try {
       const payload: unknown = JSON.parse(String(event.data));
-      if (!isRecord(payload)) throw new Error('语音识别返回了无效数据');
+      if (!isRecord(payload)) {
+        throw createClientError(FRONTEND_CLIENT_ERROR.SPEECH_RESPONSE_INVALID);
+      }
 
       const providerError = readProviderError(payload);
       if (providerError) throw providerError;
@@ -177,14 +197,18 @@ export class XfyunSpeechRecognizer {
       }
       if (payload.data.status === 2) this.finishNormally();
     } catch (error) {
-      this.fail(error instanceof Error ? error : new Error('无法解析语音识别结果'));
+      this.fail(
+        isWisePenError(error)
+          ? error
+          : createClientError(FRONTEND_CLIENT_ERROR.SPEECH_RESPONSE_INVALID, undefined, error)
+      );
     }
   }
 
   private sendAudioFrame(buffer: ArrayBuffer): void {
     const socket = this.socket;
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      this.fail(new Error('语音识别连接不可用'));
+      this.fail(createClientError(FRONTEND_CLIENT_ERROR.SPEECH_CONNECTION_UNAVAILABLE));
       return;
     }
     const status = this.sentFirstFrame ? 1 : 0;
@@ -196,7 +220,7 @@ export class XfyunSpeechRecognizer {
   private sendEndFrame(): void {
     const socket = this.socket;
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      this.fail(new Error('语音识别连接不可用'));
+      this.fail(createClientError(FRONTEND_CLIENT_ERROR.SPEECH_CONNECTION_UNAVAILABLE));
       return;
     }
 

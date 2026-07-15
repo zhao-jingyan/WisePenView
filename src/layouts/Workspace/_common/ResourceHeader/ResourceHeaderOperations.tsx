@@ -11,7 +11,7 @@ import { buildDriveNodeScope, encodeNodeId } from '@/domains/Drive';
 import { RESOURCE_ACTION, resourceActionsInclude, type ResourceAction } from '@/domains/Resource';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useWorkspaceNavigationStore } from '@/layouts/Workspace/_store/useWorkspaceNavigationStore';
-import { parseErrorMessage } from '@/utils/error';
+import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { buildDrivePath } from '@/utils/navigation/driveRoute';
 import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
 import { toast } from '@heroui/react';
@@ -104,7 +104,9 @@ function ResourceHeaderOperations({
         forkedResourceName: copyName,
         forkedResourceVersion: copyVersion,
       });
-      if (!result.resourceId) throw new Error('复制接口未返回资源 ID');
+      if (!result.resourceId) {
+        throw createClientError(FRONTEND_CLIENT_ERROR.RESOURCE_COPY_ID_MISSING);
+      }
       return result.resourceId;
     }
     if (normalizedType === RESOURCE_KIND.SKILL) {
@@ -122,7 +124,9 @@ function ResourceHeaderOperations({
   };
 
   const mountResource = async (target: DriveSelectionItem, targetResourceId: string) => {
-    if (!target.tagId) throw new Error('目标文件夹缺少标签 ID');
+    if (!target.tagId) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_TARGET_TAG_ID_MISSING);
+    }
     if (target.groupId) {
       await resourceService.mountResourcesToGroupTag({
         resourceIds: [targetResourceId],

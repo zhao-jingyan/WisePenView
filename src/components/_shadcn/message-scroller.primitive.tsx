@@ -1,5 +1,6 @@
 'use client';
 
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import * as React from 'react';
 
 type RenderState = Record<string, unknown>;
@@ -13,8 +14,7 @@ type RenderFunction<TState extends RenderState> = (
   state: TState
 ) => React.ReactElement | null;
 type RenderProp<TState extends RenderState> =
-  | React.ReactElement<Record<string, unknown>>
-  | RenderFunction<TState>;
+  React.ReactElement<Record<string, unknown>> | RenderFunction<TState>;
 
 type MessageScrollerDefaultScrollPosition = 'start' | 'end' | 'last-anchor';
 type MessageScrollerButtonDirection = 'start' | 'end';
@@ -79,10 +79,7 @@ type MessageScrollerContextValue = {
   observeVisibility: () => void;
   preserveScrollOnPrependRef: React.MutableRefObject<boolean>;
   scrollToEnd: (options?: MessageScrollerScrollOptions) => boolean;
-  scrollToMessage: (
-    messageId: string,
-    options?: MessageScrollerScrollOptions
-  ) => boolean;
+  scrollToMessage: (messageId: string, options?: MessageScrollerScrollOptions) => boolean;
   scrollToStart: (options?: MessageScrollerScrollOptions) => boolean;
   setContentElement: (element: HTMLDivElement | null) => void;
   setRootElement: (element: HTMLDivElement | null) => void;
@@ -181,10 +178,7 @@ function renderComponent<TState extends RenderState>({
     Record<keyof TState, (value: TState[keyof TState]) => Record<string, unknown> | undefined>
   >;
 }) {
-  const mergedProps = mergeProps(
-    mapStateAttributes(state, stateAttributesMapping),
-    props
-  );
+  const mergedProps = mergeProps(mapStateAttributes(state, stateAttributesMapping), props);
 
   if (!render) {
     return React.createElement(defaultTagName, mergedProps);
@@ -242,7 +236,11 @@ function mergeProps(...propsList: Array<Record<string, unknown> | undefined>) {
         continue;
       }
 
-      if (isEventHandlerKey(key) && typeof existingValue === 'function' && typeof value === 'function') {
+      if (
+        isEventHandlerKey(key) &&
+        typeof existingValue === 'function' &&
+        typeof value === 'function'
+      ) {
         mergedProps[key] = composeEventHandlers(
           value as (event: unknown) => void,
           existingValue as (event: unknown) => void
@@ -410,9 +408,9 @@ function getVisibilityState({
       isScrollAnchor || needsManualIntersection ? item.getBoundingClientRect() : null;
 
     if (
-      (needsManualIntersection && itemRect
+      needsManualIntersection && itemRect
         ? itemRect.bottom > anchorTopEdge && itemRect.top < viewportRect.bottom
-        : visibleMessageIds.has(messageId))
+        : visibleMessageIds.has(messageId)
     ) {
       nextVisibleMessageIds.push(messageId);
     }
@@ -450,7 +448,10 @@ function findFirstScrollAnchorFromIndex(items: HTMLElement[], startIndex: number
   return null;
 }
 
-function findUnhandledScrollAnchor(items: HTMLElement[], handledScrollAnchors: WeakSet<HTMLElement>) {
+function findUnhandledScrollAnchor(
+  items: HTMLElement[],
+  handledScrollAnchors: WeakSet<HTMLElement>
+) {
   for (const item of items) {
     if (item.dataset.scrollAnchor === 'true' && !handledScrollAnchors.has(item)) {
       return item;
@@ -871,11 +872,7 @@ function useScrollCommands({
       return false;
     }
 
-    return scrollToElement(
-      element,
-      { align: 'start' },
-      { keepPreviousPeek: true }
-    );
+    return scrollToElement(element, { align: 'start' }, { keepPreviousPeek: true });
   }, [modeRef, scrollToElement, streamingTurnRef]);
   const scrollToMessage = React.useCallback(
     (messageId: string, options?: MessageScrollerScrollOptions) => {
@@ -1030,9 +1027,7 @@ function useMessageScrollerRefs({
   const handledScrollAnchorsRef = React.useRef(new WeakSet<HTMLElement>());
   const itemCountRef = React.useRef(0);
   const messageElementsRef = React.useRef<MessageElementRegistry>(new Map());
-  const modeRef = React.useRef<ScrollMode>(
-    autoScroll ? 'following-bottom' : 'free-scrolling'
-  );
+  const modeRef = React.useRef<ScrollMode>(autoScroll ? 'following-bottom' : 'free-scrolling');
   const pendingScrollFrameRef = React.useRef<number | null>(null);
   const pendingScrollToMessageRef = React.useRef<PendingScrollToMessage | null>(null);
   const prependRestoreRef = React.useRef<PrependRestoreState | null>(null);
@@ -1194,11 +1189,7 @@ function useMessageScrollerController({
   );
   const updateScrollModeFromState = React.useCallback(
     (scrollableState: MessageScrollerScrollable) => {
-      if (
-        autoScrollRef.current &&
-        !scrollableState.end &&
-        modeRef.current !== 'settling-jump'
-      ) {
+      if (autoScrollRef.current && !scrollableState.end && modeRef.current !== 'settling-jump') {
         modeRef.current = 'following-bottom';
         return;
       }
@@ -1295,8 +1286,7 @@ function useMessageScrollerController({
       return false;
     }
 
-    const delta =
-      getElementViewportTop(restoreState.element, viewport) - restoreState.viewportTop;
+    const delta = getElementViewportTop(restoreState.element, viewport) - restoreState.viewportTop;
 
     if (Math.abs(delta) <= PIXEL_TOLERANCE) {
       return false;
@@ -1358,9 +1348,10 @@ function useMessageScrollerController({
     if (defaultScrollPosition === 'last-anchor') {
       const content = contentRef.current;
       const viewport = viewportRef.current;
-      const lastAnchor = content && viewport
-        ? findLastScrollAnchor(getMessageItems(content, spacerRef.current))
-        : null;
+      const lastAnchor =
+        content && viewport
+          ? findLastScrollAnchor(getMessageItems(content, spacerRef.current))
+          : null;
 
       if (!content || !viewport || !lastAnchor) {
         didScroll = scrollToEnd({ behavior: 'auto' });
@@ -1375,11 +1366,7 @@ function useMessageScrollerController({
             anchorTop <=
           viewport.clientHeight
             ? scrollToEnd({ behavior: 'auto' })
-            : scrollToElement(
-                lastAnchor,
-                { align: 'start' },
-                { keepPreviousPeek: true }
-              );
+            : scrollToElement(lastAnchor, { align: 'start' }, { keepPreviousPeek: true });
       }
     } else {
       didScroll =
@@ -1461,11 +1448,7 @@ function useMessageScrollerController({
           return;
         }
 
-        scrollToElement(
-          newScrollAnchor,
-          { align: 'start' },
-          { keepPreviousPeek: true }
-        );
+        scrollToElement(newScrollAnchor, { align: 'start' }, { keepPreviousPeek: true });
         handledScrollAnchorsRef.current.add(newScrollAnchor);
         capturePrependAnchor();
         return;
@@ -1473,17 +1456,10 @@ function useMessageScrollerController({
     }
 
     if (items.length === previousItemCount) {
-      const unhandledAnchor = findUnhandledScrollAnchor(
-        items,
-        handledScrollAnchorsRef.current
-      );
+      const unhandledAnchor = findUnhandledScrollAnchor(items, handledScrollAnchorsRef.current);
 
       if (unhandledAnchor) {
-        scrollToElement(
-          unhandledAnchor,
-          { align: 'start' },
-          { keepPreviousPeek: true }
-        );
+        scrollToElement(unhandledAnchor, { align: 'start' }, { keepPreviousPeek: true });
         handledScrollAnchorsRef.current.add(unhandledAnchor);
         capturePrependAnchor();
         return;
@@ -1763,16 +1739,16 @@ function useLatestRef<TValue>(value: TValue) {
   return ref;
 }
 
-const MessageScrollerContext = React.createContext<MessageScrollerContextValue | null>(
-  null
-);
+const MessageScrollerContext = React.createContext<MessageScrollerContextValue | null>(null);
 const MessageScrollerItemContext = React.createContext<RegisterMessage | null>(null);
 
 function useMessageScrollerContext() {
   const context = React.useContext(MessageScrollerContext);
 
   if (!context) {
-    throw new Error('useMessageScroller must be used within a MessageScroller.');
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: 'useMessageScroller must be used within a MessageScroller.',
+    });
   }
 
   return context;
@@ -1782,7 +1758,9 @@ function useMessageScrollerItemContext() {
   const context = React.useContext(MessageScrollerItemContext);
 
   if (!context) {
-    throw new Error('MessageScrollerItem must be used within a MessageScroller.');
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: 'MessageScrollerItem must be used within a MessageScroller.',
+    });
   }
 
   return context;
@@ -1808,8 +1786,7 @@ function useMessageScrollerScrollable() {
 }
 
 function useMessageScrollerVisibility() {
-  const { observeVisibility, unobserveVisibility, visibilityStore } =
-    useMessageScrollerContext();
+  const { observeVisibility, unobserveVisibility, visibilityStore } = useMessageScrollerContext();
   const subscribe = React.useCallback(
     (listener: () => void) =>
       visibilityStore.subscribe(listener, observeVisibility, unobserveVisibility),
@@ -2134,12 +2111,12 @@ const MessageScroller = {
 
 export {
   MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerRoot,
   MessageScrollerViewport,
-  MessageScrollerContent,
-  MessageScrollerItem,
-  MessageScrollerButton,
   useMessageScroller,
   useMessageScrollerScrollable,
   useMessageScrollerVisibility,
@@ -2149,8 +2126,8 @@ export type {
   MessageScrollerButtonProps,
   MessageScrollerDefaultScrollPosition,
   MessageScrollerProps,
+  MessageScrollerScrollable,
   MessageScrollerScrollAlign,
   MessageScrollerScrollOptions,
-  MessageScrollerScrollable,
   MessageScrollerVisibilityState,
 };

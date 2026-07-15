@@ -141,7 +141,9 @@ function SidebarDrive() {
     mountCreatedResource: async (resourceId) => {
       const target = importTargetRef.current;
       if (!target) {
-        throw createClientError(FRONTEND_CLIENT_ERROR.VALIDATION);
+        throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+          reason: 'Markdown 导入目标不存在',
+        });
       }
       await mountCreatedResource(resourceId, target);
     },
@@ -340,7 +342,9 @@ function SidebarDrive() {
   useRequest(
     async () => {
       if (!noteTarget) {
-        throw createClientError(FRONTEND_CLIENT_ERROR.VALIDATION);
+        throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+          reason: '笔记创建目标不存在',
+        });
       }
       const { resourceId } = await noteService.createNote({ title: '未命名笔记' });
       if (!resourceId) {

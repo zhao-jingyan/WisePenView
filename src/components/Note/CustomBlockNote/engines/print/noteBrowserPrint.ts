@@ -1,3 +1,4 @@
+import { createClientError, FRONTEND_CLIENT_ERROR, isWisePenError } from '@/utils/error';
 import { collectNotePrintStyles } from '../../content/registry';
 import type { NotePluginRegistry } from '../../content/types';
 import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
@@ -265,7 +266,9 @@ export async function printNotePdfViaBrowser(
 ): Promise<void> {
   const proseMirrorRoot = getProseMirrorRoot(editor);
   if (!proseMirrorRoot) {
-    throw new Error('无法获取编辑器内容，导出已取消');
+    throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_EXPORT_FAILED, {
+      reason: '无法获取编辑器内容',
+    });
   }
 
   const iframe = document.createElement('iframe');
@@ -278,7 +281,9 @@ export async function printNotePdfViaBrowser(
   const doc = iframe.contentDocument;
   if (!win || !doc) {
     iframe.remove();
-    throw new Error('无法创建打印区域，导出已取消');
+    throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_EXPORT_FAILED, {
+      reason: '无法创建打印区域',
+    });
   }
 
   const removeFrame = () => {
@@ -305,6 +310,7 @@ export async function printNotePdfViaBrowser(
     win.print();
   } catch (error) {
     removeFrame();
-    throw error;
+    if (isWisePenError(error)) throw error;
+    throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_EXPORT_FAILED, undefined, error);
   }
 }

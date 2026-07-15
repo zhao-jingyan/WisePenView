@@ -2,7 +2,7 @@ import { ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL } from '@/apis/clientUrls';
 import { ResultState, Spin } from '@/components/Feedback';
 import { useDocumentService, useInteractService } from '@/domains';
 import type { ResourceItem } from '@/domains/Resource';
-import { parseErrorMessage } from '@/utils/error';
+import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
 import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
 import {
   DEFAULT_RESOURCE_HOST_ID,
@@ -92,9 +92,22 @@ function OfficeEditorHost({
         width="100%"
         height="100%"
         events_onDocumentReady={onReady}
-        events_onError={(event) => onError(event)}
+        events_onError={(event) =>
+          onError(
+            createClientError(
+              FRONTEND_CLIENT_ERROR.OFFICE_LOAD_FAILED,
+              { errorCode: 'unknown' },
+              event
+            )
+          )
+        }
         onLoadComponentError={(errorCode, errorDescription) => {
-          onError(new Error(`${errorDescription || 'ONLYOFFICE 组件加载失败'} (${errorCode})`));
+          onError(
+            createClientError(FRONTEND_CLIENT_ERROR.OFFICE_LOAD_FAILED, {
+              errorCode,
+              errorDescription,
+            })
+          );
         }}
       />
     </div>

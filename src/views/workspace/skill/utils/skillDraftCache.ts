@@ -1,4 +1,5 @@
 import type { SkillFileNode } from '@/domains/Skill';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 
 import type { SkillSaveQueueItem } from '../_components/SkillSaveQueueDock/index.type';
 
@@ -35,7 +36,14 @@ function openSkillDraftDb(): Promise<IDBDatabase> {
       }
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('打开 Skill 草稿缓存失败'));
+    request.onerror = () =>
+      reject(
+        createClientError(
+          FRONTEND_CLIENT_ERROR.SKILL_DRAFT_CACHE_FAILED,
+          { operation: 'open' },
+          request.error
+        )
+      );
   });
 }
 
@@ -49,11 +57,24 @@ async function withSkillDraftStore<T>(
     const store = transaction.objectStore(STORE_NAME);
     const request = action(store);
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('访问 Skill 草稿缓存失败'));
+    request.onerror = () =>
+      reject(
+        createClientError(
+          FRONTEND_CLIENT_ERROR.SKILL_DRAFT_CACHE_FAILED,
+          { operation: 'request' },
+          request.error
+        )
+      );
     transaction.oncomplete = () => db.close();
     transaction.onerror = () => {
       db.close();
-      reject(transaction.error ?? new Error('写入 Skill 草稿缓存失败'));
+      reject(
+        createClientError(
+          FRONTEND_CLIENT_ERROR.SKILL_DRAFT_CACHE_FAILED,
+          { operation: 'write' },
+          transaction.error
+        )
+      );
     };
   });
 }

@@ -6,6 +6,7 @@ import type {
 import type { DriveNodeScope } from '@/domains/Drive';
 import type { ResourceItem } from '@/domains/Resource';
 import type { ResourceHeaderConfig } from '@/layouts/Workspace/_common/ResourceHeader/index.type';
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { createContext, useContext, useLayoutEffect, type ReactNode } from 'react';
 
 export interface OpenResourceTarget {
@@ -75,7 +76,9 @@ export const DEFAULT_RESOURCE_HOST_ID = 'default';
 export function useResourceHostContext() {
   const context = useContext(ResourceHostContext);
   if (!context) {
-    throw new Error('useResourceHostContext 必须在 ResourceHostContext 作用域内使用');
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: 'useResourceHostContext 必须在 ResourceHostContext 作用域内使用',
+    });
   }
   return context;
 }

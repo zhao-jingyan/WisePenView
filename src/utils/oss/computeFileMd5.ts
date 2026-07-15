@@ -1,3 +1,4 @@
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import SparkMD5 from 'spark-md5';
 
 const CHUNK_SIZE = 2 * 1024 * 1024;
@@ -24,7 +25,7 @@ export const computeFileMd5 = (
     fileReader.onload = (e) => {
       const result = e.target?.result;
       if (!(result instanceof ArrayBuffer)) {
-        reject(new Error('读取文件失败'));
+        reject(createClientError(FRONTEND_CLIENT_ERROR.FILE_READ_FAILED));
         return;
       }
       spark.append(result);
@@ -37,7 +38,10 @@ export const computeFileMd5 = (
       }
     };
 
-    fileReader.onerror = () => reject(new Error('读取文件失败'));
+    fileReader.onerror = () =>
+      reject(
+        createClientError(FRONTEND_CLIENT_ERROR.FILE_READ_FAILED, undefined, fileReader.error)
+      );
     loadNext();
   });
 };

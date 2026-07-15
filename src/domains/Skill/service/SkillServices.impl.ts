@@ -80,7 +80,6 @@ export const createSkillServices = (deps: SkillServicesDeps): ISkillService => {
       SkillApi.getSkillAssetStsToken({ resourceId, targetVersion }),
     resolveCacheKey: ({ resourceId, targetVersion }) =>
       `${resourceId}:${targetVersion ?? 'published'}`,
-    invalidCredentialMessage: '技能文件访问凭证不完整',
   });
 
   const readAssetContent = async (
@@ -119,7 +118,7 @@ export const createSkillServices = (deps: SkillServicesDeps): ISkillService => {
   const forkSkill: ISkillService['forkSkill'] = async (params) => {
     const resourceId = await SkillApi.forkSkill(params);
     if (!resourceId) {
-      throw new Error('复制 Skill 接口未返回资源 ID');
+      throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_COPY_RESOURCE_ID_MISSING);
     }
     return resourceId;
   };
@@ -177,7 +176,7 @@ export const createSkillServices = (deps: SkillServicesDeps): ISkillService => {
     targetVersion?: number
   ) => {
     if (!objectKey) {
-      throw new Error('技能文件缺少 objectKey');
+      throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_FILE_OBJECT_KEY_MISSING);
     }
     return readAssetContent(resourceId, objectKey, targetVersion);
   };
@@ -242,7 +241,9 @@ export const createSkillServices = (deps: SkillServicesDeps): ISkillService => {
           const ticket = tickets[index];
           try {
             if (!ticket?.assetId) {
-              throw new Error(`技能文件上传票据缺少 assetId：${request.name}`);
+              throw createClientError(FRONTEND_CLIENT_ERROR.SKILL_UPLOAD_ASSET_ID_MISSING, {
+                fileName: request.name,
+              });
             }
 
             options?.onProgress?.({ clientId, progress: 0 });

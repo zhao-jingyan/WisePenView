@@ -1,3 +1,4 @@
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { projectInlinePlainText } from '../../content/projection';
 import type {
   NoteAiDiffComparisonContext,
@@ -74,7 +75,11 @@ function renderInlineChildren(content: unknown, registry: NotePluginRegistry): D
   for (const inline of content) {
     if (!isRecord(inline) || typeof inline.type !== 'string') continue;
     const owner = registry.inlinePlugins.get(inline.type);
-    if (!owner) throw new Error(`AI Diff 候选内容缺少 inline owner：${inline.type}`);
+    if (!owner) {
+      throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+        reason: `AI Diff 候选内容缺少 inline owner：${inline.type}`,
+      });
+    }
     fragment.appendChild(owner.aiDiff.renderAiContent(inline, registry));
   }
   return fragment;
@@ -88,7 +93,9 @@ function renderInlineRange(
 ): DocumentFragment {
   const slicedContent = sliceInlineContentByTextRange(content, from, to, registry);
   if (!slicedContent) {
-    throw new Error(`AI Diff 无法按文本范围渲染 inline content：${from}-${to}`);
+    throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
+      reason: `AI Diff 无法按文本范围渲染 inline content：${from}-${to}`,
+    });
   }
   return renderInlineChildren(slicedContent, registry);
 }

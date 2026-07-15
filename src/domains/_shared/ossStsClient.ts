@@ -1,4 +1,5 @@
 import { registerServiceCacheCleaner } from '@/domains/_shared/cacheRegistry';
+import { createClientError, FRONTEND_CLIENT_ERROR, isWisePenError } from '@/utils/error';
 import OSS from 'ali-oss';
 
 export interface OssStsToken {
@@ -14,7 +15,6 @@ export interface OssStsToken {
 export interface OssStsClientManagerOptions<Key> {
   loadToken: (key: Key) => Promise<OssStsToken | null | undefined>;
   resolveCacheKey: (key: Key) => string;
-  invalidCredentialMessage: string;
   refreshBufferMs?: number;
   defaultExpiresInMs?: number;
 }
@@ -39,7 +39,7 @@ const resolveExpiresAt = (expiration: string | undefined, defaultExpiresInMs: nu
   return Number.isFinite(expiresAt) ? expiresAt : Date.now() + defaultExpiresInMs;
 };
 
-const createOssClient = (token: OssStsToken, invalidCredentialMessage: string): OSS => {
+const createOssClient = (token: OssStsToken): OSS => {
   if (
     !token.accessKeyId ||
     !token.accessKeySecret ||
@@ -47,7 +47,7 @@ const createOssClient = (token: OssStsToken, invalidCredentialMessage: string): 
     !token.bucket ||
     (!token.region && !token.endpoint)
   ) {
-    throw new Error(invalidCredentialMessage);
+    throw createClientError(FRONTEND_CLIENT_ERROR.OSS_CREDENTIAL_INVALID);
   }
 
   return new OSS({
@@ -112,13 +112,13 @@ export const createOssStsClientManager = <Key>(
       .loadToken(key)
       .then((token) => {
         if (!token) {
-          throw new Error(options.invalidCredentialMessage);
+          throw createClientError(FRONTEND_CLIENT_ERROR.OSS_CREDENTIAL_INVALID);
         }
         if (requestGeneration !== cacheGeneration) {
-          throw new Error('登录状态已变更，请重试');
+          throw createClientError(FRONTEND_CLIENT_ERROR.AUTH_SESSION_CHANGED);
         }
 
-        const client = createOssClient(token, options.invalidCredentialMessage);
+        const client = createOssClient(token);
         clientCache.set(cacheKey, {
           client,
           expiresAt: resolveExpiresAt(token.expiration, defaultExpiresInMs),
@@ -141,8 +141,16 @@ export const createOssStsClientManager = <Key>(
     try {
       return await operation(await getClient(key));
     } catch (error) {
-      if (!isOssAuthExpiredError(error)) throw error;
-      return operation(await getClient(key, { forceRefresh: true }));
+      if (isWisePenError(error)) throw error;
+      if (!isOssAuthExpiredError(error)) {
+        throw createClientError(FRONTEND_CLIENT_ERROR.OSS_OPERATION_FAILED, undefined, error);
+      }
+      try {
+        return await operation(await getClient(key, { forceRefresh: true }));
+      } catch (retryError) {
+        if (isWisePenError(retryError)) throw retryError;
+        throw createClientError(FRONTEND_CLIENT_ERROR.OSS_OPERATION_FAILED, undefined, retryError);
+      }
     }
   };
 

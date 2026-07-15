@@ -2,6 +2,7 @@ import type { BlockSpecs, ExtensionFactoryInstance } from '@blocknote/core';
 import { BlockNoteSchema } from '@blocknote/core';
 import type { EditorProps } from '@tiptap/pm/view';
 
+import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type {
   NoteBlockPlugin,
   NoteContentPlugin,
@@ -16,6 +17,9 @@ import type {
 type DOMEventHandlers = NonNullable<EditorProps['handleDOMEvents']>;
 type DOMEventName = keyof DOMEventHandlers;
 type DOMEventHandler = NonNullable<DOMEventHandlers[DOMEventName]>;
+
+const createRegistryError = (reason: string) =>
+  createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, { reason });
 
 function flattenPluginTree(root: NotePluginBundle): NotePluginNode[] {
   const nodes: NotePluginNode[] = [];
@@ -41,12 +45,12 @@ function sortByDependencies<T extends { id: string; dependencies?: readonly stri
   const visit = (item: T) => {
     if (visited.has(item.id)) return;
     if (visiting.has(item.id)) {
-      throw new Error(`Note 插件依赖存在环：${item.id}`);
+      throw createRegistryError(`Note 插件依赖存在环：${item.id}`);
     }
     visiting.add(item.id);
     for (const dependencyId of item.dependencies ?? []) {
       if (!availableIds.has(dependencyId)) {
-        throw new Error(`Note 插件 ${item.id} 缺少依赖：${dependencyId}`);
+        throw createRegistryError(`Note 插件 ${item.id} 缺少依赖：${dependencyId}`);
       }
       const dependency = byId.get(dependencyId);
       if (dependency) visit(dependency);
@@ -69,7 +73,7 @@ export function createNotePluginRegistry(
   const seenIds = new Set<string>();
   for (const item of allItems) {
     if (seenIds.has(item.id)) {
-      throw new Error(`Note 插件 id 重复：${item.id}`);
+      throw createRegistryError(`Note 插件 id 重复：${item.id}`);
     }
     seenIds.add(item.id);
   }
@@ -85,10 +89,10 @@ export function createNotePluginRegistry(
 
   for (const plugin of sortedContentPlugins) {
     if (!plugin.inlineComment) {
-      throw new Error(`Note 插件 ${plugin.id} 未声明 inlineComment policy`);
+      throw createRegistryError(`Note 插件 ${plugin.id} 未声明 inlineComment policy`);
     }
     if (plugin.inlineComment.mode === 'dedicated' && !plugin.inlineComment.anchor) {
-      throw new Error(`Note 插件 ${plugin.id} 声明专用批注，但未提供 anchor facet`);
+      throw createRegistryError(`Note 插件 ${plugin.id} 声明专用批注，但未提供 anchor facet`);
     }
     const executableCapabilities = [
       ['Markdown 导入', plugin.capabilities.markdownImport, plugin.markdownImport],
@@ -101,26 +105,26 @@ export function createNotePluginRegistry(
       const needsImplementation =
         declaration.support === 'custom' || declaration.support === 'inherited';
       if (needsImplementation && !implementation) {
-        throw new Error(
+        throw createRegistryError(
           `Note 插件 ${plugin.id} 的 ${name}：声明为 ${declaration.support}，但未提供实现`
         );
       }
       if (!needsImplementation && implementation) {
-        throw new Error(`Note 插件 ${plugin.id} 提供了 ${name} 实现，但未声明为 custom`);
+        throw createRegistryError(`Note 插件 ${plugin.id} 提供了 ${name} 实现，但未声明为 custom`);
       }
     }
 
     const owners = plugin.kind === 'block' ? blockPlugins : inlinePlugins;
     const currentOwner = owners.get(plugin.type);
     if (currentOwner) {
-      throw new Error(
+      throw createRegistryError(
         `Note ${plugin.kind} type ${plugin.type} 存在多个 owner：${currentOwner.id}、${plugin.id}`
       );
     }
     owners.set(plugin.type, plugin as never);
     if (plugin.kind === 'block' && plugin.insertion?.default) {
       if (defaultBlock) {
-        throw new Error(`Note 默认插入 block 存在多个 owner：${plugin.id}`);
+        throw createRegistryError(`Note 默认插入 block 存在多个 owner：${plugin.id}`);
       }
       defaultBlock = plugin.insertion;
     }
@@ -138,7 +142,7 @@ export function createNotePluginRegistry(
 
 export function createDefaultNoteBlock(registry: NotePluginRegistry): Record<string, unknown> {
   if (!registry.defaultBlock) {
-    throw new Error('Note registry 缺少默认插入 block owner');
+    throw createRegistryError('Note registry 缺少默认插入 block owner');
   }
   return registry.defaultBlock.createEmpty();
 }
@@ -227,7 +231,7 @@ export function collectNoteEditorProps(registry: NotePluginRegistry): Partial<Ed
       }
       const previousContributor = seenScalarKeys.get(String(key));
       if (previousContributor) {
-        throw new Error(
+        throw createRegistryError(
           `Note editorProps.${String(key)} 存在多个 owner：${previousContributor}、${contributor?.id ?? 'unknown'}`
         );
       }
