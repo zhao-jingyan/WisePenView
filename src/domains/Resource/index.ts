@@ -6,13 +6,6 @@ export type {
   ResourceTagInfo,
 } from './entity/resource';
 export type { ResourceSkillSummary, SkillScopeType } from './entity/skill';
-export type {
-  CommentAuthor,
-  CommentPage,
-  CommentSortBy,
-  CommentType,
-  ResourceComment,
-} from './entity/comment';
 export {
   RESOURCE_ACTION,
   RESOURCE_PERMISSION_ACTION_ORDER,
@@ -53,18 +46,11 @@ export type {
   ChangeInlineCommentResolveStatusRequest,
   CreateInlineCommentRequest,
   DeleteInlineCommentItemRequest,
-  CommentItemActionRequest,
-  CreateResourceCommentRequest,
-  CreateResourceReplyRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
   IResourceService,
-  InteractRateRequest,
-  InteractToggleLikeRequest,
   ListInlineCommentsRequest,
-  ListResourceCommentsRequest,
-  ListResourceRepliesRequest,
   MountResourcesToGroupTagRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
@@ -88,5 +74,5 @@ export type {
   UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,
 } from './service/index.type';
-export { isCommentVisibilityPrivileged } from './utils/isCommentVisibilityPrivileged';
+export { isInlineCommentVisibilityPrivileged } from './utils/isInlineCommentVisibilityPrivileged';
 export { resolveResourceIconType } from './utils/resolveResourceIconType';

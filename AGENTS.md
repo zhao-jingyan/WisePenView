@@ -60,6 +60,11 @@
 
 跨层任务按数据流补读：`view/component -> service -> mapper -> api -> entity/enum`。
 
+## 隐私与安全
+
+- 不在提交时泄漏用户隐私、敏感信息、后端协议或第三方 API key。
+- mock数据应该采用虚拟化、匿名化、脱敏化处理，避免泄漏真实用户和开发者信息。
+
 ## 验证与交付
 
 - 默认至少运行 `pnpm lint`；涉及类型、构建或跨层链路时运行 `pnpm typecheck` 或 `pnpm build`。

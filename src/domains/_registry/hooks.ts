@@ -7,6 +7,7 @@ import type { IDocumentService } from '@/domains/Document';
 import type { IDriveService } from '@/domains/Drive';
 import type { IGroupService } from '@/domains/Group';
 import type { IImageService } from '@/domains/Image';
+import type { IInteractService } from '@/domains/Interact';
 import type { INoteService } from '@/domains/Note';
 import type { IQuotaService } from '@/domains/Quota';
 import type { IResourceService } from '@/domains/Resource';
@@ -35,6 +36,7 @@ export const useDocumentService = (): IDocumentService => useServicesContext().d
 export const useDriveService = (): IDriveService => useServicesContext().driveService;
 export const useGroupService = (): IGroupService => useServicesContext().groupService;
 export const useImageService = (): IImageService => useServicesContext().imageService;
+export const useInteractService = (): IInteractService => useServicesContext().interactService;
 export const useNoteService = (): INoteService => useServicesContext().noteService;
 export const useQuotaService = (): IQuotaService => useServicesContext().quotaService;
 export const useResourceService = (): IResourceService => useServicesContext().resourceService;

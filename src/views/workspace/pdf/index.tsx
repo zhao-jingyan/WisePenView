@@ -1,7 +1,7 @@
 import { ResultState, Spin } from '@/components/Feedback';
 import PdfViewer from '@/components/PdfViewer/index';
-import { useDocumentService, useResourceService } from '@/domains';
-import type { ResourceAction } from '@/domains/Resource';
+import { useDocumentService, useInteractService } from '@/domains';
+import type { ResourceItem } from '@/domains/Resource';
 import { parseErrorMessage } from '@/utils/error';
 import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
 import { useResourceHostLayoutConfig } from '@/views/workspace/ResourceHostContext';
@@ -9,46 +9,40 @@ import { Button } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import ResourceCommentSection from '../_components/ResourceCommentSection';
 import styles from './style.module.less';
 
 interface PdfLayoutConfigProps {
   children: ReactNode;
-  resourceId?: string;
-  resourceName?: string;
-  resourceType?: string;
-  resourceInfoActions?: ResourceAction[] | null;
-  ownerId?: string | null;
+  resourceInfo?: ResourceItem;
   onPermissionSuccess?: () => void;
+  onResourceChanged?: () => unknown | Promise<unknown>;
 }
 
 function PdfLayoutConfig({
   children,
-  resourceId,
-  resourceName,
-  resourceType,
-  resourceInfoActions,
-  ownerId,
+  resourceInfo,
   onPermissionSuccess,
+  onResourceChanged,
 }: PdfLayoutConfigProps) {
   const frameConfig = useMemo(
     () => ({
       className: styles.container,
-      header: resourceName
+      sidePanel: resourceInfo ? { resource: resourceInfo, onResourceChanged } : undefined,
+      header: resourceInfo
         ? {
             resource: {
-              resourceId,
-              resourceName,
-              resourceType,
-              currentActions: resourceInfoActions,
+              resourceId: resourceInfo.resourceId,
+              resourceName: resourceInfo.resourceName,
+              resourceType: resourceInfo.resourceType,
+              currentActions: resourceInfo.currentActions,
               permissionResourceType: RESOURCE_KIND.FILE,
-              ownerId,
+              ownerId: resourceInfo.ownerId,
               onPermissionSuccess,
             },
           }
         : {},
     }),
-    [onPermissionSuccess, ownerId, resourceId, resourceInfoActions, resourceName, resourceType]
+    [onPermissionSuccess, onResourceChanged, resourceInfo]
   );
   useResourceHostLayoutConfig(frameConfig);
 
@@ -62,7 +56,7 @@ interface DocumentPreviewProps {
 function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
   const [viewerErrorMap, setViewerErrorMap] = useState<Record<string, unknown>>({});
   const documentService = useDocumentService();
-  const resourceService = useResourceService();
+  const interactService = useInteractService();
   const {
     data: docInfo,
     error: docInfoError,
@@ -79,7 +73,7 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
   );
 
   // 进入页面时上报阅读
-  useRequest(() => resourceService.interactRead(resourceId as string), {
+  useRequest(() => interactService.recordResourceRead(resourceId as string), {
     ready: Boolean(resourceId),
     refreshDeps: [resourceId],
   });
@@ -174,12 +168,9 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
 
   return (
     <PdfLayoutConfig
-      resourceId={docInfo.resourceInfo.resourceId || resourceId}
-      resourceName={docInfo.resourceInfo.resourceName}
-      resourceType={docInfo.resourceInfo.resourceType}
-      resourceInfoActions={docInfo.resourceInfo.currentActions}
-      ownerId={docInfo.resourceInfo.ownerId}
+      resourceInfo={docInfo.resourceInfo}
       onPermissionSuccess={refreshDocInfo}
+      onResourceChanged={refreshDocInfo}
     >
       <div className={styles.content}>
         <div className={styles.root}>
@@ -212,12 +203,6 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
               onLoadError={handleViewerLoadError}
             />
           )}
-          <ResourceCommentSection
-            resourceId={resourceId}
-            resourceOwnerId={docInfo.resourceInfo.ownerId}
-            totalCommentCount={docInfo.resourceInfo.commentCount}
-            onCommentsChanged={refreshDocInfo}
-          />
         </div>
       </div>
     </PdfLayoutConfig>

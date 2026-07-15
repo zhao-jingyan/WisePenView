@@ -60,16 +60,19 @@ const mapNoteInfoDisplayFromApi = (data: GetNoteInfoApiResponse): NoteInfoDispla
     resourceInfo.currentActions as unknown[] | undefined
   );
   const canCollaborativeEdit = resourceActionsInclude(currentActions, RESOURCE_ACTION.EDIT);
-  const commentsEnabled =
+  const inlineCommentEnabled =
     resourceActionsInclude(currentActions, RESOURCE_ACTION.LOAD) ||
     resourceActionsInclude(currentActions, RESOURCE_ACTION.EDIT);
-  const canEditComments = resourceActionsInclude(currentActions, RESOURCE_ACTION.INLINE_COMMENT);
+  const canEditInlineComment = resourceActionsInclude(
+    currentActions,
+    RESOURCE_ACTION.INLINE_COMMENT
+  );
   const authorsDisplay = data.authorsDisplay ?? {};
   const authorIds =
     data.noteInfo?.authors && data.noteInfo.authors.length > 0
       ? data.noteInfo.authors
       : Object.keys(authorsDisplay);
-  const authorsById = Object.fromEntries(
+  const inlineCommentAuthorsById = Object.fromEntries(
     authorIds.map((authorId) => [authorId, mapAuthorDisplay(authorId, authorsDisplay[authorId])])
   );
   const lastEditedAtText = data.noteInfo?.lastUpdatedAt
@@ -79,14 +82,14 @@ const mapNoteInfoDisplayFromApi = (data: GetNoteInfoApiResponse): NoteInfoDispla
   return {
     noteTitle: resourceInfo.resourceName,
     ownerId,
-    authors: authorIds.map((authorId) => authorsById[authorId]),
-    authorsById,
+    authors: authorIds.map((authorId) => inlineCommentAuthorsById[authorId]),
+    inlineCommentAuthorsById,
     lastEditedAtText,
     resourceInfo,
     version: data.version,
     canCollaborativeEdit,
-    commentsEnabled,
-    canEditComments,
+    inlineCommentEnabled,
+    canEditInlineComment,
   };
 };
 

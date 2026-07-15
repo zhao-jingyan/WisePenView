@@ -29,28 +29,28 @@ import {
   useNoteYjsUndoManager,
 } from './engines/collaboration/useNoteYjsUndoStack';
 import {
-  buildCommentsExtension,
-  capturePendingCommentSelection,
-  getBlockNoteCommentUsersYMap,
-  getBlockNoteThreadsYMap,
-  isCommentableSelection,
-  NoteCommentRuntimeProvider,
-  NoteCommentsUi,
-  resolveActiveCommentUserProfile,
-  resolveBlockNoteCommentUsers,
-  resolveNoteCommentsRuntimeState,
-  syncDomSelectionToProseMirror,
-  useContentComments,
-  useRemoteCommentSync,
-  useSyncCommentDocumentMarks,
-  type PendingCommentReference,
-  type PendingCommentSelection,
-} from './engines/comments';
-import { syncCommentUserProfileToYMap } from './engines/comments/threads/users';
-import {
   createNoteReadOnlyFilterExtension,
   NoteEditorReadOnlyProvider,
 } from './engines/editor/readOnly';
+import {
+  buildInlineCommentExtension,
+  capturePendingInlineCommentSelection,
+  getBlockNoteCommentUsersYMap,
+  getBlockNoteThreadsYMap,
+  isInlineCommentableSelection,
+  NoteInlineCommentRuntimeProvider,
+  NoteInlineCommentUi,
+  resolveActiveInlineCommentUserProfile,
+  resolveBlockNoteInlineCommentUsers,
+  resolveNoteInlineCommentRuntimeState,
+  syncDomSelectionToProseMirror,
+  useContentInlineComments,
+  useRemoteInlineCommentSync,
+  useSyncInlineCommentDocumentMarks,
+  type PendingInlineCommentReference,
+  type PendingInlineCommentSelection,
+} from './engines/inlineComment';
+import { syncInlineCommentUserProfileToYMap } from './engines/inlineComment/threads/users';
 import { exportNoteMarkdown } from './engines/markdown/markdownExport';
 import { importNoteMarkdown } from './engines/markdown/markdownImport';
 import { printNotePdfViaBrowser, waitForEditorPaint } from './engines/print/noteBrowserPrint';
@@ -99,34 +99,29 @@ function CustomBlockNote({
   onActiveHeadingChange,
   onAiDiffPresenceChange,
   onAskAi,
-  comments: {
-    status: commentsStatus,
-    actor: commentUser,
-    usersById: commentUsersById,
-    documentRole: commentDocumentRole,
-    visibilityPrivileged: isCommentVisibilityPrivileged,
+  inlineComment: {
+    status: inlineCommentStatus,
+    actor: inlineCommentActor,
+    usersById: inlineCommentUsersById,
+    documentRole: inlineCommentDocumentRole,
+    visibilityPrivileged: isInlineCommentVisibilityPrivileged,
     collaboratorVisibility,
-    onOpen: onOpenComments,
-    sidebar: {
-      collapsed: commentsSidebarCollapsed,
-      width: commentsSidebarWidth,
-      onWidthChange: onCommentsSidebarWidthChange,
-    },
-    history: { open: commentHistoryOpen, onOpenChange: onCommentHistoryOpenChange },
+    onOpen: onOpenInlineComment,
+    history: { open: inlineCommentHistoryOpen, onOpenChange: onInlineCommentHistoryOpenChange },
   },
   portalContainers: {
-    commentsSidebar: commentsSidebarPortalContainer,
+    inlineCommentSidebar: inlineCommentSidebarPortalContainer,
     aiBulkActions: aiBulkActionsPortalContainer,
   },
   onAiDiffBodyContentHashChange,
   ref,
 }: CustomBlockNoteProps & { ref?: Ref<NoteBodyEditorHandle> }) {
   const {
-    enabled: commentsEnabled,
-    uiEnabled: commentsUiEnabled,
-    hasWritePermission: hasCommentWritePermission,
-    canWrite: commentsWritable,
-  } = resolveNoteCommentsRuntimeState(commentsStatus);
+    enabled: inlineCommentEnabled,
+    uiEnabled: inlineCommentUiEnabled,
+    hasWritePermission: hasInlineCommentWritePermission,
+    canWrite: inlineCommentWritable,
+  } = resolveNoteInlineCommentRuntimeState(inlineCommentStatus);
   const imageService = useImageService();
   const resourceService = useResourceService();
   const newNoteBodyOnChangeCleanupRef = useRef<(() => void) | null>(null);
@@ -164,44 +159,46 @@ function CustomBlockNote({
   const [exportDisplayModeOverride, setExportDisplayModeOverride] =
     useState<AiDiffDisplayMode | null>(null);
   const effectiveAiDiffDisplayMode = exportDisplayModeOverride ?? aiDiffDisplayMode;
-  const pendingCommentReferenceRef = useRef<PendingCommentReference | null>(null);
-  /** 与 reference 分离：applyPendingCommentReference 会在 createThread 时清空 reference，但 mark 仍需选区 */
-  const pendingCommentSelectionRef = useRef<PendingCommentSelection | null>(null);
+  const pendingInlineCommentReferenceRef = useRef<PendingInlineCommentReference | null>(null);
+  /** 与 reference 分离：applyPendingInlineCommentReference 会在 createThread 时清空 reference，但 mark 仍需选区 */
+  const pendingInlineCommentSelectionRef = useRef<PendingInlineCommentSelection | null>(null);
   const editorRef = useRef<CustomBlockNoteEditor | null>(null);
   const aiDiffBodyContentHashTimerRef = useRef<number | null>(null);
-  const commitPendingReferenceForThreadRef = useRef<(threadId: string) => void>(() => undefined);
+  const commitPendingInlineCommentReferenceForThreadRef = useRef<(threadId: string) => void>(
+    () => undefined
+  );
   const noteFragment = useNoteYjsFragment(doc);
   const aiContentStore = getAiContentStore(doc);
   const threadsYMap = getBlockNoteThreadsYMap(doc);
-  const commentUsersYMap = getBlockNoteCommentUsersYMap(doc);
-  const { activeCommentUserId, activeCommentUsername, activeCommentAvatarUrl } =
-    resolveActiveCommentUserProfile(commentUser ?? null);
-  const activeCommentUserIdLatest = useLatest(activeCommentUserId);
-  const commentResolverContextLatest = useLatest({
-    activeCommentUserId,
-    activeCommentUsername,
-    activeCommentAvatarUrl,
-    commentUsersById,
-    commentUsersYMap,
+  const inlineCommentUsersYMap = getBlockNoteCommentUsersYMap(doc);
+  const { activeInlineCommentUserId, activeInlineCommentUsername, activeInlineCommentAvatarUrl } =
+    resolveActiveInlineCommentUserProfile(inlineCommentActor ?? null);
+  const activeInlineCommentUserIdLatest = useLatest(activeInlineCommentUserId);
+  const inlineCommentResolverContextLatest = useLatest({
+    activeInlineCommentUserId,
+    activeInlineCommentUsername,
+    activeInlineCommentAvatarUrl,
+    inlineCommentUsersById,
+    inlineCommentUsersYMap,
   });
 
   useUpdateEffect(() => {
-    if (commentsEnabled) {
-      syncCommentUserProfileToYMap(commentUsersYMap, activeCommentUserId, {
-        username: activeCommentUsername,
-        avatarUrl: activeCommentAvatarUrl,
+    if (inlineCommentEnabled) {
+      syncInlineCommentUserProfileToYMap(inlineCommentUsersYMap, activeInlineCommentUserId, {
+        username: activeInlineCommentUsername,
+        avatarUrl: activeInlineCommentAvatarUrl,
       });
     }
   }, [
-    activeCommentAvatarUrl,
-    activeCommentUserId,
-    activeCommentUsername,
-    commentUsersYMap,
-    commentsEnabled,
+    activeInlineCommentAvatarUrl,
+    activeInlineCommentUserId,
+    activeInlineCommentUsername,
+    inlineCommentUsersYMap,
+    inlineCommentEnabled,
   ]);
 
-  useRemoteCommentSync({
-    enabled: commentsEnabled,
+  useRemoteInlineCommentSync({
+    enabled: inlineCommentEnabled,
     resourceId,
     threadsYMap,
     listInlineComments: resourceService.listInlineComments,
@@ -212,33 +209,38 @@ function CustomBlockNote({
       ...collectNoteEditorExtensions(notePluginRegistry),
       createNoteReadOnlyFilterExtension(shouldBlockLocalDocWrites),
     ];
-    if (commentsEnabled) {
+    if (inlineCommentEnabled) {
       extensions.push(
         // eslint-disable-next-line react-hooks/refs -- 扩展初始化早于 editor 创建，以下 ref 只在扩展运行期回调读取。
-        buildCommentsExtension({
+        buildInlineCommentExtension({
           registry: notePluginRegistry,
           resourceId,
-          getActiveCommentUserId: () => activeCommentUserIdLatest.current,
-          hasWritePermission: hasCommentWritePermission,
-          isCommentVisibilityPrivileged,
-          commentDocumentRole,
+          getActiveCommentUserId: () => activeInlineCommentUserIdLatest.current,
+          hasWritePermission: hasInlineCommentWritePermission,
+          isInlineCommentVisibilityPrivileged,
+          inlineCommentDocumentRole,
           threadsYMap,
           doc,
           resolveUsers: (userIds) =>
             Promise.resolve(
-              resolveBlockNoteCommentUsers(userIds, commentResolverContextLatest.current)
+              resolveBlockNoteInlineCommentUsers(
+                userIds,
+                inlineCommentResolverContextLatest.current
+              )
             ),
           getEditor: () => editorRef.current,
-          getPendingCommentSelection: () => pendingCommentSelectionRef.current,
-          getPendingCommentReferenceText: () => pendingCommentReferenceRef.current?.referenceText,
-          clearPendingCommentSelection: () => {
-            pendingCommentSelectionRef.current = null;
+          getPendingInlineCommentSelection: () => pendingInlineCommentSelectionRef.current,
+          getPendingInlineCommentReferenceText: () =>
+            pendingInlineCommentReferenceRef.current?.referenceText,
+          clearPendingInlineCommentSelection: () => {
+            pendingInlineCommentSelectionRef.current = null;
           },
           onThreadDocumentMarked: (threadId) => {
-            commitPendingReferenceForThreadRef.current(threadId);
+            commitPendingInlineCommentReferenceForThreadRef.current(threadId);
           },
-          canAddThreadToDocument: (editor) => isCommentableSelection(editor, notePluginRegistry),
-          remoteCommentDataSource: {
+          canAddThreadToDocument: (editor) =>
+            isInlineCommentableSelection(editor, notePluginRegistry),
+          inlineCommentDataSource: {
             listInlineComments: resourceService.listInlineComments,
             createInlineComment: resourceService.createInlineComment,
             addInlineCommentItem: resourceService.addInlineCommentItem,
@@ -251,17 +253,17 @@ function CustomBlockNote({
     }
     return extensions;
   }, [
-    commentDocumentRole,
-    commentsEnabled,
-    hasCommentWritePermission,
-    isCommentVisibilityPrivileged,
+    inlineCommentDocumentRole,
+    inlineCommentEnabled,
+    hasInlineCommentWritePermission,
+    isInlineCommentVisibilityPrivileged,
     resourceId,
     resourceService,
     threadsYMap,
     doc,
     shouldBlockLocalDocWrites,
-    activeCommentUserIdLatest,
-    commentResolverContextLatest,
+    activeInlineCommentUserIdLatest,
+    inlineCommentResolverContextLatest,
   ]);
   const editor = useCreateBlockNote({
     schema: blockNoteSchema,
@@ -442,44 +444,46 @@ function CustomBlockNote({
 
   const {
     runtimeProviderProps,
-    rememberPendingCommentReference,
-    commitPendingReferenceForThread,
-    bumpContentState,
+    rememberPendingInlineCommentReference,
+    commitPendingInlineCommentReferenceForThread,
+    bumpInlineCommentState,
     visibleThreadReferenceTexts,
-    contentThreadPositions,
-  } = useContentComments({
+    inlineCommentThreadPositions,
+  } = useContentInlineComments({
     editor,
     doc,
     registry: notePluginRegistry,
-    commentsEnabled,
-    commentsWritable,
+    inlineCommentEnabled,
+    inlineCommentWritable,
     readOnly,
-    commentUserId: activeCommentUserId,
-    isCommentVisibilityPrivileged,
+    inlineCommentUserId: activeInlineCommentUserId,
+    isInlineCommentVisibilityPrivileged,
     collaboratorVisibility,
-    pendingCommentReferenceRef,
-    pendingCommentSelectionRef,
-    onOpenComments,
+    pendingInlineCommentReferenceRef,
+    pendingInlineCommentSelectionRef,
+    onOpenInlineComment,
   });
 
   useMount(() => {
-    commitPendingReferenceForThreadRef.current = commitPendingReferenceForThread;
+    commitPendingInlineCommentReferenceForThreadRef.current =
+      commitPendingInlineCommentReferenceForThread;
   });
 
   useUpdateEffect(() => {
-    commitPendingReferenceForThreadRef.current = commitPendingReferenceForThread;
-  }, [commitPendingReferenceForThread]);
+    commitPendingInlineCommentReferenceForThreadRef.current =
+      commitPendingInlineCommentReferenceForThread;
+  }, [commitPendingInlineCommentReferenceForThread]);
 
-  useSyncCommentDocumentMarks({
+  useSyncInlineCommentDocumentMarks({
     editor,
     registry: notePluginRegistry,
     doc,
     provider,
-    commentsEnabled,
-    commentUserId: activeCommentUserId,
-    isCommentVisibilityPrivileged,
+    inlineCommentEnabled,
+    inlineCommentUserId: activeInlineCommentUserId,
+    isInlineCommentVisibilityPrivileged,
     collaboratorVisibility,
-    onAfterDocumentMarksSync: bumpContentState,
+    onAfterDocumentMarksSync: bumpInlineCommentState,
   });
 
   useImperativeHandle(
@@ -533,10 +537,14 @@ function CustomBlockNote({
       text: editor.getSelectedText(),
       scope: buildSelectedNoteScope(editor),
     };
-    if (commentsEnabled && commentsWritable && isCommentableSelection(editor, notePluginRegistry)) {
-      const selection = capturePendingCommentSelection(editor);
+    if (
+      inlineCommentEnabled &&
+      inlineCommentWritable &&
+      isInlineCommentableSelection(editor, notePluginRegistry)
+    ) {
+      const selection = capturePendingInlineCommentSelection(editor);
       if (selection) {
-        pendingCommentSelectionRef.current = selection;
+        pendingInlineCommentSelectionRef.current = selection;
       }
     }
     if (!onActiveHeadingChange) {
@@ -588,7 +596,7 @@ function CustomBlockNote({
         portalContainer={aiBulkActionsPortalContainer}
       />
       <NoteEditorReadOnlyProvider value={readOnly}>
-        <NoteCommentRuntimeProvider {...runtimeProviderProps}>
+        <NoteInlineCommentRuntimeProvider {...runtimeProviderProps}>
           <BlockNoteView
             className="bodyBlockNoteView"
             editor={editor}
@@ -603,40 +611,37 @@ function CustomBlockNote({
           >
             <NoteToolbar
               onAskAi={handleAskAi}
-              showAddComment={commentsWritable}
-              onRememberPendingCommentReference={() => {
+              showAddInlineComment={inlineCommentWritable}
+              onRememberPendingInlineCommentReference={() => {
                 syncDomSelectionToProseMirror(editor);
-                rememberPendingCommentReference();
+                rememberPendingInlineCommentReference();
               }}
             />
             <NoteSlashMenu editor={editor} plugins={notePluginRegistry.contentPlugins} />
             <NoteSideMenu plugins={notePluginRegistry.contentPlugins} />
             <NoteTableHandles />
-            {commentsUiEnabled ? (
-              <NoteCommentsUi
+            {inlineCommentUiEnabled ? (
+              <NoteInlineCommentUi
                 editor={editor}
                 doc={doc}
                 registry={notePluginRegistry}
-                commentsWritable={commentsWritable}
-                commentUserId={activeCommentUserId}
-                commentUsername={activeCommentUsername}
-                commentAvatarUrl={activeCommentAvatarUrl}
-                commentUsersById={commentUsersById}
-                isCommentVisibilityPrivileged={isCommentVisibilityPrivileged}
+                inlineCommentWritable={inlineCommentWritable}
+                inlineCommentUserId={activeInlineCommentUserId}
+                inlineCommentUsername={activeInlineCommentUsername}
+                inlineCommentAvatarUrl={activeInlineCommentAvatarUrl}
+                inlineCommentUsersById={inlineCommentUsersById}
+                isInlineCommentVisibilityPrivileged={isInlineCommentVisibilityPrivileged}
                 collaboratorVisibility={collaboratorVisibility}
-                sidebarCollapsed={commentsSidebarCollapsed}
-                sidebarWidth={commentsSidebarWidth}
-                onSidebarWidthChange={onCommentsSidebarWidthChange}
-                sidebarPortalContainer={commentsSidebarPortalContainer}
-                commentHistoryOpen={commentHistoryOpen}
-                onCommentHistoryOpenChange={onCommentHistoryOpenChange}
+                inlineCommentSidebarPortalContainer={inlineCommentSidebarPortalContainer}
+                inlineCommentHistoryOpen={inlineCommentHistoryOpen}
+                onInlineCommentHistoryOpenChange={onInlineCommentHistoryOpenChange}
                 localThreadReferenceTexts={visibleThreadReferenceTexts}
-                contentThreadPositions={contentThreadPositions}
-                onBumpThreadsSidebar={bumpContentState}
+                inlineCommentThreadPositions={inlineCommentThreadPositions}
+                onBumpInlineCommentSidebar={bumpInlineCommentState}
               />
             ) : null}
           </BlockNoteView>
-        </NoteCommentRuntimeProvider>
+        </NoteInlineCommentRuntimeProvider>
       </NoteEditorReadOnlyProvider>
     </div>
   );

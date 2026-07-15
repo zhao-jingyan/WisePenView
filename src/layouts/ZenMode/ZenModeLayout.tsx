@@ -145,6 +145,7 @@ function ZenResourcePane({
   const resourceHostContext = useMemo<ResourceHostContextValue>(() => {
     return {
       hostId: pane.paneId,
+      layoutConfig: runtime.layoutConfig,
       routeContext: {
         resourceId: target?.resourceId,
         resourceType: target?.resourceType,
@@ -162,6 +163,7 @@ function ZenResourcePane({
     openResource,
     pane.paneId,
     resetLayoutConfig,
+    runtime.layoutConfig,
     setChatContext,
     setLayoutConfig,
     target?.resourceId,

@@ -60,6 +60,8 @@ export interface ResourceItem {
   // ---- 互动字段 ----
   /** 资源总点赞数，后端不为 null */
   likeCount?: number | null;
+  /** 资源总收藏人数，同一用户多集合收藏只计一次 */
+  favoriteCount?: number | null;
   /** 顶级评论与回复合计数量 */
   commentCount?: number | null;
   /** 平均评分，暂无评分时为 null，不得展示 0.0 */

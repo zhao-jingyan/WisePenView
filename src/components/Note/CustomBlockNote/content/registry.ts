@@ -84,10 +84,10 @@ export function createNotePluginRegistry(
   let defaultBlock: NotePluginRegistry['defaultBlock'];
 
   for (const plugin of sortedContentPlugins) {
-    if (!plugin.comments) {
-      throw new Error(`Note 插件 ${plugin.id} 未声明 comments policy`);
+    if (!plugin.inlineComment) {
+      throw new Error(`Note 插件 ${plugin.id} 未声明 inlineComment policy`);
     }
-    if (plugin.comments.mode === 'dedicated' && !plugin.comments.anchor) {
+    if (plugin.inlineComment.mode === 'dedicated' && !plugin.inlineComment.anchor) {
       throw new Error(`Note 插件 ${plugin.id} 声明专用批注，但未提供 anchor facet`);
     }
     const executableCapabilities = [

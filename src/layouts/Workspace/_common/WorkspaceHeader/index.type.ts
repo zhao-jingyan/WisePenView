@@ -8,6 +8,8 @@ export interface WorkspaceHeaderProps {
   inlineTitle?: ReactNode;
   /** 右侧操作区（分享等） */
   extra?: ReactNode;
+  /** Workspace 资源内容区右侧栏操作，不控制聊天栏。 */
+  resourceSidePanelActions?: ReactNode;
   /** 工具条下方整块区域，如笔记可编辑标题 */
   titleBlock?: ReactNode;
   canGoBack?: boolean;

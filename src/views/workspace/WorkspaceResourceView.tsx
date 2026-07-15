@@ -6,7 +6,9 @@ import {
 import { buildWorkspaceResourcePathWithSearch } from '@/utils/navigation/workspaceRoute';
 import { useCallback } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useResourceHostContext } from './ResourceHostContext';
 import ResourceRenderer from './ResourceRenderer';
+import WorkspaceResourceSidePanel from './_components/WorkspaceResourceSidePanel';
 
 function WorkspaceResourceView() {
   const { resourceType: rawResourceType, resourceId } = useParams<{
@@ -15,6 +17,7 @@ function WorkspaceResourceView() {
   }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { layoutConfig } = useResourceHostContext();
   const viewerParam = new URLSearchParams(location.search).get('viewer') ?? undefined;
 
   const target: ResourceTarget = {
@@ -46,8 +49,13 @@ function WorkspaceResourceView() {
     navigate('/app/drive');
   }, [navigate]);
 
+  const sidePanelConfig =
+    layoutConfig.sidePanel?.resource.resourceId === resourceId ? layoutConfig.sidePanel : undefined;
+
   return (
-    <ResourceRenderer target={target} onTargetChange={handleTargetChange} onClose={handleClose} />
+    <WorkspaceResourceSidePanel resourceId={resourceId ?? ''} config={sidePanelConfig}>
+      <ResourceRenderer target={target} onTargetChange={handleTargetChange} onClose={handleClose} />
+    </WorkspaceResourceSidePanel>
   );
 }
 

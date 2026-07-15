@@ -11,6 +11,7 @@ function WorkspaceHeader({
   resource,
   inlineTitle,
   extra,
+  resourceSidePanelActions,
   titleBlock,
   canGoBack = false,
   canGoForward = false,
@@ -48,6 +49,7 @@ function WorkspaceHeader({
           )}
           <div className={styles.toolbarEnd}>
             {resource ? null : extra}
+            {resourceSidePanelActions}
             {onEnterZenMode ? (
               <AppIconButton
                 icon={<PanelsTopLeft size={18} aria-hidden="true" />}

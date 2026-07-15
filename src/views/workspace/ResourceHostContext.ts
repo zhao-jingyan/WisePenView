@@ -3,6 +3,7 @@ import type {
   ResourceChatStateProvider,
 } from '@/components/ChatPanel/ResourceChatProtocol';
 import type { DriveNodeScope } from '@/domains/Drive';
+import type { ResourceItem } from '@/domains/Resource';
 import type { ResourceHeaderConfig } from '@/layouts/Workspace/_common/ResourceHeader/index.type';
 import { createContext, useContext, useLayoutEffect, type ReactNode } from 'react';
 
@@ -38,6 +39,13 @@ export interface ResourceHostLayoutConfig {
   bodyClassName?: string;
   header?: ResourceHostHeaderConfig | false;
   chatStateProvider?: ResourceChatStateProvider;
+  sidePanel?: ResourceHostSidePanelConfig;
+}
+
+export interface ResourceHostSidePanelConfig {
+  resource: ResourceItem;
+  inlineComment?: ReactNode;
+  onResourceChanged?: () => unknown | Promise<unknown>;
 }
 
 export interface ResourceHostRouteContext {
@@ -48,6 +56,7 @@ export interface ResourceHostRouteContext {
 
 export interface ResourceHostContextValue {
   hostId: string;
+  layoutConfig: ResourceHostLayoutConfig;
   routeContext: ResourceHostRouteContext;
   getNavigationScope: () => DriveNodeScope;
   openResource: OpenResourceFn;

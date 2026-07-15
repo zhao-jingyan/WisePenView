@@ -54,7 +54,7 @@ export const RESOURCE_ACTION = createEnum([
   { value: 2, key: 'VIEW', label: '在线阅读' },
   { value: 4, key: 'LOAD', label: 'AI 装载' },
   { value: 8, key: 'EDIT', label: '协同编辑' },
-  { value: 16, key: 'INLINE_COMMENT', label: '行内评论' },
+  { value: 16, key: 'INLINE_COMMENT', label: '批注' },
   { value: 32, key: 'DOWNLOAD_WATERMARK', label: '导出/下载带水印' },
   { value: 64, key: 'DOWNLOAD_ORIGINAL', label: '下载源文件' },
   { value: 128, key: 'FORK', label: '复制资源' },

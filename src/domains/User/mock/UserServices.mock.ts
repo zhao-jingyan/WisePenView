@@ -27,9 +27,9 @@ const mockSearchUsers: UserSearchUser[] = [
   },
   {
     userId: '10087',
-    username: 'ruojin',
-    nickname: '若瑾',
-    realName: '李若瑾',
+    username: 'xiaozhang',
+    nickname: '小张',
+    realName: '张三',
     avatar: '',
     identityType: 2,
   },

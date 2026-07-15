@@ -12,14 +12,14 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useEffectForce } from '@/hooks/useEffectForce';
 import 'katex/dist/katex.min.css';
-import type { NoteCommentAnchor } from '../../../content/types';
-import { useNoteCommentRuntime } from '../../../engines/comments/runtime/CommentRuntime';
+import type { NoteInlineCommentAnchor } from '../../../content/types';
 import { useNoteEditorReadOnlyContext } from '../../../engines/editor/readOnly';
+import { useNoteInlineCommentRuntime } from '../../../engines/inlineComment/runtime/InlineCommentRuntime';
 import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
-import { MATH_BLOCK_COMMENT_OWNER_ID } from '../comments/anchor';
-import { formatFormulaReferenceText } from '../comments/formulaReference';
-import { LatexFormulaCommentButton } from '../comments/LatexFormulaCommentButton';
-import { useMathBlockCommentHighlight } from '../comments/useMathBlockThreadMarkClasses';
+import { formatFormulaInlineCommentReferenceText } from '../inlineComment/formulaInlineCommentReference';
+import { MATH_BLOCK_INLINE_COMMENT_OWNER_ID } from '../inlineComment/inlineCommentAnchor';
+import { LatexFormulaInlineCommentButton } from '../inlineComment/LatexFormulaInlineCommentButton';
+import { useMathBlockInlineCommentHighlight } from '../inlineComment/useMathBlockInlineCommentMarkClasses';
 import popoverStyles from '../InlineMath/style.module.less';
 import { renderKatexInto } from '../katexRender';
 import { LatexEditPopover } from '../LatexEditPopover';
@@ -74,7 +74,7 @@ function MathFormulaPreview({ expression, className }: { expression: string; cla
 
 function MathBlockView(props: MathBlockRenderProps) {
   const readOnly = useNoteEditorReadOnlyContext();
-  const comments = useNoteCommentRuntime();
+  const inlineCommentRuntime = useNoteInlineCommentRuntime();
 
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(props.block.props.expression);
@@ -217,22 +217,23 @@ function MathBlockView(props: MathBlockRenderProps) {
     () => ({ kind: 'block' as const, blockId: props.block.id }),
     [props.block.id]
   );
-  const blockCommentTarget = useMemo(
+  const blockInlineCommentTarget = useMemo(
     () => ({
-      ownerId: MATH_BLOCK_COMMENT_OWNER_ID,
-      anchor: blockFormulaAnchor as unknown as NoteCommentAnchor,
+      ownerId: MATH_BLOCK_INLINE_COMMENT_OWNER_ID,
+      anchor: blockFormulaAnchor as unknown as NoteInlineCommentAnchor,
     }),
     [blockFormulaAnchor]
   );
-  const commentHighlight = useMathBlockCommentHighlight({
-    commentEditor: comments?.editor ?? (props.editor as unknown as CustomBlockNoteEditor),
-    target: blockCommentTarget,
+  const inlineCommentHighlight = useMathBlockInlineCommentHighlight({
+    inlineCommentEditor:
+      inlineCommentRuntime?.editor ?? (props.editor as unknown as CustomBlockNoteEditor),
+    target: blockInlineCommentTarget,
     revisionKey: String(props.block.props.expression ?? ''),
-    comments,
+    inlineCommentRuntime,
   });
-  const commentHighlightClass = [
-    commentHighlight.commented ? styles.mathBlockCommented : '',
-    commentHighlight.selected ? styles.mathBlockSelected : '',
+  const inlineCommentHighlightClass = [
+    inlineCommentHighlight.hasInlineComment ? styles.mathBlockInlineCommented : '',
+    inlineCommentHighlight.selected ? styles.mathBlockSelected : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -256,10 +257,10 @@ function MathBlockView(props: MathBlockRenderProps) {
       onChange={(e) => {
         const nextValue = e.target.value;
         setValue(nextValue);
-        const referenceText = formatFormulaReferenceText(nextValue, 'block');
+        const referenceText = formatFormulaInlineCommentReferenceText(nextValue, 'block');
         if (referenceText) {
-          comments?.updateContentCommentReference({
-            ...blockCommentTarget,
+          inlineCommentRuntime?.updateContentInlineCommentReference({
+            ...blockInlineCommentTarget,
             referenceText,
           });
         }
@@ -277,7 +278,7 @@ function MathBlockView(props: MathBlockRenderProps) {
   return (
     <div ref={shellRef} contentEditable={false} className={`${shellClass} bn-math-block-root`}>
       {!isEditing ? (
-        <LatexFormulaCommentButton
+        <LatexFormulaInlineCommentButton
           expression={props.block.props.expression}
           kind="block"
           shellRef={shellRef}
@@ -285,7 +286,7 @@ function MathBlockView(props: MathBlockRenderProps) {
         />
       ) : null}
       <div
-        className={`${rootClass} ${commentHighlightClass}`}
+        className={`${rootClass} ${inlineCommentHighlightClass}`}
         role={canEnterEdit ? 'button' : undefined}
         tabIndex={canEnterEdit ? 0 : -1}
         aria-label={canEnterEdit ? '编辑独立公式' : undefined}

@@ -1,4 +1,4 @@
-import type { ResourceAction } from '@/domains/Resource';
+import type { ResourceAction, ResourceItem } from '@/domains/Resource';
 import type { SkillVersionStatus } from '../enum';
 
 export type SkillScopeType = 'PERSONAL' | 'GROUP';
@@ -32,6 +32,7 @@ export interface SkillSummary {
 }
 
 export interface SkillDetail extends SkillSummary {
+  resourceInfo?: ResourceItem;
   draftVersion: number;
   fileCount: number;
   files: SkillFileNode[];

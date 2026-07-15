@@ -1,0 +1,131 @@
+.container {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.topBar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.topLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.detailTitle {
+  margin: 0;
+  font-size: var(--font-size-heading-4);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.resourceTable {
+  flex: 1;
+}
+
+.resourceCellButton {
+  display: inline-flex;
+  max-width: 100%;
+  justify-content: flex-start;
+  gap: var(--space-sm);
+  padding-inline: 0;
+  overflow: hidden;
+  color: var(--foreground);
+  text-align: left;
+}
+
+.resourceCellName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resourceCellDisabled {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--muted);
+}
+
+.collectionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-lg);
+}
+
+.collectionCardTrigger {
+  min-width: 0;
+  cursor: pointer;
+  outline: none;
+}
+
+.collectionCardTrigger:focus-visible {
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.collectionCard {
+  min-height: 140px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.collectionCardTrigger:hover .collectionCard {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.collectionCardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.collectionCardTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collectionCardHeader :global(button) {
+  margin-left: auto;
+}
+
+.collectionCardContent {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.collectionCardContent p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.collectionCardContent span {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}

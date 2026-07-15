@@ -1,4 +1,5 @@
 import { coerceResourceActions } from '@/domains/Resource';
+import { ResourceServicesMap } from '@/domains/Resource/mapper/ResourceServices.map';
 import {
   AssetResourceTypeEnum,
   type SkillAssetApiInfo,
@@ -126,6 +127,9 @@ function mapSkillDetail(params: {
 
   return {
     resourceId: params.resourceId,
+    resourceInfo: resourceInfo
+      ? ResourceServicesMap.mapResourceItemFromApi(resourceInfo)
+      : undefined,
     title: resourceInfo?.resourceName ?? '',
     skillName: skillInfo?.name ?? '',
     description: skillInfo?.description ?? '',

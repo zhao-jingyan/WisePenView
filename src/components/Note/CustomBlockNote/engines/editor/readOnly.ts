@@ -3,7 +3,7 @@ import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 import { createContext, use } from 'react';
 import { ySyncPluginKey } from 'y-prosemirror';
 
-import { isWisePenCommentMarkSyncTransaction } from '../comments/anchors/range';
+import { isWisePenInlineCommentMarkSyncTransaction } from '../inlineComment/anchors/range';
 
 const NoteEditorReadOnlyContext = createContext(false);
 
@@ -29,7 +29,7 @@ export function createNoteReadOnlyFilterExtension(
         filterTransaction(tr) {
           if (!isBlockLocalDocWrites() || !tr.docChanged) return true;
           if (isYjsSyncTransaction(tr)) return true;
-          if (isWisePenCommentMarkSyncTransaction(tr)) return true;
+          if (isWisePenInlineCommentMarkSyncTransaction(tr)) return true;
           return false;
         },
       }),

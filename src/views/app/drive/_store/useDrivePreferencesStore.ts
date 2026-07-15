@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 import { registerStore } from '@/store/lifecycle';
 import { createStoreJSONStorage } from '@/store/persistence';
 
-export type DriveViewMode = 'uploadQueue' | 'tableDrive';
+export type DriveViewMode = 'uploadQueue' | 'tableDrive' | 'favorites';
 
 const DEFAULT_DRIVE_PREFERENCES = {
   viewMode: 'tableDrive' as DriveViewMode,

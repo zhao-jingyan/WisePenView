@@ -1,7 +1,7 @@
 import { ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL } from '@/apis/clientUrls';
 import { ResultState, Spin } from '@/components/Feedback';
-import { useDocumentService, useResourceService } from '@/domains';
-import type { ResourceAction } from '@/domains/Resource';
+import { useDocumentService, useInteractService } from '@/domains';
+import type { ResourceItem } from '@/domains/Resource';
 import { parseErrorMessage } from '@/utils/error';
 import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
 import {
@@ -16,17 +16,13 @@ import { DocumentEditor } from '@onlyoffice/document-editor-react';
 import { useRequest } from 'ahooks';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import ResourceCommentSection from '../_components/ResourceCommentSection';
 import styles from './style.module.less';
 
 interface OfficeLayoutConfigProps {
   children: ReactNode;
-  resourceId?: string;
-  resourceName?: string;
-  resourceType?: string;
-  resourceInfoActions?: ResourceAction[] | null;
-  ownerId?: string | null;
+  resourceInfo?: ResourceItem;
   onPermissionSuccess?: () => void;
+  onResourceChanged?: () => unknown | Promise<unknown>;
 }
 
 interface OfficeEditorHostProps {
@@ -43,31 +39,29 @@ interface OfficeViewProps {
 
 function OfficeLayoutConfig({
   children,
-  resourceId,
-  resourceName,
-  resourceType,
-  resourceInfoActions,
-  ownerId,
+  resourceInfo,
   onPermissionSuccess,
+  onResourceChanged,
 }: OfficeLayoutConfigProps) {
   const frameConfig = useMemo<ResourceHostLayoutConfig>(
     () => ({
       className: styles.container,
-      header: resourceName
+      sidePanel: resourceInfo ? { resource: resourceInfo, onResourceChanged } : undefined,
+      header: resourceInfo
         ? {
             resource: {
-              resourceId,
-              resourceName,
-              resourceType,
-              currentActions: resourceInfoActions,
+              resourceId: resourceInfo.resourceId,
+              resourceName: resourceInfo.resourceName,
+              resourceType: resourceInfo.resourceType,
+              currentActions: resourceInfo.currentActions,
               permissionResourceType: RESOURCE_KIND.FILE,
-              ownerId,
+              ownerId: resourceInfo.ownerId,
               onPermissionSuccess,
             },
           }
         : {},
     }),
-    [onPermissionSuccess, ownerId, resourceId, resourceInfoActions, resourceName, resourceType]
+    [onPermissionSuccess, onResourceChanged, resourceInfo]
   );
   useResourceHostLayoutConfig(frameConfig);
 
@@ -109,7 +103,7 @@ function OfficeEditorHost({
 
 function OfficeView({ resourceId }: OfficeViewProps = {}) {
   const documentService = useDocumentService();
-  const resourceService = useResourceService();
+  const interactService = useInteractService();
   const [editorReady, setEditorReady] = useState(false);
   const [editorError, setEditorError] = useState<unknown>(null);
 
@@ -137,7 +131,7 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
     }
   );
 
-  useRequest(() => resourceService.interactRead(resourceId as string), {
+  useRequest(() => interactService.recordResourceRead(resourceId as string), {
     ready: Boolean(resourceId),
     refreshDeps: [resourceId],
   });
@@ -152,7 +146,7 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
     setEditorReady(false);
   }, []);
 
-  const refreshCommentResourceInfo = useCallback(async () => {
+  const refreshResourceInfo = useCallback(async () => {
     const docInfo = await documentService.getDocInfo(resourceId as string);
     if (data) mutateOfficeData({ ...data, docInfo });
   }, [data, documentService, mutateOfficeData, resourceId]);
@@ -223,53 +217,39 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
     );
   }
 
-  const resourceName = data.docInfo.resourceInfo.resourceName;
-  const resourceType = data.docInfo.resourceInfo.resourceType;
-
   return (
     <OfficeLayoutConfig
-      resourceId={data.docInfo.resourceInfo.resourceId || resourceId}
-      resourceName={resourceName}
-      resourceType={resourceType}
-      resourceInfoActions={data.docInfo.resourceInfo.currentActions}
-      ownerId={data.docInfo.resourceInfo.ownerId}
+      resourceInfo={data.docInfo.resourceInfo}
       onPermissionSuccess={refreshOfficeData}
+      onResourceChanged={refreshResourceInfo}
     >
       <div className={styles.content}>
-        <div className={styles.editorFrame}>
-          <OfficeEditorHost
-            key={`${resourceId}-${data.editorConfig.sessionId ?? 'session'}`}
-            config={data.editorConfig.config}
-            documentServerUrl={ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL}
-            resourceId={resourceId}
-            onReady={handleEditorReady}
-            onError={handleEditorError}
-          />
-          {(!editorReady || Boolean(editorError)) && (
-            <div className={styles.loadingOverlay} aria-busy={!editorError} aria-live="polite">
-              {editorError ? (
-                <div className={styles.middleOverlayInner}>
-                  <ResultState
-                    status="warning"
-                    title="ONLYOFFICE 编辑器加载失败"
-                    subTitle={parseErrorMessage(editorError)}
-                  />
-                </div>
-              ) : (
-                <div className={styles.middleOverlayLoading}>
-                  <Spin size="large" />
-                  <span className={styles.middleOverlayText}>正在启动 ONLYOFFICE 编辑器...</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        <ResourceCommentSection
+        <OfficeEditorHost
+          key={`${resourceId}-${data.editorConfig.sessionId ?? 'session'}`}
+          config={data.editorConfig.config}
+          documentServerUrl={ONLYOFFICE_DOCUMENT_SERVER_PUBLIC_URL}
           resourceId={resourceId}
-          resourceOwnerId={data.docInfo.resourceInfo.ownerId}
-          totalCommentCount={data.docInfo.resourceInfo.commentCount}
-          onCommentsChanged={refreshCommentResourceInfo}
+          onReady={handleEditorReady}
+          onError={handleEditorError}
         />
+        {(!editorReady || Boolean(editorError)) && (
+          <div className={styles.loadingOverlay} aria-busy={!editorError} aria-live="polite">
+            {editorError ? (
+              <div className={styles.middleOverlayInner}>
+                <ResultState
+                  status="warning"
+                  title="ONLYOFFICE 编辑器加载失败"
+                  subTitle={parseErrorMessage(editorError)}
+                />
+              </div>
+            ) : (
+              <div className={styles.middleOverlayLoading}>
+                <Spin size="large" />
+                <span className={styles.middleOverlayText}>正在启动 ONLYOFFICE 编辑器...</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </OfficeLayoutConfig>
   );

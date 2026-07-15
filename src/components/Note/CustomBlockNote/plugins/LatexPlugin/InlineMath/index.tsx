@@ -9,17 +9,17 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import { useEffectForce } from '@/hooks/useEffectForce';
 import 'katex/dist/katex.min.css';
-import type { NoteCommentAnchor } from '../../../content/types';
-import { useNoteCommentRuntime } from '../../../engines/comments/runtime/CommentRuntime';
+import type { NoteInlineCommentAnchor } from '../../../content/types';
 import { useNoteEditorReadOnlyContext } from '../../../engines/editor/readOnly';
+import { useNoteInlineCommentRuntime } from '../../../engines/inlineComment/runtime/InlineCommentRuntime';
+import { captureInlineMathAnchor } from '../inlineComment/formulaInlineCommentAnchor';
+import { formatFormulaInlineCommentReferenceText } from '../inlineComment/formulaInlineCommentReference';
 import {
-  INLINE_MATH_COMMENT_OWNER_ID,
+  INLINE_MATH_INLINE_COMMENT_OWNER_ID,
   INLINE_MATH_PM_TYPE,
-  type FormulaThreadAnchor,
-} from '../comments/anchor';
-import { captureInlineMathAnchor } from '../comments/formulaAnchor';
-import { formatFormulaReferenceText } from '../comments/formulaReference';
-import { LatexFormulaCommentButton } from '../comments/LatexFormulaCommentButton';
+  type FormulaInlineCommentAnchor,
+} from '../inlineComment/inlineCommentAnchor';
+import { LatexFormulaInlineCommentButton } from '../inlineComment/LatexFormulaInlineCommentButton';
 import { renderKatexInto } from '../katexRender';
 import { LatexEditPopover } from '../LatexEditPopover';
 import {
@@ -112,7 +112,7 @@ function InlineMathView(
 ) {
   const { contentRef, updateInlineContent, inlineContent, editor } = props;
   const readOnly = useNoteEditorReadOnlyContext();
-  const comments = useNoteCommentRuntime();
+  const inlineCommentRuntime = useNoteInlineCommentRuntime();
   const expression = inlineContent.props.expression as string;
   const autoOpenEdit = inlineContent.props.autoOpenEdit as boolean;
 
@@ -126,7 +126,7 @@ function InlineMathView(
     left: number;
     width: number;
   } | null>(null);
-  const anchorRef = useRef<FormulaThreadAnchor | null>(null);
+  const anchorRef = useRef<FormulaInlineCommentAnchor | null>(null);
 
   useLayoutEffect(() => {
     if (!shellRef.current) {
@@ -150,11 +150,11 @@ function InlineMathView(
     if (!anchor) {
       return;
     }
-    const referenceText = formatFormulaReferenceText(nextExpression, 'inline');
+    const referenceText = formatFormulaInlineCommentReferenceText(nextExpression, 'inline');
     if (!referenceText) return;
-    comments?.updateContentCommentReference({
-      ownerId: INLINE_MATH_COMMENT_OWNER_ID,
-      anchor: anchor as unknown as NoteCommentAnchor,
+    inlineCommentRuntime?.updateContentInlineCommentReference({
+      ownerId: INLINE_MATH_INLINE_COMMENT_OWNER_ID,
+      anchor: anchor as unknown as NoteInlineCommentAnchor,
       referenceText,
       persist,
     });
@@ -221,9 +221,9 @@ function InlineMathView(
     const anchor = getInlineFormulaAnchor();
     if (anchor) {
       window.setTimeout(() => {
-        comments?.clearContentCommentReferenceOverride({
-          ownerId: INLINE_MATH_COMMENT_OWNER_ID,
-          anchor: anchor as unknown as NoteCommentAnchor,
+        inlineCommentRuntime?.clearContentInlineCommentReferenceOverride({
+          ownerId: INLINE_MATH_INLINE_COMMENT_OWNER_ID,
+          anchor: anchor as unknown as NoteInlineCommentAnchor,
         });
       }, 0);
     }
@@ -303,7 +303,11 @@ function InlineMathView(
       contentEditable={false}
     >
       {!isEditing ? (
-        <LatexFormulaCommentButton expression={expression} kind="inline" shellRef={shellRef} />
+        <LatexFormulaInlineCommentButton
+          expression={expression}
+          kind="inline"
+          shellRef={shellRef}
+        />
       ) : null}
       <span
         className={

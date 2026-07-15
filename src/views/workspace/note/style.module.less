@@ -12,7 +12,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
   padding: var(--space-lg);
 }
 
@@ -26,13 +26,6 @@
   max-width: 980px;
   margin: 0;
   padding: 0;
-}
-
-.headerResourceActions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-shrink: 0;
 }
 
 .headerSaveStatus {
@@ -50,14 +43,14 @@
   color: var(--danger);
 }
 
-.commentVisibilitySetting {
+.inlineCommentVisibilitySetting {
   display: flex;
   align-items: flex-start;
   gap: var(--space-md);
   padding: var(--space-md);
 }
 
-.commentVisibilityCopy {
+.inlineCommentVisibilityCopy {
   display: flex;
   flex: 1;
   min-width: 0;
@@ -65,14 +58,14 @@
   gap: var(--space-2xs);
 }
 
-.commentVisibilityTitle {
+.inlineCommentVisibilityTitle {
   color: var(--overlay-foreground);
   font-size: var(--font-size-sm);
   font-weight: 500;
   line-height: var(--line-height-sm);
 }
 
-.commentVisibilityDescription {
+.inlineCommentVisibilityDescription {
   color: var(--muted);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-xs);
@@ -95,8 +88,8 @@
 }
 
 .contentRow {
-  flex: 0 0 max(680px, calc(100vh - 112px));
-  min-height: 680px;
+  flex: 1;
+  min-height: 0;
   display: flex;
   position: relative;
   box-sizing: border-box;
@@ -119,13 +112,14 @@
   position: relative;
 }
 
-.noteAsidePanel {
-  flex: 0 0 var(--note-aside-width, 300px);
-  width: var(--note-aside-width, 300px);
+.inlineCommentSidePanelHost {
+  width: 100%;
   height: 100%;
   min-width: 0;
   min-height: 0;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .mainCol {

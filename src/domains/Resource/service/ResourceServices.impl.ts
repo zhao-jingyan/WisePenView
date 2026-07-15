@@ -1,8 +1,6 @@
 import { DocumentApi } from '@/domains/Document/apis/DocumentApi';
 import { NoteApi } from '@/domains/Note/apis/NoteApi';
 import { SkillApi } from '@/domains/Skill/apis/SkillApi';
-import { ResourceCommentApi } from '../apis/CommentApi';
-import { ResourceInteractApi } from '../apis/InteractApi';
 import { ResourceInlineCommentApi, ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
 import type { ResourceItem } from '../entity/resource';
@@ -14,18 +12,11 @@ import type {
   ChangeInlineCommentResolveStatusRequest,
   CreateInlineCommentRequest,
   DeleteInlineCommentItemRequest,
-  CommentItemActionRequest,
-  CreateResourceCommentRequest,
-  CreateResourceReplyRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
-  InteractRateRequest,
-  InteractToggleLikeRequest,
   IResourceService,
   ListInlineCommentsRequest,
-  ListResourceCommentsRequest,
-  ListResourceRepliesRequest,
   MountResourcesToGroupTagRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
@@ -37,29 +28,6 @@ import type {
   UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,
 } from './index.type';
-
-const listComments = async (params: ListResourceCommentsRequest) =>
-  ResourceServicesMap.mapCommentPageFromApi(await ResourceCommentApi.listComments(params));
-
-const listReplies = async (params: ListResourceRepliesRequest) =>
-  ResourceServicesMap.mapCommentPageFromApi(await ResourceCommentApi.listReplies(params));
-
-const createComment = (params: CreateResourceCommentRequest): Promise<string> =>
-  ResourceCommentApi.createComment({ ...params, imageUrls: params.imageUrls ?? [] });
-
-const createReply = (params: CreateResourceReplyRequest): Promise<string> =>
-  ResourceCommentApi.createReply({ ...params, imageUrls: params.imageUrls ?? [] });
-
-const deleteComment = (params: CommentItemActionRequest): Promise<void> =>
-  ResourceCommentApi.deleteCommentItem(params);
-
-const toggleCommentLike = (params: CommentItemActionRequest): Promise<boolean> =>
-  ResourceCommentApi.toggleLike(params);
-
-const getCommentLikeIds = async (resourceId: string): Promise<ReadonlySet<string>> =>
-  ResourceServicesMap.mapCommentLikeIdsFromApi(
-    await ResourceInteractApi.getUserInteractionRecord({ resourceId })
-  );
 
 const GROUP_RESOURCE_SCAN_PAGE_SIZE = 200;
 
@@ -210,33 +178,6 @@ const getResourcePermissionOverview = async (params: GetResourcePermissionOvervi
   return ResourceServicesMap.mapResourcePermissionOverviewFromApi(resourceInfo, params.resourceId);
 };
 
-/** 获取当前用户点赞状态，供点赞组件薄层调用 */
-const getLikeStatus = async (resourceId: string): Promise<{ liked: boolean }> => {
-  const res = await ResourceInteractApi.getUserInteractionRecord({ resourceId });
-  return ResourceServicesMap.mapLikeStatusFromApi(res);
-};
-
-/** 获取当前用户评分，供评分组件薄层调用 */
-const getRate = async (resourceId: string): Promise<{ score: number }> => {
-  const res = await ResourceInteractApi.getUserInteractionRecord({ resourceId });
-  return ResourceServicesMap.mapRateFromApi(res);
-};
-
-/** 点赞 / 取消点赞 */
-const interactToggleLike = async (params: InteractToggleLikeRequest): Promise<void> => {
-  await ResourceInteractApi.toggleLike({ resourceId: params.resourceId });
-};
-
-/** 评分（1–5），支持覆盖 */
-const interactRate = async (params: InteractRateRequest): Promise<void> => {
-  await ResourceInteractApi.rate({ resourceId: params.resourceId, score: params.score });
-};
-
-/** 上报资源阅读 */
-const interactRead = async (resourceId: string): Promise<void> => {
-  await ResourceInteractApi.read({ resourceId });
-};
-
 const globalSearch = async (params: SearchQueryRequest): Promise<SearchResultPage> => {
   const data = await ResourceItemApi.globalSearch(params);
   return ResourceServicesMap.mapSearchResultPageFromApi(data);
@@ -249,38 +190,15 @@ const listInlineComments = async (params: ListInlineCommentsRequest) => {
   return ResourceServicesMap.mapListInlineCommentsFromApi(data);
 };
 
-const requireInlineCommentResponseId = (
-  id: string | undefined,
-  actionName: string,
-  fieldName: string
-): string => {
-  if (id) {
-    return id;
-  }
-  throw new Error(`${actionName}接口响应缺少 ${fieldName}`);
-};
-
-const createInlineComment = async (params: CreateInlineCommentRequest): Promise<string> => {
-  const data = await ResourceInlineCommentApi.createInlineComment(
+const createInlineComment = (params: CreateInlineCommentRequest): Promise<string> =>
+  ResourceInlineCommentApi.createInlineComment(
     ResourceServicesMap.mapCreateInlineCommentRequest(params)
   );
-  return requireInlineCommentResponseId(
-    ResourceServicesMap.mapInlineCommentThreadIdFromApi(data),
-    '创建行内批注',
-    'inlineCommentId'
-  );
-};
 
-const addInlineCommentItem = async (params: AddInlineCommentItemRequest): Promise<string> => {
-  const data = await ResourceInlineCommentApi.addInlineCommentItem(
+const addInlineCommentItem = (params: AddInlineCommentItemRequest): Promise<string> =>
+  ResourceInlineCommentApi.addInlineCommentItem(
     ResourceServicesMap.mapAddInlineCommentItemRequest(params)
   );
-  return requireInlineCommentResponseId(
-    ResourceServicesMap.mapInlineCommentItemIdFromApi(data),
-    '追加行内批注回复',
-    'itemId'
-  );
-};
 
 const updateInlineCommentItem = async (params: UpdateInlineCommentItemRequest): Promise<void> => {
   await ResourceInlineCommentApi.updateInlineCommentItem(
@@ -299,13 +217,6 @@ const changeInlineCommentResolveStatus = async (
 };
 
 export const createResourceServices = (): IResourceService => ({
-  listComments,
-  listReplies,
-  createComment,
-  createReply,
-  deleteComment,
-  toggleCommentLike,
-  getCommentLikeIds,
   getUserResources,
   getGroupResources,
   renameResource,
@@ -315,11 +226,6 @@ export const createResourceServices = (): IResourceService => ({
   updateResourceActionPermission,
   updateResourcePermissionSubjects,
   getResourcePermissionOverview,
-  getLikeStatus,
-  getRate,
-  interactToggleLike,
-  interactRate,
-  interactRead,
   globalSearch,
   listInlineComments,
   createInlineComment,

@@ -6,8 +6,6 @@ import type {
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
-  InteractRateRequest,
-  InteractToggleLikeRequest,
   IResourceService,
   ListInlineCommentsRequest,
   RemoveResourcesRequest,
@@ -28,27 +26,10 @@ import {
   RESOURCE_ACTION,
 } from '@/domains/Resource';
 import { useResourceDisplayNameStore } from '../store/useResourceDisplayNameStore';
-import {
-  createMockComment,
-  createMockReply,
-  deleteMockComment,
-  getMockCommentLikeIds,
-  listMockComments,
-  listMockReplies,
-  toggleMockCommentLike,
-} from './commentMock';
 import mockdata from './mockdata.json';
 import { simulateGlobalSearch } from './searchMockData';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const listComments = listMockComments;
-const listReplies = listMockReplies;
-const createComment = createMockComment;
-const createReply = createMockReply;
-const deleteComment = deleteMockComment;
-const toggleCommentLike = toggleMockCommentLike;
-const getCommentLikeIds = getMockCommentLikeIds;
 
 const toResourceItem = (
   item: Omit<ResourceItem, 'ownerInfo'> & { ownerInfo?: ResourceItem['ownerInfo'] }
@@ -212,14 +193,6 @@ const mountResourcesToGroupTag = async (): Promise<void> => {
   await delay(150);
 };
 
-const interactToggleLike = async (_params: InteractToggleLikeRequest): Promise<void> => {
-  await delay(100);
-};
-
-const interactRate = async (_params: InteractRateRequest): Promise<void> => {
-  await delay(100);
-};
-
 const updateResourceActionPermission = async (): Promise<void> => {
   await delay(100);
 };
@@ -266,7 +239,7 @@ const getResourcePermissionOverview = async (
       id: 'owner:1',
       kind: 'owner' as const,
       source: 'owner' as const,
-      name: '李若瑾',
+      name: '陈思齐',
       description: '所有者',
       userId: '1',
       effectiveActions: supportedActions,
@@ -318,20 +291,6 @@ const getResourcePermissionOverview = async (
   };
 };
 
-const getLikeStatus = async (_resourceId: string): Promise<{ liked: boolean }> => {
-  await delay(50);
-  return { liked: false };
-};
-
-const getRate = async (_resourceId: string): Promise<{ score: number }> => {
-  await delay(50);
-  return { score: 0 };
-};
-
-const interactRead = async (_resourceId: string): Promise<void> => {
-  await delay(50);
-};
-
 const globalSearch = async (params: SearchQueryRequest): Promise<SearchResultPage> => {
   await delay(180);
   return simulateGlobalSearch(params);
@@ -369,13 +328,6 @@ const changeInlineCommentResolveStatus = async (
 };
 
 export const ResourceServicesMock: IResourceService = {
-  listComments,
-  listReplies,
-  createComment,
-  createReply,
-  deleteComment,
-  toggleCommentLike,
-  getCommentLikeIds,
   getUserResources,
   getGroupResources,
   renameResource,
@@ -385,11 +337,6 @@ export const ResourceServicesMock: IResourceService = {
   updateResourceActionPermission,
   updateResourcePermissionSubjects,
   getResourcePermissionOverview,
-  getLikeStatus,
-  getRate,
-  interactToggleLike,
-  interactRate,
-  interactRead,
   globalSearch,
   listInlineComments,
   createInlineComment,

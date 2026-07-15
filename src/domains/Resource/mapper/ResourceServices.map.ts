@@ -3,11 +3,6 @@ import type { UserDisplayBase } from '@/domains/User';
 import { normalizeUserDisplayBaseFromApi } from '@/domains/User/mapper/userEnum.mapper';
 import { normalizeId } from '@/utils/normalize/normalizeId';
 import type {
-  CommentPageApiResponse,
-  ResourceCommentItemApiResponse,
-} from '../apis/CommentApi.type';
-import type { GetUserInteractionRecordApiResponse } from '../apis/InteractApi.type';
-import type {
   AddInlineCommentItemApiRequest,
   ChangeResourceActionPermissionApiRequest,
   CreateInlineCommentApiRequest,
@@ -24,7 +19,6 @@ import type {
   ResourceSpecifiedUserGrantedActionsApiResponse,
   UpdateInlineCommentItemApiRequest,
 } from '../apis/ResourceApi.type';
-import type { CommentAuthor, CommentPage, ResourceComment } from '../entity/comment';
 import {
   coerceResourceActions,
   filterSupportedResourcePermissionActions,
@@ -220,6 +214,7 @@ const mapResourceItemFromApi = (
     specifiedUsersGrantedActions: normalizeResourceActionMap(raw.specifiedUsersGrantedActions),
     readCount: interactionInfo?.readCount,
     likeCount: interactionInfo?.likeCount,
+    favoriteCount: interactionInfo?.favoriteCount,
     scoreAvg: scoreCount > 0 ? scoreTotal / scoreCount : null,
   };
   const currentTagBind = resolveCurrentTagBind(item, context);
@@ -471,85 +466,6 @@ const normalizeResourceActionMap = (
   return entries.length > 0 ? Object.fromEntries(entries) : null;
 };
 
-/** 互动记录 API 响应 → 点赞状态；null（未操作）归一化为 false */
-const mapLikeStatusFromApi = (
-  res: GetUserInteractionRecordApiResponse | null | undefined
-): { liked: boolean } => ({
-  liked: res?.liked ?? false,
-});
-
-/** 互动记录 API 响应 → 评分；null（未评分）归一化为 0 */
-const mapRateFromApi = (
-  res: GetUserInteractionRecordApiResponse | null | undefined
-): { score: number } => ({
-  score: res?.score ?? 0,
-});
-
-const mapCommentAuthorFromApi = (
-  value: ResourceCommentItemApiResponse['authorInfo'],
-  fallbackId: string
-): CommentAuthor => ({
-  name: value?.realName?.trim() || value?.nickname?.trim() || fallbackId,
-  avatar: value?.avatar?.trim() || undefined,
-});
-
-const mapCommentImageUrlsFromApi = (value: unknown): string[] => {
-  if (Array.isArray(value)) {
-    return value
-      .filter((url): url is string => typeof url === 'string')
-      .map((url) => url.trim())
-      .filter(Boolean);
-  }
-  // 兼容历史数据或异常写入为单个字符串的形态，避免组件层执行 .map 崩溃。
-  if (typeof value === 'string' && value.trim() !== '') {
-    return [value];
-  }
-  return [];
-};
-
-const mapCommentCreateTimeFromApi = (value: unknown): number => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
-  if (typeof value === 'string' && value.trim() !== '') {
-    const parsed = Date.parse(value);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-  // 后端历史数据可能缺少时间；以本次加载时刻兜底，保证新发布内容可正常展示时间。
-  return Date.now();
-};
-
-const mapCommentFromApi = (data: ResourceCommentItemApiResponse): ResourceComment => ({
-  commentId: data.commentId,
-  resourceId: data.resourceId,
-  authorId: data.authorId,
-  author: mapCommentAuthorFromApi(data.authorInfo, data.authorId),
-  replyToUserId: data.replyToUserId ?? undefined,
-  replyToUser: data.replyToUserId
-    ? mapCommentAuthorFromApi(data.replyToUserInfo, data.replyToUserId)
-    : undefined,
-  content: data.content ?? '',
-  imageUrls: mapCommentImageUrlsFromApi(data.imageUrls),
-  likeCount: data.likeCount ?? 0,
-  replyCount: data.replyCount ?? 0,
-  commentType: data.commentType,
-  createTime: mapCommentCreateTimeFromApi(data.createTime),
-  deleted: data.deleted ?? false,
-});
-
-const mapCommentPageFromApi = (data: CommentPageApiResponse): CommentPage => ({
-  items: data.list.map(mapCommentFromApi),
-  total: data.total,
-  page: data.page,
-  size: data.size,
-  totalPage: data.totalPage,
-});
-
-const mapCommentLikeIdsFromApi = (
-  data: GetUserInteractionRecordApiResponse | null | undefined
-): ReadonlySet<string> => new Set(data?.likedCommentIds ?? []);
 // 枚举归一化大小写，下游 === 比较与分组 label 生效
 const mapSearchHitFromApi = (raw: GlobalSearchApiResponse['list'][number]): SearchHitItem => ({
   ...raw,
@@ -683,28 +599,6 @@ const mapListInlineCommentsFromApi = (
 ): ResourceInlineCommentThread[] =>
   Array.isArray(data) ? data.map(mapInlineCommentThreadFromApi) : [];
 
-const mapIdFieldFromApi = (
-  data: unknown,
-  fieldName: 'inlineCommentId' | 'itemId'
-): string | undefined => {
-  if (typeof data === 'string') {
-    return data.trim() || undefined;
-  }
-  if (data && typeof data === 'object') {
-    const raw = (data as Record<string, unknown>)[fieldName];
-    if (typeof raw === 'string') {
-      return raw.trim() || undefined;
-    }
-  }
-  return undefined;
-};
-
-const mapInlineCommentThreadIdFromApi = (data: unknown): string | undefined =>
-  mapIdFieldFromApi(data, 'inlineCommentId');
-
-const mapInlineCommentItemIdFromApi = (data: unknown): string | undefined =>
-  mapIdFieldFromApi(data, 'itemId');
-
 const mapCreateInlineCommentRequest = (
   params: CreateInlineCommentRequest
 ): CreateInlineCommentApiRequest => ({
@@ -748,22 +642,15 @@ const mapUpdateInlineCommentItemRequest = (
 });
 
 export const ResourceServicesMap = {
-  mapCommentFromApi,
-  mapCommentPageFromApi,
-  mapCommentLikeIdsFromApi,
   mapListResourceItemsRequest,
   mapResourceListPageFromApi,
   mapResourceItemFromApi,
   mapChangeResourceActionPermissionRequest,
   mapChangeResourceActionPermissionRequestFromSubjects,
   mapResourcePermissionOverviewFromApi,
-  mapLikeStatusFromApi,
-  mapRateFromApi,
   mapSearchResultPageFromApi,
   mapListInlineCommentsRequest,
   mapListInlineCommentsFromApi,
-  mapInlineCommentThreadIdFromApi,
-  mapInlineCommentItemIdFromApi,
   mapCreateInlineCommentRequest,
   mapAddInlineCommentItemRequest,
   mapUpdateInlineCommentItemRequest,

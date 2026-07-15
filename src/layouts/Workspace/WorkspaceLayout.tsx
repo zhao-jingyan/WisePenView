@@ -15,6 +15,7 @@ import { useResizablePanelSize } from '@/layouts/_common/useResizablePanelSize';
 import { useAppNavigation } from '@/layouts/AppNavigation/AppNavigationContext';
 import { useEnterZenMode } from '@/layouts/ZenMode/useEnterZenMode';
 import { normalizeResourceKind, resolveResourceViewer } from '@/utils/navigation/resourceTarget';
+import WorkspaceResourceSidePanelActions from '@/views/workspace/_components/WorkspaceResourceSidePanel/Actions';
 import {
   DEFAULT_RESOURCE_HOST_ID,
   ResourceHostContext,
@@ -265,6 +266,7 @@ function WorkspaceLayout() {
   const resourceHostContext = useMemo<ResourceHostContextValue>(
     () => ({
       hostId: DEFAULT_RESOURCE_HOST_ID,
+      layoutConfig,
       routeContext,
       getNavigationScope: () => useWorkspaceNavigationStore.getState().location.scope,
       openResource,
@@ -273,13 +275,17 @@ function WorkspaceLayout() {
       setChatContext: useWorkspaceChatProtocolStore.getState().setContext,
       clearChatContext: useWorkspaceChatProtocolStore.getState().clearContext,
     }),
-    [openResource, resetLayoutConfig, routeContext, setLayoutConfig]
+    [layoutConfig, openResource, resetLayoutConfig, routeContext, setLayoutConfig]
   );
 
   const renderHeader = () => {
     if (layoutConfig.header === false) return null;
 
     const headerConfig = layoutConfig.header ?? {};
+    const sidePanelConfig =
+      layoutConfig.sidePanel?.resource.resourceId === routeContext.resourceId
+        ? layoutConfig.sidePanel
+        : undefined;
     const resource = headerConfig.resource
       ? {
           ...headerConfig.resource,
@@ -292,6 +298,15 @@ function WorkspaceLayout() {
       <WorkspaceHeader
         {...headerConfig}
         resource={resource}
+        resourceSidePanelActions={
+          sidePanelConfig ? (
+            <WorkspaceResourceSidePanelActions
+              resourceId={sidePanelConfig.resource.resourceId}
+              inlineCommentAvailable={Boolean(sidePanelConfig.inlineComment)}
+              disabled={headerConfig.resource?.isDisabled}
+            />
+          ) : undefined
+        }
         canGoBack={appNavigation.canGoBack}
         canGoForward={appNavigation.canGoForward}
         leftSidebarCollapsed={sidebarCollapsed}

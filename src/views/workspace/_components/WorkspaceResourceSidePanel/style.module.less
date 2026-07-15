@@ -1,0 +1,75 @@
+.root {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.resourceRenderer,
+.sidePanel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidePanel {
+  background: var(--surface);
+}
+
+.panelFrame {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.panelHeader {
+  display: flex;
+  min-height: 44px;
+  flex: 0 0 44px;
+  align-items: center;
+  padding: 0 var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.panelTitle {
+  margin: 0;
+  color: var(--foreground);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+.panelBody {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.resizeHandle {
+  z-index: 20;
+}
+
+.resizeHandleCollapsed {
+  flex: 0 0 0 !important;
+  flex-basis: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden;
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}

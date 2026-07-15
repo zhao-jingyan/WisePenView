@@ -10,7 +10,7 @@ import type {
 } from '@/components/Skill/SkillFileTree/index.type';
 import SkillVersionDropdown from '@/components/Skill/SkillVersionDropdown';
 import type { DataNode } from '@/components/Tree';
-import { useResourceService, useSkillService } from '@/domains';
+import { useInteractService, useSkillService } from '@/domains';
 import type { SkillFileNode, UploadSkillAssetResult } from '@/domains/Skill';
 import { SkillServicesMap } from '@/domains/Skill';
 import { useEffectForce } from '@/hooks/useEffectForce';
@@ -26,7 +26,6 @@ import { useRequest } from 'ahooks';
 import { FolderPlus, Pencil, Plus, Save, Settings, Upload } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom';
-import ResourceCommentSection from '../_components/ResourceCommentSection';
 import SkillSaveQueueDock from './_components/SkillSaveQueueDock';
 import type { SkillSaveQueueItem } from './_components/SkillSaveQueueDock/index.type';
 import type { UnsavedSkillChangesMode } from './_components/UnsavedSkillChangesModal';
@@ -703,7 +702,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const navigate = useNavigate();
   const { getNavigationScope, openResource } = useResourceHostContext();
   const skillService = useSkillService();
-  const resourceService = useResourceService();
+  const interactService = useInteractService();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const draftCacheWriteVersionRef = useRef(0);
   const restoredEditorDraftRef = useRef<{
@@ -773,7 +772,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
     refreshDeps: [resourceId],
   });
 
-  useRequest(() => resourceService.interactRead(resourceId), {
+  useRequest(() => interactService.recordResourceRead(resourceId), {
     ready: Boolean(resourceId),
     refreshDeps: [resourceId],
   });
@@ -1937,6 +1936,9 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
 
   const headerConfig = useMemo<ResourceHostLayoutConfig>(
     () => ({
+      sidePanel: skill?.resourceInfo
+        ? { resource: skill.resourceInfo, onResourceChanged: refreshSkill }
+        : undefined,
       header: {
         resource: {
           resourceId: skill?.resourceId ?? resourceId,
@@ -2236,9 +2238,6 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
             </div>
           )}
         </div>
-        {skill ? (
-          <ResourceCommentSection resourceId={resourceId} resourceOwnerId={skill.ownerId} />
-        ) : null}
       </div>
 
       <AppAlertDialog

@@ -1,13 +1,13 @@
 import { DRAWIO_EMBED_URL } from '@/apis/clientUrls';
 import { ResultState, Spin } from '@/components/Feedback';
 import AppDisplayDialog from '@/components/Overlay/AppDisplayDialog';
-import { useNoteService, useResourceService, useUserService } from '@/domains';
+import { useInteractService, useNoteService, useUserService } from '@/domains';
 import type {
   DrawIoLatestSnapshotData,
   NoteInfoDisplayData,
   NoteVersionListPage,
 } from '@/domains/Note';
-import type { ResourceAction } from '@/domains/Resource';
+import type { ResourceAction, ResourceItem } from '@/domains/Resource';
 import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
 import { parseErrorMessage } from '@/utils/error';
 import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
@@ -156,8 +156,10 @@ function DrawioLayoutConfig({
   resourceName = 'Draw.io 图',
   ownerId,
   currentActions,
+  resourceInfo,
   copyVersion,
   onPermissionSuccess,
+  onResourceChanged,
   titleMeta,
   actions,
 }: {
@@ -166,14 +168,17 @@ function DrawioLayoutConfig({
   resourceName?: string;
   ownerId?: string | null;
   currentActions?: ResourceAction[] | null;
+  resourceInfo?: ResourceItem;
   copyVersion?: number;
   onPermissionSuccess?: () => void;
+  onResourceChanged?: () => unknown | Promise<unknown>;
   titleMeta?: ReactNode;
   actions?: ReactNode;
 }) {
   const frameConfig = useMemo<ResourceHostLayoutConfig>(
     () => ({
       className: styles.container,
+      sidePanel: resourceInfo ? { resource: resourceInfo, onResourceChanged } : undefined,
       header: {
         resource: {
           resourceId,
@@ -194,8 +199,10 @@ function DrawioLayoutConfig({
       copyVersion,
       currentActions,
       onPermissionSuccess,
+      onResourceChanged,
       ownerId,
       resourceId,
+      resourceInfo,
       resourceName,
       titleMeta,
     ]
@@ -477,8 +484,10 @@ function DrawioViewConnected({ resourceId, data, onRefreshDrawioInfo }: DrawioVi
       resourceName={title}
       ownerId={noteInfoDisplay.ownerId}
       currentActions={noteInfoDisplay.resourceInfo?.currentActions}
+      resourceInfo={noteInfoDisplay.resourceInfo}
       copyVersion={currentVersion}
       onPermissionSuccess={onRefreshDrawioInfo}
+      onResourceChanged={onRefreshDrawioInfo}
       titleMeta={
         <>
           <span className={styles.versionBadge}>v{currentVersion}</span>
@@ -516,7 +525,7 @@ function DrawioViewConnected({ resourceId, data, onRefreshDrawioInfo }: DrawioVi
 
 function DrawioView({ resourceId }: DrawioViewProps) {
   const noteService = useNoteService();
-  const resourceService = useResourceService();
+  const interactService = useInteractService();
   const {
     data,
     error,
@@ -541,7 +550,7 @@ function DrawioView({ resourceId }: DrawioViewProps) {
     }
   );
 
-  useRequest(() => resourceService.interactRead(resourceId as string), {
+  useRequest(() => interactService.recordResourceRead(resourceId as string), {
     ready: Boolean(resourceId),
     refreshDeps: [resourceId],
   });

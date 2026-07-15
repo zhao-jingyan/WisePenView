@@ -84,14 +84,14 @@ export interface NoteInlineAiDiff {
   ) => HTMLElement;
 }
 
-export type NoteCommentAnchor = Readonly<Record<string, unknown>>;
+export type NoteInlineCommentAnchor = Readonly<Record<string, unknown>>;
 
-export interface NoteCommentPosition {
+export interface NoteInlineCommentPosition {
   from: number;
   to: number;
 }
 
-export type NoteCommentEditor = Pick<
+export type NoteInlineCommentEditor = Pick<
   PluginEditor,
   | 'prosemirrorView'
   | 'transact'
@@ -103,28 +103,34 @@ export type NoteCommentEditor = Pick<
 >;
 
 /** 内容 owner 为专用批注锚点提供的可执行能力，engine 不解释 payload。 */
-export interface NoteCommentAnchorFacet {
+export interface NoteInlineCommentAnchorFacet {
   getStore: (doc: Y.Doc) => Y.Map<unknown>;
-  parse: (value: unknown) => NoteCommentAnchor | null;
-  select: (editor: NoteCommentEditor, anchor: NoteCommentAnchor) => boolean;
-  resolve: (editor: NoteCommentEditor, anchor: NoteCommentAnchor) => NoteCommentPosition | null;
-  getReferenceText: (editor: NoteCommentEditor, anchor: NoteCommentAnchor) => string | undefined;
-  getSelectionReferenceText?: (editor: NoteCommentEditor) => string | undefined;
-  equals: (left: NoteCommentAnchor, right: NoteCommentAnchor) => boolean;
+  parse: (value: unknown) => NoteInlineCommentAnchor | null;
+  select: (editor: NoteInlineCommentEditor, anchor: NoteInlineCommentAnchor) => boolean;
+  resolve: (
+    editor: NoteInlineCommentEditor,
+    anchor: NoteInlineCommentAnchor
+  ) => NoteInlineCommentPosition | null;
+  getReferenceText: (
+    editor: NoteInlineCommentEditor,
+    anchor: NoteInlineCommentAnchor
+  ) => string | undefined;
+  getSelectionReferenceText?: (editor: NoteInlineCommentEditor) => string | undefined;
+  equals: (left: NoteInlineCommentAnchor, right: NoteInlineCommentAnchor) => boolean;
   syncMark?: (
-    editor: NoteCommentEditor,
+    editor: NoteInlineCommentEditor,
     threadId: string,
-    anchor: NoteCommentAnchor,
-    position: NoteCommentPosition
+    anchor: NoteInlineCommentAnchor,
+    position: NoteInlineCommentPosition
   ) => boolean;
 }
 
-export type NoteCommentFacet =
+export type NoteInlineCommentFacet =
   | { mode: 'range'; hideFormattingToolbar?: boolean }
   | {
       mode: 'dedicated';
       hideFormattingToolbar?: boolean;
-      anchor: NoteCommentAnchorFacet;
+      anchor: NoteInlineCommentAnchorFacet;
     }
   | { mode: 'unsupported'; hideFormattingToolbar?: boolean; reason?: string };
 
@@ -228,7 +234,7 @@ interface NotePluginNodeBase {
 interface NoteContentPluginBase extends NotePluginNodeBase {
   type: string;
   capabilities: NoteContentCapabilityDeclarations;
-  comments: NoteCommentFacet;
+  inlineComment: NoteInlineCommentFacet;
   print?: NotePrintContribution;
   extensions?: (context: NotePluginRuntimeContext) => ExtensionFactoryInstance[];
   editorProps?: (context: NotePluginRuntimeContext) => Partial<EditorProps>;

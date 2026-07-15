@@ -4,8 +4,6 @@
  */
 
 import type {
-  CommentPage,
-  CommentSortBy,
   ResourceAction,
   ResourceIconType,
   ResourceItem,
@@ -27,13 +25,6 @@ export interface ResourceListPage {
 
 /** ResourceService 接口：供依赖注入使用 */
 export interface IResourceService {
-  listComments(params: ListResourceCommentsRequest): Promise<CommentPage>;
-  listReplies(params: ListResourceRepliesRequest): Promise<CommentPage>;
-  createComment(params: CreateResourceCommentRequest): Promise<string>;
-  createReply(params: CreateResourceReplyRequest): Promise<string>;
-  deleteComment(params: CommentItemActionRequest): Promise<void>;
-  toggleCommentLike(params: CommentItemActionRequest): Promise<boolean>;
-  getCommentLikeIds(resourceId: string): Promise<ReadonlySet<string>>;
   getUserResources(params: GetUserResourcesRequest): Promise<ResourceListPage>;
   getGroupResources(params: GetGroupResourceRequest): Promise<ResourceListPage>;
   renameResource(params: RenameResourceRequest): Promise<void>;
@@ -46,16 +37,6 @@ export interface IResourceService {
   getResourcePermissionOverview(
     params: GetResourcePermissionOverviewRequest
   ): Promise<ResourcePermissionOverview>;
-  /** 获取当前用户点赞状态，供点赞组件薄层调用 */
-  getLikeStatus(resourceId: string): Promise<{ liked: boolean }>;
-  /** 获取当前用户评分，供评分组件薄层调用 */
-  getRate(resourceId: string): Promise<{ score: number }>;
-  /** 点赞 / 取消点赞 */
-  interactToggleLike(params: InteractToggleLikeRequest): Promise<void>;
-  /** 评分（1–5），支持覆盖 */
-  interactRate(params: InteractRateRequest): Promise<void>;
-  /** 上报资源阅读（详情页 / 文档预览页进入时调用一次） */
-  interactRead(resourceId: string): Promise<void>;
   /** 全局全文搜索（ACL 过滤 + 高亮，分页） */
   globalSearch(params: SearchQueryRequest): Promise<SearchResultPage>;
   /** 查询资源行内批注列表 */
@@ -70,34 +51,6 @@ export interface IResourceService {
   deleteInlineCommentItem(params: DeleteInlineCommentItemRequest): Promise<void>;
   /** 更新批注串解决状态 */
   changeInlineCommentResolveStatus(params: ChangeInlineCommentResolveStatusRequest): Promise<void>;
-}
-
-export interface ListResourceCommentsRequest {
-  resourceId: string;
-  sortBy: CommentSortBy;
-  page: number;
-  size: number;
-}
-
-export interface ListResourceRepliesRequest {
-  rootCommentId: string;
-  page: number;
-  size: number;
-}
-
-export interface CreateResourceCommentRequest {
-  resourceId: string;
-  content: string;
-  imageUrls?: string[];
-}
-
-export interface CreateResourceReplyRequest extends CreateResourceCommentRequest {
-  replyTo: string;
-}
-
-export interface CommentItemActionRequest {
-  resourceId: string;
-  commentId: string;
 }
 
 /** 全文搜索请求（对齐 GET /resource/search/globalSearchResources） */
@@ -228,18 +181,6 @@ export interface GetUserResourcesRequest {
 export type GetGroupResourceRequest = GetUserResourcesRequest & {
   groupId: string;
 };
-
-/** 点赞 / 取消点赞请求参数（对齐 POST /resource/interaction/toggleLike） */
-export interface InteractToggleLikeRequest {
-  resourceId: string;
-}
-
-/** 评分请求参数（对齐 POST /resource/interaction/rate） */
-export interface InteractRateRequest {
-  resourceId: string;
-  /** 1–5 整数，支持覆盖提交 */
-  score: number;
-}
 
 export type ResourceInlineCommentAnchorKind =
   'text-range' | 'formula-inline' | 'formula-block' | 'unknown';

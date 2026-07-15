@@ -1,5 +1,5 @@
-import { shouldHideNoteFormattingToolbar } from '@/components/Note/CustomBlockNote/engines/comments';
 import { useNoteEditorReadOnlyContext } from '@/components/Note/CustomBlockNote/engines/editor/readOnly';
+import { shouldHideNoteFormattingToolbar } from '@/components/Note/CustomBlockNote/engines/inlineComment';
 import {
   blockNoteSchema,
   notePluginRegistry,
@@ -40,8 +40,8 @@ import { getSelectedBlocks, stopToolbarMouseDown } from './utils';
 
 interface NoteToolbarProps {
   onAskAi: () => void;
-  showAddComment?: boolean;
-  onRememberPendingCommentReference?: () => void;
+  showAddInlineComment?: boolean;
+  onRememberPendingInlineCommentReference?: () => void;
 }
 
 const getTableRailToolbarPlacement = (
@@ -85,8 +85,8 @@ function useBlockTypeFileGroupVisible() {
 
 function CustomFormattingToolbar({
   onAskAi,
-  showAddComment = false,
-  onRememberPendingCommentReference,
+  showAddInlineComment = false,
+  onRememberPendingInlineCommentReference,
 }: NoteToolbarProps) {
   const readOnly = useNoteEditorReadOnlyContext();
   const editor = useBlockNoteEditor();
@@ -127,13 +127,13 @@ function CustomFormattingToolbar({
         </>
       ) : null}
       <ButtonGroup size="sm" variant="ghost" aria-label="批注和 AI">
-        {showAddComment && commentsExtension?.startPendingComment ? (
+        {showAddInlineComment && commentsExtension?.startPendingComment ? (
           <ToolbarButton
             label="添加批注"
             icon={<MessageSquarePlus size={20} />}
-            onMouseDownCapture={onRememberPendingCommentReference}
+            onMouseDownCapture={onRememberPendingInlineCommentReference}
             onPress={() => {
-              onRememberPendingCommentReference?.();
+              onRememberPendingInlineCommentReference?.();
               commentsExtension.startPendingComment?.();
             }}
           />

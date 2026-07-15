@@ -93,7 +93,7 @@ function ResourceHeaderMore({
       return;
     }
     if (key === 'comment-history') {
-      menu?.onCommentHistory?.();
+      menu?.onInlineCommentHistory?.();
       return;
     }
     if (key === 'print') {
@@ -167,12 +167,12 @@ function ResourceHeaderMore({
               </Dropdown.Item>
             </Dropdown.Section>
           ) : null}
-          {menu?.showCommentHistory ? (
+          {menu?.showInlineCommentHistory ? (
             <Dropdown.Section>
               <Dropdown.Item
                 id="comment-history"
                 textValue="历史批注"
-                isDisabled={!menu.onCommentHistory}
+                isDisabled={!menu.onInlineCommentHistory}
               >
                 <ResourceHeaderMenuItemContent icon={MessageSquare} label="历史批注" />
               </Dropdown.Item>

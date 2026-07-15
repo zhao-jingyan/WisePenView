@@ -12,8 +12,8 @@ export interface ResourceHeaderDownloadAction {
 
 export interface ResourceHeaderMoreMenu {
   advanced?: ReactNode;
-  showCommentHistory?: boolean;
-  onCommentHistory?: () => void;
+  showInlineCommentHistory?: boolean;
+  onInlineCommentHistory?: () => void;
   onPrint?: () => void;
   download?: ResourceHeaderDownloadAction;
   isPending?: boolean;
