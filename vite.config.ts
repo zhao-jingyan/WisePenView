@@ -69,5 +69,9 @@ export default defineConfig(({ mode }) => {
         '@services-registry': path.resolve(__dirname, servicesRegistry),
       },
     },
+    build: {
+      // PDF、BlockNote 和代码高亮均已按路由/语言按需加载，允许其运行时 chunk 保持较大体积。
+      chunkSizeWarningLimit: 2500,
+    },
   };
 });
