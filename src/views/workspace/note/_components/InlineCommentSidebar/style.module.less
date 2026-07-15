@@ -226,4 +226,83 @@
     color: var(--accent);
     background: var(--surface-tertiary);
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.threadQuickActionButtonActive {
+  color: var(--accent);
+  background: var(--surface-tertiary);
+}
+
+.inlineCommentReactionList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.inlineCommentReaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.inlineCommentReactionButton {
+  margin: 0;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.inlineCommentReactionEmoji {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.inlineCommentReactionUser {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.emojiPickerPopover {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.emojiPickerPanel {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-md, 0 8px 24px rgb(0 0 0 / 12%));
+}
+
+.emojiMartPickerHost {
+  :global(em-emoji-picker) {
+    --rgb-background: transparent;
+    --rgb-input: transparent;
+    height: 320px;
+  }
 }

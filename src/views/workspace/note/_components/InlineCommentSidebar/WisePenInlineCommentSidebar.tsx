@@ -14,6 +14,7 @@ export function WisePenInlineCommentSidebar({
   onSelectThread,
   onUpdateInlineComment,
   onDeleteInlineComment,
+  onChangeInlineCommentReaction,
   onResolveThread,
   onReopenThread,
   onReplyThread,
@@ -37,6 +38,7 @@ export function WisePenInlineCommentSidebar({
             onSelectThread={onSelectThread}
             onUpdateInlineComment={onUpdateInlineComment}
             onDeleteInlineComment={onDeleteInlineComment}
+            onChangeInlineCommentReaction={onChangeInlineCommentReaction}
             onResolveThread={onResolveThread}
             onReopenThread={onReopenThread}
             onReplyThread={onReplyThread}

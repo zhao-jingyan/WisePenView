@@ -47,6 +47,10 @@ export interface IResourceService {
   addInlineCommentItem(params: AddInlineCommentItemRequest): Promise<string>;
   /** 修改批注回复 */
   updateInlineCommentItem(params: UpdateInlineCommentItemRequest): Promise<void>;
+  /** 设置批注回复表情 */
+  setInlineCommentItemReaction(params: SetInlineCommentItemReactionRequest): Promise<void>;
+  /** 取消批注回复表情 */
+  deleteInlineCommentItemReaction(params: DeleteInlineCommentItemReactionRequest): Promise<void>;
   /** 删除批注回复 */
   deleteInlineCommentItem(params: DeleteInlineCommentItemRequest): Promise<void>;
   /** 更新批注串解决状态 */
@@ -191,6 +195,13 @@ export interface ResourceInlineCommentAuthorInfo {
   avatarUrl: string;
 }
 
+export interface ResourceInlineCommentItemReaction {
+  userId: string;
+  emojiId: string;
+  userInfo?: ResourceInlineCommentAuthorInfo;
+  createTime?: string;
+}
+
 export interface ResourceInlineCommentAnchor {
   externalAnchorId: string;
   quoteText: string;
@@ -205,6 +216,7 @@ export interface ResourceInlineCommentItem {
   content: string;
   imageUrls: string[];
   mentionUserIds: string[];
+  reactions: ResourceInlineCommentItemReaction[];
   createTime?: string;
   updateTime?: string;
 }
@@ -262,6 +274,21 @@ export interface UpdateInlineCommentItemRequest {
   content: string;
   imageUrls?: string[];
   mentionUserIds?: string[];
+}
+
+export interface SetInlineCommentItemReactionRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  itemId: string;
+  contentVersion?: number;
+  emojiId: string;
+}
+
+export interface DeleteInlineCommentItemReactionRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  itemId: string;
+  contentVersion?: number;
 }
 
 export interface DeleteInlineCommentItemRequest {

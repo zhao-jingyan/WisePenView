@@ -2,6 +2,7 @@ import type {
   AddInlineCommentItemRequest,
   ChangeInlineCommentResolveStatusRequest,
   CreateInlineCommentRequest,
+  DeleteInlineCommentItemReactionRequest,
   DeleteInlineCommentItemRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
@@ -16,6 +17,7 @@ import type {
   ResourcePermissionOverview,
   SearchQueryRequest,
   SearchResultPage,
+  SetInlineCommentItemReactionRequest,
   UpdateInlineCommentItemRequest,
   UpdateResourcePermissionSubjectsRequest,
 } from '@/domains/Resource';
@@ -317,6 +319,18 @@ const updateInlineCommentItem = async (_params: UpdateInlineCommentItemRequest):
   await delay(120);
 };
 
+const setInlineCommentItemReaction = async (
+  _params: SetInlineCommentItemReactionRequest
+): Promise<void> => {
+  await delay(120);
+};
+
+const deleteInlineCommentItemReaction = async (
+  _params: DeleteInlineCommentItemReactionRequest
+): Promise<void> => {
+  await delay(120);
+};
+
 const deleteInlineCommentItem = async (_params: DeleteInlineCommentItemRequest): Promise<void> => {
   await delay(120);
 };
@@ -342,6 +356,8 @@ export const ResourceServicesMock: IResourceService = {
   createInlineComment,
   addInlineCommentItem,
   updateInlineCommentItem,
+  setInlineCommentItemReaction,
+  deleteInlineCommentItemReaction,
   deleteInlineCommentItem,
   changeInlineCommentResolveStatus,
 };

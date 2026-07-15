@@ -42,7 +42,11 @@ type InlineCommentThreadsSidebarProps = {
   actionMode?: 'default' | 'history';
   canReopenThread?: (thread: ThreadData) => boolean;
   actionsEnabled?: boolean;
-  resolveInlineCommentAuthor: (comment: CommentData) => WisePenInlineCommentAuthorInfo;
+  resolveInlineCommentUser: (
+    userId: string,
+    comment: CommentData,
+    source: 'author' | 'reaction'
+  ) => WisePenInlineCommentAuthorInfo;
 };
 
 function isDeletedInlineComment(comment: CommentData): boolean {
@@ -53,7 +57,7 @@ function mapThreadToSidebarThread(
   thread: ThreadData,
   referenceText: string,
   currentUserId: string,
-  resolveInlineCommentAuthor: InlineCommentThreadsSidebarProps['resolveInlineCommentAuthor']
+  resolveInlineCommentUser: InlineCommentThreadsSidebarProps['resolveInlineCommentUser']
 ): WisePenInlineCommentThread {
   return {
     id: thread.id,
@@ -61,10 +65,18 @@ function mapThreadToSidebarThread(
     resolved: thread.resolved,
     inlineComments: thread.comments.map((inlineComment) => ({
       id: inlineComment.id,
-      author: resolveInlineCommentAuthor(inlineComment),
+      author: resolveInlineCommentUser(inlineComment.userId, inlineComment, 'author'),
       createdAt: inlineComment.createdAt,
       updatedAt: inlineComment.updatedAt,
       content: extractPlainTextFromInlineCommentBody(inlineComment.body),
+      reactions: (inlineComment.reactions ?? []).flatMap((reaction) =>
+        reaction.userIds.map((userId) => ({
+          id: `${inlineComment.id}:${reaction.emoji}:${userId}`,
+          emojiId: reaction.emoji,
+          user: resolveInlineCommentUser(userId, inlineComment, 'reaction'),
+          reactedByCurrentUser: userId === currentUserId,
+        }))
+      ),
       deleted: isDeletedInlineComment(inlineComment),
       canUpdate: inlineComment.userId === currentUserId,
     })),
@@ -83,7 +95,7 @@ export function InlineCommentThreadsSidebar({
   actionMode = 'default',
   canReopenThread,
   actionsEnabled = false,
-  resolveInlineCommentAuthor,
+  resolveInlineCommentUser,
 }: InlineCommentThreadsSidebarProps) {
   const commentsExtension = useExtension(CommentsExtension);
   const { selectedThreadId, threadPositions } = useExtensionState(CommentsExtension, { editor });
@@ -144,7 +156,7 @@ export function InlineCommentThreadsSidebar({
       thread,
       referenceText,
       visibilityScope.currentUserId,
-      resolveInlineCommentAuthor
+      resolveInlineCommentUser
     )
   );
 
@@ -178,6 +190,26 @@ export function InlineCommentThreadsSidebar({
       } catch (error) {
         toast.danger('批注修改失败');
         throw error;
+      }
+    }
+  );
+
+  const handleChangeInlineCommentReaction = useMemoizedFn(
+    async (threadId: string, inlineCommentId: string, emojiId: string, nextReacted: boolean) => {
+      try {
+        const params = {
+          threadId,
+          commentId: inlineCommentId,
+          emoji: emojiId,
+        };
+        if (nextReacted) {
+          await commentsExtension.threadStore.addReaction(params);
+        } else {
+          await commentsExtension.threadStore.deleteReaction(params);
+        }
+      } catch (error) {
+        const fallback = nextReacted ? '表情回复失败' : '取消表情回复失败';
+        toast.danger(error instanceof Error ? error.message : fallback);
       }
     }
   );
@@ -225,6 +257,7 @@ export function InlineCommentThreadsSidebar({
       onSelectThread={handleSelectThread}
       onUpdateInlineComment={handleUpdateInlineComment}
       onDeleteInlineComment={handleDeleteInlineComment}
+      onChangeInlineCommentReaction={handleChangeInlineCommentReaction}
       onResolveThread={handleResolveThread}
       onReopenThread={handleReopenThread}
       onReplyThread={handleReplyThread}

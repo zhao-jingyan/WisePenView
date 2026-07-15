@@ -58,6 +58,15 @@ function readInlineCommentAuthorInfo(comment: CommentData): RawInlineCommentAuth
   return metadata?.authorInfo;
 }
 
+function readReactionUserInfo(
+  comment: CommentData,
+  userId: string
+): RawInlineCommentAuthorInfo | undefined {
+  const metadata = comment.metadata as
+    { reactionUserInfoById?: Record<string, RawInlineCommentAuthorInfo | undefined> } | undefined;
+  return metadata?.reactionUserInfoById?.[userId];
+}
+
 type NoteInlineCommentUiProps = {
   editor: CustomBlockNoteEditor;
   doc: Doc;
@@ -108,15 +117,23 @@ export function NoteInlineCommentUi({
   const canReopenThread = (thread: Parameters<typeof getThreadInlineComments>[0]) =>
     isInlineCommentVisibilityPrivileged ||
     getThreadInlineComments(thread)[0]?.userId === inlineCommentUserId;
-  const resolveInlineCommentAuthor = useMemoizedFn(
-    (inlineComment: CommentData): WisePenInlineCommentAuthorInfo => {
-      const authorInfo = readInlineCommentAuthorInfo(inlineComment);
-      const userId = trimDisplayValue(inlineComment.userId) || trimDisplayValue(authorInfo?.id);
+  const resolveInlineCommentUser = useMemoizedFn(
+    (
+      rawUserId: string,
+      inlineComment: CommentData,
+      source: 'author' | 'reaction'
+    ): WisePenInlineCommentAuthorInfo => {
+      const inputUserId = trimDisplayValue(rawUserId);
+      const userInfo =
+        source === 'reaction'
+          ? readReactionUserInfo(inlineComment, inputUserId)
+          : readInlineCommentAuthorInfo(inlineComment);
+      const userId = inputUserId || trimDisplayValue(userInfo?.id);
       const metadataName = pickSafeDisplayName(
-        [authorInfo?.name, authorInfo?.nickname, authorInfo?.realName, authorInfo?.username],
+        [userInfo?.name, userInfo?.nickname, userInfo?.realName, userInfo?.username],
         userId
       );
-      const metadataAvatarUrl = normalizeAvatarUrl(authorInfo?.avatarUrl || authorInfo?.avatar);
+      const metadataAvatarUrl = normalizeAvatarUrl(userInfo?.avatarUrl || userInfo?.avatar);
       const isCurrentUser =
         userId === inlineCommentUserId ||
         (userId ? isPlaceholderInlineCommentUserId(userId) : false);
@@ -204,7 +221,7 @@ export function NoteInlineCommentUi({
       actionMode="history"
       canReopenThread={canReopenThread}
       actionsEnabled={false}
-      resolveInlineCommentAuthor={resolveInlineCommentAuthor}
+      resolveInlineCommentUser={resolveInlineCommentUser}
     />
   );
   const inlineCommentSidebar = (
@@ -218,7 +235,7 @@ export function NoteInlineCommentUi({
       sort="position"
       maxInlineCommentsBeforeCollapse={5}
       actionsEnabled={inlineCommentWritable}
-      resolveInlineCommentAuthor={resolveInlineCommentAuthor}
+      resolveInlineCommentUser={resolveInlineCommentUser}
     />
   );
   const renderedInlineCommentPanel = inlineCommentSidebarPortalContainer

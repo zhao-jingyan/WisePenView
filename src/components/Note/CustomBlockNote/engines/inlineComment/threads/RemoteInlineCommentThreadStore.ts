@@ -1,4 +1,9 @@
-import type { CommentData, ThreadData, ThreadStoreAuth } from '@blocknote/core/comments';
+import type {
+  CommentData,
+  CommentReactionData,
+  ThreadData,
+  ThreadStoreAuth,
+} from '@blocknote/core/comments';
 import { ThreadStore } from '@blocknote/core/comments';
 import type * as Y from 'yjs';
 
@@ -6,8 +11,10 @@ import type {
   AddInlineCommentItemRequest,
   ChangeInlineCommentResolveStatusRequest,
   CreateInlineCommentRequest,
+  DeleteInlineCommentItemReactionRequest,
   DeleteInlineCommentItemRequest,
   ResourceInlineCommentThread,
+  SetInlineCommentItemReactionRequest,
   UpdateInlineCommentItemRequest,
 } from '@/domains/Resource';
 
@@ -28,6 +35,10 @@ export type RemoteInlineCommentDataSource = {
   createInlineComment: (params: CreateInlineCommentRequest) => Promise<string>;
   addInlineCommentItem: (params: AddInlineCommentItemRequest) => Promise<string>;
   updateInlineCommentItem: (params: UpdateInlineCommentItemRequest) => Promise<void>;
+  setInlineCommentItemReaction: (params: SetInlineCommentItemReactionRequest) => Promise<void>;
+  deleteInlineCommentItemReaction: (
+    params: DeleteInlineCommentItemReactionRequest
+  ) => Promise<void>;
   deleteInlineCommentItem: (params: DeleteInlineCommentItemRequest) => Promise<void>;
   changeInlineCommentResolveStatus: (
     params: ChangeInlineCommentResolveStatusRequest
@@ -62,6 +73,12 @@ type DeleteCommentArgs = {
 
 type ResolveThreadArgs = {
   threadId: string;
+};
+
+type ReactionArgs = {
+  threadId: string;
+  commentId: string;
+  emoji: string;
 };
 
 type GettableMapLike = {
@@ -167,6 +184,42 @@ function getVisibleInlineCommentData(comments: CommentData[]): CommentData[] {
   return comments.filter((comment) => !comment.deletedAt);
 }
 
+function mapInlineCommentItemReactionsToCommentData(
+  item: ResourceInlineCommentThread['items'][number]
+): CommentReactionData[] {
+  const groups = new Map<string, CommentReactionData>();
+  item.reactions.forEach((reaction) => {
+    const createdAt = normalizeOptionalInlineCommentDate(reaction.createTime) ?? new Date();
+    const existing = groups.get(reaction.emojiId);
+    if (existing) {
+      existing.userIds.push(reaction.userId);
+      if (createdAt.getTime() < existing.createdAt.getTime()) {
+        existing.createdAt = createdAt;
+      }
+      return;
+    }
+    groups.set(reaction.emojiId, {
+      emoji: reaction.emojiId,
+      createdAt,
+      userIds: [reaction.userId],
+    });
+  });
+  return [...groups.values()];
+}
+
+function buildReactionUserInfoById(
+  item: ResourceInlineCommentThread['items'][number]
+): Record<string, unknown> {
+  return Object.fromEntries(
+    item.reactions
+      .filter((reaction) => reaction.userInfo)
+      .map((reaction) => [
+        reaction.userId,
+        reaction.userInfo as NonNullable<typeof reaction.userInfo>,
+      ])
+  );
+}
+
 function mapInlineCommentItemToCommentData(
   thread: ResourceInlineCommentThread,
   item: ResourceInlineCommentThread['items'][number]
@@ -179,10 +232,11 @@ function mapInlineCommentItemToCommentData(
     userId: item.authorId,
     createdAt,
     updatedAt,
-    reactions: [],
+    reactions: mapInlineCommentItemReactionsToCommentData(item),
     metadata: {
       inlineCommentId: thread.inlineCommentId,
       authorInfo: item.authorInfo,
+      reactionUserInfoById: buildReactionUserInfoById(item),
     },
     body: buildTextInlineCommentBody(item.content),
   };
@@ -346,6 +400,48 @@ function updateThreadInMap(
   const next = updater(current);
   setThreadDataToMap(threadsYMap, next as PlainThreadRecord);
   return next;
+}
+
+function withoutUserReaction(
+  reactions: CommentReactionData[],
+  userId: string
+): CommentReactionData[] {
+  return reactions
+    .map((reaction) => ({
+      ...reaction,
+      userIds: reaction.userIds.filter((id) => id !== userId),
+    }))
+    .filter((reaction) => reaction.userIds.length > 0);
+}
+
+function setUserReaction(
+  reactions: CommentReactionData[],
+  userId: string,
+  emoji: string,
+  createdAt: Date
+): CommentReactionData[] {
+  const nextReactions = withoutUserReaction(reactions, userId);
+  const existing = nextReactions.find((reaction) => reaction.emoji === emoji);
+  if (existing) {
+    return nextReactions.map((reaction) =>
+      reaction.emoji === emoji
+        ? {
+            ...reaction,
+            createdAt:
+              createdAt.getTime() < reaction.createdAt.getTime() ? createdAt : reaction.createdAt,
+            userIds: [...reaction.userIds, userId],
+          }
+        : reaction
+    );
+  }
+  return [
+    ...nextReactions,
+    {
+      emoji,
+      createdAt,
+      userIds: [userId],
+    },
+  ];
 }
 
 type InlineCommentMetadata = Record<string, unknown>;
@@ -576,11 +672,49 @@ export class RemoteInlineCommentThreadStore extends ThreadStore {
     }));
   }
 
-  public async addReaction(): Promise<void> {
-    throw new Error('当前后端暂不支持批注表情反应');
+  public async addReaction(args: ReactionArgs): Promise<void> {
+    const now = new Date();
+    await this.dataSource.setInlineCommentItemReaction({
+      resourceId: this.resourceId,
+      inlineCommentId: args.threadId,
+      itemId: args.commentId,
+      emojiId: args.emoji,
+    });
+    invalidateRemoteInlineCommentSync(this.threadsYMap);
+
+    const userId = this.getActiveCommentUserId();
+    updateThreadInMap(this.threadsYMap, args.threadId, (thread) => ({
+      ...thread,
+      comments: thread.comments.map((comment) =>
+        comment.id === args.commentId
+          ? {
+              ...comment,
+              reactions: setUserReaction(comment.reactions, userId, args.emoji, now),
+            }
+          : comment
+      ),
+    }));
   }
 
-  public async deleteReaction(): Promise<void> {
-    throw new Error('当前后端暂不支持批注表情反应');
+  public async deleteReaction(args: ReactionArgs): Promise<void> {
+    await this.dataSource.deleteInlineCommentItemReaction({
+      resourceId: this.resourceId,
+      inlineCommentId: args.threadId,
+      itemId: args.commentId,
+    });
+    invalidateRemoteInlineCommentSync(this.threadsYMap);
+
+    const userId = this.getActiveCommentUserId();
+    updateThreadInMap(this.threadsYMap, args.threadId, (thread) => ({
+      ...thread,
+      comments: thread.comments.map((comment) =>
+        comment.id === args.commentId
+          ? {
+              ...comment,
+              reactions: withoutUserReaction(comment.reactions, userId),
+            }
+          : comment
+      ),
+    }));
   }
 }

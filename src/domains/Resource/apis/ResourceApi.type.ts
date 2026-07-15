@@ -135,6 +135,26 @@ export interface ResourceInlineCommentAnchorRefApiResponse {
   anchorPayload?: Record<string, unknown> | null;
 }
 
+export interface ResourceInlineCommentItemReactionApiResponse {
+  emojiId?: string | null;
+  createTime?: string | null;
+  updateTime?: string | null;
+}
+
+export interface ResourceInlineCommentItemReactionGroupApiResponse {
+  emojiId?: string | null;
+  count?: number | null;
+  reactedByCurrentUser?: boolean | null;
+  users?: Array<{
+    id?: string | number | null;
+    name?: string | null;
+    nickname?: string | null;
+    realName?: string | null;
+    avatar?: string | null;
+    avatarUrl?: string | null;
+  } | null> | null;
+}
+
 export interface ResourceInlineCommentItemApiResponse {
   itemId?: string | null;
   authorId?: string | null;
@@ -149,6 +169,11 @@ export interface ResourceInlineCommentItemApiResponse {
   content?: string | null;
   imageUrls?: string[] | null;
   mentionUserIds?: string[] | null;
+  reactions?: Record<
+    string,
+    ResourceInlineCommentItemReactionApiResponse | null | undefined
+  > | null;
+  reactionGroups?: ResourceInlineCommentItemReactionGroupApiResponse[] | null;
   createTime?: string | null;
   updateTime?: string | null;
 }
@@ -234,5 +259,20 @@ export interface ChangeInlineCommentResolveStatusApiRequest {
   resourceId: string;
   inlineCommentId: string;
   resolved: boolean;
+  contentVersion?: number;
+}
+
+export interface SetInlineCommentItemReactionApiRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  itemId: string;
+  contentVersion?: number;
+  emojiId: string;
+}
+
+export interface DeleteInlineCommentItemReactionApiRequest {
+  resourceId: string;
+  inlineCommentId: string;
+  itemId: string;
   contentVersion?: number;
 }

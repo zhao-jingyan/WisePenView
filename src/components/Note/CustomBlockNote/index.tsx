@@ -245,6 +245,8 @@ function CustomBlockNote({
             createInlineComment: resourceService.createInlineComment,
             addInlineCommentItem: resourceService.addInlineCommentItem,
             updateInlineCommentItem: resourceService.updateInlineCommentItem,
+            setInlineCommentItemReaction: resourceService.setInlineCommentItemReaction,
+            deleteInlineCommentItemReaction: resourceService.deleteInlineCommentItemReaction,
             deleteInlineCommentItem: resourceService.deleteInlineCommentItem,
             changeInlineCommentResolveStatus: resourceService.changeInlineCommentResolveStatus,
           },

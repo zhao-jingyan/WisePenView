@@ -7,6 +7,7 @@ import type {
   ChangeResourceTagsApiRequest,
   CreateInlineCommentApiRequest,
   DeleteInlineCommentItemApiRequest,
+  DeleteInlineCommentItemReactionApiRequest,
   GlobalSearchApiRequest,
   GlobalSearchApiResponse,
   ListInlineCommentsApiRequest,
@@ -15,6 +16,7 @@ import type {
   RemoveResourcesApiRequest,
   RenameResourceApiRequest,
   ResourceListPageApiResponse,
+  SetInlineCommentItemReactionApiRequest,
   UpdateInlineCommentItemApiRequest,
 } from './ResourceApi.type';
 
@@ -79,6 +81,16 @@ function updateInlineCommentItem(req: UpdateInlineCommentItemApiRequest): Promis
   return apiPost('/resource/inlineComment/updateInlineCommentItem', req);
 }
 
+function setInlineCommentItemReaction(req: SetInlineCommentItemReactionApiRequest): Promise<void> {
+  return apiPost('/resource/inlineComment/setInlineCommentItemReaction', req);
+}
+
+function deleteInlineCommentItemReaction(
+  req: DeleteInlineCommentItemReactionApiRequest
+): Promise<void> {
+  return apiPost('/resource/inlineComment/deleteInlineCommentItemReaction', req);
+}
+
 function deleteInlineCommentItem(req: DeleteInlineCommentItemApiRequest): Promise<void> {
   return apiPost('/resource/inlineComment/deleteInlineCommentItem', req);
 }
@@ -94,6 +106,8 @@ export const ResourceInlineCommentApi = {
   createInlineComment,
   addInlineCommentItem,
   updateInlineCommentItem,
+  setInlineCommentItemReaction,
+  deleteInlineCommentItemReaction,
   deleteInlineCommentItem,
   changeInlineCommentResolveStatus,
 };

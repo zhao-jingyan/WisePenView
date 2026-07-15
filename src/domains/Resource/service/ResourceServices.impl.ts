@@ -11,6 +11,7 @@ import type {
   AddInlineCommentItemRequest,
   ChangeInlineCommentResolveStatusRequest,
   CreateInlineCommentRequest,
+  DeleteInlineCommentItemReactionRequest,
   DeleteInlineCommentItemRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
@@ -23,6 +24,7 @@ import type {
   ResourceListPage,
   SearchQueryRequest,
   SearchResultPage,
+  SetInlineCommentItemReactionRequest,
   UpdateInlineCommentItemRequest,
   UpdateResourceActionPermissionRequest,
   UpdateResourcePermissionSubjectsRequest,
@@ -206,6 +208,18 @@ const updateInlineCommentItem = async (params: UpdateInlineCommentItemRequest): 
   );
 };
 
+const setInlineCommentItemReaction = async (
+  params: SetInlineCommentItemReactionRequest
+): Promise<void> => {
+  await ResourceInlineCommentApi.setInlineCommentItemReaction(params);
+};
+
+const deleteInlineCommentItemReaction = async (
+  params: DeleteInlineCommentItemReactionRequest
+): Promise<void> => {
+  await ResourceInlineCommentApi.deleteInlineCommentItemReaction(params);
+};
+
 const deleteInlineCommentItem = async (params: DeleteInlineCommentItemRequest): Promise<void> => {
   await ResourceInlineCommentApi.deleteInlineCommentItem(params);
 };
@@ -231,6 +245,8 @@ export const createResourceServices = (): IResourceService => ({
   createInlineComment,
   addInlineCommentItem,
   updateInlineCommentItem,
+  setInlineCommentItemReaction,
+  deleteInlineCommentItemReaction,
   deleteInlineCommentItem,
   changeInlineCommentResolveStatus,
 });

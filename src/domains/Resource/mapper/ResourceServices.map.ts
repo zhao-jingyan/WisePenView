@@ -14,6 +14,8 @@ import type {
   ResourceGroupGrantedActionsApiResponse,
   ResourceInlineCommentApiResponse,
   ResourceInlineCommentItemApiResponse,
+  ResourceInlineCommentItemReactionApiResponse,
+  ResourceInlineCommentItemReactionGroupApiResponse,
   ResourceItemApiResponse,
   ResourceListPageApiResponse,
   ResourceSpecifiedUserGrantedActionsApiResponse,
@@ -37,6 +39,7 @@ import type {
   CreateInlineCommentRequest,
   GetUserResourcesRequest,
   ResourceInlineCommentAuthorInfo,
+  ResourceInlineCommentItemReaction,
   ResourceInlineCommentThread,
   ResourceListPage,
   ResourcePermissionActionOption,
@@ -543,6 +546,38 @@ function inferInlineCommentAnchorKind(
   return 'text-range';
 }
 
+function mapInlineCommentItemReactions(
+  reactions: Record<string, ResourceInlineCommentItemReactionApiResponse | null | undefined>,
+  groups: ResourceInlineCommentItemReactionGroupApiResponse[] | null | undefined
+): ResourceInlineCommentItemReaction[] {
+  const userInfoById = new Map<string, ResourceInlineCommentAuthorInfo>();
+  for (const group of groups ?? []) {
+    for (const rawUser of group.users ?? []) {
+      const user = mapInlineCommentAuthorInfo(rawUser);
+      if (user?.id && !userInfoById.has(user.id)) {
+        userInfoById.set(user.id, user);
+      }
+    }
+  }
+
+  return Object.entries(reactions)
+    .map(([rawUserId, reaction]): ResourceInlineCommentItemReaction | null => {
+      const userId = normalizeInlineCommentString(rawUserId);
+      const emojiId = normalizeInlineCommentString(reaction?.emojiId);
+      if (!userId || !emojiId) {
+        return null;
+      }
+      const userInfo = userInfoById.get(userId);
+      return {
+        userId,
+        emojiId,
+        userInfo: userInfo ? { ...userInfo, id: userInfo.id || userId } : undefined,
+        createTime: normalizeInlineCommentString(reaction?.createTime) || undefined,
+      };
+    })
+    .filter((reaction): reaction is ResourceInlineCommentItemReaction => Boolean(reaction));
+}
+
 const mapInlineCommentThreadFromApi = (
   raw: ResourceInlineCommentApiResponse
 ): ResourceInlineCommentThread => {
@@ -578,6 +613,7 @@ const mapInlineCommentThreadFromApi = (
       content: item.content ?? '',
       imageUrls: item.imageUrls ?? [],
       mentionUserIds: item.mentionUserIds ?? [],
+      reactions: mapInlineCommentItemReactions(item.reactions ?? {}, item.reactionGroups),
       createTime: normalizeInlineCommentString(item.createTime) || undefined,
       updateTime: normalizeInlineCommentString(item.updateTime) || undefined,
     })),

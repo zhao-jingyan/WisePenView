@@ -10,8 +10,16 @@ export type WisePenInlineCommentData = {
   createdAt: Date;
   updatedAt: Date;
   content: string;
+  reactions: WisePenInlineCommentReaction[];
   deleted?: boolean;
   canUpdate?: boolean;
+};
+
+type WisePenInlineCommentReaction = {
+  id: string;
+  emojiId: string;
+  user: WisePenInlineCommentAuthorInfo;
+  reactedByCurrentUser: boolean;
 };
 
 export type WisePenInlineCommentThread = {
@@ -39,6 +47,12 @@ export type WisePenInlineCommentSidebarProps = {
     content: string
   ) => void | Promise<void>;
   onDeleteInlineComment?: (threadId: string, inlineCommentId: string) => void | Promise<void>;
+  onChangeInlineCommentReaction?: (
+    threadId: string,
+    inlineCommentId: string,
+    emojiId: string,
+    nextReacted: boolean
+  ) => void | Promise<void>;
   onResolveThread?: (threadId: string) => void | Promise<void>;
   onReopenThread?: (threadId: string) => void | Promise<void>;
   onReplyThread?: (threadId: string, content: string) => void | Promise<void>;
