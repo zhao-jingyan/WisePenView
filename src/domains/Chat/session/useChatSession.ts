@@ -3,6 +3,7 @@ import { applyXDeveloperHeader } from '@/apis/developmentTraffic';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useCallback } from 'react';
+import type { ChatMessageMetadata, WisePenUIMessage } from '../entity/message';
 import { mapChatCompletionRequest } from '../mapper/chatCompletion.mapper';
 import type { SendSessionMessageOptions, UseChatSessionOptions } from './index.type';
 
@@ -23,8 +24,8 @@ function buildChatFetchInit(init?: RequestInit): RequestInit {
  * 3) 保留 useChat 原始能力（messages、status、stop 等）
  */
 export const useChatSession = ({ sessionId, model }: UseChatSessionOptions) => {
-  const chat = useChat({
-    transport: new DefaultChatTransport({
+  const chat = useChat<WisePenUIMessage>({
+    transport: new DefaultChatTransport<WisePenUIMessage>({
       api: CHAT_COMPLETIONS_API,
       fetch: (input, init) => fetch(input, buildChatFetchInit(init)),
     }),
@@ -38,7 +39,28 @@ export const useChatSession = ({ sessionId, model }: UseChatSessionOptions) => {
         query,
         options,
       });
-      await chat.sendMessage({ text: query }, { body: requestBody });
+      const uploadedAttachmentSnapshots = (options?.uploadedAttachments ?? [])
+        .filter((attachment) => attachment.enabled)
+        .map((attachment) => ({
+          attachmentId: attachment.attachmentId,
+          filename: attachment.filename,
+          kind: 'temporary' as const,
+          available: true,
+        }));
+      const resourceAttachmentSnapshots = (options?.selectedResources ?? [])
+        .filter((resource) => resource.enabled)
+        .map((resource) => ({
+          attachmentId: resource.resourceId,
+          filename: resource.resourceName,
+          kind: 'resource' as const,
+          available: true,
+        }));
+      const selectedAttachments = [...resourceAttachmentSnapshots, ...uploadedAttachmentSnapshots];
+      const metadata: ChatMessageMetadata = {
+        createdAt: new Date().toISOString(),
+        ...(selectedAttachments.length > 0 ? { selectedAttachments } : {}),
+      };
+      await chat.sendMessage({ text: query, metadata }, { body: requestBody });
     },
     [chat, model, sessionId]
   );

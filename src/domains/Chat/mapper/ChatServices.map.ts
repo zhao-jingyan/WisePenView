@@ -1,3 +1,4 @@
+import type { DynamicToolUIPart, ToolUIPart, UITool, UIToolInvocation } from 'ai';
 import type {
   CreateSessionApiRequest,
   CreateSessionApiResponse,
@@ -6,17 +7,19 @@ import type {
   ListModelsApiResponse,
   ListSessionsApiRequest,
   ListSessionsApiResponse,
-  MessagePartResponse as MessagePartApiResponse,
   ModelProviderMappingResponse,
   RenameSessionApiRequest,
   RenameSessionApiResponse,
   SetSessionAgentApiRequest,
   SetSessionAgentApiResponse,
 } from '../apis/ChatApi.type';
+import type {
+  ChatMessageMetadata,
+  MessageAttachmentSnapshot,
+  WisePenUIMessage,
+} from '../entity/message';
 import { MODEL_TYPE } from '../enum/model';
 import type {
-  ChatMessage,
-  ChatMessagePart,
   ChatModel,
   ChatModelProviderOption,
   ChatSession,
@@ -253,34 +256,223 @@ const mapListHistoryMessagesRequest = (
   ...(params.size !== undefined ? { size: params.size } : {}),
 });
 
-const mapMessagePartFromApi = (data: MessagePartApiResponse): ChatMessagePart => ({
-  type: data.type,
-  text: data.text,
-  state: data.state,
-  toolCallId: data.toolCallId,
-  input: data.input,
-  output: data.output,
-});
+type WisePenMessagePart = WisePenUIMessage['parts'][number];
+type ParsedToolPart = ToolUIPart | DynamicToolUIPart;
+type ParsedToolIdentity =
+  | Pick<DynamicToolUIPart, 'type' | 'toolName' | 'toolCallId'>
+  | Pick<ToolUIPart, 'type' | 'toolCallId'>;
+type ToolInvocationState =
+  UIToolInvocation<UITool> extends infer Invocation
+    ? Invocation extends UIToolInvocation<UITool>
+      ? Omit<Invocation, 'toolCallId'>
+      : never
+    : never;
 
-const mapMessageFromApi = (data: ListHistoryMessagesApiResponse['list'][number]): ChatMessage => {
-  const createdAt = data.createdAt ?? data.created_at;
+function getRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== 'object' || value == null || Array.isArray(value)) return null;
+  return Object.fromEntries(Object.entries(value));
+}
 
+function isToolPartType(value: unknown): value is `tool-${string}` {
+  return typeof value === 'string' && value.startsWith('tool-') && value.length > 5;
+}
+
+function mapTextState(value: unknown): 'streaming' | 'done' | undefined {
+  return value === 'streaming' || value === 'done' ? value : undefined;
+}
+
+function mapToolInvocation(data: Record<string, unknown>): ToolInvocationState | null {
+  const details = {
+    ...(typeof data.title === 'string' ? { title: data.title } : {}),
+    ...(typeof data.providerExecuted === 'boolean'
+      ? { providerExecuted: data.providerExecuted }
+      : {}),
+  };
+
+  switch (data.state) {
+    case 'input-streaming':
+      return { ...details, state: 'input-streaming', input: data.input };
+    case 'input-available':
+      return { ...details, state: 'input-available', input: data.input };
+    case 'approval-requested': {
+      const approval = getRecord(data.approval);
+      if (!approval || typeof approval.id !== 'string') return null;
+      return {
+        ...details,
+        state: 'approval-requested',
+        input: data.input,
+        approval: {
+          id: approval.id,
+          ...(typeof approval.signature === 'string' ? { signature: approval.signature } : {}),
+        },
+      };
+    }
+    case 'approval-responded': {
+      const approval = getRecord(data.approval);
+      if (!approval || typeof approval.id !== 'string' || typeof approval.approved !== 'boolean') {
+        return null;
+      }
+      return {
+        ...details,
+        state: 'approval-responded',
+        input: data.input,
+        approval: {
+          id: approval.id,
+          approved: approval.approved,
+          ...(typeof approval.reason === 'string' ? { reason: approval.reason } : {}),
+          ...(typeof approval.signature === 'string' ? { signature: approval.signature } : {}),
+        },
+      };
+    }
+    case 'output-available':
+      return {
+        ...details,
+        state: 'output-available',
+        input: data.input,
+        output: data.output,
+        ...(typeof data.preliminary === 'boolean' ? { preliminary: data.preliminary } : {}),
+      };
+    case 'output-error':
+      if (typeof data.errorText !== 'string') return null;
+      return {
+        ...details,
+        state: 'output-error',
+        input: data.input,
+        errorText: data.errorText,
+      };
+    case 'output-denied': {
+      const approval = getRecord(data.approval);
+      if (!approval || typeof approval.id !== 'string' || approval.approved !== false) return null;
+      return {
+        ...details,
+        state: 'output-denied',
+        input: data.input,
+        approval: {
+          id: approval.id,
+          approved: false,
+          ...(typeof approval.reason === 'string' ? { reason: approval.reason } : {}),
+          ...(typeof approval.signature === 'string' ? { signature: approval.signature } : {}),
+        },
+      };
+    }
+    default:
+      return null;
+  }
+}
+
+function combineToolPart(
+  identity: ParsedToolIdentity,
+  invocation: ToolInvocationState
+): ParsedToolPart {
+  if (identity.type === 'dynamic-tool') return { ...identity, ...invocation };
+  return { ...identity, ...invocation };
+}
+
+function mapToolPart(data: Record<string, unknown>): ParsedToolPart | null {
+  const isDynamic = data.type === 'dynamic-tool';
+  if (!isDynamic && !isToolPartType(data.type)) return null;
+  if (typeof data.toolCallId !== 'string' || data.toolCallId.length === 0) return null;
+  const invocation = mapToolInvocation(data);
+  if (!invocation) return null;
+
+  if (isDynamic) {
+    const toolName = data.toolName;
+    if (typeof toolName !== 'string' || toolName.length === 0) return null;
+    return combineToolPart(
+      { type: 'dynamic-tool', toolName, toolCallId: data.toolCallId },
+      invocation
+    );
+  }
+  const toolType = data.type;
+  if (!isToolPartType(toolType)) return null;
+  return combineToolPart({ type: toolType, toolCallId: data.toolCallId }, invocation);
+}
+
+function mapMessagePartFromApi(value: unknown): WisePenMessagePart | null {
+  const data = getRecord(value);
+  if (!data || typeof data.type !== 'string') return null;
+
+  if (data.type === 'text' || data.type === 'reasoning') {
+    if (typeof data.text !== 'string') return null;
+    const state = mapTextState(data.state);
+    return { type: data.type, text: data.text, ...(state ? { state } : {}) };
+  }
+  if (data.type === 'step-start') return { type: 'step-start' };
+  if (data.type === 'dynamic-tool' || isToolPartType(data.type)) return mapToolPart(data);
+
+  return null;
+}
+
+function mapAttachmentSnapshot(value: unknown): MessageAttachmentSnapshot | null {
+  const data = getRecord(value);
+  if (
+    !data ||
+    typeof data.attachmentId !== 'string' ||
+    typeof data.filename !== 'string' ||
+    (data.kind !== 'temporary' && data.kind !== 'resource') ||
+    typeof data.available !== 'boolean'
+  ) {
+    return null;
+  }
+  return {
+    attachmentId: data.attachmentId,
+    filename: data.filename,
+    kind: data.kind,
+    available: data.available,
+  };
+}
+
+function mapMessageMetadata(data: {
+  metadata?: unknown;
+  createdAt?: unknown;
+  created_at?: unknown;
+}): ChatMessageMetadata | undefined {
+  const rawMetadata = getRecord(data.metadata);
+  const rawCreatedAt = data.createdAt ?? data.created_at;
+  const createdAt = typeof rawCreatedAt === 'string' ? rawCreatedAt : undefined;
+  const selectedAttachments = Array.isArray(rawMetadata?.selectedAttachments)
+    ? rawMetadata.selectedAttachments
+        .map(mapAttachmentSnapshot)
+        .filter((item): item is MessageAttachmentSnapshot => item !== null)
+    : undefined;
+
+  if (!createdAt && selectedAttachments === undefined) return undefined;
+  return {
+    ...(createdAt ? { createdAt } : {}),
+    ...(selectedAttachments !== undefined ? { selectedAttachments } : {}),
+  };
+}
+
+function mapMessageFromApi(
+  data: ListHistoryMessagesApiResponse['list'][number]
+): WisePenUIMessage | null {
+  if (
+    typeof data.id !== 'string' ||
+    (data.role !== 'system' && data.role !== 'user' && data.role !== 'assistant')
+  ) {
+    return null;
+  }
+  const parts = Array.isArray(data.parts)
+    ? data.parts
+        .map(mapMessagePartFromApi)
+        .filter((part): part is WisePenMessagePart => part !== null)
+    : [];
+  const metadata = mapMessageMetadata(data);
   return {
     id: data.id,
     role: data.role,
-    ...(data.model_id != null ? { modelId: String(data.model_id) } : {}),
-    ...(data.content !== undefined ? { content: data.content } : {}),
-    ...(data.parts !== undefined ? { parts: data.parts.map(mapMessagePartFromApi) } : {}),
-    ...(data.tool_calls != null ? { toolCalls: data.tool_calls } : {}),
-    ...(createdAt !== undefined ? { createdAt } : {}),
+    parts,
+    ...(metadata ? { metadata } : {}),
   };
-};
+}
 
 const mapListHistoryMessagesFromApi = (
   data: ListHistoryMessagesApiResponse
-): PageResult<ChatMessage> => {
+): PageResult<WisePenUIMessage> => {
   return {
-    list: data.list.map(mapMessageFromApi),
+    list: data.list
+      .map(mapMessageFromApi)
+      .filter((message): message is WisePenUIMessage => message !== null),
     total: data.total,
     page: data.page,
     size: data.size,

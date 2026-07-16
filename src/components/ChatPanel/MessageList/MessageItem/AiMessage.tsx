@@ -1,8 +1,10 @@
-import type { Message } from '@/components/ChatPanel/index.type';
+import type { Model } from '@/components/ChatPanel/index.type';
 import { Spin } from '@/components/Feedback';
 import ProviderLogo from '@/components/Icons/ProviderLogo';
+import type { WisePenUIMessage } from '@/domains/Chat';
 import { Button, toast } from '@heroui/react';
 import { useInterval } from 'ahooks';
+import { isReasoningUIPart, isTextUIPart, isToolUIPart } from 'ai';
 import clsx from 'clsx';
 import { Check, Copy, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useState } from 'react';
@@ -16,13 +18,25 @@ const LOADING_HINTS = ['正在生成回复...', '请稍等片刻...', '正在组
 const LOADING_HINT_SWITCH_MS = 2000;
 const MESSAGE_ACTION_ICON_SIZE = 17;
 
-function AiMessage({ message }: { message: Message }) {
-  const hasReasoning = message.reasoningContent !== undefined;
-  const showLoadingIndicator = Boolean(message.loading && !message.content);
+interface AiMessageProps {
+  message: WisePenUIMessage;
+  model: Model | null;
+  streaming: boolean;
+}
+
+function AiMessage({ message, model, streaming }: AiMessageProps) {
   const [copied, setCopied] = useState(false);
   const [loadingHintIndex, setLoadingHintIndex] = useState(0);
-  const displayProvider = message.meta?.provider || 'openai';
-  const displayModelName = message.meta?.modelName || message.meta?.modelId || 'AI 助手';
+  const textContent = message.parts
+    .filter(isTextUIPart)
+    .map((part) => part.text)
+    .join('');
+  const hasRenderablePart = message.parts.some(
+    (part) => isTextUIPart(part) || isReasoningUIPart(part) || isToolUIPart(part)
+  );
+  const showLoadingIndicator = streaming && !hasRenderablePart;
+  const displayProvider = model?.provider || 'openai';
+  const displayModelName = model?.name || 'AI 助手';
 
   useInterval(
     () => {
@@ -33,7 +47,7 @@ function AiMessage({ message }: { message: Message }) {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message.content || '');
+      await navigator.clipboard.writeText(textContent);
       toast.success('复制成功');
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
@@ -49,20 +63,27 @@ function AiMessage({ message }: { message: Message }) {
           <ProviderLogo provider={displayProvider} size={16} className={styles.modelLogo} />
           <span className={styles.modelName}>{displayModelName}</span>
         </div>
-        {/* 思考过程块 */}
-        {hasReasoning && (
-          <ThinkingBlock
-            content={message.reasoningContent || ''}
-            duration={message.meta?.usage?.totalTime}
-            // 如果消息还在 loading 且正文没开始，说明正在思考中
-            loading={message.loading && !message.content}
-          />
-        )}
-        <ToolCallBlock
-          content={message.toolContent || ''}
-          loading={Boolean(message.loading && !message.content && !message.reasoningContent)}
-        />
-        {showLoadingIndicator && (
+
+        {message.parts.map((part, index) => {
+          const key = isToolUIPart(part) ? part.toolCallId : `${part.type}-${index}`;
+          if (isTextUIPart(part)) {
+            return (
+              <div key={key} className={styles.bubble}>
+                <MessageContent content={part.text} renderAsMarkdown />
+              </div>
+            );
+          }
+          if (isReasoningUIPart(part)) {
+            return (
+              <ThinkingBlock key={key} content={part.text} loading={part.state === 'streaming'} />
+            );
+          }
+          if (isToolUIPart(part)) return <ToolCallBlock key={key} part={part} />;
+          if (part.type === 'step-start') return null;
+          return null;
+        })}
+
+        {showLoadingIndicator ? (
           <span className={styles.loadingHint}>
             <span className={styles.loadingHintIcon} aria-hidden="true">
               <Spin size="small" />
@@ -71,16 +92,9 @@ function AiMessage({ message }: { message: Message }) {
               {LOADING_HINTS[loadingHintIndex]}
             </span>
           </span>
-        )}
-        {/* 正文内容 */}
-        {(message.content || (!hasReasoning && !showLoadingIndicator)) && (
-          <div className={styles.bubble}>
-            <MessageContent content={message.content} renderAsMarkdown />
-          </div>
-        )}
+        ) : null}
 
-        {/* 底部操作栏 (非 Loading 时显示) */}
-        {!message.loading && (
+        {!streaming && textContent ? (
           <div className={styles.actions}>
             <Button
               variant="ghost"
@@ -119,7 +133,7 @@ function AiMessage({ message }: { message: Message }) {
               <ThumbsDown size={MESSAGE_ACTION_ICON_SIZE} />
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

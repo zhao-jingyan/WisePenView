@@ -4,26 +4,23 @@ import {
   clearNewChatSessionStore,
   useNewChatSessionStore,
 } from '@/components/ChatPanel/_store/useNewChatSessionStore';
-import type { ChatPanelProps, Message, Model } from '@/components/ChatPanel/index.type';
+import type { ChatPanelProps, Model } from '@/components/ChatPanel/index.type';
 import { AppAlertDialog } from '@/components/Overlay';
 import { useChatService } from '@/domains';
-import type { ChatSession } from '@/domains/Chat';
+import { useChatHistory, type ChatSession } from '@/domains/Chat';
 import type { CreateSessionRequest } from '@/domains/Chat/service/index.type';
 import { useChatSession } from '@/domains/Chat/session/useChatSession';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatInput from './ChatInput';
 import type { SendOptions } from './ChatInput/index.type';
 import {
   HISTORY_PAGE_SIZE,
-  buildPanelMessages,
-  hasMessagesPlainText,
+  hasRenderableMessageContent,
   isSessionInvalidMessage,
-  mapHistoryMessage,
-  type ModelMeta,
 } from './ChatPanel';
 import ChatPanelHeader from './ChatPanelHeader';
 import ChatSessionBar from './ChatSessionBar';
@@ -62,10 +59,6 @@ function ChatPanel({
 
   const [currentModel, setCurrentModel] = useState<Model | null>(null);
   const [sessionBarOpen, setSessionBarOpen] = useState(false);
-  const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
-  const [historyPage, setHistoryPage] = useState(1);
-  const [historyTotalPage, setHistoryTotalPage] = useState(1);
-  const [loadingMoreHistory, setLoadingMoreHistory] = useState(false);
   const [pendingDebugSend, setPendingDebugSend] = useState<{
     text: string;
     opts?: SendOptions;
@@ -73,22 +66,32 @@ function ChatPanel({
   } | null>(null);
   const [savingDebugDraft, setSavingDebugDraft] = useState(false);
 
-  const {
-    messages: liveMessages,
-    status,
-    setMessages: setLiveMessages,
-    sendSessionMessage,
-    stop,
-  } = useChatSession({
+  const { messages, status, setMessages, sendSessionMessage, stop } = useChatSession({
     sessionId: currentSessionId ?? '',
     model: currentModel?.modelId,
   });
 
   const { runAsync: runLoadSessionHistory } = useRequest(
-    async (sessionId: string, page = 1) =>
-      chatService.listHistoryMessages({ sessionId, page, size: HISTORY_PAGE_SIZE }),
+    async (sessionId: string, page: number, size: number) =>
+      chatService.listHistoryMessages({ sessionId, page, size }),
     { manual: true }
   );
+  const loadHistoryPage = useCallback(
+    (sessionId: string, page: number, size: number) => runLoadSessionHistory(sessionId, page, size),
+    [runLoadSessionHistory]
+  );
+  const {
+    canLoadMore: canLoadMoreHistory,
+    loadingMore: loadingMoreHistory,
+    replaceHistory,
+    prependHistory,
+    clearConversation,
+  } = useChatHistory({
+    sessionId: currentSessionId ?? null,
+    pageSize: HISTORY_PAGE_SIZE,
+    loadPage: loadHistoryPage,
+    setMessages,
+  });
   const { runAsync: runCreateSession } = useRequest(
     (params?: CreateSessionRequest) => chatService.createSession(params),
     {
@@ -102,46 +105,7 @@ function ChatPanel({
       manual: true,
     }
   );
-  const { data: models = [] } = useRequest(() => chatService.getModels());
-
-  const modelMetaMap = useMemo<Record<string, ModelMeta>>(() => {
-    return models.reduce<Record<string, ModelMeta>>((acc, model) => {
-      acc[model.id] = { provider: model.provider, name: model.name };
-      if (!acc[model.modelId]) {
-        acc[model.modelId] = { provider: model.provider, name: model.name };
-      }
-      return acc;
-    }, {});
-  }, [models]);
-
-  useUpdateEffect(() => {
-    if (Object.keys(modelMetaMap).length === 0) return;
-    setHistoryMessages((previousMessages) =>
-      previousMessages.map((message) => {
-        if (message.role !== 'ai') return message;
-        const modelId = message.meta?.modelId;
-        if (!modelId) return message;
-        const modelMeta = modelMetaMap[modelId];
-        if (!modelMeta) return message;
-        if (
-          message.meta?.modelName === modelMeta.name &&
-          message.meta?.provider === modelMeta.provider
-        ) {
-          return message;
-        }
-        return {
-          ...message,
-          meta: { ...message.meta, modelName: modelMeta.name, provider: modelMeta.provider },
-        };
-      })
-    );
-  }, [modelMetaMap]);
-
-  const messages = useMemo(
-    () => buildPanelMessages(historyMessages, liveMessages, currentModel, status),
-    [currentModel, historyMessages, liveMessages, status]
-  );
-  const hasRenderableChatContent = useMemo(() => hasMessagesPlainText(messages), [messages]);
+  const hasRenderableChatContent = useMemo(() => hasRenderableMessageContent(messages), [messages]);
 
   useUpdateEffect(() => {
     if (currentSessionId == null || currentSessionId === '') return;
@@ -221,48 +185,25 @@ function ChatPanel({
 
   const loadHistoryMessages = async (sessionId: string) => {
     try {
-      const payload = await runLoadSessionHistory(sessionId, 1);
-      setHistoryMessages(
-        payload.list.map((m) => mapHistoryMessage(m, { modelMetaMap, currentModel }))
-      );
-      setHistoryPage(payload.page ?? 1);
-      setHistoryTotalPage(payload.totalPage ?? 1);
+      await replaceHistory(sessionId);
     } catch (error) {
       const errorMessage = parseErrorMessage(error);
       if (isSessionInvalidMessage(errorMessage)) {
         clearResourceChatContext?.();
         clearCurrentSession();
-        setHistoryMessages([]);
-        setHistoryPage(1);
-        setHistoryTotalPage(1);
-        setLiveMessages([]);
+        clearConversation();
         return;
       }
       toast.danger(errorMessage);
-      setHistoryMessages([]);
-      setHistoryPage(1);
-      setHistoryTotalPage(1);
+      clearConversation();
     }
   };
 
   const loadMoreHistoryMessages = async () => {
-    if (!currentSessionId || loadingMoreHistory || historyPage >= historyTotalPage) return;
-
-    const nextPage = historyPage + 1;
-    setLoadingMoreHistory(true);
-
     try {
-      const payload = await runLoadSessionHistory(currentSessionId, nextPage);
-      const olderMessages = payload.list.map((m) =>
-        mapHistoryMessage(m, { modelMetaMap, currentModel })
-      );
-      setHistoryMessages((previousMessages) => [...olderMessages, ...previousMessages]);
-      setHistoryPage(payload.page ?? nextPage);
-      setHistoryTotalPage(payload.totalPage ?? historyTotalPage);
+      await prependHistory();
     } catch (error) {
       toast.danger(parseErrorMessage(error));
-    } finally {
-      setLoadingMoreHistory(false);
     }
   };
 
@@ -378,6 +319,7 @@ function ChatPanel({
   };
 
   const handleSelectSession = (session: ChatSession) => {
+    void stop();
     clearResourceChatContext?.();
     setCurrentSession({
       id: session.id,
@@ -394,6 +336,7 @@ function ChatPanel({
   };
 
   const handleNewChat = () => {
+    void stop();
     clearResourceChatContext?.();
     setSessionBarOpen(false);
     if (onNewChat) {
@@ -407,37 +350,24 @@ function ChatPanel({
 
   useMount(() => {
     if (!currentSessionId) return;
-    setHistoryMessages([]);
-    setHistoryPage(1);
-    setHistoryTotalPage(1);
-    setLiveMessages([]);
     void loadHistoryMessages(currentSessionId);
   });
 
   useUpdateEffect(() => {
     if (!currentSessionId) {
-      setHistoryMessages([]);
-      setHistoryPage(1);
-      setHistoryTotalPage(1);
-      setLiveMessages([]);
+      clearConversation();
       return;
     }
-    setHistoryMessages([]);
-    setHistoryPage(1);
-    setHistoryTotalPage(1);
-    setLiveMessages([]);
+    if (useNewChatSessionStore.getState().newChatSessionId === currentSessionId) return;
     void loadHistoryMessages(currentSessionId);
   }, [currentSessionId]);
 
   useUpdateEffect(() => {
     if (currentSessionId) return;
     if (!chatPanelDraftOpen) {
-      setHistoryMessages([]);
-      setHistoryPage(1);
-      setHistoryTotalPage(1);
-      setLiveMessages([]);
+      clearConversation();
     }
-  }, [chatPanelDraftOpen, currentSessionId, setLiveMessages]);
+  }, [chatPanelDraftOpen, clearConversation, currentSessionId]);
 
   useUpdateEffect(() => {
     if (!collapsed) return;
@@ -474,11 +404,11 @@ function ChatPanel({
                   <div className={styles.messageViewport}>
                     <MessageList
                       messages={messages}
-                      canLoadMoreHistory={
-                        Boolean(currentSessionId) && historyPage < historyTotalPage
-                      }
+                      canLoadMoreHistory={canLoadMoreHistory}
                       loadingMoreHistory={loadingMoreHistory}
                       onLoadMoreHistory={loadMoreHistoryMessages}
+                      status={status}
+                      model={currentModel}
                       footer={
                         <div className={styles.footer}>
                           <ChatInput

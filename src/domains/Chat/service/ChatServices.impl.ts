@@ -5,6 +5,7 @@ import { computeFileMd5 } from '@/utils/oss/computeFileMd5';
 import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
 import { parseExtension } from '@/utils/parser/extensionParser';
 import { ChatApi, ChatSessionApi } from '../apis/ChatApi';
+import type { WisePenUIMessage } from '../entity/message';
 import { buildAgentFromResourceItem, buildDefaultPersonalAgent } from '../mapper/agent.mapper';
 import { ChatServicesMap } from '../mapper/ChatServices.map';
 import {
@@ -14,7 +15,6 @@ import {
 import { mapResourceItemToResourceSkillSummary } from '../mapper/workspace.mapper';
 import type {
   ChatInputCapabilityOptions,
-  ChatMessage,
   ChatModel,
   ChatServiceDeps,
   ChatSession,
@@ -225,7 +225,7 @@ const listSessions = async (params?: ListSessionsRequest): Promise<PageResult<Ch
 
 const listHistoryMessages = async (
   params: ListHistoryMessagesRequest
-): Promise<PageResult<ChatMessage>> => {
+): Promise<PageResult<WisePenUIMessage>> => {
   const query = ChatServicesMap.mapListHistoryMessagesRequest(params);
   const payload = await ChatSessionApi.listHistoryMessages(query);
   return ChatServicesMap.mapListHistoryMessagesFromApi(payload);

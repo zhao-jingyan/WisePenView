@@ -9,23 +9,15 @@ export interface ChatSession {
 }
 
 export interface MessageResponse {
-  id: string;
-  role: 'user' | 'assistant';
-  model_id?: number | string | null;
-  content?: string;
-  parts?: MessagePartResponse[];
-  tool_calls?: unknown[] | null;
-  createdAt?: string;
-  created_at?: string;
-}
-
-export interface MessagePartResponse {
-  type: string;
-  text: string | null;
-  state: string | null;
-  toolCallId: string | null;
-  input: unknown;
-  output: unknown;
+  id?: unknown;
+  role?: unknown;
+  metadata?: unknown;
+  parts?: unknown;
+  model_id?: unknown;
+  content?: unknown;
+  tool_calls?: unknown;
+  createdAt?: unknown;
+  created_at?: unknown;
 }
 
 export interface PageResult<T> {
