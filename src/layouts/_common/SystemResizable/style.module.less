@@ -21,7 +21,7 @@
   align-self: stretch;
   align-items: center;
   justify-content: center;
-  background: var(--border);
+  background: var(--border-light);
   outline: none;
 }
 
@@ -34,11 +34,11 @@
 .handle:hover,
 .handle:focus-visible,
 .handle[data-separator='active'] {
-  background: var(--border-tertiary, var(--border));
+  background: var(--border);
 }
 
 .handle:focus-visible {
-  box-shadow: 0 0 0 1px var(--focus);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .handle[aria-disabled='true'] {

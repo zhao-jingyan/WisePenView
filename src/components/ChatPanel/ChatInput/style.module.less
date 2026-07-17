@@ -1,4 +1,4 @@
-﻿.container {
+.container {
   flex-shrink: 0;
   padding: var(--space-sm) 0 var(--space-2xs);
   background: transparent;
@@ -19,8 +19,8 @@
     box-shadow 0.2s;
 
   &:focus-within {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 12%, transparent);
+    border-color: var(--accent-softer);
+    box-shadow: 0 0 0 2px var(--accent-soft);
   }
 
   &.inputCardDragOver {
@@ -160,7 +160,7 @@
 .voiceButtonActive,
 .stopButtonActive {
   color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  background: var(--danger-soft);
 }
 
 .toolbarPopover {
@@ -280,7 +280,7 @@
   height: 16px;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--primary);
+  background: var(--accent);
   color: #fff;
   font-size: 10px;
   line-height: 16px;

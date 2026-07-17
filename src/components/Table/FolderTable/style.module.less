@@ -180,7 +180,7 @@
 
 .selectedRow:global(.table__row) {
   :global(.table__cell) {
-    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+    background: var(--accent-softer);
   }
 }
 
@@ -188,7 +188,7 @@
   .selectedRow:global(.table__row:hover),
   .selectedRow:global(.table__row[data-hovered='true']) {
     :global(.table__cell) {
-      background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+      background: var(--accent-soft);
     }
   }
 }

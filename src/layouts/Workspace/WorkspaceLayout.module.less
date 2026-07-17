@@ -10,7 +10,8 @@
 .leftSider {
   height: 100%;
   width: 100%;
-  background: var(--surface);
+  /* 侧栏 = 抬升层；主区 / 右侧 Chat 保持纸面 --surface */
+  background: var(--surface-secondary);
   overflow: hidden;
 }
 
@@ -53,6 +54,7 @@
   height: 100%;
   width: 100%;
   min-width: var(--chat-panel-min-width);
+  /* 与主区 Note 同纸面 */
   background: var(--surface);
   position: relative;
   overflow: hidden;

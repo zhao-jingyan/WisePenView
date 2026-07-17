@@ -91,7 +91,7 @@
 
 :global(.table__row):has(.dndNameContent[data-drop-target='true']) {
   :global(.table__cell) {
-    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    background: var(--accent-soft);
   }
 
   :global(.table__cell:first-child) {
@@ -103,7 +103,7 @@
   display: inline-flex;
 
   &[data-drop-target='true'] > * {
-    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    background: var(--accent-soft);
     color: var(--foreground);
   }
 }

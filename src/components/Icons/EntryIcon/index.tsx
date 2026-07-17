@@ -19,13 +19,13 @@ import type { EntryIconProps } from './index.type';
 
 const COLOR_SECONDARY = 'var(--muted)';
 const COLOR_FOLDER = 'var(--warning)';
-const COLOR_DOC = 'var(--primary)';
+const COLOR_DOC = 'var(--accent)';
 const COLOR_PDF = 'var(--danger)';
 const COLOR_PPT = 'var(--warning)';
 const COLOR_XLS = 'var(--success)';
 const COLOR_NOTE = 'var(--accent)';
-const COLOR_DRAWIO = 'var(--primary)';
-const COLOR_AI = 'var(--primary-light)';
+const COLOR_DRAWIO = 'var(--accent)';
+const COLOR_AI = 'var(--accent-soft-foreground)';
 
 function SharedFolderIcon({ size = 18, color }: { size?: number; color?: string }) {
   const folderColor = color ?? COLOR_FOLDER;

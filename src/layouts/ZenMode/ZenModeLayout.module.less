@@ -16,8 +16,8 @@
   align-items: center;
   gap: var(--space-xs);
   padding: 0 var(--space-xs);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--header-surface, var(--paper));
   color: var(--muted);
 }
 
@@ -64,7 +64,7 @@
 }
 
 .resourcePaneActive {
-  box-shadow: inset 0 0 0 1px var(--focus);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .paneTitleBar {
@@ -76,7 +76,7 @@
   gap: var(--space-xs);
   padding: 0 var(--space-2xs) 0 var(--space-sm);
   border-bottom: 1px solid var(--border);
-  background: var(--background);
+  background: var(--surface-secondary);
 }
 
 .paneTitle {
@@ -132,7 +132,7 @@
 }
 
 .emptySlot:focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 2px solid var(--accent);
   outline-offset: -3px;
 }
 
@@ -149,5 +149,5 @@
 }
 
 .chatDock {
-  background: var(--background);
+  background: var(--surface);
 }

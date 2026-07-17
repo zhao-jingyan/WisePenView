@@ -39,11 +39,11 @@
 .colorSwatchItem:hover,
 .colorSwatchItem[data-hovered],
 .colorSwatchSelected {
-  border-color: var(--primary);
+  border-color: var(--accent);
 }
 
 .colorSwatchSelected {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent);
+  box-shadow: 0 0 0 2px var(--accent-soft-hover);
 }
 
 .colorTextPreview {
@@ -62,8 +62,8 @@
     linear-gradient(
       135deg,
       transparent 48%,
-      var(--primary) 49%,
-      var(--primary) 51%,
+      var(--accent) 49%,
+      var(--accent) 51%,
       transparent 52%
     ),
     var(--surface);

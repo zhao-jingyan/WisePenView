@@ -3,9 +3,9 @@
 .card {
   padding: 24px;
   margin-bottom: 24px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 8px);
 }
 
 /** 嵌入父级容器时使用，避免与外层 formSection 形成双层边框 */
@@ -33,7 +33,7 @@
 .balanceLabel {
   margin: 0 0 8px 0;
   font-size: 14px;
-  color: #4b5563;
+  color: var(--muted);
 }
 
 .balanceValue {
@@ -42,14 +42,14 @@
   font-weight: 600;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
-  color: #111827;
+  color: var(--foreground);
 }
 
 .unit {
   margin-left: 8px;
   font-size: 16px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--muted);
 }
 
 .transactionTable {
@@ -59,18 +59,18 @@
 .balanceSkeleton {
   width: 200px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: var(--radius-lg, 8px);
 }
 
 .amountRecharge {
   font-variant-numeric: tabular-nums;
-  color: #16a34a;
+  color: var(--success);
   font-weight: 500;
 }
 
 .amountSpend {
   font-variant-numeric: tabular-nums;
-  color: #dc2626;
+  color: var(--error);
   font-weight: 500;
 }
 
@@ -94,7 +94,7 @@
   margin-top: 2px;
   overflow: hidden;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--muted);
   text-overflow: ellipsis;
   white-space: nowrap;
   // 点卡尾号等掩码行：* 与数字在比例字体下宽窄不一，等宽栈 + tabular 数字对齐
@@ -120,6 +120,6 @@
     background-color: transparent;
   }
   25% {
-    background-color: #dcfce7;
+    background-color: var(--success-soft);
   }
 }

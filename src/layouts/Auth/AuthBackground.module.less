@@ -19,8 +19,8 @@
   height: 24rem;
   background: radial-gradient(
     circle,
-    color-mix(in oklch, var(--accent) 25%, transparent) 0%,
-    color-mix(in oklch, var(--accent) 12%, transparent) 100%
+    var(--accent-soft-hover) 0%,
+    var(--accent-soft) 100%
   );
 }
 
@@ -31,8 +31,8 @@
   height: 20rem;
   background: radial-gradient(
     circle,
-    color-mix(in oklch, var(--focus) 25%, transparent) 0%,
-    color-mix(in oklch, var(--focus) 12%, transparent) 100%
+    var(--accent-soft) 0%,
+    var(--accent-softer) 100%
   );
 }
 
@@ -43,8 +43,8 @@
   height: 24rem;
   background: radial-gradient(
     circle,
-    color-mix(in oklch, var(--accent) 18%, transparent) 0%,
-    color-mix(in oklch, var(--focus) 8%, transparent) 100%
+    var(--accent-soft-hover) 0%,
+    var(--accent-softer) 100%
   );
 }
 
@@ -68,15 +68,15 @@
 }
 
 .dotPrimaryHover {
-  background-color: color-mix(in oklch, var(--accent) 85%, var(--foreground));
+  background-color: var(--accent);
 }
 
 .dotPrimarySoft {
-  background-color: color-mix(in oklch, var(--accent) 45%, var(--background));
+  background-color: var(--accent-border);
 }
 
 .dotFocus {
-  background-color: var(--focus);
+  background-color: var(--accent);
 }
 
 .dotTopLeft {
@@ -121,7 +121,7 @@
 }
 
 .decorCircleStroke {
-  stroke: var(--focus);
+  stroke: var(--accent);
   stroke-width: 2;
   fill: none;
   stroke-dasharray: 5, 5;

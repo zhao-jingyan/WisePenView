@@ -100,23 +100,23 @@
 
 .schemeOption:global(.toggle-button)[data-selected='true'],
 .schemeOption:global(.toggle-button)[aria-pressed='true'] {
-  border-color: var(--contrast, var(--preview-color-3));
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--contrast, var(--preview-color-3)) 6%, transparent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-softer);
 }
 
 .schemeOption:global(.toggle-button)[data-selected='true'] .schemePreview,
 .schemeOption:global(.toggle-button)[aria-pressed='true'] .schemePreview {
-  box-shadow: inset 0 -6px 12px color-mix(in srgb, var(--preview-color-2) 8%, transparent);
+  box-shadow: inset 0 -6px 12px var(--accent-softer);
   border-radius: 6px;
 }
 
 .schemeOption:global(.toggle-button):focus-visible {
-  outline: 2px solid var(--contrast, var(--accent));
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 .schemeOption:global(.toggle-button):hover {
-  border-color: color-mix(in srgb, var(--contrast, var(--accent)) 40%, var(--border));
+  border-color: var(--accent-border);
 }
 
 .schemeDescription {

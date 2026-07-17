@@ -17,23 +17,16 @@
     --ring-offset-width: 2px;
     --cursor-interactive: pointer;
     --cursor-disabled: not-allowed;
-    --accent: #1e6f9f;
+    /* Brand + paper/canvas anchors (neutrals derived in shared ladder) */
+    --accent: #155a85;
     --accent-foreground: #ffffff;
-    --background: #f7f9fb;
-    --border: #e4e7ec;
+    --foreground: #111827;
+    --paper: #ffffff;
+    /* 更接近纸面，避免外壳/次级面发死灰 */
+    --canvas: #f7fafc;
     --danger: #ef4444;
     --danger-foreground: #ffffff;
-    --default: #f0f3f6;
-    --default-foreground: #111827;
-    --field-background: #ffffff;
     --field-border: transparent;
-    --field-foreground: #111827;
-    --field-placeholder: #9ca3af;
-    --focus: #22c7a9;
-    --foreground: #111827;
-    --muted: #6b7280;
-    --overlay: #ffffff;
-    --overlay-foreground: #111827;
     --scrollbar: var(--scrollbar-thumb);
     --scrollbar-thumb: color-mix(in oklch, var(--foreground) 18%, transparent);
     --scrollbar-thumb-hover: color-mix(in oklch, var(--foreground) 30%, transparent);
@@ -43,30 +36,10 @@
     --scrollbar-size: 8px;
     --scrollbar-radius: 999px;
     --scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-    --segment: #ffffff;
-    --segment-foreground: #111827;
-    --separator: #e9ecef;
     --success: #22c55e;
     --success-foreground: #111827;
-    --surface: #ffffff;
-    --surface-foreground: #111827;
-    --surface-secondary: #fafbfc;
-    --surface-secondary-foreground: #111827;
-    --surface-tertiary: #f0f3f6;
-    --surface-tertiary-foreground: #111827;
     --warning: #f59e0b;
     --warning-foreground: #111827;
-    --primary: #1e6f9f;
-    --primary-hover: #2a82b8;
-    --primary-light: #4ea8de;
-    --primary-dark: #165a82;
-    --ai-accent: #22c7a9;
-    --ai-accent-hover: #2dd4bf;
-    --background-alt: #f0f3f6;
-    --surface-hover: #fafbfc;
-    --border-light: #f0f1f3;
-    --text-tertiary: #9ca3af;
-    --text-disabled: #d1d5db;
     --text-inverse: #ffffff;
     --info: #3b82f6;
     --error: #ef4444;
@@ -76,9 +49,7 @@
     --diff-removed-border: #c5221f;
     --diff-modified: #e8f0fe;
     --diff-modified-border: #1967d2;
-    --card-surface: #ffffff;
     --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    --card-glow: 0 0 0 2px rgba(30, 111, 159, 0.15);
     --radius: 0.5rem;
     --field-radius: 0.75rem;
     --surface-shadow:
@@ -100,21 +71,12 @@
     /* 默认 · 学术 dark */
     --accent: #4ea8de;
     --accent-foreground: #111827;
-    --background: #0f172a;
-    --border: #374151;
+    --foreground: #f9fafb;
+    --paper: #12151c;
+    --canvas: #0c0e14;
     --danger: #ef4444;
     --danger-foreground: #ffffff;
-    --default: #1e293b;
-    --default-foreground: #f9fafb;
-    --field-background: #111827;
     --field-border: transparent;
-    --field-foreground: #f9fafb;
-    --field-placeholder: #9ca3af;
-    --focus: #2dd4bf;
-    --foreground: #f9fafb;
-    --muted: #d1d5db;
-    --overlay: #111827;
-    --overlay-foreground: #f9fafb;
     --scrollbar: var(--scrollbar-thumb);
     --scrollbar-thumb: color-mix(in oklch, var(--foreground) 20%, transparent);
     --scrollbar-thumb-hover: color-mix(in oklch, var(--foreground) 36%, transparent);
@@ -124,30 +86,10 @@
     --scrollbar-size: 8px;
     --scrollbar-radius: 999px;
     --scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-    --segment: #1f2937;
-    --segment-foreground: #f9fafb;
-    --separator: #2d3748;
     --success: #22c55e;
     --success-foreground: #111827;
-    --surface: #111827;
-    --surface-foreground: #f9fafb;
-    --surface-secondary: #1f2937;
-    --surface-secondary-foreground: #f9fafb;
-    --surface-tertiary: #1e293b;
-    --surface-tertiary-foreground: #f9fafb;
     --warning: #f59e0b;
     --warning-foreground: #111827;
-    --primary: #4ea8de;
-    --primary-hover: #5fb3e8;
-    --primary-light: #70bef0;
-    --primary-dark: #3d97cc;
-    --ai-accent: #2dd4bf;
-    --ai-accent-hover: #3ddccf;
-    --background-alt: #1e293b;
-    --surface-hover: #1f2937;
-    --border-light: #4b5563;
-    --text-tertiary: #9ca3af;
-    --text-disabled: #6b7280;
     --text-inverse: #111827;
     --info: #3b82f6;
     --error: #ef4444;
@@ -157,9 +99,7 @@
     --diff-removed-border: #c5221f;
     --diff-modified: #1a2942;
     --diff-modified-border: #1967d2;
-    --card-surface: #111827;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --card-glow: 0 0 0 2px rgba(78, 168, 222, 0.3);
     --surface-shadow: 0 0 0 0 transparent inset;
     --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.3) inset;
     --field-shadow: 0 0 0 0 transparent inset;
@@ -212,501 +152,193 @@
     --field-radius: 1rem;
   }
 
-  /* custom 7 palettes: floral, aqua, sunset, emerald, lavender, vanilla */
+  /* custom 7 palettes: floral, aqua, sunset, emerald, lavender, vanilla
+   * Schemes only set brand + paper/canvas anchors; neutrals derive in shared ladder.
+   */
 
   /* Floral */
   html[data-color-scheme='floral'] {
-    --accent: #dab2d2;
+    --accent: #7c4360;
     --accent-foreground: #ffffff;
-    --focus: #91b5a3;
-    --background: #ffffff;
     --foreground: #2e2e2e;
-    --muted: #6b6b6b;
-    --border: #e4e7ec;
-    --separator: #eeebed;
-    --surface: #ffffff;
-    --surface-foreground: #2e2e2e;
-    --surface-secondary: #fef7fb;
-    --surface-secondary-foreground: #2e2e2e;
-    --surface-tertiary: #f5eff4;
-    --surface-tertiary-foreground: #2e2e2e;
-    --field-background: #ffffff;
-    --field-foreground: #2e2e2e;
-    --field-placeholder: #a1a1a1;
-    --primary: #9a6980;
-    --primary-hover: #ca9eb4;
-    --primary-light: #dcc2d3;
-    --primary-dark: #7c4360;
-    --ai-accent: #dcc2d3;
-    --ai-accent-hover: #ebdbe6;
-    --background-alt: #f5eff4;
-    --surface-hover: #fef7fb;
-    --border-light: #f0f1f3;
-    --text-tertiary: #a1a1a1;
-    --text-disabled: #d3d3d3;
+    --paper: #ffffff;
+    --canvas: #f7f2f5;
     --text-inverse: #ffffff;
-    --card-surface: #ffffff;
     --card-shadow: 0 2px 8px rgba(230, 166, 217, 0.08);
-    --card-glow: 0 0 0 2px rgba(230, 166, 217, 0.12);
-    --contrast: #91b5a3;
     --preview-color-1: #f4e9f1;
     --preview-color-2: #dcc2d3;
-    --preview-color-3: #ca9eb4;
+    --preview-color-3: #7c4360;
   }
   html[data-color-scheme='floral'].dark,
   html[data-color-scheme='floral'][data-theme='dark'] {
     color-scheme: dark;
-    --accent: #ca9eb4;
+    --accent: #d4a8bc;
     --accent-foreground: #0d1117;
-    --focus: #82b499;
-    --background: #1a141b;
     --foreground: #eee8ed;
-    --muted: #a899a3;
-    --border: #374151;
-    --separator: #2a2026;
-    --surface: #201926;
-    --surface-foreground: #eee8ed;
-    --surface-secondary: #261d2c;
-    --surface-secondary-foreground: #eee8ed;
-    --surface-tertiary: #1c1520;
-    --surface-tertiary-foreground: #eee8ed;
-    --field-background: #201926;
-    --field-foreground: #eee8ed;
-    --field-placeholder: #8e7f89;
-    --primary: #9e8f97;
-    --primary-hover: #bca5b3;
-    --primary-light: #2a1e26;
-    --primary-dark: #624a58;
-    --ai-accent: #7a5d6e;
-    --ai-accent-hover: #9e8f97;
-    --background-alt: #1c1520;
-    --surface-hover: #261d2c;
-    --border-light: #4b5563;
-    --text-tertiary: #8e7f89;
-    --text-disabled: #5a4e56;
+    --paper: #18161a;
+    --canvas: #121014;
     --text-inverse: #0d1117;
-    --card-surface: #201926;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --card-glow: 0 0 0 2px rgba(202, 158, 180, 0.2);
-    --contrast: #82b499;
-    --preview-color-1: #2a1e26;
-    --preview-color-2: #ca9eb4;
-    --preview-color-3: #82b499;
+    --preview-color-1: #1c181c;
+    --preview-color-2: #d4a8bc;
+    --preview-color-3: #d4a8bc;
   }
 
   /* Aqua */
   html[data-color-scheme='aqua'] {
-    --accent: #79c1c6;
+    --accent: #2c7a7d;
     --accent-foreground: #ffffff;
-    --focus: #e0a480;
-    --background: #ffffff;
     --foreground: #262626;
-    --muted: #727272;
-    --border: #e4e7ec;
-    --separator: #edf3f3;
-    --surface: #ffffff;
-    --surface-foreground: #262626;
-    --surface-secondary: #f5fcfd;
-    --surface-secondary-foreground: #262626;
-    --surface-tertiary: #edf7f7;
-    --surface-tertiary-foreground: #262626;
-    --field-background: #ffffff;
-    --field-foreground: #262626;
-    --field-placeholder: #9f9f9f;
-    --primary: #398b92;
-    --primary-hover: #359199;
-    --primary-light: #b1dcde;
-    --primary-dark: #2c7a7d;
-    --ai-accent: #359199;
-    --ai-accent-hover: #a9dbdd;
-    --background-alt: #edf7f7;
-    --surface-hover: #f5fcfd;
-    --border-light: #f0f1f3;
-    --text-tertiary: #9f9f9f;
-    --text-disabled: #dee7e7;
+    --paper: #ffffff;
+    --canvas: #f0f6f6;
     --text-inverse: #ffffff;
-    --card-surface: #ffffff;
     --card-shadow: 0 2px 8px rgba(34, 209, 217, 0.06);
-    --card-glow: 0 0 0 2px rgba(34, 209, 217, 0.12);
-    --contrast: #e0a480;
     --preview-color-1: #e9f8f8;
     --preview-color-2: #79c1c6;
-    --preview-color-3: #359199;
+    --preview-color-3: #2c7a7d;
   }
   html[data-color-scheme='aqua'].dark,
   html[data-color-scheme='aqua'][data-theme='dark'] {
     color-scheme: dark;
-    --accent: #359199;
+    --accent: #4db0b6;
     --accent-foreground: #0d1117;
-    --focus: #e0a480;
-    --background: #0e1c1d;
     --foreground: #e1f2f2;
-    --muted: #bdcfcf;
-    --border: #374151;
-    --separator: #1b3131;
-    --surface: #14292a;
-    --surface-foreground: #e1f2f2;
-    --surface-secondary: #183233;
-    --surface-secondary-foreground: #e1f2f2;
-    --surface-tertiary: #101f20;
-    --surface-tertiary-foreground: #e1f2f2;
-    --field-background: #14292a;
-    --field-foreground: #e1f2f2;
-    --field-placeholder: #8eb9ba;
-    --primary: #438b8e;
-    --primary-hover: #5db3b6;
-    --primary-light: #0a1e1f;
-    --primary-dark: #245558;
-    --ai-accent: #3a7d80;
-    --ai-accent-hover: #5db3b6;
-    --background-alt: #101f20;
-    --surface-hover: #183233;
-    --border-light: #4b5563;
-    --text-tertiary: #8eb9ba;
-    --text-disabled: #5a7a7b;
+    --paper: #151a1b;
+    --canvas: #0f1314;
     --text-inverse: #0d1117;
-    --card-surface: #14292a;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --card-glow: 0 0 0 2px rgba(53, 145, 153, 0.2);
-    --contrast: #e0a480;
-    --preview-color-1: #0a1e1f;
-    --preview-color-2: #359199;
-    --preview-color-3: #e0a480;
+    --preview-color-1: #101616;
+    --preview-color-2: #4db0b6;
+    --preview-color-3: #2c7a7d;
   }
 
   /* Sunset */
   html[data-color-scheme='sunset'] {
-    --accent: #f09e75;
+    --accent: #b35a40;
     --accent-foreground: #ffffff;
-    --focus: #639cc3;
-    --background: #ffffff;
     --foreground: #252121;
-    --muted: #717171;
-    --border: #e4e7ec;
-    --separator: #f8ede7;
-    --surface: #ffffff;
-    --surface-foreground: #252121;
-    --surface-secondary: #fdf6f2;
-    --surface-secondary-foreground: #252121;
-    --surface-tertiary: #fdf2ea;
-    --surface-tertiary-foreground: #252121;
-    --field-background: #ffffff;
-    --field-foreground: #252121;
-    --field-placeholder: #aeaeae;
-    --primary: #c4745b;
-    --primary-hover: #ed875f;
-    --primary-light: #f9d8c8;
-    --primary-dark: #a2553e;
-    --ai-accent: #f3b495;
-    --ai-accent-hover: #f9d8c6;
-    --background-alt: #fdf2ea;
-    --surface-hover: #fdf6f2;
-    --border-light: #f0f1f3;
-    --text-tertiary: #aeaeae;
-    --text-disabled: #e3dfdd;
+    --paper: #ffffff;
+    --canvas: #f8f3f0;
     --text-inverse: #ffffff;
-    --card-surface: #ffffff;
     --card-shadow: 0 2px 8px rgba(255, 153, 102, 0.06);
-    --card-glow: 0 0 0 2px rgba(255, 153, 102, 0.12);
-    --contrast: #639cc3;
     --preview-color-1: #fdf2ea;
     --preview-color-2: #f3b495;
-    --preview-color-3: #ed875f;
+    --preview-color-3: #b35a40;
   }
   html[data-color-scheme='sunset'].dark,
   html[data-color-scheme='sunset'][data-theme='dark'] {
     color-scheme: dark;
-    --accent: #ed875f;
+    --accent: #f09a72;
     --accent-foreground: #0d1117;
-    --focus: #6aaacc;
-    --background: #1e1512;
     --foreground: #f6eee9;
-    --muted: #c4b0a7;
-    --border: #374151;
-    --separator: #2e221d;
-    --surface: #241a16;
-    --surface-foreground: #f6eee9;
-    --surface-secondary: #2a1f1a;
-    --surface-secondary-foreground: #f6eee9;
-    --surface-tertiary: #1a1310;
-    --surface-tertiary-foreground: #f6eee9;
-    --field-background: #241a16;
-    --field-foreground: #f6eee9;
-    --field-placeholder: #a8958b;
-    --primary: #a28c7f;
-    --primary-hover: #c6a99a;
-    --primary-light: #1e1512;
-    --primary-dark: #694942;
-    --ai-accent: #7a5e54;
-    --ai-accent-hover: #a28c7f;
-    --background-alt: #1a1310;
-    --surface-hover: #2a1f1a;
-    --border-light: #4b5563;
-    --text-tertiary: #a8958b;
-    --text-disabled: #6b5d56;
+    --paper: #1a1715;
+    --canvas: #13110f;
     --text-inverse: #0d1117;
-    --card-surface: #241a16;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --card-glow: 0 0 0 2px rgba(237, 135, 95, 0.2);
-    --contrast: #6aaacc;
-    --preview-color-1: #1e1512;
-    --preview-color-2: #ed875f;
-    --preview-color-3: #6aaacc;
+    --preview-color-1: #161311;
+    --preview-color-2: #f09a72;
+    --preview-color-3: #f09a72;
   }
 
   /* Emerald */
   html[data-color-scheme='emerald'] {
-    --accent: #3d9d75;
+    --accent: #2f8a64;
     --accent-foreground: #ffffff;
-    --focus: #9c7d85;
-    --background: #ffffff;
     --foreground: #1a2c25;
-    --muted: #7b7b7b;
-    --border: #e4e7ec;
-    --separator: #eff3f0;
-    --surface: #ffffff;
-    --surface-foreground: #1a2c25;
-    --surface-secondary: #f3f9f5;
-    --surface-secondary-foreground: #1a2c25;
-    --surface-tertiary: #ecf4ef;
-    --surface-tertiary-foreground: #1a2c25;
-    --field-background: #ffffff;
-    --field-foreground: #1a2c25;
-    --field-placeholder: #a9a9a9;
-    --primary: #4e8e67;
-    --primary-hover: #3d9d75;
-    --primary-light: #c2dccd;
-    --primary-dark: #31795d;
-    --ai-accent: #91c0a0;
-    --ai-accent-hover: #d4e8dd;
-    --background-alt: #ecf4ef;
-    --surface-hover: #f3f9f5;
-    --border-light: #f0f1f3;
-    --text-tertiary: #a9a9a9;
-    --text-disabled: #dee4e0;
+    --paper: #ffffff;
+    --canvas: #f1f6f3;
     --text-inverse: #ffffff;
-    --card-surface: #ffffff;
     --card-shadow: 0 2px 8px rgba(39, 179, 122, 0.06);
-    --card-glow: 0 0 0 2px rgba(39, 179, 122, 0.12);
-    --contrast: #9c7d85;
     --preview-color-1: #ecf4ef;
     --preview-color-2: #91c0a0;
-    --preview-color-3: #3d9d75;
+    --preview-color-3: #2f8a64;
   }
   html[data-color-scheme='emerald'].dark,
   html[data-color-scheme='emerald'][data-theme='dark'] {
     color-scheme: dark;
-    --accent: #3d9d75;
+    --accent: #4eb887;
     --accent-foreground: #0d1117;
-    --focus: #a77e8a;
-    --background: #0f1914;
     --foreground: #dff0e6;
-    --muted: #b2c9bd;
-    --border: #374151;
-    --separator: #1a2e23;
-    --surface: #132218;
-    --surface-foreground: #dff0e6;
-    --surface-secondary: #16291d;
-    --surface-secondary-foreground: #dff0e6;
-    --surface-tertiary: #0d160f;
-    --surface-tertiary-foreground: #dff0e6;
-    --field-background: #132218;
-    --field-foreground: #dff0e6;
-    --field-placeholder: #83b599;
-    --primary: #6da18a;
-    --primary-hover: #8ec3aa;
-    --primary-light: #0d160f;
-    --primary-dark: #26553f;
-    --ai-accent: #3d6d56;
-    --ai-accent-hover: #6da18a;
-    --background-alt: #0d160f;
-    --surface-hover: #16291d;
-    --border-light: #4b5563;
-    --text-tertiary: #83b599;
-    --text-disabled: #52705f;
+    --paper: #151a17;
+    --canvas: #101412;
     --text-inverse: #0d1117;
-    --card-surface: #132218;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --card-glow: 0 0 0 2px rgba(61, 157, 117, 0.2);
-    --contrast: #a77e8a;
-    --preview-color-1: #0d160f;
-    --preview-color-2: #3d9d75;
-    --preview-color-3: #a77e8a;
+    --preview-color-1: #111613;
+    --preview-color-2: #4eb887;
+    --preview-color-3: #4eb887;
   }
 
   /* Lavender */
   html[data-color-scheme='lavender'] {
-    --accent: #cfbcf7;
-    --accent-foreground: #161622;
-    --focus: #f3ba94;
-    --background: #ffffff;
+    --accent: #6b4aa8;
+    --accent-foreground: #ffffff;
     --foreground: #232323;
-    --muted: #6c6c6c;
-    --border: #e4e7ec;
-    --separator: #f5f3fb;
-    --surface: #ffffff;
-    --surface-foreground: #232323;
-    --surface-secondary: #fbf8fe;
-    --surface-secondary-foreground: #232323;
-    --surface-tertiary: #f7f3fe;
-    --surface-tertiary-foreground: #232323;
-    --field-background: #ffffff;
-    --field-foreground: #232323;
-    --field-placeholder: #bfb9d5;
-    --primary: #8665c1;
-    --primary-hover: #aa97f3;
-    --primary-light: #d6cbef;
-    --primary-dark: #61469a;
-    --ai-accent: #cebff8;
-    --ai-accent-hover: #eae3fc;
-    --background-alt: #f7f3fe;
-    --surface-hover: #fbf8fe;
-    --border-light: #f0f1f3;
-    --text-tertiary: #bfb9d5;
-    --text-disabled: #e9e4f2;
+    --paper: #ffffff;
+    --canvas: #f4f2f9;
     --text-inverse: #ffffff;
-    --card-surface: #ffffff;
     --card-shadow: 0 2px 8px rgba(205, 180, 255, 0.06);
-    --card-glow: 0 0 0 2px rgba(205, 180, 255, 0.12);
-    --contrast: #f3ba94;
     --preview-color-1: #f7f3fe;
     --preview-color-2: #cebff8;
-    --preview-color-3: #aa97f3;
+    --preview-color-3: #6b4aa8;
   }
   html[data-color-scheme='lavender'].dark,
   html[data-color-scheme='lavender'][data-theme='dark'] {
     color-scheme: dark;
-    --accent: #aa97f3;
+    --accent: #b8a6f5;
     --accent-foreground: #0d1117;
-    --focus: #f3ba94;
-    --background: #14111e;
     --foreground: #f0ecf8;
-    --muted: #c2bdda;
-    --border: #374151;
-    --separator: #241e30;
-    --surface: #19152b;
-    --surface-foreground: #f0ecf8;
-    --surface-secondary: #1e1932;
-    --surface-secondary-foreground: #f0ecf8;
-    --surface-tertiary: #110e19;
-    --surface-tertiary-foreground: #f0ecf8;
-    --field-background: #19152b;
-    --field-foreground: #f0ecf8;
-    --field-placeholder: #a89ec6;
-    --primary: #9f8cc4;
-    --primary-hover: #bba6e2;
-    --primary-light: #110e19;
-    --primary-dark: #61547a;
-    --ai-accent: #786890;
-    --ai-accent-hover: #9f8cc4;
-    --background-alt: #110e19;
-    --surface-hover: #1e1932;
-    --border-light: #4b5563;
-    --text-tertiary: #a89ec6;
-    --text-disabled: #6a6080;
+    --paper: #17161c;
+    --canvas: #111016;
     --text-inverse: #0d1117;
-    --card-surface: #19152b;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --card-glow: 0 0 0 2px rgba(170, 151, 243, 0.2);
-    --contrast: #f3ba94;
-    --preview-color-1: #110e19;
-    --preview-color-2: #aa97f3;
-    --preview-color-3: #f3ba94;
+    --preview-color-1: #131218;
+    --preview-color-2: #b8a6f5;
+    --preview-color-3: #6b4aa8;
   }
 
   /* Vanilla */
   html[data-color-scheme='vanilla'] {
-    --accent: #c0a854;
+    --accent: #8c7736;
+    /* mustard solid: dark fg for contrast */
     --accent-foreground: #161622;
-    --focus: #9eadc9;
-    --background: #ffffff;
     --foreground: #252525;
-    --muted: #6e6e6e;
-    --border: #e4e7ec;
-    --separator: #f8f6ed;
-    --surface: #ffffff;
-    --surface-foreground: #252525;
-    --surface-secondary: #fefaf7;
-    --surface-secondary-foreground: #252525;
-    --surface-tertiary: #fdf6ee;
-    --surface-tertiary-foreground: #252525;
-    --field-background: #ffffff;
-    --field-foreground: #252525;
-    --field-placeholder: #a7a7a7;
-    --primary: #b49e4e;
-    --primary-hover: #d0bc74;
-    --primary-light: #d5cfa0;
-    --primary-dark: #8c7736;
-    --ai-accent: #c0a854;
-    --ai-accent-hover: #d5cfa0;
-    --background-alt: #fdf6ee;
-    --surface-hover: #fefaf7;
-    --border-light: #f0f1f3;
-    --text-tertiary: #a7a7a7;
-    --text-disabled: #e2dfd9;
+    --paper: #ffffff;
+    --canvas: #f7f5ef;
     --text-inverse: #161622;
-    --card-surface: #ffffff;
     --card-shadow: 0 2px 8px rgba(196, 160, 48, 0.08);
-    --card-glow: 0 0 0 2px rgba(196, 160, 48, 0.12);
-    --contrast: #9eadc9;
     --preview-color-1: #fdf8ef;
     --preview-color-2: #c0a854;
-    --preview-color-3: #9eadc9;
+    --preview-color-3: #8c7736;
   }
   html[data-color-scheme='vanilla'].dark,
   html[data-color-scheme='vanilla'][data-theme='dark'] {
     color-scheme: dark;
     --accent: #e5d3a6;
     --accent-foreground: #0d1117;
-    --focus: #98abc6;
-    --background: #1a1612;
     --foreground: #f2ece2;
-    --muted: #bfb7a9;
-    --border: #374151;
-    --separator: #29221b;
-    --surface: #211c15;
-    --surface-foreground: #f2ece2;
-    --surface-secondary: #282218;
-    --surface-secondary-foreground: #f2ece2;
-    --surface-tertiary: #17130e;
-    --surface-tertiary-foreground: #f2ece2;
-    --field-background: #211c15;
-    --field-foreground: #f2ece2;
-    --field-placeholder: #a89985;
-    --primary: #a4998c;
-    --primary-hover: #c5b7a5;
-    --primary-light: #17130e;
-    --primary-dark: #5a5a58;
-    --ai-accent: #726a64;
-    --ai-accent-hover: #a4998c;
-    --background-alt: #17130e;
-    --surface-hover: #282218;
-    --border-light: #4b5563;
-    --text-tertiary: #a89985;
-    --text-disabled: #6b6053;
+    --paper: #191714;
+    --canvas: #131210;
     --text-inverse: #0d1117;
-    --card-surface: #211c15;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --card-glow: 0 0 0 2px rgba(229, 211, 166, 0.2);
-    --contrast: #98abc6;
-    --preview-color-1: #17130e;
+    --preview-color-1: #151310;
     --preview-color-2: #e5d3a6;
-    --preview-color-3: #98abc6;
+    --preview-color-3: #e5d3a6;
   }
+
 
   /* default preview (three colors) */
   html.light [data-scheme-preview='default'],
   html[data-theme='light'] [data-scheme-preview='default'] {
     --preview-color-1: #edf5f8;
     --preview-color-2: #316b8c;
-    --preview-color-3: #3aaf9a;
+    --preview-color-3: #155a85;
   }
 
   html.dark [data-scheme-preview='default'],
   html[data-theme='dark'] [data-scheme-preview='default'] {
     --preview-color-1: #1f3039;
     --preview-color-2: #63a3c9;
-    --preview-color-3: #47baab;
+    --preview-color-3: #4ea8de;
   }
 
   /* previews for new palettes — explicit colors with contrast */
@@ -715,72 +347,72 @@
   html.light [data-scheme-preview='floral'], html[data-theme='light'] [data-scheme-preview='floral'] {
     --preview-color-1: #fcf3f9;
     --preview-color-2: #dab2d2;
-    --preview-color-3: #91b5a3;
+    --preview-color-3: #7c4360;
   }
   html.dark [data-scheme-preview='floral'], html[data-theme='dark'] [data-scheme-preview='floral'] {
     --preview-color-1: #312f31;
-    --preview-color-2: #ca9eb4;
-    --preview-color-3: #82b499;
+    --preview-color-2: #d4a8bc;
+    --preview-color-3: #d4a8bc;
   }
 
   /* Aqua */
   html.light [data-scheme-preview='aqua'], html[data-theme='light'] [data-scheme-preview='aqua'] {
     --preview-color-1: #e9f8f8;
     --preview-color-2: #79c1c6;
-    --preview-color-3: #e0a480;
+    --preview-color-3: #2c7a7d;
   }
   html.dark [data-scheme-preview='aqua'], html[data-theme='dark'] [data-scheme-preview='aqua'] {
     --preview-color-1: #1a1a1a;
-    --preview-color-2: #359199;
-    --preview-color-3: #e0a480;
+    --preview-color-2: #4db0b6;
+    --preview-color-3: #2c7a7d;
   }
 
   /* Sunset */
   html.light [data-scheme-preview='sunset'], html[data-theme='light'] [data-scheme-preview='sunset'] {
     --preview-color-1: #fdf2ea;
     --preview-color-2: #f09e75;
-    --preview-color-3: #639cc3;
+    --preview-color-3: #b35a40;
   }
   html.dark [data-scheme-preview='sunset'], html[data-theme='dark'] [data-scheme-preview='sunset'] {
     --preview-color-1: #261d1d;
-    --preview-color-2: #ed875f;
-    --preview-color-3: #6aaacc;
+    --preview-color-2: #f09a72;
+    --preview-color-3: #f09a72;
   }
 
   /* Emerald */
   html.light [data-scheme-preview='emerald'], html[data-theme='light'] [data-scheme-preview='emerald'] {
     --preview-color-1: #ecf4ef;
-    --preview-color-2: #3d9d75;
-    --preview-color-3: #9c7d85;
+    --preview-color-2: #91c0a0;
+    --preview-color-3: #2f8a64;
   }
   html.dark [data-scheme-preview='emerald'], html[data-theme='dark'] [data-scheme-preview='emerald'] {
     --preview-color-1: #1a1a1a;
-    --preview-color-2: #3d9d75;
-    --preview-color-3: #a77e8a;
+    --preview-color-2: #4eb887;
+    --preview-color-3: #4eb887;
   }
 
   /* Lavender */
   html.light [data-scheme-preview='lavender'], html[data-theme='light'] [data-scheme-preview='lavender'] {
     --preview-color-1: #f7f3fe;
     --preview-color-2: #cfbcf7;
-    --preview-color-3: #f3ba94;
+    --preview-color-3: #6b4aa8;
   }
   html.dark [data-scheme-preview='lavender'], html[data-theme='dark'] [data-scheme-preview='lavender'] {
     --preview-color-1: #1a1a1a;
-    --preview-color-2: #aa97f3;
-    --preview-color-3: #f3ba94;
+    --preview-color-2: #b8a6f5;
+    --preview-color-3: #6b4aa8;
   }
 
   /* Vanilla */
   html.light [data-scheme-preview='vanilla'], html[data-theme='light'] [data-scheme-preview='vanilla'] {
     --preview-color-1: #fdf8ef;
     --preview-color-2: #c0a854;
-    --preview-color-3: #9eadc9;
+    --preview-color-3: #8c7736;
   }
   html.dark [data-scheme-preview='vanilla'], html[data-theme='dark'] [data-scheme-preview='vanilla'] {
     --preview-color-1: #1f1f1f;
     --preview-color-2: #e5d3a6;
-    --preview-color-3: #98abc6;
+    --preview-color-3: #e5d3a6;
   }
 
   /* WisePen 排版 / 间距 / Table 行高 */
@@ -896,11 +528,41 @@
     --line-width: 1px;
     --motion-duration-fast: 0.1s;
     --motion-duration-mid: 0.2s;
-    --table-row-hover-bg: var(--surface-hover);
+
+    /* 纸面带极弱色温；正文略白；顶栏用纯纸 */
+    --header-surface: var(--paper);
+    --surface: color-mix(in oklab, var(--accent) 2%, var(--paper));
+    --surface-foreground: var(--foreground);
+    --overlay: var(--surface);
+    --overlay-foreground: var(--foreground);
+    --field-background: var(--surface);
+    --field-foreground: var(--foreground);
+    --card-surface: var(--surface);
+    --segment: var(--surface);
+    --segment-foreground: var(--foreground);
+
+    /* L 台阶：弱 accent 色温为主；少掺 foreground，避免发死灰 */
+    --background: color-mix(in oklab, var(--accent) 4%, var(--canvas));
+    --surface-secondary: color-mix(in oklab, var(--accent) 5%, var(--paper));
+    --surface-secondary-foreground: var(--foreground);
+    --surface-tertiary: color-mix(
+      in oklab,
+      var(--accent) 7%,
+      color-mix(in oklab, var(--foreground) 2.5%, var(--paper))
+    );
+    --surface-tertiary-foreground: var(--foreground);
+
+    /* HeroUI 控件默认底 ≈ tertiary，不另开第四套布局灰 */
+    --default: var(--surface-tertiary);
+    --default-foreground: var(--foreground);
+
+    /* aliases → 同一套三层壳，禁止再 mix 出并行灰阶 */
+    --surface-hover: var(--surface-secondary);
     --surface-muted: var(--surface-tertiary);
-    --accent-hover: var(--primary-hover);
-    --background-secondary: color-mix(in oklab, var(--background) 96%, var(--foreground) 4%);
-    --background-tertiary: color-mix(in oklab, var(--background) 92%, var(--foreground) 8%);
+    --background-alt: var(--surface-tertiary);
+    --background-secondary: var(--surface-secondary);
+    --background-tertiary: var(--surface-tertiary);
+    --table-row-hover-bg: var(--surface-hover);
     --background-inverse: var(--foreground);
     --default-hover: color-mix(in oklab, var(--default) 96%, var(--default-foreground) 4%);
     --field-hover: color-mix(
@@ -919,36 +581,179 @@
       var(--field-border, var(--border)) 74%,
       var(--field-foreground, var(--foreground)) 22%
     );
+
+    --border: color-mix(
+      in oklab,
+      var(--accent) 10%,
+      color-mix(in oklab, var(--foreground) 12%, var(--paper))
+    );
+    --border-light: color-mix(
+      in oklab,
+      var(--accent) 6%,
+      color-mix(in oklab, var(--foreground) 6%, var(--paper))
+    );
+    --separator: color-mix(in oklab, var(--accent) 6%, var(--paper));
+
+    --muted: color-mix(
+      in oklab,
+      var(--accent) 8%,
+      color-mix(in oklab, var(--foreground) 58%, var(--paper))
+    );
+    --text-tertiary: color-mix(
+      in oklab,
+      var(--accent) 10%,
+      color-mix(in oklab, var(--foreground) 35%, var(--paper))
+    );
+    --text-disabled: color-mix(
+      in oklab,
+      var(--accent) 6%,
+      color-mix(in oklab, var(--foreground) 18%, var(--paper))
+    );
+    --field-placeholder: var(--text-tertiary);
+
     --separator-secondary: color-mix(in oklab, var(--surface) 85%, var(--surface-foreground) 15%);
     --separator-tertiary: color-mix(in oklab, var(--surface) 81%, var(--surface-foreground) 19%);
     --border-secondary: color-mix(in oklab, var(--surface) 78%, var(--surface-foreground) 22%);
     --border-tertiary: color-mix(in oklab, var(--surface) 66%, var(--surface-foreground) 34%);
-    --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--surface));
     --accent-soft-foreground: color-mix(in oklab, var(--accent) 70%, var(--foreground) 30%);
-    --accent-soft-hover: color-mix(in oklab, var(--accent) 20%, transparent);
-    --accent-softer: color-mix(in srgb, var(--accent) 8%, transparent);
+    --accent-soft-hover: color-mix(in srgb, var(--accent) 20%, var(--surface));
+    --accent-softer: color-mix(in srgb, var(--accent) 8%, var(--surface));
     --accent-border: color-mix(in srgb, var(--accent) 32%, var(--border));
-    --info-soft: color-mix(in srgb, var(--info) 12%, transparent);
-    --warning-soft: color-mix(in srgb, var(--warning) 14%, transparent);
+    /* 实心按钮悬停：浅色加深；dark 块内改为提亮 */
+    --accent-hover: color-mix(in oklab, var(--accent) 86%, #000);
+    --card-glow: 0 0 0 2px var(--accent-soft);
+    /* HeroUI / 旧桥：业务请只用 --accent* */
+    --primary: var(--accent);
+    --primary-foreground: var(--accent-foreground);
+    --primary-hover: var(--accent-hover);
+    --focus: var(--accent);
+    --link: var(--accent);
+    --info-soft: color-mix(in srgb, var(--info) 12%, var(--surface));
+    --warning-soft: color-mix(in srgb, var(--warning) 14%, var(--surface));
     --warning-soft-foreground: color-mix(in oklab, var(--warning) 80%, var(--foreground) 70%);
-    --warning-soft-hover: color-mix(in oklab, var(--warning) 20%, transparent);
+    --warning-soft-hover: color-mix(in srgb, var(--warning) 20%, var(--surface));
     --warning-border: color-mix(in srgb, var(--warning) 36%, var(--border));
-    --error-soft: color-mix(in srgb, var(--error) 12%, transparent);
+    --warning-hover: color-mix(in srgb, var(--warning) 88%, #000 12%);
+    --error-soft: color-mix(in srgb, var(--error) 12%, var(--surface));
     --error-hover: color-mix(in srgb, var(--error) 88%, #000 12%);
     --error-border: color-mix(in srgb, var(--error) 36%, var(--border));
-    --danger-soft: color-mix(in srgb, var(--danger) 12%, transparent);
+    --danger-soft: color-mix(in srgb, var(--danger) 12%, var(--surface));
     --danger-soft-foreground: color-mix(in oklab, var(--danger) 70%, var(--foreground) 40%);
-    --danger-soft-hover: color-mix(in oklab, var(--danger) 20%, transparent);
+    --danger-soft-hover: color-mix(in srgb, var(--danger) 20%, var(--surface));
     --danger-border: color-mix(in srgb, var(--danger) 36%, var(--border));
     --danger-hover: var(--error-hover);
-    --success-soft: color-mix(in srgb, var(--success) 12%, transparent);
+    --success-soft: color-mix(in srgb, var(--success) 12%, var(--surface));
     --success-soft-foreground: color-mix(in oklab, var(--success) 80%, var(--foreground) 60%);
-    --success-soft-hover: color-mix(in oklab, var(--success) 20%, transparent);
+    --success-soft-hover: color-mix(in srgb, var(--success) 20%, var(--surface));
     --success-hover: color-mix(in srgb, var(--success) 88%, #000 12%);
     --success-active: color-mix(in srgb, var(--success) 78%, #000 22%);
     --success-border: color-mix(in srgb, var(--success) 36%, var(--border));
     --default-soft: color-mix(in oklab, var(--default) 50%, transparent);
     --default-soft-foreground: var(--default-foreground);
     --default-soft-hover: color-mix(in oklab, var(--default) 60%, transparent);
+  }
+
+
+  /* Dark：色温极弱，避免整页发色；层级主要靠明度 */
+  .dark,
+  [data-theme='dark'],
+  html[data-color-scheme].dark,
+  html[data-color-scheme][data-theme='dark'] {
+    --header-surface: var(--paper);
+    --surface: color-mix(in oklab, var(--accent) 1%, var(--paper));
+    --overlay: var(--surface);
+    --field-background: var(--surface);
+    --card-surface: var(--surface);
+    --segment: var(--surface);
+
+    --background: color-mix(in oklab, var(--accent) 2%, var(--canvas));
+    --surface-secondary: color-mix(
+      in oklab,
+      var(--accent) 2.5%,
+      color-mix(in oklab, var(--foreground) 4%, var(--paper))
+    );
+    --surface-tertiary: color-mix(
+      in oklab,
+      var(--accent) 2%,
+      color-mix(in oklab, var(--foreground) 3%, var(--canvas))
+    );
+    --default: var(--surface-tertiary);
+
+    --border: color-mix(
+      in oklab,
+      var(--accent) 4%,
+      color-mix(in oklab, var(--foreground) 16%, var(--paper))
+    );
+    --border-light: color-mix(
+      in oklab,
+      var(--accent) 2.5%,
+      color-mix(in oklab, var(--foreground) 12%, var(--paper))
+    );
+    --separator: color-mix(
+      in oklab,
+      var(--accent) 2%,
+      color-mix(in oklab, var(--foreground) 10%, var(--paper))
+    );
+
+    --muted: color-mix(
+      in oklab,
+      var(--accent) 4%,
+      color-mix(in oklab, var(--foreground) 70%, var(--paper))
+    );
+    --text-tertiary: color-mix(
+      in oklab,
+      var(--accent) 4%,
+      color-mix(in oklab, var(--foreground) 38%, var(--paper))
+    );
+    --text-disabled: color-mix(
+      in oklab,
+      var(--accent) 2%,
+      color-mix(in oklab, var(--foreground) 22%, var(--paper))
+    );
+
+    /* soft 选中底也略降，避免大块发色 */
+    --accent-soft: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    --accent-soft-hover: color-mix(in srgb, var(--accent) 16%, var(--surface));
+    --accent-softer: color-mix(in srgb, var(--accent) 6%, var(--surface));
+    --accent-border: color-mix(in srgb, var(--accent) 24%, var(--border));
+    --accent-hover: color-mix(in oklab, var(--accent) 88%, #fff);
+  }
+
+
+  html[data-color-scheme] :is(.light, .dark, .default):not(html):not(:root) {
+    --accent: inherit;
+    --accent-foreground: inherit;
+    --accent-hover: inherit;
+    --paper: inherit;
+    --canvas: inherit;
+    --header-surface: inherit;
+    --background: inherit;
+    --foreground: inherit;
+    --muted: inherit;
+    --border: inherit;
+    --separator: inherit;
+    --surface: inherit;
+    --surface-foreground: inherit;
+    --surface-secondary: inherit;
+    --surface-secondary-foreground: inherit;
+    --surface-tertiary: inherit;
+    --surface-tertiary-foreground: inherit;
+    --overlay: inherit;
+    --overlay-foreground: inherit;
+    --default: inherit;
+    --default-foreground: inherit;
+    --field-background: inherit;
+    --field-foreground: inherit;
+    --field-placeholder: inherit;
+    --focus: inherit;
+    --primary: inherit;
+    --primary-hover: inherit;
+    --primary-foreground: inherit;
+    --border-light: inherit;
+    --text-tertiary: inherit;
+    --text-disabled: inherit;
+    --text-inverse: inherit;
+    --card-surface: inherit;
   }
 }

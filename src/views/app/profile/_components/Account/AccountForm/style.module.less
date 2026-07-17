@@ -24,7 +24,7 @@
   margin: 0 0 24px 0;
   font-size: 20px;
   font-weight: 500;
-  color: #1f2937;
+  color: var(--foreground);
 }
 
 .formFieldsGrid {
@@ -35,7 +35,7 @@
 }
 
 .editableInput {
-  background-color: #ffffff;
+  background-color: var(--field-background, var(--surface));
 }
 
 .profileForm {
@@ -64,15 +64,15 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: #71717a;
+  color: var(--muted);
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
   padding: 0;
 
   &:hover {
-    background: #f4f4f5;
-    color: #27272a;
+    background: var(--surface-tertiary);
+    color: var(--foreground);
   }
 }
 
@@ -85,14 +85,14 @@
 
   dt {
     margin-bottom: 6px;
-    color: #6b7280;
+    color: var(--muted);
     font-size: 14px;
     line-height: 1.4;
   }
 
   dd {
     margin: 0;
-    color: #1f2937;
+    color: var(--foreground);
     font-size: 14px;
     line-height: 1.5;
     overflow-wrap: anywhere;

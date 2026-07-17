@@ -2,7 +2,8 @@
 
 @import 'tailwindcss';
 @import '@heroui/styles';
-@import '../theme/heroui/wisepen.css' layer(theme);
+/* Same layer as HeroUI tokens so scheme overrides can win by specificity */
+@import '../theme/heroui/wisepen.css' layer(base);
 
 @theme inline {
   --font-sans: var(--app-font-family);

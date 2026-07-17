@@ -196,13 +196,13 @@
   }
 
   :global(.table__row[data-selected='true'] .table__cell) {
-    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+    background: var(--accent-softer);
   }
 
   @media (hover: hover) {
     :global(.table__row[data-selected='true']:hover .table__cell),
     :global(.table__row[data-selected='true'][data-hovered='true'] .table__cell) {
-      background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+      background: var(--accent-soft);
     }
   }
 
@@ -294,7 +294,7 @@
 :global(.table__row[data-selected='true']) .stickyCheckboxCell:global(.table__cell),
 :global(.table__row[data-selected='true']) .stickyRowHeaderCell:global(.table__cell),
 :global(.table__row[data-selected='true']) .stickyActionCell:global(.table__cell) {
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  background: var(--accent-softer);
 }
 
 @media (hover: hover) {
@@ -304,7 +304,7 @@
   :global(.table__row[data-selected='true'][data-hovered='true']) .stickyRowHeaderCell:global(.table__cell),
   :global(.table__row[data-selected='true']:hover) .stickyActionCell:global(.table__cell),
   :global(.table__row[data-selected='true'][data-hovered='true']) .stickyActionCell:global(.table__cell) {
-    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    background: var(--accent-soft);
   }
 }
 

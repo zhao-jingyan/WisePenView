@@ -69,8 +69,8 @@
   width: var(--note-slash-menu-frame-width, 0);
   height: var(--note-slash-menu-frame-height, 0);
   border-radius: var(--app-radius-popover-item, var(--radius-xl));
-  background: var(--surface-secondary);
-  box-shadow: inset 0 0 0 1px var(--focus);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-border);
   opacity: 0;
   pointer-events: none;
   transform: translate3d(
@@ -125,7 +125,8 @@
 .menuShell:not([data-keyboard-navigation]) .item:hover,
 .menuShell:not([data-keyboard-navigation]) .item[data-hovered],
 .item[data-menu-hovered] {
-  background: var(--surface-secondary);
+  background: var(--accent-soft);
+  color: var(--foreground);
 }
 
 .menuShell[data-keyboard-navigation] .item:hover,
@@ -134,7 +135,7 @@
 }
 
 .item[data-focus-visible] {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 
