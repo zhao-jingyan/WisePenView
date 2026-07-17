@@ -450,32 +450,54 @@ function DrawioViewConnected({ resourceId, data, onRefreshDrawioInfo }: DrawioVi
     manual: true,
   });
 
-  const handleOpenVersions = () => {
+  const handleOpenVersions = useCallback(() => {
     setVersionOpen(true);
     runLoadVersions();
-  };
+  }, [runLoadVersions]);
 
-  const headerActions = (
-    <div className={styles.headerExtra}>
-      {currentUser?.id === noteInfoDisplay.ownerId && canViewVersions ? (
-        <Button size="sm" variant="secondary" onPress={handleOpenVersions} aria-label="版本记录">
-          <History size={16} />
-          <span>版本</span>
-        </Button>
-      ) : null}
-      {canEdit ? (
-        <Button
-          size="sm"
-          variant="primary"
-          isDisabled={!editorLoaded || saveState === 'saved' || saveState === 'saving'}
-          onPress={requestEditorExport}
-          aria-label="保存"
-        >
-          <Save size={16} />
-          <span>{saveState === 'saving' ? '保存中' : '保存'}</span>
-        </Button>
-      ) : null}
-    </div>
+  const titleMeta = useMemo(
+    () => (
+      <>
+        <span className={styles.versionBadge}>v{currentVersion}</span>
+        <SaveStatusText state={saveState} />
+      </>
+    ),
+    [currentVersion, saveState]
+  );
+
+  const headerActions = useMemo(
+    () => (
+      <div className={styles.headerExtra}>
+        {currentUser?.id === noteInfoDisplay.ownerId && canViewVersions ? (
+          <Button size="sm" variant="secondary" onPress={handleOpenVersions} aria-label="版本记录">
+            <History size={16} />
+            <span>版本</span>
+          </Button>
+        ) : null}
+        {canEdit ? (
+          <Button
+            size="sm"
+            variant="primary"
+            isDisabled={!editorLoaded || saveState === 'saved' || saveState === 'saving'}
+            onPress={requestEditorExport}
+            aria-label="保存"
+          >
+            <Save size={16} />
+            <span>{saveState === 'saving' ? '保存中' : '保存'}</span>
+          </Button>
+        ) : null}
+      </div>
+    ),
+    [
+      canEdit,
+      canViewVersions,
+      currentUser?.id,
+      editorLoaded,
+      handleOpenVersions,
+      noteInfoDisplay.ownerId,
+      requestEditorExport,
+      saveState,
+    ]
   );
 
   return (
@@ -488,12 +510,7 @@ function DrawioViewConnected({ resourceId, data, onRefreshDrawioInfo }: DrawioVi
       copyVersion={currentVersion}
       onPermissionSuccess={onRefreshDrawioInfo}
       onResourceChanged={onRefreshDrawioInfo}
-      titleMeta={
-        <>
-          <span className={styles.versionBadge}>v{currentVersion}</span>
-          <SaveStatusText state={saveState} />
-        </>
-      }
+      titleMeta={titleMeta}
       actions={headerActions}
     >
       <div className={styles.content}>
