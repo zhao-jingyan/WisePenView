@@ -3,14 +3,10 @@ import type { Doc } from 'yjs';
 import type {
   AiDiffDisplayMode,
   NoteAiDiffPreviewData,
-  NoteInlineCommentUserDisplayRecord,
   NoteSelectionSnapshot,
   WisepenProvider,
 } from '@/domains/Note';
-import type { User } from '@/domains/User';
 import type { NoteOutlineItem } from './content/outline';
-import type { BlockNoteInlineCommentDocumentRole } from './engines/inlineComment/threads/auth';
-import type { CollaboratorInlineCommentVisibility } from './engines/inlineComment/visibility/document';
 
 export interface NoteBodyEditorHandle {
   focus: () => void;
@@ -51,30 +47,7 @@ interface NoteEditorState {
   blockLocalDocWrites: boolean;
 }
 
-export type NoteInlineCommentStatus =
-  | { kind: 'disabled' }
-  | { kind: 'connecting'; hasWritePermission: boolean }
-  | { kind: 'readOnly' }
-  | { kind: 'writable' };
-
-interface NoteInlineCommentConfig {
-  /** 连接中仍挂载 schema，并保留服务端写权限供线程权限初始化。 */
-  status: NoteInlineCommentStatus;
-  /** 页面已加载的当前用户，作为批注 actor；不在编辑器内重复请求。 */
-  actor?: User;
-  usersById?: NoteInlineCommentUserDisplayRecord;
-  documentRole: BlockNoteInlineCommentDocumentRole;
-  visibilityPrivileged: boolean;
-  collaboratorVisibility: CollaboratorInlineCommentVisibility;
-  onOpen: () => void;
-  history: {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-  };
-}
-
 interface NotePortalContainers {
-  inlineCommentSidebar: HTMLElement | null;
   aiBulkActions: HTMLElement | null;
 }
 
@@ -83,7 +56,6 @@ export interface CustomBlockNoteProps {
   collaboration: NoteCollaborationBinding;
   state: NoteEditorState;
   aiDiffPreview?: NoteAiDiffPreviewData;
-  inlineComment: NoteInlineCommentConfig;
   portalContainers: NotePortalContainers;
   onOutlineChange?: (items: NoteOutlineItem[]) => void;
   onActiveHeadingChange?: (activeId: string | undefined) => void;

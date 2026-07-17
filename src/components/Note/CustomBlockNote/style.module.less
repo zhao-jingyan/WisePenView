@@ -4,17 +4,6 @@
   display: flex;
   flex-direction: column;
 
-  /* 正文批注原文高亮 */
-  :global(.bodyBlockNoteView .bn-editor .bn-thread-mark:not([data-orphan='true'])) {
-    background: #ffc80026;
-    border-radius: 2px;
-  }
-
-  :global(.bodyBlockNoteView .bn-editor .bn-thread-mark.bn-thread-mark-selected:not([data-orphan='true'])),
-  :global(.bodyBlockNoteView .bn-editor .bn-thread-mark .bn-thread-mark-selected) {
-    background: #ffc80040;
-  }
-
   /* BlockNote 默认会有自己的字体变量，这里统一到应用字体栈（仅作用正文编辑区） */
   :global(.bn-container),
   :global(.bn-editor),

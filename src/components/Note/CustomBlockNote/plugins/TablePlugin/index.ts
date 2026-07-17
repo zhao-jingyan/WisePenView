@@ -46,7 +46,6 @@ export const tablePlugin = {
     projection: { support: 'custom' },
     print: { support: 'custom' },
   },
-  inlineComment: { mode: 'unsupported' },
   aiDiff: {
     renderAiContent: TableAiContentView,
   },

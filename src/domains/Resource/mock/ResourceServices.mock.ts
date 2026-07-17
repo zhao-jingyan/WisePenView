@@ -1,24 +1,15 @@
 import type {
-  AddInlineCommentItemRequest,
-  ChangeInlineCommentResolveStatusRequest,
-  CreateInlineCommentRequest,
-  DeleteInlineCommentItemReactionRequest,
-  DeleteInlineCommentItemRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
   IResourceService,
-  ListInlineCommentsRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
-  ResourceInlineCommentThread,
   ResourceItem,
   ResourceListPage,
   ResourcePermissionOverview,
   SearchQueryRequest,
   SearchResultPage,
-  SetInlineCommentItemReactionRequest,
-  UpdateInlineCommentItemRequest,
   UpdateResourcePermissionSubjectsRequest,
 } from '@/domains/Resource';
 import {
@@ -298,49 +289,6 @@ const globalSearch = async (params: SearchQueryRequest): Promise<SearchResultPag
   return simulateGlobalSearch(params);
 };
 
-const listInlineComments = async (
-  _params: ListInlineCommentsRequest
-): Promise<ResourceInlineCommentThread[]> => {
-  await delay(120);
-  return [];
-};
-
-const createInlineComment = async (_params: CreateInlineCommentRequest): Promise<string> => {
-  await delay(120);
-  return `mock-inline-comment-${Date.now()}`;
-};
-
-const addInlineCommentItem = async (_params: AddInlineCommentItemRequest): Promise<string> => {
-  await delay(120);
-  return `mock-inline-comment-item-${Date.now()}`;
-};
-
-const updateInlineCommentItem = async (_params: UpdateInlineCommentItemRequest): Promise<void> => {
-  await delay(120);
-};
-
-const setInlineCommentItemReaction = async (
-  _params: SetInlineCommentItemReactionRequest
-): Promise<void> => {
-  await delay(120);
-};
-
-const deleteInlineCommentItemReaction = async (
-  _params: DeleteInlineCommentItemReactionRequest
-): Promise<void> => {
-  await delay(120);
-};
-
-const deleteInlineCommentItem = async (_params: DeleteInlineCommentItemRequest): Promise<void> => {
-  await delay(120);
-};
-
-const changeInlineCommentResolveStatus = async (
-  _params: ChangeInlineCommentResolveStatusRequest
-): Promise<void> => {
-  await delay(120);
-};
-
 export const ResourceServicesMock: IResourceService = {
   getUserResources,
   getGroupResources,
@@ -352,12 +300,4 @@ export const ResourceServicesMock: IResourceService = {
   updateResourcePermissionSubjects,
   getResourcePermissionOverview,
   globalSearch,
-  listInlineComments,
-  createInlineComment,
-  addInlineCommentItem,
-  updateInlineCommentItem,
-  setInlineCommentItemReaction,
-  deleteInlineCommentItemReaction,
-  deleteInlineCommentItem,
-  changeInlineCommentResolveStatus,
 };

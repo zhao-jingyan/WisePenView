@@ -5,11 +5,9 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import CustomBlockNote from '@/components/Note/CustomBlockNote';
 import type { NoteOutlineItem } from '@/components/Note/CustomBlockNote/content/outline';
-import { useDocumentInlineCommentVisibility } from '@/components/Note/CustomBlockNote/engines/inlineComment';
 import type {
   NoteBodyEditorHandle,
   NoteCollaborationUser,
-  NoteInlineCommentStatus,
 } from '@/components/Note/CustomBlockNote/index.type';
 import { useInteractService, useUserService } from '@/domains';
 import type {
@@ -24,7 +22,6 @@ import {
   encodeNoteClientContentSignature,
   useNoteSession,
 } from '@/domains/Note';
-import { isInlineCommentVisibilityPrivileged } from '@/domains/Resource';
 import type { User } from '@/domains/User';
 import { useResourceDisplayName } from '@/hooks/useResourceDisplayName';
 import { useSmoothFlag } from '@/hooks/useSmoothFlag';
@@ -35,8 +32,7 @@ import {
   useResourceHostLayoutConfig,
   type ResourceHostLayoutConfig,
 } from '@/views/workspace/ResourceHostContext';
-import { useWorkspaceResourceSidePanelStore } from '@/views/workspace/_store/useWorkspaceResourceSidePanelStore';
-import { Alert, Button, Switch, toast } from '@heroui/react';
+import { Alert, Button, toast } from '@heroui/react';
 import {
   createNoteChatStateProvider,
   createNoteSelectionChatContext,
@@ -147,16 +143,6 @@ function formatNoteSaveStatus(status: NoteHeaderSaveStatus): string {
   return '已自动保存';
 }
 
-function resolveInlineCommentStatus(
-  enabled: boolean,
-  connected: boolean,
-  canEdit: boolean
-): NoteInlineCommentStatus {
-  if (!enabled) return { kind: 'disabled' };
-  if (!connected) return { kind: 'connecting', hasWritePermission: canEdit };
-  return canEdit ? { kind: 'writable' } : { kind: 'readOnly' };
-}
-
 function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteWorkspaceProps) {
   const aiDiffDisplayMode = useAiDiffDisplayStore((state) => state.displayMode);
   const setAiDiffDisplayMode = useAiDiffDisplayStore((state) => state.setDisplayMode);
@@ -168,13 +154,10 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
   const scrollBarHideTimerRef = useRef<number | null>(null);
   const [isMainScrolling, setIsMainScrolling] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
-  const [isInlineCommentHistoryOpen, setIsInlineCommentHistoryOpen] = useState(false);
   const [outlineItems, setOutlineItems] = useState<NoteOutlineItem[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | undefined>(undefined);
   const [aiBulkActionsPortalContainer, setAiBulkActionsPortalContainer] =
     useState<HTMLDivElement | null>(null);
-  const [inlineCommentSidebarHostElement, setInlineCommentSidebarHostElement] =
-    useState<HTMLElement | null>(null);
   const [exportPending, setExportPending] = useState(false);
   const [titleSaveStatus, setTitleSaveStatus] = useState<NoteTitleSaveStatus>('saved');
   const [hasAiDiffContent, setHasAiDiffContent] = useState(false);
@@ -189,10 +172,6 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
     enabled: !shouldWaitCurrentUser,
     localOnly: Boolean(noteInfoDisplay.aiDiffPreview),
   });
-  const setSidePanelMode = useWorkspaceResourceSidePanelStore((state) => state.setMode);
-  const { visibility: inlineCommentVisibility, setCollaboratorVisibility } =
-    useDocumentInlineCommentVisibility(status === 'connected' ? doc : null);
-
   const isConnected = status === 'connected';
   const isDisconnected = useSmoothFlag(status === 'disconnected', 2000, 2000);
   const isEditorReadOnly = status === 'connecting' || !noteInfoDisplay.canCollaborativeEdit;
@@ -216,18 +195,6 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
   const saveStatusText = formatNoteSaveStatus(headerSaveStatus);
   const collaborationUser = useMemo(() => buildNoteCollaborationUser(currentUser), [currentUser]);
   const canRenderBodyEditor = !shouldWaitCurrentUser;
-  const canManageInlineCommentVisibility =
-    isInlineCommentVisibilityPrivileged(noteInfoDisplay.resourceInfo?.resourceAccessRole) ||
-    (Boolean(noteInfoDisplay.ownerId) && currentUser?.id === noteInfoDisplay.ownerId);
-  const inlineCommentStatus = resolveInlineCommentStatus(
-    noteInfoDisplay.inlineCommentEnabled,
-    isConnected,
-    noteInfoDisplay.canEditInlineComment
-  );
-  const openInlineCommentPanel = useCallback(() => {
-    setSidePanelMode(resourceId, 'inlineComment');
-  }, [resourceId, setSidePanelMode]);
-
   useRequest(() => interactService.recordResourceRead(resourceId), {
     refreshDeps: [resourceId],
   });
@@ -339,12 +306,6 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
       sidePanel: noteInfoDisplay.resourceInfo
         ? {
             resource: noteInfoDisplay.resourceInfo,
-            inlineComment: noteInfoDisplay.inlineCommentEnabled ? (
-              <div
-                ref={setInlineCommentSidebarHostElement}
-                className={styles.inlineCommentSidePanelHost}
-              />
-            ) : undefined,
             onResourceChanged: onRefreshNoteInfo,
           }
         : undefined,
@@ -382,31 +343,6 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
             />
           ) : null,
           moreMenu: {
-            advanced: canManageInlineCommentVisibility ? (
-              <div className={styles.inlineCommentVisibilitySetting}>
-                <div className={styles.inlineCommentVisibilityCopy}>
-                  <span className={styles.inlineCommentVisibilityTitle}>隔离协作者批注</span>
-                  <span className={styles.inlineCommentVisibilityDescription}>
-                    开启后，协作者只能查看自己的批注。
-                  </span>
-                </div>
-                <Switch
-                  aria-label="隔离协作者批注"
-                  isSelected={inlineCommentVisibility.collaboratorVisibility === 'own_only'}
-                  isDisabled={!isConnected}
-                  onChange={(selected) => setCollaboratorVisibility(selected ? 'own_only' : 'all')}
-                  size="sm"
-                >
-                  <Switch.Content aria-label="隔离协作者批注">
-                    <Switch.Control>
-                      <Switch.Thumb />
-                    </Switch.Control>
-                  </Switch.Content>
-                </Switch>
-              </div>
-            ) : undefined,
-            showInlineCommentHistory: noteInfoDisplay.inlineCommentEnabled,
-            onInlineCommentHistory: () => setIsInlineCommentHistoryOpen(true),
             onPrint: () => void handlePrintPdf(),
             download: {
               label: '下载为 Markdown',
@@ -419,14 +355,10 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
     }),
     [
       aiDiffDisplayMode,
-      canManageInlineCommentVisibility,
-      inlineCommentVisibility.collaboratorVisibility,
       handleDownloadMarkdown,
       handlePrintPdf,
       exportPending,
-      isConnected,
       noteChatStateProvider,
-      noteInfoDisplay.inlineCommentEnabled,
       noteInfoDisplay.ownerId,
       noteInfoDisplay.resourceInfo,
       noteInfoDisplay.version,
@@ -436,7 +368,6 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
       headerSaveStatus,
       saveStatusText,
       setAiDiffDisplayMode,
-      setCollaboratorVisibility,
       showAiDiffDisplayModeSwitch,
       showFullPageSpin,
     ]
@@ -494,7 +425,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
                 <div className={styles.body}>
                   {canRenderBodyEditor ? (
                     <CustomBlockNote
-                      key={`${resourceId}-${noteInfoDisplay.canCollaborativeEdit}-${noteInfoDisplay.canEditInlineComment}`}
+                      key={`${resourceId}-${noteInfoDisplay.canCollaborativeEdit}`}
                       ref={bodyEditorRef}
                       resourceId={resourceId}
                       aiDiffPreview={noteInfoDisplay.aiDiffPreview}
@@ -513,21 +444,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
                       onActiveHeadingChange={setActiveHeadingId}
                       onAiDiffPresenceChange={setHasAiDiffContent}
                       onAskAi={handleAskAi}
-                      inlineComment={{
-                        status: inlineCommentStatus,
-                        actor: currentUser,
-                        usersById: noteInfoDisplay.inlineCommentAuthorsById,
-                        documentRole: noteInfoDisplay.canCollaborativeEdit ? 'editor' : 'comment',
-                        visibilityPrivileged: canManageInlineCommentVisibility,
-                        collaboratorVisibility: inlineCommentVisibility.collaboratorVisibility,
-                        onOpen: openInlineCommentPanel,
-                        history: {
-                          open: isInlineCommentHistoryOpen,
-                          onOpenChange: setIsInlineCommentHistoryOpen,
-                        },
-                      }}
                       portalContainers={{
-                        inlineCommentSidebar: inlineCommentSidebarHostElement,
                         aiBulkActions: aiBulkActionsPortalContainer,
                       }}
                       onAiDiffBodyContentHashChange={setAiDiffBodyContentHash}

@@ -1,9 +1,5 @@
 import { useNoteEditorReadOnlyContext } from '@/components/Note/CustomBlockNote/engines/editor/readOnly';
-import { shouldHideNoteFormattingToolbar } from '@/components/Note/CustomBlockNote/engines/inlineComment';
-import {
-  blockNoteSchema,
-  notePluginRegistry,
-} from '@/components/Note/CustomBlockNote/noteEditorComposition';
+import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditorComposition';
 import {
   blockMatchesBlockTypeItem,
   getAvailableBlockTypeItems,
@@ -23,7 +19,7 @@ import {
   type GenericPopoverReference,
 } from '@blocknote/react';
 import { ButtonGroup, Separator, Toolbar } from '@heroui/react';
-import { MessageSquarePlus, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useMemo, type ComponentProps } from 'react';
 import { BlockTypeMenu } from './components/BlockTypeMenu';
 import { ColorMenu } from './components/ColorMenu';
@@ -40,8 +36,6 @@ import { getSelectedBlocks, stopToolbarMouseDown } from './utils';
 
 interface NoteToolbarProps {
   onAskAi: () => void;
-  showAddInlineComment?: boolean;
-  onRememberPendingInlineCommentReference?: () => void;
 }
 
 const getTableRailToolbarPlacement = (
@@ -83,16 +77,9 @@ function useBlockTypeFileGroupVisible() {
   });
 }
 
-function CustomFormattingToolbar({
-  onAskAi,
-  showAddInlineComment = false,
-  onRememberPendingInlineCommentReference,
-}: NoteToolbarProps) {
+function CustomFormattingToolbar({ onAskAi }: NoteToolbarProps) {
   const readOnly = useNoteEditorReadOnlyContext();
-  const editor = useBlockNoteEditor();
   const showBlockTypeFileGroup = useBlockTypeFileGroupVisible();
-  const commentsExtension = editor.getExtension('comments') as
-    { startPendingComment?: () => void } | undefined;
 
   return (
     <Toolbar
@@ -126,18 +113,7 @@ function CustomFormattingToolbar({
           <ToolbarSeparator />
         </>
       ) : null}
-      <ButtonGroup size="sm" variant="ghost" aria-label="批注和 AI">
-        {showAddInlineComment && commentsExtension?.startPendingComment ? (
-          <ToolbarButton
-            label="添加批注"
-            icon={<MessageSquarePlus size={20} />}
-            onMouseDownCapture={onRememberPendingInlineCommentReference}
-            onPress={() => {
-              onRememberPendingInlineCommentReference?.();
-              commentsExtension.startPendingComment?.();
-            }}
-          />
-        ) : null}
+      <ButtonGroup size="sm" variant="ghost" aria-label="AI">
         <ToolbarButton label="问 AI" icon={<Sparkles size={20} />} onPress={onAskAi} />
       </ButtonGroup>
     </Toolbar>
@@ -155,11 +131,7 @@ function TextSelectionFormattingToolbar({
   const editor = useBlockNoteEditor();
   const toolbarState = useFloatingToolbarState(editor);
 
-  if (
-    hidden ||
-    !toolbarState.visible ||
-    shouldHideNoteFormattingToolbar(editor, notePluginRegistry)
-  ) {
+  if (hidden || !toolbarState.visible) {
     return null;
   }
 

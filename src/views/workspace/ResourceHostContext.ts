@@ -47,7 +47,6 @@ export interface ResourceHostLayoutConfig {
 
 export interface ResourceHostSidePanelConfig {
   resource: ResourceItem;
-  inlineComment?: ReactNode;
   onResourceChanged?: () => unknown | Promise<unknown>;
 }
 

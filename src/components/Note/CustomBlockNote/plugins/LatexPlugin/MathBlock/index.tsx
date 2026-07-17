@@ -8,18 +8,11 @@ import type {
 } from '@blocknote/core';
 import { createReactBlockSpec } from '@blocknote/react';
 import type { ComponentType } from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { useEffectForce } from '@/hooks/useEffectForce';
 import 'katex/dist/katex.min.css';
-import type { NoteInlineCommentAnchor } from '../../../content/types';
 import { useNoteEditorReadOnlyContext } from '../../../engines/editor/readOnly';
-import { useNoteInlineCommentContext } from '../../../engines/inlineComment/integration/InlineCommentContext';
-import type { CustomBlockNoteEditor } from '../../../noteEditorComposition';
-import { formatFormulaInlineCommentReferenceText } from '../inlineComment/formulaInlineCommentReference';
-import { MATH_BLOCK_INLINE_COMMENT_OWNER_ID } from '../inlineComment/inlineCommentAnchor';
-import { LatexFormulaInlineCommentButton } from '../inlineComment/LatexFormulaInlineCommentButton';
-import { useMathBlockInlineCommentHighlight } from '../inlineComment/useMathBlockInlineCommentMarkClasses';
 import popoverStyles from '../InlineMath/style.module.less';
 import { renderKatexInto } from '../katexRender';
 import { LatexEditPopover } from '../LatexEditPopover';
@@ -74,8 +67,6 @@ function MathFormulaPreview({ expression, className }: { expression: string; cla
 
 function MathBlockView(props: MathBlockRenderProps) {
   const readOnly = useNoteEditorReadOnlyContext();
-  const inlineCommentContext = useNoteInlineCommentContext();
-
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(props.block.props.expression);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -213,31 +204,6 @@ function MathBlockView(props: MathBlockRenderProps) {
     }, 0);
   };
 
-  const blockFormulaAnchor = useMemo(
-    () => ({ kind: 'block' as const, blockId: props.block.id }),
-    [props.block.id]
-  );
-  const blockInlineCommentTarget = useMemo(
-    () => ({
-      ownerId: MATH_BLOCK_INLINE_COMMENT_OWNER_ID,
-      anchor: blockFormulaAnchor as unknown as NoteInlineCommentAnchor,
-    }),
-    [blockFormulaAnchor]
-  );
-  const inlineCommentHighlight = useMathBlockInlineCommentHighlight({
-    inlineCommentEditor:
-      inlineCommentContext?.editor ?? (props.editor as unknown as CustomBlockNoteEditor),
-    target: blockInlineCommentTarget,
-    revisionKey: String(props.block.props.expression ?? ''),
-    inlineCommentContext,
-  });
-  const inlineCommentHighlightClass = [
-    inlineCommentHighlight.hasInlineComment ? styles.mathBlockInlineCommented : '',
-    inlineCommentHighlight.selected ? styles.mathBlockSelected : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
-
   const shellClass = `${styles.mathShell} ${styles.mathShellBlock}`;
   const previewClass = styles.mathPreview;
   const editTitle = '编辑 LaTeX（独立）';
@@ -254,17 +220,7 @@ function MathBlockView(props: MathBlockRenderProps) {
       hint="Enter 确定 · Shift+Enter 换行 · Esc 取消"
       textareaClassName={`${popoverStyles.inlineEditTextarea} ${styles.blockPopoverTextarea}`}
       value={value}
-      onChange={(e) => {
-        const nextValue = e.target.value;
-        setValue(nextValue);
-        const referenceText = formatFormulaInlineCommentReferenceText(nextValue, 'block');
-        if (referenceText) {
-          inlineCommentContext?.updateContentInlineCommentReference({
-            ...blockInlineCommentTarget,
-            referenceText,
-          });
-        }
-      }}
+      onChange={(e) => setValue(e.target.value)}
       onCommit={() => commit(true)}
       commitEnterUnlessShift
       onCancel={cancel}
@@ -277,16 +233,8 @@ function MathBlockView(props: MathBlockRenderProps) {
 
   return (
     <div ref={shellRef} contentEditable={false} className={`${shellClass} bn-math-block-root`}>
-      {!isEditing ? (
-        <LatexFormulaInlineCommentButton
-          expression={props.block.props.expression}
-          kind="block"
-          shellRef={shellRef}
-          blockId={props.block.id}
-        />
-      ) : null}
       <div
-        className={`${rootClass} ${inlineCommentHighlightClass}`}
+        className={rootClass}
         role={canEnterEdit ? 'button' : undefined}
         tabIndex={canEnterEdit ? 0 : -1}
         aria-label={canEnterEdit ? '编辑独立公式' : undefined}

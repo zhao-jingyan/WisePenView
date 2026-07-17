@@ -123,7 +123,6 @@ export const codeBlockPlugin = {
     projection: { support: 'default' },
     print: { support: 'custom' },
   },
-  inlineComment: { mode: 'range' },
   aiDiff: {
     renderAiContent: CodeBlockAiContentView,
     comparison: {

@@ -2,31 +2,23 @@ import { DocumentApi } from '@/domains/Document/apis/DocumentApi';
 import { NoteApi } from '@/domains/Note/apis/NoteApi';
 import { SkillApi } from '@/domains/Skill/apis/SkillApi';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
-import { ResourceInlineCommentApi, ResourceItemApi } from '../apis/ResourceApi';
+import { ResourceItemApi } from '../apis/ResourceApi';
 import type { ListResourceItemsApiRequest } from '../apis/ResourceApi.type';
 import type { ResourceItem } from '../entity/resource';
 import { RESOURCE_SORT_BY, RESOURCE_SORT_DIR } from '../enum';
 import { ResourceServicesMap } from '../mapper/ResourceServices.map';
 import { useResourceDisplayNameStore } from '../store/useResourceDisplayNameStore';
 import type {
-  AddInlineCommentItemRequest,
-  ChangeInlineCommentResolveStatusRequest,
-  CreateInlineCommentRequest,
-  DeleteInlineCommentItemReactionRequest,
-  DeleteInlineCommentItemRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
   IResourceService,
-  ListInlineCommentsRequest,
   MountResourcesToGroupTagRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
   ResourceListPage,
   SearchQueryRequest,
   SearchResultPage,
-  SetInlineCommentItemReactionRequest,
-  UpdateInlineCommentItemRequest,
   UpdateResourceActionPermissionRequest,
   UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,
@@ -186,51 +178,6 @@ const globalSearch = async (params: SearchQueryRequest): Promise<SearchResultPag
   return ResourceServicesMap.mapSearchResultPageFromApi(data);
 };
 
-const listInlineComments = async (params: ListInlineCommentsRequest) => {
-  const data = await ResourceInlineCommentApi.listInlineComments(
-    ResourceServicesMap.mapListInlineCommentsRequest(params)
-  );
-  return ResourceServicesMap.mapListInlineCommentsFromApi(data);
-};
-
-const createInlineComment = (params: CreateInlineCommentRequest): Promise<string> =>
-  ResourceInlineCommentApi.createInlineComment(
-    ResourceServicesMap.mapCreateInlineCommentRequest(params)
-  );
-
-const addInlineCommentItem = (params: AddInlineCommentItemRequest): Promise<string> =>
-  ResourceInlineCommentApi.addInlineCommentItem(
-    ResourceServicesMap.mapAddInlineCommentItemRequest(params)
-  );
-
-const updateInlineCommentItem = async (params: UpdateInlineCommentItemRequest): Promise<void> => {
-  await ResourceInlineCommentApi.updateInlineCommentItem(
-    ResourceServicesMap.mapUpdateInlineCommentItemRequest(params)
-  );
-};
-
-const setInlineCommentItemReaction = async (
-  params: SetInlineCommentItemReactionRequest
-): Promise<void> => {
-  await ResourceInlineCommentApi.setInlineCommentItemReaction(params);
-};
-
-const deleteInlineCommentItemReaction = async (
-  params: DeleteInlineCommentItemReactionRequest
-): Promise<void> => {
-  await ResourceInlineCommentApi.deleteInlineCommentItemReaction(params);
-};
-
-const deleteInlineCommentItem = async (params: DeleteInlineCommentItemRequest): Promise<void> => {
-  await ResourceInlineCommentApi.deleteInlineCommentItem(params);
-};
-
-const changeInlineCommentResolveStatus = async (
-  params: ChangeInlineCommentResolveStatusRequest
-): Promise<void> => {
-  await ResourceInlineCommentApi.changeInlineCommentResolveStatus(params);
-};
-
 export const createResourceServices = (): IResourceService => ({
   getUserResources,
   getGroupResources,
@@ -242,12 +189,4 @@ export const createResourceServices = (): IResourceService => ({
   updateResourcePermissionSubjects,
   getResourcePermissionOverview,
   globalSearch,
-  listInlineComments,
-  createInlineComment,
-  addInlineCommentItem,
-  updateInlineCommentItem,
-  setInlineCommentItemReaction,
-  deleteInlineCommentItemReaction,
-  deleteInlineCommentItem,
-  changeInlineCommentResolveStatus,
 });

@@ -5,21 +5,11 @@ import { createReactInlineContentSpec } from '@blocknote/react';
 import type { Transaction } from '@tiptap/pm/state';
 import { TextSelection } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { useEffectForce } from '@/hooks/useEffectForce';
 import 'katex/dist/katex.min.css';
-import type { NoteInlineCommentAnchor } from '../../../content/types';
 import { useNoteEditorReadOnlyContext } from '../../../engines/editor/readOnly';
-import { useNoteInlineCommentContext } from '../../../engines/inlineComment/integration/InlineCommentContext';
-import { captureInlineMathAnchor } from '../inlineComment/formulaInlineCommentAnchor';
-import { formatFormulaInlineCommentReferenceText } from '../inlineComment/formulaInlineCommentReference';
-import {
-  INLINE_MATH_INLINE_COMMENT_OWNER_ID,
-  INLINE_MATH_PM_TYPE,
-  type FormulaInlineCommentAnchor,
-} from '../inlineComment/inlineCommentAnchor';
-import { LatexFormulaInlineCommentButton } from '../inlineComment/LatexFormulaInlineCommentButton';
 import { renderKatexInto } from '../katexRender';
 import { LatexEditPopover } from '../LatexEditPopover';
 import {
@@ -42,6 +32,8 @@ const inlineMathConfig = {
   },
   content: 'none',
 } as const;
+
+const INLINE_MATH_PM_TYPE = 'inlineMath';
 
 /** 仅依赖 PM 视图与 transact，避免与 BlockNote 泛型编辑器类型冲突 */
 type EditorForPmCaret = {
@@ -112,7 +104,6 @@ function InlineMathView(
 ) {
   const { contentRef, updateInlineContent, inlineContent, editor } = props;
   const readOnly = useNoteEditorReadOnlyContext();
-  const inlineCommentContext = useNoteInlineCommentContext();
   const expression = inlineContent.props.expression as string;
   const autoOpenEdit = inlineContent.props.autoOpenEdit as boolean;
 
@@ -126,40 +117,6 @@ function InlineMathView(
     left: number;
     width: number;
   } | null>(null);
-  const anchorRef = useRef<FormulaInlineCommentAnchor | null>(null);
-
-  useLayoutEffect(() => {
-    if (!shellRef.current) {
-      return;
-    }
-    const next = captureInlineMathAnchor(editor, shellRef.current);
-    if (next) {
-      anchorRef.current = next;
-    }
-  }, [editor, expression, isEditing]);
-
-  const getInlineFormulaAnchor = () =>
-    (shellRef.current ? captureInlineMathAnchor(editor, shellRef.current) : null) ??
-    anchorRef.current;
-
-  const updateInlineFormulaReference = (
-    nextExpression: string,
-    anchor = getInlineFormulaAnchor(),
-    persist = false
-  ) => {
-    if (!anchor) {
-      return;
-    }
-    const referenceText = formatFormulaInlineCommentReferenceText(nextExpression, 'inline');
-    if (!referenceText) return;
-    inlineCommentContext?.updateContentInlineCommentReference({
-      ownerId: INLINE_MATH_INLINE_COMMENT_OWNER_ID,
-      anchor: anchor as unknown as NoteInlineCommentAnchor,
-      referenceText,
-      persist,
-    });
-  };
-
   const clearPopoverPos = useCallback(() => {
     setPopoverPos(null);
   }, []);
@@ -217,16 +174,6 @@ function InlineMathView(
       textareaBlurTimerRef.current = null;
     }
     setValue(expression);
-    updateInlineFormulaReference(expression);
-    const anchor = getInlineFormulaAnchor();
-    if (anchor) {
-      window.setTimeout(() => {
-        inlineCommentContext?.clearContentInlineCommentReferenceOverride({
-          ownerId: INLINE_MATH_INLINE_COMMENT_OWNER_ID,
-          anchor: anchor as unknown as NoteInlineCommentAnchor,
-        });
-      }, 0);
-    }
     setIsEditing(false);
   };
 
@@ -285,7 +232,6 @@ function InlineMathView(
       onChange={(e) => {
         const nextValue = e.target.value.replace(/\n/g, '');
         setValue(nextValue);
-        updateInlineFormulaReference(nextValue);
       }}
       onCommit={commit}
       commitEnterUnlessShift={false}
@@ -302,13 +248,6 @@ function InlineMathView(
       className={`${popoverStyles.mathShellInline} bn-inline-math-root`}
       contentEditable={false}
     >
-      {!isEditing ? (
-        <LatexFormulaInlineCommentButton
-          expression={expression}
-          kind="inline"
-          shellRef={shellRef}
-        />
-      ) : null}
       <span
         className={
           canEnterEdit

@@ -3,8 +3,6 @@ import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 import { createContext, use } from 'react';
 import { ySyncPluginKey } from 'y-prosemirror';
 
-import { isWisePenInlineCommentMarkSyncTransaction } from '../inlineComment/anchors/range';
-
 const NoteEditorReadOnlyContext = createContext(false);
 
 export const NoteEditorReadOnlyProvider = NoteEditorReadOnlyContext.Provider;
@@ -17,7 +15,7 @@ function isYjsSyncTransaction(tr: Transaction): boolean {
   return tr.getMeta(ySyncPluginKey) !== undefined || tr.getMeta('y-sync$') !== undefined;
 }
 
-/** 无协同编辑权时拦截本地 ProseMirror 文档写入（Yjs 同步与批注同步事务仍放行）。 */
+/** 无协同编辑权时拦截本地 ProseMirror 文档写入（Yjs 同步事务仍放行）。 */
 export function createNoteReadOnlyFilterExtension(
   isBlockLocalDocWrites: () => boolean
 ): ExtensionFactoryInstance {
@@ -29,7 +27,6 @@ export function createNoteReadOnlyFilterExtension(
         filterTransaction(tr) {
           if (!isBlockLocalDocWrites() || !tr.docChanged) return true;
           if (isYjsSyncTransaction(tr)) return true;
-          if (isWisePenInlineCommentMarkSyncTransaction(tr)) return true;
           return false;
         },
       }),

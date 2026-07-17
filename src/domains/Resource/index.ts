@@ -42,24 +42,13 @@ export type {
 export { groupSearchHits } from './service/groupSearchHits';
 export type { SearchHitGroup } from './service/groupSearchHits';
 export type {
-  AddInlineCommentItemRequest,
-  ChangeInlineCommentResolveStatusRequest,
-  CreateInlineCommentRequest,
-  DeleteInlineCommentItemReactionRequest,
-  DeleteInlineCommentItemRequest,
   GetGroupResourceRequest,
   GetResourcePermissionOverviewRequest,
   GetUserResourcesRequest,
   IResourceService,
-  ListInlineCommentsRequest,
   MountResourcesToGroupTagRequest,
   RemoveResourcesRequest,
   RenameResourceRequest,
-  ResourceInlineCommentAnchor,
-  ResourceInlineCommentAnchorKind,
-  ResourceInlineCommentAuthorInfo,
-  ResourceInlineCommentItem,
-  ResourceInlineCommentThread,
   ResourceListPage,
   ResourcePermissionActionOption,
   ResourcePermissionOverview,
@@ -70,11 +59,8 @@ export type {
   SearchHitItem,
   SearchQueryRequest,
   SearchResultPage,
-  SetInlineCommentItemReactionRequest,
-  UpdateInlineCommentItemRequest,
   UpdateResourceActionPermissionRequest,
   UpdateResourcePermissionSubjectsRequest,
   UpdateResourceTagsRequest,
 } from './service/index.type';
-export { isInlineCommentVisibilityPrivileged } from './utils/isInlineCommentVisibilityPrivileged';
 export { resolveResourceIconType } from './utils/resolveResourceIconType';

@@ -302,7 +302,6 @@ function WorkspaceLayout() {
           sidePanelConfig ? (
             <WorkspaceResourceSidePanelActions
               resourceId={sidePanelConfig.resource.resourceId}
-              inlineCommentAvailable={Boolean(sidePanelConfig.inlineComment)}
               disabled={headerConfig.resource?.isDisabled}
             />
           ) : undefined

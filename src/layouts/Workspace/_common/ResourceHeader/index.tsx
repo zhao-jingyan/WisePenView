@@ -13,7 +13,6 @@ import {
   FolderInput,
   HardDrive,
   Link2,
-  MessageSquare,
   Printer,
   Settings2,
   Share2,
@@ -92,10 +91,6 @@ function ResourceHeaderMore({
       operations.onDelete?.();
       return;
     }
-    if (key === 'comment-history') {
-      menu?.onInlineCommentHistory?.();
-      return;
-    }
     if (key === 'print') {
       menu?.onPrint?.();
       return;
@@ -164,17 +159,6 @@ function ResourceHeaderMore({
             <Dropdown.Section>
               <Dropdown.Item id="permission" textValue="权限">
                 <ResourceHeaderMenuItemContent icon={ShieldCheck} label="权限" />
-              </Dropdown.Item>
-            </Dropdown.Section>
-          ) : null}
-          {menu?.showInlineCommentHistory ? (
-            <Dropdown.Section>
-              <Dropdown.Item
-                id="comment-history"
-                textValue="历史批注"
-                isDisabled={!menu.onInlineCommentHistory}
-              >
-                <ResourceHeaderMenuItemContent icon={MessageSquare} label="历史批注" />
               </Dropdown.Item>
             </Dropdown.Section>
           ) : null}

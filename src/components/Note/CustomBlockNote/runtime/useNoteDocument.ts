@@ -116,12 +116,11 @@ export function useNoteDocument({
     }
   });
 
-  const handleSelectionChange = (onSelectionCapture: () => void) => {
+  const handleSelectionChange = () => {
     selectionSnapshotRef.current = {
       text: editor.getSelectedText(),
       scope: buildSelectedNoteScope(editor),
     };
-    onSelectionCapture();
     if (!onActiveHeadingChange) {
       return;
     }

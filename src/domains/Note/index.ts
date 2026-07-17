@@ -14,7 +14,6 @@ export type {
   ListNoteVersionsRequest,
   NoteInfoDisplayAuthor,
   NoteInfoDisplayData,
-  NoteInlineCommentUserDisplayRecord,
   NoteVersionListPage,
   NoteVersionSummary,
   SaveDrawIoSnapshotRequest,

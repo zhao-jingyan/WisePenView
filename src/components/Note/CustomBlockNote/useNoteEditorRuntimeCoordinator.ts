@@ -1,5 +1,3 @@
-import { useMount, useUpdateEffect } from 'ahooks';
-
 import type { CustomBlockNoteProps } from './index.type';
 import type { CustomBlockNoteEditor } from './noteEditorComposition';
 import {
@@ -8,19 +6,8 @@ import {
   useNoteDocument,
   useNoteEditorCommands,
   useNoteEditorHydration,
-  useNoteInlineComment,
   type NoteEditorDefinition,
 } from './runtime';
-
-function useBindNoteEditor(editor: CustomBlockNoteEditor, definition: NoteEditorDefinition): void {
-  useMount(() => {
-    definition.setEditor(editor);
-  });
-
-  useUpdateEffect(() => {
-    definition.setEditor(editor);
-  }, [editor]);
-}
 
 export function useNoteEditorRuntimeCoordinator({
   editor,
@@ -36,15 +23,12 @@ export function useNoteEditorRuntimeCoordinator({
     collaboration: collaborationBinding,
     state: { aiDiffDisplayMode, readOnly, blockLocalDocWrites },
     aiDiffPreview,
-    inlineComment: inlineCommentConfig,
     onOutlineChange,
     onActiveHeadingChange,
     onAiDiffPresenceChange,
     onAskAi,
     onAiDiffBodyContentHashChange,
   } = props;
-  useBindNoteEditor(editor, definition);
-
   const collaboration = useNoteCollaboration({
     editor,
     definition,
@@ -83,24 +67,12 @@ export function useNoteEditorRuntimeCoordinator({
     aiDiffPreview,
     scheduleBodyContentHashRefresh: document.scheduleBodyContentHashRefresh,
   });
-  const inlineComment = useNoteInlineComment({
-    editor,
-    definition,
-    collaboration: collaborationBinding,
-    inlineComment: inlineCommentConfig,
-    readOnly,
-  });
-
   const commands = useNoteEditorCommands(editor, aiDiff.setExportDisplayModeOverride);
 
   return {
     collaboration,
-    document: {
-      ...document,
-      handleSelectionChange: () => document.handleSelectionChange(inlineComment.captureSelection),
-    },
+    document,
     aiDiff,
-    inlineComment,
     commands,
   };
 }

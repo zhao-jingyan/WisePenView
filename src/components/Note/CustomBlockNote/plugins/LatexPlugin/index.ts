@@ -1,13 +1,5 @@
 import type { NoteBlockPlugin, NoteInlinePlugin, NotePluginBundle } from '../../content/types';
 import { inlineMathAiDiff, mathBlockAiDiff } from './aiDiff';
-import {
-  INLINE_MATH_INLINE_COMMENT_OWNER_ID,
-  MATH_BLOCK_INLINE_COMMENT_OWNER_ID,
-} from './inlineComment/inlineCommentAnchor';
-import {
-  inlineMathInlineCommentFacet,
-  mathBlockInlineCommentFacet,
-} from './inlineComment/inlineCommentFacet';
 import { inlineMathContentSpec } from './InlineMath';
 import { createInlineMathDollarExtension } from './InlineMath/inlineMathDollarExtension';
 import { inlineMathMarkdownImport, mathBlockMarkdownImport } from './markdownImport';
@@ -16,7 +8,7 @@ import { createMathSlashMenuItem } from './slashMenuItem';
 
 const mathBlockPlugin = {
   kind: 'block',
-  id: MATH_BLOCK_INLINE_COMMENT_OWNER_ID,
+  id: 'latex.block.math',
   type: 'math',
   contentModel: 'none',
   spec: createMathBlockSpec(),
@@ -27,7 +19,6 @@ const mathBlockPlugin = {
     projection: { support: 'custom' },
     print: { support: 'custom' },
   },
-  inlineComment: mathBlockInlineCommentFacet,
   print: {
     styles: [
       `.note-print-body .bn-block-content[data-content-type='math'] {
@@ -67,7 +58,7 @@ const mathBlockPlugin = {
 
 const inlineMathPlugin = {
   kind: 'inline',
-  id: INLINE_MATH_INLINE_COMMENT_OWNER_ID,
+  id: 'latex.inline.inlineMath',
   type: 'inlineMath',
   spec: inlineMathContentSpec,
   capabilities: {
@@ -90,7 +81,6 @@ const inlineMathPlugin = {
   markdownImport: inlineMathMarkdownImport,
   markdownExport: { project: (inline) => inline },
   aiDiff: inlineMathAiDiff,
-  inlineComment: inlineMathInlineCommentFacet,
 } satisfies NoteInlinePlugin;
 
 export const latexPlugin = {

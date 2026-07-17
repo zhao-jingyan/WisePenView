@@ -88,12 +88,6 @@ export function createNotePluginRegistry(
   let defaultBlock: NotePluginRegistry['defaultBlock'];
 
   for (const plugin of sortedContentPlugins) {
-    if (!plugin.inlineComment) {
-      throw createRegistryError(`Note 插件 ${plugin.id} 未声明 inlineComment policy`);
-    }
-    if (plugin.inlineComment.mode === 'dedicated' && !plugin.inlineComment.anchor) {
-      throw createRegistryError(`Note 插件 ${plugin.id} 声明专用批注，但未提供 anchor facet`);
-    }
     const executableCapabilities = [
       ['Markdown 导入', plugin.capabilities.markdownImport, plugin.markdownImport],
       ['Markdown 导出', plugin.capabilities.markdownExport, plugin.markdownExport],

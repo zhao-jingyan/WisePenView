@@ -5,7 +5,7 @@ export const WORKSPACE_RESOURCE_SIDE_PANEL_DEFAULT_WIDTH = 300;
 export const WORKSPACE_RESOURCE_SIDE_PANEL_MIN_WIDTH = 280;
 export const WORKSPACE_RESOURCE_SIDE_PANEL_MAX_WIDTH = 560;
 
-export type WorkspaceResourceSidePanelMode = 'closed' | 'inlineComment' | 'comment';
+export type WorkspaceResourceSidePanelMode = 'closed' | 'comment';
 
 interface WorkspaceResourceSidePanelState {
   modeByResourceId: Record<string, WorkspaceResourceSidePanelMode>;
