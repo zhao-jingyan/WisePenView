@@ -48,7 +48,7 @@ function buildDecorations(params: {
         if (textFrom < textTo) threadDecorations.push(Decoration.inline(textFrom, textTo, attrs));
         return;
       }
-      if (node.isInline && node.nodeSize > 0) {
+      if ((node.isInline || node.isLeaf) && node.nodeSize > 0) {
         const nodeFrom = Math.max(from, pos);
         const nodeTo = Math.min(to, pos + node.nodeSize);
         if (nodeFrom < nodeTo)
