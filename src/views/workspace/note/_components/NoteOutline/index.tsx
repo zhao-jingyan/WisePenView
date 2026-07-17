@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { ChevronsRight, Menu } from 'lucide-react';
 
-import type { NoteOutlineItem } from '@/components/Note/CustomBlockNote/content/outline';
+import type { NoteOutlineItem } from '@/components/Note/CustomBlockNote/index.type';
 import { Tooltip } from '@heroui/react';
 import styles from './style.module.less';
 

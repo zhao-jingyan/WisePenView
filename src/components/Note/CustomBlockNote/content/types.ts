@@ -34,7 +34,10 @@ export interface NoteContentCapabilityDeclarations {
 
 interface NoteBlockProjection {
   plainText?: (block: Record<string, unknown>, registry: NotePluginRegistry) => string;
-  outlineLevel?: (block: Record<string, unknown>) => number | undefined;
+}
+
+export interface NoteBlockOutlineFacet {
+  getLevel: (block: Record<string, unknown>) => number | undefined;
 }
 
 interface NoteInlineProjection {
@@ -196,6 +199,7 @@ export interface NoteBlockPlugin extends NoteContentPluginBase {
   insertion?: NoteBlockInsertion;
   inputRules?: NoteBlockInputRules;
   projection?: NoteBlockProjection;
+  outline?: NoteBlockOutlineFacet;
   markdownImport?: NoteMarkdownBlockImport;
   markdownExport?: NoteMarkdownExportProjection;
   aiDiff?: NoteBlockAiDiff;

@@ -5,9 +5,8 @@ import { toast } from '@heroui/react';
 import { useMemoizedFn, useMount, useUnmount, useUpdateEffect } from 'ahooks';
 import { useRef } from 'react';
 
-import { buildOutlineProjection, resolveActiveHeadingId } from '../content/outline';
 import type { CustomBlockNoteProps } from '../index.type';
-import { notePluginRegistry, type CustomBlockNoteEditor } from '../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../noteEditorComposition';
 import type { NoteEditorDefinition } from './useNoteEditorDefinition';
 
 function buildSelectedNoteScope(editor: CustomBlockNoteEditor): SelectedNoteScope | null {
@@ -24,8 +23,6 @@ export function useNoteDocument({
   definition,
   resourceId,
   blockLocalDocWrites,
-  onOutlineChange,
-  onActiveHeadingChange,
   onAskAi,
   onAiDiffBodyContentHashChange,
 }: {
@@ -33,14 +30,11 @@ export function useNoteDocument({
   definition: NoteEditorDefinition;
   resourceId: string;
   blockLocalDocWrites: boolean;
-  onOutlineChange: CustomBlockNoteProps['onOutlineChange'];
-  onActiveHeadingChange: CustomBlockNoteProps['onActiveHeadingChange'];
   onAskAi: CustomBlockNoteProps['onAskAi'];
   onAiDiffBodyContentHashChange: CustomBlockNoteProps['onAiDiffBodyContentHashChange'];
 }) {
   const bodyOnChangeCleanupRef = useRef<(() => void) | null>(null);
   const selectionSnapshotRef = useRef<NoteSelectionSnapshot | undefined>(undefined);
-  const flatBlocksRef = useRef<ReturnType<typeof buildOutlineProjection>['flatBlocks']>([]);
   const bodyContentHashTimerRef = useRef<number | null>(null);
 
   const refreshBodyContentHash = useMemoizedFn(() => {
@@ -73,13 +67,6 @@ export function useNoteDocument({
       definition.setPmWriteGuardReady(true);
     };
 
-    const syncOutlineProjection = () => {
-      if (!onOutlineChange && !onActiveHeadingChange) return;
-      const projection = buildOutlineProjection(editor, notePluginRegistry);
-      flatBlocksRef.current = projection.flatBlocks;
-      onOutlineChange?.(projection.items);
-    };
-
     bodyOnChangeCleanupRef.current = editor.onChange(() => {
       activateWriteGuard();
       scheduleBodyContentHashRefresh();
@@ -91,10 +78,7 @@ export function useNoteDocument({
       ) {
         newNoteState.markNewNoteDirty(resourceId);
       }
-      syncOutlineProjection();
     });
-
-    syncOutlineProjection();
 
     if (definition.hasBlockLocalDocWritesProp()) {
       window.requestAnimationFrame(activateWriteGuard);
@@ -116,27 +100,11 @@ export function useNoteDocument({
     }
   });
 
-  const handleSelectionChange = () => {
+  const captureSelection = () => {
     selectionSnapshotRef.current = {
       text: editor.getSelectedText(),
       scope: buildSelectedNoteScope(editor),
     };
-    if (!onActiveHeadingChange) {
-      return;
-    }
-    let activeId: string | undefined;
-    try {
-      const cursor = editor.getTextCursorPosition();
-      const currentId = cursor.block?.id;
-      if (!currentId) {
-        onActiveHeadingChange(undefined);
-        return;
-      }
-      activeId = resolveActiveHeadingId(flatBlocksRef.current, currentId);
-    } catch {
-      activeId = undefined;
-    }
-    onActiveHeadingChange(activeId);
   };
 
   const handleAskAi = () => {
@@ -155,7 +123,7 @@ export function useNoteDocument({
 
   return {
     scheduleBodyContentHashRefresh,
-    handleSelectionChange,
+    captureSelection,
     handleAskAi,
   };
 }

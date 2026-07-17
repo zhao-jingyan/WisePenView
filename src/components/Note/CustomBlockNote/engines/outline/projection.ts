@@ -5,30 +5,25 @@ import type {
   StyleSchema,
 } from '@blocknote/core';
 
-import { projectBlockPlainText } from './projection';
-import type { NotePluginRegistry } from './types';
+import { projectBlockPlainText } from '../../content/projection';
+import type { NotePluginRegistry } from '../../content/types';
+import type { NoteOutlineItem } from './index.type';
 
-export interface NoteOutlineItem {
+export interface NoteOutlineBlockSnapshot {
   id: string;
-  level: number;
-  text: string;
+  contributesToOutline: boolean;
 }
 
-type FlatBlockSnapshot = {
-  id: string;
-  outline: boolean;
-};
-
-interface NoteOutlineProjection {
+export interface NoteOutlineProjection {
   items: NoteOutlineItem[];
-  flatBlocks: FlatBlockSnapshot[];
+  blocks: NoteOutlineBlockSnapshot[];
 }
 
 function toBlockRecord(block: unknown): Record<string, unknown> {
   return typeof block === 'object' && block !== null ? (block as Record<string, unknown>) : {};
 }
 
-export function buildOutlineProjection<
+export function buildNoteOutlineProjection<
   BSchema extends BlockSchema,
   ISchema extends InlineContentSchema,
   SSchema extends StyleSchema,
@@ -37,11 +32,11 @@ export function buildOutlineProjection<
   registry: NotePluginRegistry
 ): NoteOutlineProjection {
   const items: NoteOutlineItem[] = [];
-  const flatBlocks: FlatBlockSnapshot[] = [];
+  const blocks: NoteOutlineBlockSnapshot[] = [];
   editor.forEachBlock((block) => {
     const owner = registry.blockPlugins.get(block.type);
-    const level = owner?.projection?.outlineLevel?.(toBlockRecord(block));
-    flatBlocks.push({ id: block.id, outline: level !== undefined });
+    const level = owner?.outline?.getLevel(toBlockRecord(block));
+    blocks.push({ id: block.id, contributesToOutline: level !== undefined });
     if (level === undefined) return true;
 
     items.push({
@@ -51,17 +46,17 @@ export function buildOutlineProjection<
     });
     return true;
   });
-  return { items, flatBlocks };
+  return { items, blocks };
 }
 
-export function resolveActiveHeadingId(
-  flat: FlatBlockSnapshot[],
-  currentId: string
+export function resolveActiveOutlineItemId(
+  blocks: readonly NoteOutlineBlockSnapshot[],
+  currentBlockId: string
 ): string | undefined {
-  const index = flat.findIndex((block) => block.id === currentId);
+  const index = blocks.findIndex((block) => block.id === currentBlockId);
   if (index < 0) return undefined;
   for (let currentIndex = index; currentIndex >= 0; currentIndex -= 1) {
-    if (flat[currentIndex]?.outline) return flat[currentIndex]?.id;
+    if (blocks[currentIndex]?.contributesToOutline) return blocks[currentIndex]?.id;
   }
   return undefined;
 }

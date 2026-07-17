@@ -4,10 +4,10 @@ import { useMemoizedFn, useRequest, useUnmount } from 'ahooks';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import CustomBlockNote from '@/components/Note/CustomBlockNote';
-import type { NoteOutlineItem } from '@/components/Note/CustomBlockNote/content/outline';
 import type {
   NoteBodyEditorHandle,
   NoteCollaborationUser,
+  NoteOutlineItem,
 } from '@/components/Note/CustomBlockNote/index.type';
 import { useInteractService, useUserService } from '@/domains';
 import type {

@@ -49,7 +49,7 @@ function createDefaultBlockPlugin(
   type: string,
   capabilities: NoteContentCapabilityDeclarations,
   options: {
-    outline?: boolean;
+    outline?: NoteBlockPlugin['outline'];
     aiDiff?: NoteBlockPlugin['aiDiff'];
     contentModel?: NoteBlockPlugin['contentModel'];
     defaultInsertion?: boolean;
@@ -78,20 +78,9 @@ function createDefaultBlockPlugin(
     ...(options.aiDiff ? { aiDiff: options.aiDiff } : {}),
     ...(options.print ? { print: options.print } : {}),
     ...(options.sideMenu ? { sideMenu: options.sideMenu } : {}),
+    ...(options.outline ? { outline: options.outline } : {}),
     projection: {
       plainText: (block, registry) => projectInlinePlainText(block.content, registry),
-      ...(options.outline
-        ? {
-            outlineLevel: (block: Record<string, unknown>) => {
-              const props =
-                typeof block.props === 'object' && block.props !== null
-                  ? (block.props as Record<string, unknown>)
-                  : {};
-              const level = Number(props.level ?? 1);
-              return Number.isFinite(level) && level > 0 ? level : 1;
-            },
-          }
-        : {}),
     },
   } satisfies NoteBlockPlugin;
 }
@@ -133,6 +122,17 @@ const richTextBlockTypes = [
 ] as const;
 
 const passThroughAtomicBlockTypes = ['audio', 'divider', 'file', 'image', 'video'] as const;
+
+const headingOutline: NonNullable<NoteBlockPlugin['outline']> = {
+  getLevel: (block) => {
+    const props =
+      typeof block.props === 'object' && block.props !== null
+        ? (block.props as Record<string, unknown>)
+        : {};
+    const level = Number(props.level ?? 1);
+    return Number.isFinite(level) && level > 0 ? level : 1;
+  },
+};
 
 const headingPrint: NotePrintContribution = {
   styles: [
@@ -184,7 +184,7 @@ export function createDefaultContentPlugin(
               : {}),
           },
           {
-            outline: type === 'heading',
+            ...(type === 'heading' ? { outline: headingOutline } : {}),
             aiDiff: richTextBlockAiDiff,
             defaultInsertion: type === 'paragraph',
             inlineMathDollar:

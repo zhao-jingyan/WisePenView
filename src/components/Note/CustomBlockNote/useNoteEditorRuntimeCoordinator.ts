@@ -1,11 +1,14 @@
+import { useMemoizedFn } from 'ahooks';
+
 import type { CustomBlockNoteProps } from './index.type';
-import type { CustomBlockNoteEditor } from './noteEditorComposition';
+import { notePluginRegistry, type CustomBlockNoteEditor } from './noteEditorComposition';
 import {
   useNoteAiDiff,
   useNoteCollaboration,
   useNoteDocument,
   useNoteEditorCommands,
   useNoteEditorHydration,
+  useNoteOutlineRuntime,
   type NoteEditorDefinition,
 } from './runtime';
 
@@ -47,13 +50,18 @@ export function useNoteEditorRuntimeCoordinator({
     onPresenceChange: onAiDiffPresenceChange,
   });
 
+  const outlineRuntime = useNoteOutlineRuntime({
+    editor,
+    registry: notePluginRegistry,
+    onOutlineChange,
+    onActiveItemChange: onActiveHeadingChange,
+  });
+
   const document = useNoteDocument({
     editor,
     definition,
     resourceId,
     blockLocalDocWrites,
-    onOutlineChange,
-    onActiveHeadingChange,
     onAskAi,
     onAiDiffBodyContentHashChange,
   });
@@ -68,12 +76,17 @@ export function useNoteEditorRuntimeCoordinator({
     scheduleBodyContentHashRefresh: document.scheduleBodyContentHashRefresh,
   });
   const commands = useNoteEditorCommands(editor, aiDiff.setExportDisplayModeOverride);
+  const handleSelectionChange = useMemoizedFn(() => {
+    document.captureSelection();
+    outlineRuntime.syncActiveItem();
+  });
 
   return {
     collaboration,
     document,
     aiDiff,
     commands,
+    handleSelectionChange,
   };
 }
 
