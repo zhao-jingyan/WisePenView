@@ -1,7 +1,6 @@
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import styles from '../../engines/aiDiff/style.module.less';
 import {
-  diffAiText,
   type AiDiffTextConfig,
   type AiDiffTextHunk,
   type AiDiffTextSegment,
@@ -14,9 +13,9 @@ import type {
   NotePluginRegistry,
 } from '../../registry/types';
 import {
-  acceptInlineTextHunk,
-  buildInlineTextDiffSource,
-  discardInlineTextHunk,
+  acceptInlineHunk,
+  diffInlineContent,
+  discardInlineHunk,
   sliceInlineContentByTextRange,
 } from './inlineDiff';
 
@@ -132,23 +131,19 @@ function resolveRichTextDiffPlan(
   aiBlock: Record<string, unknown>,
   config: AiDiffTextConfig
 ): RichTextDiffPlan {
-  const currentSource = buildInlineTextDiffSource(current.content);
-  const aiSource = buildInlineTextDiffSource(aiBlock.content);
-  if (!currentSource || !aiSource || currentSource.structureKey !== aiSource.structureKey) {
-    return { mode: 'content' };
-  }
-  const hunks = diffAiText(currentSource.text, aiSource.text, config);
+  const hunks = diffInlineContent(current.content, aiBlock.content, config);
+  if (!hunks) return { mode: 'content' };
   const actionableHunks = hunks.filter((hunk) => hunk.mode === 'hunk');
   const isFullyActionable =
     actionableHunks.length > 0 &&
     actionableHunks.every(
       (hunk) =>
-        acceptInlineTextHunk({
+        acceptInlineHunk({
           current: current.content,
           aiContent: aiBlock.content,
           hunk,
         }) &&
-        discardInlineTextHunk({
+        discardInlineHunk({
           current: current.content,
           aiContent: aiBlock.content,
           hunk,
@@ -231,7 +226,7 @@ function renderRichTextComparison(
       replacementOffset = rendered.replacementOffset;
       hunkRoot.appendChild(rendered.element);
     }
-    appendHunkActions(hunkRoot, { kind: 'text-hunk', index: hunkIndex }, context);
+    appendHunkActions(hunkRoot, { kind: 'inline-hunk', index: hunkIndex }, context);
     root.appendChild(hunkRoot);
     hunkIndex += 1;
   }
@@ -283,14 +278,14 @@ export function createRichTextBlockAiDiff(config: NoteRichTextAiDiffConfig): Not
       if (!hunk) return null;
 
       if (action === 'accept') {
-        return acceptInlineTextHunk({
+        return acceptInlineHunk({
           current: block.content,
           aiContent,
           hunk,
         });
       }
 
-      return discardInlineTextHunk({
+      return discardInlineHunk({
         current: block.content,
         aiContent,
         hunk,

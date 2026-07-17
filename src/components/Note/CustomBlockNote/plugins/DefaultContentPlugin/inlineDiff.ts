@@ -1,5 +1,11 @@
 import { stableStringify } from '../../engines/aiDiff/stableValue';
-import type { AiDiffTextHunk } from '../../engines/aiDiff/wordDiff';
+import {
+  diffAiTextTokens,
+  tokenizeAiDiffText,
+  type AiDiffTextConfig,
+  type AiDiffTextHunk,
+  type AiDiffTextToken,
+} from '../../engines/aiDiff/wordDiff';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -76,41 +82,69 @@ function readInlineText(content: readonly Record<string, unknown>[]): string | n
   return text;
 }
 
-function buildInlineStructure(
-  content: readonly Record<string, unknown>[]
-): Record<string, unknown>[] | null {
-  const structure: Record<string, unknown>[] = [];
+function collectInlineDiffSource(
+  content: readonly Record<string, unknown>[],
+  ancestors: readonly Record<string, unknown>[],
+  tokens: AiDiffTextToken[]
+): string | null {
+  let text = '';
   for (const inline of content) {
     if (inline.type === 'text' && typeof inline.text === 'string') {
-      structure.push(withoutField(inline, 'text'));
+      const structureKey = stableStringify([...ancestors, withoutField(inline, 'text')]);
+      for (const token of tokenizeAiDiffText(inline.text)) {
+        tokens.push({
+          text: token,
+          comparisonKey: stableStringify([structureKey, token]),
+        });
+      }
+      text += inline.text;
       continue;
     }
     if (inline.type === 'link' && Array.isArray(inline.content)) {
       const children = inline.content.filter(isRecord);
       if (children.length !== inline.content.length) return null;
-      const childStructure = buildInlineStructure(children);
-      if (!childStructure) return null;
-      structure.push({ ...withoutField(inline, 'content'), content: childStructure });
+      const childText = collectInlineDiffSource(
+        children,
+        [...ancestors, withoutField(inline, 'content')],
+        tokens
+      );
+      if (childText === null) return null;
+      text += childText;
       continue;
     }
     return null;
   }
-  return structure;
+  return text;
 }
 
-export interface InlineTextDiffSource {
+interface InlineDiffSource {
   text: string;
-  structureKey: string;
+  tokens: AiDiffTextToken[];
 }
 
-/** 仅为结构完全一致的 rich-text 构建 granular diff 输入；样式和链接属性属于结构。 */
-export function buildInlineTextDiffSource(content: unknown): InlineTextDiffSource | null {
+function buildInlineDiffSource(content: unknown): InlineDiffSource | null {
   if (!Array.isArray(content) || !content.every(isRecord)) return null;
   const normalized = normalizeInlineContent(content);
-  const text = readInlineText(normalized);
-  const structure = buildInlineStructure(normalized);
-  if (text === null || !structure) return null;
-  return { text, structureKey: stableStringify(structure) };
+  const tokens: AiDiffTextToken[] = [];
+  const text = collectInlineDiffSource(normalized, [], tokens);
+  if (text === null) return null;
+  return { text, tokens };
+}
+
+/** 直接比较两组 InlineContent，文本、样式与链接属性共同决定 token 是否相等。 */
+export function diffInlineContent(
+  current: unknown,
+  aiContent: unknown,
+  config: AiDiffTextConfig
+): AiDiffTextHunk[] | null {
+  const currentSource = buildInlineDiffSource(current);
+  const aiSource = buildInlineDiffSource(aiContent);
+  if (!currentSource || !aiSource) return null;
+  const hunks = diffAiTextTokens(currentSource.tokens, aiSource.tokens, config);
+  const currentLength = hunks.at(-1)?.originTo ?? 0;
+  const aiLength = hunks.at(-1)?.replacementTo ?? 0;
+  if (currentLength !== currentSource.text.length || aiLength !== aiSource.text.length) return null;
+  return hunks;
 }
 
 /** 按文本偏移切分结构兼容的 inline content，同时保留样式与链接。 */
@@ -188,7 +222,7 @@ function replaceInlineTextRange(params: {
 }
 
 /** 接受一个展示 hunk，并保留范围外已有的 inline 样式与链接结构。 */
-export function acceptInlineTextHunk(params: {
+export function acceptInlineHunk(params: {
   current: unknown;
   aiContent: unknown;
   hunk: AiDiffTextHunk;
@@ -205,7 +239,7 @@ export function acceptInlineTextHunk(params: {
 }
 
 /** 拒绝一个展示 hunk，并保留候选中其它尚未处理的修改。 */
-export function discardInlineTextHunk(params: {
+export function discardInlineHunk(params: {
   current: unknown;
   aiContent: unknown;
   hunk: AiDiffTextHunk;

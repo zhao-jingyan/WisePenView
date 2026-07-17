@@ -20,7 +20,12 @@ export interface AiDiffTextConfig {
   maxMatrixCells: number;
 }
 
-type Token = { value: string };
+export interface AiDiffTextToken {
+  text: string;
+  comparisonKey: string;
+}
+
+type Token = AiDiffTextToken;
 type InternalSegment = AiDiffTextSegment & { tokenCount: number };
 
 function isCjkCodePoint(code: number): boolean {
@@ -31,52 +36,52 @@ function isCjkCodePoint(code: number): boolean {
   );
 }
 
-function tokenizeFallback(text: string): Token[] {
-  const tokens: Token[] = [];
+function tokenizeFallback(text: string): string[] {
+  const tokens: string[] = [];
   let index = 0;
   while (index < text.length) {
     const current = text[index];
     const codePoint = current.codePointAt(0);
     const characterLength = codePoint !== undefined && codePoint > 0xffff ? 2 : 1;
     if (current === '\n') {
-      tokens.push({ value: current });
+      tokens.push(current);
       index += 1;
       continue;
     }
     if (/\s/.test(current)) {
       let end = index + 1;
       while (end < text.length && text[end] !== '\n' && /\s/.test(text[end])) end += 1;
-      tokens.push({ value: text.slice(index, end) });
+      tokens.push(text.slice(index, end));
       index = end;
       continue;
     }
     if (/[0-9]/.test(current)) {
       let end = index + 1;
       while (end < text.length && /[0-9.]/.test(text[end])) end += 1;
-      tokens.push({ value: text.slice(index, end) });
+      tokens.push(text.slice(index, end));
       index = end;
       continue;
     }
     if (/[A-Za-z]/.test(current)) {
       let end = index + 1;
       while (end < text.length && /[A-Za-z-]/.test(text[end])) end += 1;
-      tokens.push({ value: text.slice(index, end) });
+      tokens.push(text.slice(index, end));
       index = end;
       continue;
     }
     if (codePoint !== undefined && isCjkCodePoint(codePoint)) {
-      tokens.push({ value: text.slice(index, index + characterLength) });
+      tokens.push(text.slice(index, index + characterLength));
       index += characterLength;
       continue;
     }
-    tokens.push({ value: text.slice(index, index + characterLength) });
+    tokens.push(text.slice(index, index + characterLength));
     index += characterLength;
   }
   return tokens;
 }
 
 /** 使用运行环境的词法分段器处理中英文；不可用时退化为 ASCII 单词与 CJK 字符。 */
-function tokenizeAiDiffText(text: string, localeHint = 'und'): string[] {
+export function tokenizeAiDiffText(text: string, localeHint = 'und'): string[] {
   if (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function') {
     try {
       const segmenter = new Intl.Segmenter(localeHint, { granularity: 'word' });
@@ -95,12 +100,12 @@ function tokenizeAiDiffText(text: string, localeHint = 'und'): string[] {
       void 0;
     }
   }
-  return tokenizeFallback(text).map((token) => token.value);
+  return tokenizeFallback(text);
 }
 
 function segment(kind: InternalSegment['kind'], tokens: readonly Token[]): InternalSegment | null {
   if (tokens.length === 0) return null;
-  return { kind, text: tokens.map((token) => token.value).join(''), tokenCount: tokens.length };
+  return { kind, text: tokens.map((token) => token.text).join(''), tokenCount: tokens.length };
 }
 
 function buildLinearFallback(oldTokens: readonly Token[], newTokens: readonly Token[]) {
@@ -108,7 +113,7 @@ function buildLinearFallback(oldTokens: readonly Token[], newTokens: readonly To
   while (
     prefixLength < oldTokens.length &&
     prefixLength < newTokens.length &&
-    oldTokens[prefixLength].value === newTokens[prefixLength].value
+    oldTokens[prefixLength].comparisonKey === newTokens[prefixLength].comparisonKey
   ) {
     prefixLength += 1;
   }
@@ -116,8 +121,8 @@ function buildLinearFallback(oldTokens: readonly Token[], newTokens: readonly To
   while (
     suffixLength < oldTokens.length - prefixLength &&
     suffixLength < newTokens.length - prefixLength &&
-    oldTokens[oldTokens.length - 1 - suffixLength].value ===
-      newTokens[newTokens.length - 1 - suffixLength].value
+    oldTokens[oldTokens.length - 1 - suffixLength].comparisonKey ===
+      newTokens[newTokens.length - 1 - suffixLength].comparisonKey
   ) {
     suffixLength += 1;
   }
@@ -164,7 +169,7 @@ function diffTokens(
   for (let oldIndex = 1; oldIndex <= oldLength; oldIndex += 1) {
     for (let newIndex = 1; newIndex <= newLength; newIndex += 1) {
       matrix[oldIndex][newIndex] =
-        oldTokens[oldIndex - 1].value === newTokens[newIndex - 1].value
+        oldTokens[oldIndex - 1].comparisonKey === newTokens[newIndex - 1].comparisonKey
           ? matrix[oldIndex - 1][newIndex - 1] + 1
           : Math.max(matrix[oldIndex - 1][newIndex], matrix[oldIndex][newIndex - 1]);
     }
@@ -177,11 +182,11 @@ function diffTokens(
     if (
       oldIndex > 0 &&
       newIndex > 0 &&
-      oldTokens[oldIndex - 1].value === newTokens[newIndex - 1].value
+      oldTokens[oldIndex - 1].comparisonKey === newTokens[newIndex - 1].comparisonKey
     ) {
       reversed.push({
         kind: 'equal',
-        text: oldTokens[oldIndex - 1].value,
+        text: oldTokens[oldIndex - 1].text,
         tokenCount: 1,
       });
       oldIndex -= 1;
@@ -192,14 +197,14 @@ function diffTokens(
     ) {
       reversed.push({
         kind: 'insert',
-        text: newTokens[newIndex - 1].value,
+        text: newTokens[newIndex - 1].text,
         tokenCount: 1,
       });
       newIndex -= 1;
     } else {
       reversed.push({
         kind: 'delete',
-        text: oldTokens[oldIndex - 1].value,
+        text: oldTokens[oldIndex - 1].text,
         tokenCount: 1,
       });
       oldIndex -= 1;
@@ -285,17 +290,15 @@ function changedTokenRatio(segments: readonly InternalSegment[]): number {
  * 生成词级差异，并以句号、分号、逗号和换行为边界合并相邻改动。
  * 大面积重写或超长文本会退化为公共前后缀 + 单个中段 hunk，避免碎片化和二次方计算。
  */
-export function diffAiText(
-  origin: string,
-  replacement: string,
+export function diffAiTextTokens(
+  originTokens: readonly AiDiffTextToken[],
+  replacementTokens: readonly AiDiffTextToken[],
   config: AiDiffTextConfig
 ): AiDiffTextHunk[] {
-  const oldTokens = tokenizeAiDiffText(origin).map((value) => ({ value }));
-  const newTokens = tokenizeAiDiffText(replacement).map((value) => ({ value }));
-  let segments = diffTokens(oldTokens, newTokens, config.maxMatrixCells);
+  let segments = diffTokens(originTokens, replacementTokens, config.maxMatrixCells);
   const hasHighChangeRatio = changedTokenRatio(segments) > config.highChangeRatio;
   if (hasHighChangeRatio) {
-    segments = buildLinearFallback(oldTokens, newTokens);
+    segments = buildLinearFallback(originTokens, replacementTokens);
   }
   let originOffset = 0;
   let replacementOffset = 0;
@@ -315,4 +318,15 @@ export function diffAiText(
       replacementTo: replacementOffset,
     };
   });
+}
+
+/** 为纯文本构建词级 token 后生成差异。 */
+export function diffAiText(
+  origin: string,
+  replacement: string,
+  config: AiDiffTextConfig
+): AiDiffTextHunk[] {
+  const createTokens = (text: string) =>
+    tokenizeAiDiffText(text).map((token) => ({ text: token, comparisonKey: token }));
+  return diffAiTextTokens(createTokens(origin), createTokens(replacement), config);
 }

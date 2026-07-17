@@ -60,7 +60,7 @@ interface NoteMarkdownExportProjection {
 export type NoteAiDiffAction = 'accept' | 'discard';
 
 export type NoteAiDiffActionTarget =
-  { kind: 'text-hunk'; index: number } | { kind: 'content-hunk' };
+  { kind: 'inline-hunk'; index: number } | { kind: 'content-hunk' };
 
 export interface NoteAiDiffComparisonContext {
   renderAction: (action: NoteAiDiffAction, target: NoteAiDiffActionTarget) => HTMLElement;

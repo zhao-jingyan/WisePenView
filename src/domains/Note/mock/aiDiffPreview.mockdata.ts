@@ -70,6 +70,18 @@ export const NOTE_AI_DIFF_PREVIEW_MOCK = {
     },
     paragraphBlock('mock-ai-diff-inline-single', copy.inlineSingle.current, copy.inlineSingle.ai),
     paragraphBlock('mock-ai-diff-inline-sparse', copy.inlineSparse.current, copy.inlineSparse.ai),
+    {
+      id: 'mock-ai-diff-inline-style',
+      type: 'paragraph',
+      props: textBlockProps(),
+      content: [text('样式调整：重点结论需要在评审前复核。')],
+      'ai-content': [
+        text('样式调整：'),
+        text('重点结论', { bold: true }),
+        text('需要在评审前复核。'),
+      ],
+      children: [],
+    },
     paragraphBlock('mock-ai-diff-block-rewrite', copy.blockRewrite.current, copy.blockRewrite.ai),
     {
       id: 'mock-ai-diff-rich-content',
