@@ -1,5 +1,6 @@
 import { useImageService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
+import { createUuid } from '@/utils/random/createUuid';
 import { Button, TextArea, Tooltip } from '@heroui/react';
 import { useRequest, useUnmount } from 'ahooks';
 import { ImagePlus, Send, X } from 'lucide-react';
@@ -52,7 +53,7 @@ function CommentComposer({ placeholder, autoFocus, onCancel, onSubmit }: Comment
   const appendImages = (files: File[]) => {
     const images = files
       .filter((file) => file.type.startsWith('image/'))
-      .map((file) => ({ id: crypto.randomUUID(), file }));
+      .map((file) => ({ id: createUuid(), file }));
     if (images.length === 0) return;
     setPendingImages((currentImages) => [...currentImages, ...images]);
     setSubmitError(undefined);

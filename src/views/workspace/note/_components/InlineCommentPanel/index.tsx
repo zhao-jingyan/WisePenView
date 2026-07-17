@@ -5,6 +5,7 @@ import type {
 } from '@/domains/Interact';
 import { parseErrorMessage } from '@/utils/error';
 import { formatTimestampToDateTime } from '@/utils/format/formatTime';
+import { createUuid } from '@/utils/random/createUuid';
 import { Avatar, Button, TextArea, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { MessageSquareReply, Send, X } from 'lucide-react';
@@ -38,7 +39,7 @@ function InlineCommentComposer({
   onSubmit(content: string, idempotencyKey: string): Promise<void>;
 }) {
   const [content, setContent] = useState('');
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const [idempotencyKey] = useState(createUuid);
   const { loading, run: submit } = useRequest(
     async () => {
       const normalizedContent = content.trim();

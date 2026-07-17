@@ -9,6 +9,7 @@ import UploadZone from '@/components/UploadZone';
 import { useDocumentService, useDriveService, useResourceService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
 import { parseExtension } from '@/utils/parser/extensionParser';
+import { createUuid } from '@/utils/random/createUuid';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import type { AxiosError } from 'axios';
@@ -185,7 +186,7 @@ function UploadDocumentModal({
     async ({ files, mountTagId }: SubmitUploadPayload) => {
       if (files.length === 0) return 0;
       const shouldMountToFolder = Boolean(mountTagId?.trim());
-      const uploadIds = files.map(createUploadId);
+      const uploadIds = files.map(() => createUuid());
 
       startUploads(
         files.map((file, index) => ({
@@ -371,13 +372,6 @@ function getDisplayFileType(file: File): string {
   } catch {
     return 'unknown';
   }
-}
-
-function createUploadId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 function isResourceNotReadyError(err: unknown): boolean {

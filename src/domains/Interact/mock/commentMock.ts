@@ -8,6 +8,7 @@ import type {
   ResourceComment,
 } from '@/domains/Interact';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
+import { createUuid } from '@/utils/random/createUuid';
 
 interface MockComment extends ResourceComment {
   rootCommentId?: string;
@@ -115,7 +116,7 @@ export async function listMockReplies(params: ListRepliesRequest): Promise<Comme
 }
 
 export async function createMockComment(params: CreateCommentRequest): Promise<string> {
-  const commentId = `mock-comment-${crypto.randomUUID()}`;
+  const commentId = `mock-comment-${createUuid()}`;
   getComments(params.resourceId).unshift({
     commentId,
     authorId: CURRENT_USER_ID,
@@ -138,7 +139,7 @@ export async function createMockReply(params: CreateReplyRequest): Promise<strin
   const rootCommentId = target.commentType === 'COMMENT' ? target.commentId : target.rootCommentId;
   const root = comments.find((item) => item.commentId === rootCommentId);
   if (root) root.replyCount += 1;
-  const commentId = `mock-reply-${crypto.randomUUID()}`;
+  const commentId = `mock-reply-${createUuid()}`;
   comments.push({
     commentId,
     rootCommentId,

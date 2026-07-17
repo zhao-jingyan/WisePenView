@@ -11,13 +11,14 @@ import type {
   ListInlineCommentThreadsRequest,
 } from '@/domains/Interact';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
+import { createUuid } from '@/utils/random/createUuid';
 
 const inlineCommentThreads = new Map<string, InlineCommentThread>();
 const inlineCommentIdempotency = new Map<string, string>();
 const inlineCommentItemIdempotency = new Map<string, InlineComment>();
 
 const createMockComment = (content: string, revision: number): InlineComment => ({
-  commentId: `mock-comment-${crypto.randomUUID()}`,
+  commentId: `mock-comment-${createUuid()}`,
   authorId: 'mock-current-user',
   author: { id: 'mock-current-user', name: '当前用户' },
   content,
@@ -34,7 +35,7 @@ export const createInlineCommentThread = async (
 
   const createdAt = Date.now();
   const thread: InlineCommentThread = {
-    threadId: `mock-thread-${crypto.randomUUID()}`,
+    threadId: `mock-thread-${createUuid()}`,
     resourceId: params.resourceId,
     anchor: params.anchor,
     quoteText: params.quoteText,

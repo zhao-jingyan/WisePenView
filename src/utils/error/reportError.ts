@@ -1,3 +1,5 @@
+import { createUuid } from '@/utils/random/createUuid';
+
 import { isWisePenError } from './WisePenError';
 
 export type ErrorReportOrigin =
@@ -34,20 +36,9 @@ export type ErrorReporter = (report: ErrorReport) => void | Promise<void>;
 const errorIds = new WeakMap<object, string>();
 const reportedAt = new WeakMap<object, number>();
 let reporter: ErrorReporter | undefined;
-let fallbackSequence = 0;
 const REPORT_DEDUPLICATION_WINDOW_MS = 1000;
 
-const createErrorId = (): string => {
-  try {
-    if (typeof globalThis.crypto?.randomUUID === 'function') {
-      return `WPE-${globalThis.crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-    }
-  } catch {
-    // 随机数能力不可用时退回进程内序号，错误页本身不能继续抛错。
-  }
-  fallbackSequence += 1;
-  return `WPE-${Date.now().toString(36).toUpperCase()}-${fallbackSequence.toString(36).toUpperCase()}`;
-};
+const createErrorId = (): string => `WPE-${createUuid().slice(0, 8).toUpperCase()}`;
 
 const isObjectKey = (value: unknown): value is object =>
   (typeof value === 'object' && value !== null) || typeof value === 'function';

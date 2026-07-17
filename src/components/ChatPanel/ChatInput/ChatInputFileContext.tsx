@@ -1,6 +1,7 @@
 import { useChatService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
 import { base64ToFile, fileToBase64, generateThumbnail } from '@/utils/file/upload';
+import { createUuid } from '@/utils/random/createUuid';
 import { toast } from '@heroui/react';
 import { useMount, useUnmount } from 'ahooks';
 import { useRef, type ChangeEvent, type ReactNode } from 'react';
@@ -72,7 +73,7 @@ export function ChatInputFileProvider({
   }
 
   function queueLocalAttachment(file: File): void {
-    const id = crypto.randomUUID();
+    const id = createUuid();
     pendingAttachmentFileMapRef.current.set(id, file);
     addPendingAttachmentUpload({ id, filename: file.name, status: 'pending' });
   }
@@ -81,7 +82,7 @@ export function ChatInputFileProvider({
     file: File,
     uploadId?: string
   ): Promise<LocalAttachmentPayload | null> {
-    const id = uploadId ?? crypto.randomUUID();
+    const id = uploadId ?? createUuid();
     if (uploadId) {
       setPendingAttachmentUploadStatus(id, 'uploading');
     } else {
@@ -117,7 +118,7 @@ export function ChatInputFileProvider({
         return;
       }
       const { mimeType, base64 } = await fileToBase64(file);
-      const id = crypto.randomUUID();
+      const id = createUuid();
       const thumbnailUrl = await generateThumbnail(file, 48).catch(() => '');
       base64MapRef.current.set(id, base64);
       addPendingImageMeta({ id, filename: file.name, mimeType, thumbnailUrl });

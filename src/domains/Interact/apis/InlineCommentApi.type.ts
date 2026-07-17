@@ -14,8 +14,8 @@ export interface InlineCommentItemApi {
   authorId: string;
   author: InlineCommentAuthorApi;
   content: string;
-  createdAt: number;
-  revision: number;
+  createdAt: string;
+  revision: string;
 }
 
 export interface InlineCommentThreadApi {
@@ -24,9 +24,9 @@ export interface InlineCommentThreadApi {
   anchor: InlineCommentAnchorApi;
   quoteText: string;
   items: InlineCommentItemApi[];
-  revision: number;
-  createdAt: number;
-  updatedAt: number;
+  revision: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateInlineCommentThreadApiRequest {
@@ -53,7 +53,7 @@ export interface GetInlineCommentChangesApiRequest {
 
 export interface InlineCommentChangeApi {
   threadId: string;
-  revision: number;
+  revision: string;
 }
 
 export interface InlineCommentChangesApiResponse {

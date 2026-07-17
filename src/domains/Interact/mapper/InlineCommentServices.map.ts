@@ -40,7 +40,7 @@ function requiredText(value: string, field: string): string {
   return value;
 }
 
-function mapTimestamp(value: number, field: string): number {
+function mapTimestamp(value: string, field: string): number {
   const timestamp = normalizeFiniteNumber(value);
   if (timestamp === undefined) {
     throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
@@ -50,13 +50,14 @@ function mapTimestamp(value: number, field: string): number {
   return timestamp;
 }
 
-function mapRevision(value: number, field: string): number {
-  if (!Number.isSafeInteger(value) || value < 1) {
+function mapRevision(value: string, field: string): number {
+  const revision = normalizeFiniteNumber(value);
+  if (revision === undefined || !Number.isSafeInteger(revision) || revision < 1) {
     throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
       reason: `批注 ${field} 无效`,
     });
   }
-  return value;
+  return revision;
 }
 
 function mapAuthor(author: InlineCommentItemApi['author']): InlineCommentAuthor {
