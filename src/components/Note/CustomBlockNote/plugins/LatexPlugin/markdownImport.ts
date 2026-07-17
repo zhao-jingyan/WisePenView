@@ -2,7 +2,7 @@ import type {
   NoteMarkdownBlockImport,
   NoteMarkdownImportContext,
   NoteMarkdownInlineImport,
-} from '../../content/types';
+} from '../../registry/types';
 
 interface MarkdownFence {
   marker: '`' | '~';

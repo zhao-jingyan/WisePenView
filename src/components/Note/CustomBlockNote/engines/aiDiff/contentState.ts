@@ -2,7 +2,7 @@ import type {
   NoteAiDiffProjection,
   NoteBlockAiDiff,
   NotePluginRegistry,
-} from '../../content/types';
+} from '../../registry/types';
 import { stableStringify } from './stableValue';
 
 function isRecord(value: unknown): value is Record<string, unknown> {

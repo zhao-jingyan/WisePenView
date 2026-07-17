@@ -12,7 +12,7 @@ import type {
   NoteAiDiffComparisonContext,
   NoteEditorExtension,
   NotePluginRegistry,
-} from '../../content/types';
+} from '../../registry/types';
 import { resolveNoteAiDiffBlock } from './contentState';
 import styles from './style.module.less';
 

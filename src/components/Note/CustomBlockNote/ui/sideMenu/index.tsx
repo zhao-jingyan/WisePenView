@@ -1,4 +1,3 @@
-import type { NoteContentPlugin } from '@/components/Note/CustomBlockNote/content/types';
 import { useNoteEditorReadOnlyContext } from '@/components/Note/CustomBlockNote/engines/editor/readOnly';
 import {
   exportNoteFullHtml,
@@ -10,6 +9,7 @@ import {
   createDefaultNoteBlock,
   notePluginRegistry,
 } from '@/components/Note/CustomBlockNote/noteEditorComposition';
+import type { NoteContentPlugin } from '@/components/Note/CustomBlockNote/registry/types';
 import {
   applyBlockTypeToBlocks,
   blockMatchesBlockTypeItem,

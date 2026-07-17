@@ -1,11 +1,3 @@
-import {
-  collectNoteEditorExtensions,
-  collectNoteEditorProps,
-  createDefaultNoteBlock,
-  createNoteBlockNoteSchema,
-  createNotePluginRegistry,
-} from './content/registry';
-import type { NotePluginBundle } from './content/types';
 import { aiDiffEditorExtension } from './engines/aiDiff/extension';
 import { stripEscapeEditorExtension } from './engines/editor/stripEscape';
 import { noteConfig } from './noteConfig';
@@ -13,6 +5,14 @@ import { codeBlockPlugin } from './plugins/CodeBlockPlugin';
 import { createDefaultContentPlugin } from './plugins/DefaultContentPlugin';
 import { latexPlugin } from './plugins/LatexPlugin';
 import { tablePlugin } from './plugins/TablePlugin';
+import {
+  collectNoteEditorExtensions,
+  collectNoteEditorProps,
+  createDefaultNoteBlock,
+  createNoteBlockNoteSchema,
+  createNotePluginRegistry,
+} from './registry';
+import type { NotePluginBundle } from './registry/types';
 
 const defaultContentPlugin = createDefaultContentPlugin(noteConfig.aiDiff.richText);
 

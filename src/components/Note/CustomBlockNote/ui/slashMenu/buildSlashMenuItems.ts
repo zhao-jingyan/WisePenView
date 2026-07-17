@@ -1,8 +1,8 @@
 import type { DefaultReactSuggestionItem } from '@blocknote/react';
 import { getDefaultReactSlashMenuItems } from '@blocknote/react';
 
-import type { NoteContentPlugin, PluginEditor } from '../../content/types';
 import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+import type { NoteContentPlugin, PluginEditor } from '../../registry/types';
 
 /**
  * BlockNote 默认 slash 菜单项在源码中带稳定字段 `key`，但未对外公开类型；这里收敛窄化避免使用 any。

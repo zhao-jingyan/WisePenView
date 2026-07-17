@@ -5,8 +5,8 @@ import type {
   StyleSchema,
 } from '@blocknote/core';
 
-import { projectBlockPlainText } from '../../content/projection';
-import type { NotePluginRegistry } from '../../content/types';
+import type { NotePluginRegistry } from '../../registry/types';
+import { projectBlockPlainText } from '../plainText';
 import type { NoteOutlineItem } from './index.type';
 
 export interface NoteOutlineBlockSnapshot {

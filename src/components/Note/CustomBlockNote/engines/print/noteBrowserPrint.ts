@@ -1,7 +1,7 @@
 import { createClientError, FRONTEND_CLIENT_ERROR, isWisePenError } from '@/utils/error';
-import { collectNotePrintStyles } from '../../content/registry';
-import type { NotePluginRegistry } from '../../content/types';
 import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+import { collectNotePrintStyles } from '../../registry';
+import type { NotePluginRegistry } from '../../registry/types';
 import { getProseMirrorRoot } from '../editor/dom';
 
 interface PrintNotePdfOptions {

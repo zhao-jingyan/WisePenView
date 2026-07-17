@@ -1,4 +1,4 @@
-import type { NoteBlockPlugin, NoteInlinePlugin, NotePluginBundle } from '../../content/types';
+import type { NoteBlockPlugin, NoteInlinePlugin, NotePluginBundle } from '../../registry/types';
 import { inlineMathAiDiff, mathBlockAiDiff } from './aiDiff';
 import { inlineMathContentSpec } from './InlineMath';
 import { createInlineMathDollarExtension } from './InlineMath/inlineMathDollarExtension';
@@ -16,7 +16,7 @@ const mathBlockPlugin = {
     markdownImport: { support: 'custom' },
     markdownExport: { support: 'custom' },
     aiDiff: { support: 'custom' },
-    projection: { support: 'custom' },
+    plainText: { support: 'custom' },
     print: { support: 'custom' },
   },
   print: {
@@ -32,8 +32,8 @@ const mathBlockPlugin = {
     ],
   },
   slashMenu: ({ editor }) => [createMathSlashMenuItem(editor)],
-  projection: {
-    plainText: (block) => {
+  plainText: {
+    project: (block) => {
       const props =
         typeof block.props === 'object' && block.props !== null
           ? (block.props as Record<string, unknown>)
@@ -65,12 +65,12 @@ const inlineMathPlugin = {
     markdownImport: { support: 'custom' },
     markdownExport: { support: 'custom' },
     aiDiff: { support: 'custom' },
-    projection: { support: 'custom' },
+    plainText: { support: 'custom' },
     print: { support: 'default' },
   },
   extensions: ({ registry }) => [createInlineMathDollarExtension(registry)()],
-  projection: {
-    plainText: (inline) => {
+  plainText: {
+    project: (inline) => {
       const props =
         typeof inline.props === 'object' && inline.props !== null
           ? (inline.props as Record<string, unknown>)

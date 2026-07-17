@@ -1,5 +1,5 @@
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
-import type { NotePluginRegistry } from '../../content/types';
+import type { NotePluginRegistry } from '../../registry/types';
 import styles from './style.module.less';
 
 interface TableCellLike {

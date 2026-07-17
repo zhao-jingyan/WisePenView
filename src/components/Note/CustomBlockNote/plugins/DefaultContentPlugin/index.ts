@@ -8,7 +8,8 @@ import {
 import { Image as ImageIcon } from 'lucide-react';
 
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
-import { projectInlinePlainText } from '../../content/projection';
+import { projectInlinePlainText } from '../../engines/plainText';
+import type { NoteRichTextAiDiffConfig } from '../../noteConfig';
 import type {
   NoteBlockPlugin,
   NoteCapabilityDeclaration,
@@ -16,9 +17,8 @@ import type {
   NoteInlinePlugin,
   NotePluginBundle,
   NotePrintContribution,
-} from '../../content/types';
-import type { NoteRichTextAiDiffConfig } from '../../noteConfig';
-import { createRichTextBlockAiDiff, plainLinkInlineAiDiff, plainTextInlineAiDiff } from './aiDiff';
+} from '../../registry/types';
+import { createRichTextBlockAiDiff, linkInlineAiDiff, textInlineAiDiff } from './aiDiff';
 
 const DEFAULT_CAPABILITY: NoteCapabilityDeclaration = { support: 'default' };
 const UNSUPPORTED_AI_DIFF: NoteCapabilityDeclaration = {
@@ -30,7 +30,7 @@ function richTextCapabilities(): NoteContentCapabilityDeclarations {
     markdownImport: DEFAULT_CAPABILITY,
     markdownExport: DEFAULT_CAPABILITY,
     aiDiff: { support: 'inherited' },
-    projection: { support: 'inherited' },
+    plainText: { support: 'inherited' },
     print: DEFAULT_CAPABILITY,
   };
 }
@@ -40,7 +40,7 @@ function atomicCapabilities(): NoteContentCapabilityDeclarations {
     markdownImport: DEFAULT_CAPABILITY,
     markdownExport: DEFAULT_CAPABILITY,
     aiDiff: UNSUPPORTED_AI_DIFF,
-    projection: { support: 'inherited' },
+    plainText: { support: 'inherited' },
     print: DEFAULT_CAPABILITY,
   };
 }
@@ -79,8 +79,8 @@ function createDefaultBlockPlugin(
     ...(options.print ? { print: options.print } : {}),
     ...(options.sideMenu ? { sideMenu: options.sideMenu } : {}),
     ...(options.outline ? { outline: options.outline } : {}),
-    projection: {
-      plainText: (block, registry) => projectInlinePlainText(block.content, registry),
+    plainText: {
+      project: (block, registry) => projectInlinePlainText(block.content, registry),
     },
   } satisfies NoteBlockPlugin;
 }
@@ -96,18 +96,18 @@ function createDefaultInlinePlugin(type: 'text' | 'link') {
       markdownImport: DEFAULT_CAPABILITY,
       markdownExport: DEFAULT_CAPABILITY,
       aiDiff: { support: 'inherited' },
-      projection: { support: 'inherited' },
+      plainText: { support: 'inherited' },
       print: DEFAULT_CAPABILITY,
     },
-    projection: {
-      plainText: (inline, registry) => {
+    plainText: {
+      project: (inline, registry) => {
         if (type === 'text') {
           return typeof inline.text === 'string' ? inline.text : '';
         }
         return projectInlinePlainText(inline.content, registry);
       },
     },
-    aiDiff: type === 'text' ? plainTextInlineAiDiff : plainLinkInlineAiDiff,
+    aiDiff: type === 'text' ? textInlineAiDiff : linkInlineAiDiff,
   } satisfies NoteInlinePlugin;
 }
 

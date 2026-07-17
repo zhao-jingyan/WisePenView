@@ -3,7 +3,7 @@ import { createCodeBlockSpec } from '@blocknote/core';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import type { NoteBlockPlugin } from '../../content/types';
+import type { NoteBlockPlugin } from '../../registry/types';
 import { CodeBlockAiContentView, CodeBlockAiDiffComparisonView } from './AiDiffView';
 import { CodeBlockToolbar } from './CodeBlockToolbar';
 import { getCodeBlockLanguageOptions } from './language';
@@ -120,7 +120,7 @@ export const codeBlockPlugin = {
     markdownImport: { support: 'default' },
     markdownExport: { support: 'default' },
     aiDiff: { support: 'custom' },
-    projection: { support: 'default' },
+    plainText: { support: 'default' },
     print: { support: 'custom' },
   },
   aiDiff: {

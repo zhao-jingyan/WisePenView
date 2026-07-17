@@ -1,11 +1,4 @@
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
-import { projectInlinePlainText } from '../../content/projection';
-import type {
-  NoteAiDiffComparisonContext,
-  NoteBlockAiDiff,
-  NoteInlineAiDiff,
-  NotePluginRegistry,
-} from '../../content/types';
 import styles from '../../engines/aiDiff/style.module.less';
 import {
   diffAiText,
@@ -14,8 +7,15 @@ import {
   type AiDiffTextSegment,
 } from '../../engines/aiDiff/wordDiff';
 import type { NoteRichTextAiDiffConfig } from '../../noteConfig';
+import type {
+  NoteAiDiffComparisonContext,
+  NoteBlockAiDiff,
+  NoteInlineAiDiff,
+  NotePluginRegistry,
+} from '../../registry/types';
 import {
   acceptInlineTextHunk,
+  buildInlineTextDiffSource,
   discardInlineTextHunk,
   sliceInlineContentByTextRange,
 } from './inlineDiff';
@@ -28,7 +28,8 @@ const BOOLEAN_STYLE_TAGS = [
   ['code', 'code'],
 ] as const;
 
-type RichTextDiffPlan = { mode: 'text'; hunks: readonly AiDiffTextHunk[] } | { mode: 'content' };
+type RichTextDiffPlan =
+  { mode: 'granular'; hunks: readonly AiDiffTextHunk[] } | { mode: 'content' };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -91,7 +92,7 @@ function renderInlineRange(
   to: number,
   registry: NotePluginRegistry
 ): DocumentFragment {
-  const slicedContent = sliceInlineContentByTextRange(content, from, to, registry);
+  const slicedContent = sliceInlineContentByTextRange(content, from, to);
   if (!slicedContent) {
     throw createClientError(FRONTEND_CLIENT_ERROR.INTERNAL_STATE, {
       reason: `AI Diff 无法按文本范围渲染 inline content：${from}-${to}`,
@@ -129,14 +130,14 @@ function renderComparisonSegment(params: {
 function resolveRichTextDiffPlan(
   current: Record<string, unknown>,
   aiBlock: Record<string, unknown>,
-  registry: NotePluginRegistry,
   config: AiDiffTextConfig
 ): RichTextDiffPlan {
-  const hunks = diffAiText(
-    projectInlinePlainText(current.content, registry),
-    projectInlinePlainText(aiBlock.content, registry),
-    config
-  );
+  const currentSource = buildInlineTextDiffSource(current.content);
+  const aiSource = buildInlineTextDiffSource(aiBlock.content);
+  if (!currentSource || !aiSource || currentSource.structureKey !== aiSource.structureKey) {
+    return { mode: 'content' };
+  }
+  const hunks = diffAiText(currentSource.text, aiSource.text, config);
   const actionableHunks = hunks.filter((hunk) => hunk.mode === 'hunk');
   const isFullyActionable =
     actionableHunks.length > 0 &&
@@ -146,16 +147,14 @@ function resolveRichTextDiffPlan(
           current: current.content,
           aiContent: aiBlock.content,
           hunk,
-          registry,
         }) &&
         discardInlineTextHunk({
           current: current.content,
           aiContent: aiBlock.content,
           hunk,
-          registry,
         })
     );
-  return isFullyActionable ? { mode: 'text', hunks } : { mode: 'content' };
+  return isFullyActionable ? { mode: 'granular', hunks } : { mode: 'content' };
 }
 
 function appendHunkActions(
@@ -202,7 +201,7 @@ function renderRichTextComparison(
 ): HTMLElement {
   const root = document.createElement('span');
   root.className = styles.inlineComparison;
-  const plan = resolveRichTextDiffPlan(current, aiBlock, registry, config);
+  const plan = resolveRichTextDiffPlan(current, aiBlock, config);
   if (plan.mode === 'content') {
     root.appendChild(renderContentHunk(current, aiBlock, registry, context));
     return root;
@@ -239,13 +238,13 @@ function renderRichTextComparison(
   return root;
 }
 
-export const plainTextInlineAiDiff: NoteInlineAiDiff = {
+export const textInlineAiDiff: NoteInlineAiDiff = {
   renderAiContent(aiContent) {
     return renderStyledText(typeof aiContent.text === 'string' ? aiContent.text : '', aiContent);
   },
 };
 
-export const plainLinkInlineAiDiff: NoteInlineAiDiff = {
+export const linkInlineAiDiff: NoteInlineAiDiff = {
   renderAiContent(aiContent, registry) {
     const link = document.createElement('a');
     const props = readInlineProps(aiContent);
@@ -273,13 +272,13 @@ export function createRichTextBlockAiDiff(config: NoteRichTextAiDiffConfig): Not
         return renderRichTextComparison(current, aiBlock, registry, textDiffConfig, context);
       },
     },
-    applyGranular(block, aiContent, action, target, registry) {
+    applyGranular(block, aiContent, action, target) {
       if (target.kind === 'content-hunk') {
         return action === 'accept' ? aiContent : block.content;
       }
       const aiBlock = { ...block, content: aiContent };
-      const plan = resolveRichTextDiffPlan(block, aiBlock, registry, textDiffConfig);
-      if (plan.mode !== 'text') return null;
+      const plan = resolveRichTextDiffPlan(block, aiBlock, textDiffConfig);
+      if (plan.mode !== 'granular') return null;
       const hunk = plan.hunks.filter((item) => item.mode === 'hunk')[target.index];
       if (!hunk) return null;
 
@@ -288,7 +287,6 @@ export function createRichTextBlockAiDiff(config: NoteRichTextAiDiffConfig): Not
           current: block.content,
           aiContent,
           hunk,
-          registry,
         });
       }
 
@@ -296,7 +294,6 @@ export function createRichTextBlockAiDiff(config: NoteRichTextAiDiffConfig): Not
         current: block.content,
         aiContent,
         hunk,
-        registry,
       });
     },
   };

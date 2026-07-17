@@ -28,20 +28,20 @@ export interface NoteContentCapabilityDeclarations {
   markdownImport: NoteCapabilityDeclaration;
   markdownExport: NoteCapabilityDeclaration;
   aiDiff: NoteCapabilityDeclaration;
-  projection: NoteCapabilityDeclaration;
+  plainText: NoteCapabilityDeclaration;
   print: NoteCapabilityDeclaration;
 }
 
-interface NoteBlockProjection {
-  plainText?: (block: Record<string, unknown>, registry: NotePluginRegistry) => string;
+interface NoteBlockPlainTextFacet {
+  project: (block: Record<string, unknown>, registry: NotePluginRegistry) => string;
 }
 
 export interface NoteBlockOutlineFacet {
   getLevel: (block: Record<string, unknown>) => number | undefined;
 }
 
-interface NoteInlineProjection {
-  plainText: (inline: Record<string, unknown>, registry: NotePluginRegistry) => string;
+interface NoteInlinePlainTextFacet {
+  project: (inline: Record<string, unknown>, registry: NotePluginRegistry) => string;
 }
 
 interface NoteMarkdownExportContext {
@@ -198,7 +198,7 @@ export interface NoteBlockPlugin extends NoteContentPluginBase {
   contentModel: NoteBlockContentModel;
   insertion?: NoteBlockInsertion;
   inputRules?: NoteBlockInputRules;
-  projection?: NoteBlockProjection;
+  plainText?: NoteBlockPlainTextFacet;
   outline?: NoteBlockOutlineFacet;
   markdownImport?: NoteMarkdownBlockImport;
   markdownExport?: NoteMarkdownExportProjection;
@@ -209,7 +209,7 @@ export interface NoteBlockPlugin extends NoteContentPluginBase {
 export interface NoteInlinePlugin extends NoteContentPluginBase {
   kind: 'inline';
   spec: InlineContentSpec<InlineContentConfig>;
-  projection?: NoteInlineProjection;
+  plainText?: NoteInlinePlainTextFacet;
   markdownImport?: NoteMarkdownInlineImport;
   markdownExport?: NoteMarkdownExportProjection;
   aiDiff: NoteInlineAiDiff;

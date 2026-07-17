@@ -2,7 +2,6 @@ import { useEffectForce } from '@/hooks/useEffectForce';
 import { useLatest, useMemoizedFn } from 'ahooks';
 import { useRef } from 'react';
 
-import type { NotePluginRegistry } from '../content/types';
 import {
   buildNoteOutlineProjection,
   resolveActiveOutlineItemId,
@@ -10,6 +9,7 @@ import {
   type NoteOutlineItem,
 } from '../engines/outline';
 import type { CustomBlockNoteEditor } from '../noteEditorComposition';
+import type { NotePluginRegistry } from '../registry/types';
 
 interface UseNoteOutlineRuntimeParams {
   editor: CustomBlockNoteEditor;

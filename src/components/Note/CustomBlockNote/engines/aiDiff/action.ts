@@ -1,14 +1,14 @@
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type * as Y from 'yjs';
 
+import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
 import type {
   NoteAiDiffAcceptedBlockUpdate,
   NoteAiDiffAction,
   NoteAiDiffActionTarget,
   NoteBlockAiDiff,
   NotePluginRegistry,
-} from '../../content/types';
-import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+} from '../../registry/types';
 import { isAiDiffContentEmpty, isAiDiffContentEqual, resolveNoteAiDiffBlock } from './contentState';
 import {
   AI_DIFF_ACTION_ORIGIN,

@@ -10,7 +10,7 @@ import type {
   NoteMarkdownImportContext,
   NoteMarkdownImportSegment,
   NotePluginRegistry,
-} from '../../content/types';
+} from '../../registry/types';
 
 interface StoredToken {
   ownerId: string;

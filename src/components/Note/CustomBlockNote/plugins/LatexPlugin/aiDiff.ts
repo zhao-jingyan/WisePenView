@@ -1,4 +1,4 @@
-import type { NoteBlockAiDiff, NoteInlineAiDiff } from '../../content/types';
+import type { NoteBlockAiDiff, NoteInlineAiDiff } from '../../registry/types';
 import { renderKatexInto } from './katexRender';
 import mathBlockStyles from './MathBlock/style.module.less';
 

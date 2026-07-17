@@ -6,7 +6,7 @@ import type {
 import { createExtension, getBlockInfo, inlineContentToNodes, nodeToBlock } from '@blocknote/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
-import type { NotePluginRegistry } from '../../../content/types';
+import type { NotePluginRegistry } from '../../../registry/types';
 
 /**
  * 行内内容的结构性类型：BlockNote 默认 inline content（text/link）+ 由本扩展插入的 inlineMath。

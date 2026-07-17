@@ -3,7 +3,7 @@ import type { Mark } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorProps } from '@tiptap/pm/view';
 
-import type { NoteEditorExtension } from '../../content/types';
+import type { NoteEditorExtension } from '../../registry/types';
 
 const ESC = '\u001b';
 

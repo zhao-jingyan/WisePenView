@@ -1,6 +1,3 @@
-import { projectInlinePlainText } from '../../content/projection';
-import type { NotePluginRegistry } from '../../content/types';
-
 import { getCodeBlockLanguageLabel } from './language';
 import { buildCodeLineDiff, type CodeLineDiffEntry } from './lineDiff';
 import styles from './style.module.less';
@@ -14,8 +11,13 @@ function readLanguage(aiBlock: Record<string, unknown>): string {
   return typeof props.language === 'string' && props.language ? props.language : 'text';
 }
 
-function readCode(aiBlock: Record<string, unknown>, registry: NotePluginRegistry): string {
-  return projectInlinePlainText(aiBlock.content, registry);
+function readCode(aiBlock: Record<string, unknown>): string {
+  if (typeof aiBlock.content === 'string') return aiBlock.content;
+  if (!Array.isArray(aiBlock.content)) return '';
+  return aiBlock.content
+    .filter(isRecord)
+    .map((inline) => (typeof inline.text === 'string' ? inline.text : ''))
+    .join('');
 }
 
 function createCodeBlockShell(params: {
@@ -88,14 +90,11 @@ function createDiffLine(entry: CodeLineDiffEntry): HTMLSpanElement {
 }
 
 /** 使用代码块原生 DOM 契约渲染只读 AI 候选。 */
-export function CodeBlockAiContentView(
-  aiBlock: Record<string, unknown>,
-  registry: NotePluginRegistry
-): HTMLElement {
+export function CodeBlockAiContentView(aiBlock: Record<string, unknown>): HTMLElement {
   const language = readLanguage(aiBlock);
   const code = document.createElement('code');
   code.className = styles.plainCode;
-  code.textContent = readCode(aiBlock, registry);
+  code.textContent = readCode(aiBlock);
   return createCodeBlockShell({
     language,
     languageLabel: getCodeBlockLanguageLabel(language),
@@ -106,13 +105,12 @@ export function CodeBlockAiContentView(
 /** 对比模式隐藏原代码块，改为在同一个代码块内逐行展示新旧差异。 */
 export function CodeBlockAiDiffComparisonView(
   current: Record<string, unknown>,
-  aiBlock: Record<string, unknown>,
-  registry: NotePluginRegistry
+  aiBlock: Record<string, unknown>
 ): HTMLElement {
   const aiLanguage = readLanguage(aiBlock);
   const code = document.createElement('code');
   code.className = styles.lineList;
-  buildCodeLineDiff(readCode(current, registry), readCode(aiBlock, registry)).forEach((entry) => {
+  buildCodeLineDiff(readCode(current), readCode(aiBlock)).forEach((entry) => {
     code.appendChild(createDiffLine(entry));
   });
   return createCodeBlockShell({

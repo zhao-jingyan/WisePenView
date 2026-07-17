@@ -1,7 +1,7 @@
 import { defaultBlockSpecs } from '@blocknote/core';
 import { PanelLeft, PanelTop, StretchHorizontal, Table2 } from 'lucide-react';
 
-import type { NoteBlockPlugin, NoteSideMenuAction } from '../../content/types';
+import type { NoteBlockPlugin, NoteSideMenuAction } from '../../registry/types';
 import { readTableContent, TableAiContentView, type TableContentLike } from './AiDiffView';
 
 function tableActions(content: TableContentLike | null): NoteSideMenuAction[] {
@@ -43,7 +43,7 @@ export const tablePlugin = {
     markdownImport: { support: 'default' },
     markdownExport: { support: 'default' },
     aiDiff: { support: 'custom' },
-    projection: { support: 'custom' },
+    plainText: { support: 'custom' },
     print: { support: 'custom' },
   },
   aiDiff: {
@@ -61,7 +61,7 @@ export const tablePlugin = {
 }`,
     ],
   },
-  projection: { plainText: () => '' },
+  plainText: { project: () => '' },
   sideMenu: {
     icon: Table2,
     inspect(block) {

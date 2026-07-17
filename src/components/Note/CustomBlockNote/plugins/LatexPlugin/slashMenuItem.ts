@@ -3,7 +3,7 @@ import type { DefaultReactSuggestionItem } from '@blocknote/react';
 import { Sigma } from 'lucide-react';
 import { createElement } from 'react';
 
-import type { PluginEditor } from '../../content/types';
+import type { PluginEditor } from '../../registry/types';
 
 /** `insertOrUpdateBlockForSlashMenu` 第二个参数的类型（PartialBlock<...>） */
 type SlashMenuPartialBlock = Parameters<typeof insertOrUpdateBlockForSlashMenu>[1];
