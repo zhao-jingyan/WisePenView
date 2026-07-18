@@ -40,7 +40,7 @@ const enUSAuth = {
     submit: 'Register',
     hasAccount: 'Already have an account?',
     toLogin: 'Sign In',
-    registerSuccess: 'Registration successful. Signing you in now.',
+    registerSuccess: 'Registration successful.',
     registerFailed: 'Registration failed',
     agreementRequired: 'Please accept the user agreement',
   },

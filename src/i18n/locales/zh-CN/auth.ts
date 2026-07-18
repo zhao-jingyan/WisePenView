@@ -40,7 +40,7 @@ const zhCNAuth = {
     submit: '注册',
     hasAccount: '已有账号？',
     toLogin: '登录',
-    registerSuccess: '注册成功，正在为您登录。',
+    registerSuccess: '注册成功',
     registerFailed: '注册失败',
     agreementRequired: '请接受用户协议',
   },
