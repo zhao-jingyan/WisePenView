@@ -31,18 +31,22 @@ export interface InlineCommentDeletePayload {
 
 export interface InlineCommentProps {
   threads: readonly InlineCommentThreadView[];
+  resolvedThreads: readonly InlineCommentThreadView[];
   loading?: boolean;
   error?: unknown;
   draft?: InlineCommentDraftView;
   activeThreadId?: string;
+  isHistoryOpen: boolean;
   currentUserId?: string;
   resourceOwnerId?: string | null;
   imageUpload?: Pick<ImageUploadRequest, 'scene' | 'bizTag'> | false;
+  onHistoryOpenChange(open: boolean): void;
   onDraftClose(): void;
   onThreadSelect(threadId: string): void;
   onCreate(payload: InlineCommentSubmitPayload): Promise<void>;
   onReply(threadId: string, payload: InlineCommentSubmitPayload): Promise<void>;
   onReactionChange(payload: InlineCommentReactionPayload): Promise<void>;
   onResolve(threadId: string): Promise<void>;
+  onReopen(threadId: string): Promise<void>;
   onDelete(payload: InlineCommentDeletePayload): Promise<void>;
 }

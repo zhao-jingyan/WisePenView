@@ -40,6 +40,30 @@
   box-shadow: var(--card-shadow);
 }
 
+.historyBody {
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  .appSubtleScrollbar();
+}
+
+.resolvedList {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.resolvedThread {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border: 1px solid var(--border-light);
+  border-radius: 7px;
+  background: var(--surface);
+}
+
 .threadHeader {
   display: flex;
   min-width: 0;
@@ -64,6 +88,15 @@
 }
 
 .draftQuote {
+  cursor: default;
+}
+
+.resolvedQuote {
+  flex: none;
+  padding: var(--space-xs) var(--space-sm);
+  border: 0;
+  border-radius: 6px;
+  background: var(--surface-secondary);
   cursor: default;
 }
 
@@ -96,6 +129,17 @@
   min-width: 0;
   flex-direction: column;
   gap: var(--space-md);
+}
+
+.resolvedActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2xs);
+}
+
+.reopenButton {
+  color: var(--accent);
 }
 
 .comment {

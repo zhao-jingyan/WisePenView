@@ -3,6 +3,7 @@ import type {
   ResourceIconType,
   ResourcePermissionResourceType,
 } from '@/domains/Resource';
+import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export interface ResourceHeaderDownloadAction {
@@ -10,8 +11,16 @@ export interface ResourceHeaderDownloadAction {
   onAction: () => void;
 }
 
+export interface ResourceHeaderMoreAction {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  onAction(): void;
+}
+
 export interface ResourceHeaderMoreMenu {
   advanced?: ReactNode;
+  actions?: readonly ResourceHeaderMoreAction[];
   onPrint?: () => void;
   download?: ResourceHeaderDownloadAction;
   isPending?: boolean;

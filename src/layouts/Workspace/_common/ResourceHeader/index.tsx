@@ -97,7 +97,9 @@ function ResourceHeaderMore({
     }
     if (key === 'download') {
       menu?.download?.onAction();
+      return;
     }
+    menu?.actions?.find((action) => action.id === key)?.onAction();
   };
 
   return (
@@ -160,6 +162,15 @@ function ResourceHeaderMore({
               <Dropdown.Item id="permission" textValue="权限">
                 <ResourceHeaderMenuItemContent icon={ShieldCheck} label="权限" />
               </Dropdown.Item>
+            </Dropdown.Section>
+          ) : null}
+          {menu?.actions?.length ? (
+            <Dropdown.Section>
+              {menu.actions.map((action) => (
+                <Dropdown.Item key={action.id} id={action.id} textValue={action.label}>
+                  <ResourceHeaderMenuItemContent icon={action.icon} label={action.label} />
+                </Dropdown.Item>
+              ))}
             </Dropdown.Section>
           ) : null}
           {menu?.onPrint || menu?.download ? (

@@ -37,6 +37,7 @@ import {
 } from '@/views/workspace/ResourceHostContext';
 import { useWorkspaceResourceSidePanelStore } from '@/views/workspace/_store/useWorkspaceResourceSidePanelStore';
 import { Alert, Button, toast } from '@heroui/react';
+import { History } from 'lucide-react';
 import {
   createNoteChatStateProvider,
   createNoteSelectionChatContext,
@@ -169,6 +170,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
   const [hasAiDiffContent, setHasAiDiffContent] = useState(false);
   const [inlineCommentDraft, setInlineCommentDraft] = useState<NoteInlineCommentDraft>();
   const [activeInlineCommentThreadId, setActiveInlineCommentThreadId] = useState<string>();
+  const [isInlineCommentHistoryOpen, setIsInlineCommentHistoryOpen] = useState(false);
   const interactService = useInteractService();
   const inlineCommentService = useInlineCommentService();
   const userService = useUserService();
@@ -366,8 +368,10 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
             content: (
               <InlineComment
                 threads={inlineCommentSnapshot.threads}
+                resolvedThreads={inlineCommentSnapshot.resolvedThreads}
                 loading={inlineCommentSnapshot.loading}
                 error={inlineCommentSnapshot.error}
+                isHistoryOpen={isInlineCommentHistoryOpen}
                 draft={
                   inlineCommentDraft
                     ? {
@@ -383,6 +387,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
                   scene: 'PRIVATE_IMAGE_FOR_NOTE',
                   bizTag: `notes/${resourceId}/inline-comments`,
                 }}
+                onHistoryOpenChange={setIsInlineCommentHistoryOpen}
                 onDraftClose={() => setInlineCommentDraft(undefined)}
                 onThreadSelect={handleInlineCommentThreadSelect}
                 onCreate={async ({ content, imageUrls, idempotencyKey }) => {
@@ -413,6 +418,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
                     currentThreadId === threadId ? undefined : currentThreadId
                   );
                 }}
+                onReopen={(threadId) => inlineCommentSession.reopenThread(threadId)}
                 onDelete={({ threadId, itemId }) =>
                   inlineCommentSession.deleteComment(threadId, itemId)
                 }
@@ -454,6 +460,18 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
             />
           ) : null,
           moreMenu: {
+            actions: [
+              {
+                id: 'inline-comment-history',
+                label: `历史评论${
+                  inlineCommentSnapshot.resolvedThreads.length > 0
+                    ? ` (${inlineCommentSnapshot.resolvedThreads.length})`
+                    : ''
+                }`,
+                icon: History,
+                onAction: () => setIsInlineCommentHistoryOpen(true),
+              },
+            ],
             onPrint: handlePrintPdf,
             download: {
               label: '下载为 Markdown',
@@ -476,6 +494,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
       activeInlineCommentThreadId,
       handleInlineCommentThreadSelect,
       inlineCommentDraft,
+      isInlineCommentHistoryOpen,
       inlineCommentSnapshot,
       inlineCommentSession,
       currentUser?.id,

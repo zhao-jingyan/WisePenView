@@ -1,11 +1,12 @@
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
 import AppDisplayDialog from '@/components/Overlay/AppDisplayDialog';
+import AppModal from '@/components/Overlay/AppModal';
 import type { InlineCommentItem, InlineCommentReactionGroup } from '@/domains/InlineComment';
 import { parseErrorMessage } from '@/utils/error';
 import { formatTimestampToDateTime } from '@/utils/format/formatTime';
 import { Avatar, Button, Tooltip, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { Check, Trash2, X } from 'lucide-react';
+import { Check, RotateCcw, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 
 import CommentComposer from './CommentComposer';
@@ -181,6 +182,95 @@ interface CommentThreadProps extends Pick<
   onPreviewImage(url: string): void;
 }
 
+interface ResolvedCommentThreadProps {
+  thread: InlineCommentThreadView;
+  currentUserId?: string;
+  resourceOwnerId?: string | null;
+  onReopen(threadId: string): Promise<void>;
+  onDelete(payload: InlineCommentDeletePayload): void;
+  onPreviewImage(url: string): void;
+}
+
+function ResolvedCommentThread({
+  thread,
+  currentUserId,
+  resourceOwnerId,
+  onReopen,
+  onDelete,
+  onPreviewImage,
+}: ResolvedCommentThreadProps) {
+  const { loading: reopening, runAsync: reopen } = useRequest(
+    async () => onReopen(thread.threadId),
+    {
+      manual: true,
+      onSuccess: () => toast.success('批注已重新打开'),
+      onError: (error) => toast.danger(parseErrorMessage(error)),
+    }
+  );
+  const deletableItem = thread.items[thread.items.length - 1];
+  const canDelete = Boolean(
+    deletableItem &&
+    currentUserId &&
+    (currentUserId === deletableItem.authorId || currentUserId === resourceOwnerId)
+  );
+
+  return (
+    <article className={styles.resolvedThread}>
+      <blockquote className={`${styles.quoteButton} ${styles.resolvedQuote}`}>
+        <span className={styles.quoteText}>{thread.quoteText}</span>
+      </blockquote>
+      <div className={styles.commentList}>
+        {thread.items.map((item) => (
+          <CommentItem
+            key={item.itemId}
+            threadId={thread.threadId}
+            item={item}
+            active={false}
+            canDelete={false}
+            onReactionChange={async () => undefined}
+            onDelete={onDelete}
+            onPreviewImage={onPreviewImage}
+          />
+        ))}
+      </div>
+      <div className={styles.resolvedActions}>
+        <Button
+          variant="ghost"
+          size="sm"
+          isDisabled={reopening}
+          className={styles.reopenButton}
+          aria-busy={reopening || undefined}
+          onPress={() => void reopen()}
+        >
+          <RotateCcw size={14} aria-hidden />
+          重新打开
+        </Button>
+        {canDelete ? (
+          <Tooltip>
+            <Tooltip.Trigger>
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                className={styles.iconButton}
+                aria-label="删除批注"
+                onPress={() => {
+                  if (deletableItem) {
+                    onDelete({ threadId: thread.threadId, itemId: deletableItem.itemId });
+                  }
+                }}
+              >
+                <Trash2 size={15} aria-hidden />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>删除</Tooltip.Content>
+          </Tooltip>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 function CommentThread({
   thread,
   activeThreadId,
@@ -265,19 +355,23 @@ function CommentThread({
 
 function InlineComment({
   threads,
+  resolvedThreads,
   loading,
   error,
   draft,
   activeThreadId,
+  isHistoryOpen,
   currentUserId,
   resourceOwnerId,
   imageUpload,
+  onHistoryOpenChange,
   onDraftClose,
   onThreadSelect,
   onCreate,
   onReply,
   onReactionChange,
   onResolve,
+  onReopen,
   onDelete,
 }: InlineCommentProps) {
   const [pendingDeletion, setPendingDeletion] = useState<InlineCommentDeletePayload>();
@@ -370,6 +464,41 @@ function InlineComment({
         isConfirmDisabled={!pendingDeletion}
         onConfirm={() => void deleteComment()}
       />
+
+      <AppModal
+        isOpen={isHistoryOpen}
+        onOpenChange={onHistoryOpenChange}
+        title="历史评论"
+        size="md"
+        bodyClassName={styles.historyBody}
+        footer={false}
+      >
+        {loading && resolvedThreads.length === 0 ? (
+          <p className={styles.stateText}>正在加载历史评论...</p>
+        ) : null}
+        {error ? <p className={styles.errorText}>{parseErrorMessage(error)}</p> : null}
+        {!loading && !error && resolvedThreads.length === 0 ? (
+          <p className={styles.stateText}>还没有已解决的评论</p>
+        ) : null}
+        {resolvedThreads.length > 0 ? (
+          <div className={styles.resolvedList}>
+            {resolvedThreads.map((thread) => (
+              <ResolvedCommentThread
+                key={thread.threadId}
+                thread={thread}
+                currentUserId={currentUserId}
+                resourceOwnerId={resourceOwnerId}
+                onReopen={async (threadId) => {
+                  await onReopen(threadId);
+                  onHistoryOpenChange(false);
+                }}
+                onDelete={setPendingDeletion}
+                onPreviewImage={setPreviewImageUrl}
+              />
+            ))}
+          </div>
+        ) : null}
+      </AppModal>
 
       <AppDisplayDialog
         isOpen={Boolean(previewImageUrl)}

@@ -6,6 +6,7 @@ import { NoteInlineCommentServicesMap } from '../mapper/NoteInlineCommentService
 
 export interface NoteInlineCommentSessionSnapshot {
   threads: readonly NoteInlineCommentThread[];
+  resolvedThreads: readonly NoteInlineCommentThread[];
   loading: boolean;
   error?: unknown;
 }
@@ -23,9 +24,14 @@ export class NoteInlineCommentSession {
   readonly resourceId: string;
   private readonly inlineCommentService: IInlineCommentService;
   private readonly threadsById = new Map<string, NoteInlineCommentThread>();
+  private resolvedThreads: NoteInlineCommentThread[] = [];
   private readonly addedItemIdsByRequestKey = new Map<string, string>();
   private readonly subscribers = new Set<() => void>();
-  private snapshot: NoteInlineCommentSessionSnapshot = { threads: [], loading: false };
+  private snapshot: NoteInlineCommentSessionSnapshot = {
+    threads: [],
+    resolvedThreads: [],
+    loading: false,
+  };
   private refreshPromise?: Promise<void>;
   private hasLoaded = false;
   private destroyed = false;
@@ -131,6 +137,15 @@ export class NoteInlineCommentSession {
     await this.refreshAfterMutation();
   }
 
+  async reopenThread(threadId: string): Promise<void> {
+    await this.inlineCommentService.changeInlineCommentResolveStatus({
+      resourceId: this.resourceId,
+      inlineCommentId: threadId,
+      resolved: false,
+    });
+    await this.refreshAfterMutation();
+  }
+
   refresh(): Promise<void> {
     if (this.destroyed) return Promise.resolve();
     if (this.refreshPromise) return this.refreshPromise;
@@ -153,15 +168,22 @@ export class NoteInlineCommentSession {
 
   private async loadThreads(): Promise<void> {
     if (this.destroyed) return;
-    const threads = NoteInlineCommentServicesMap.mapThreads(
-      await this.inlineCommentService.listInlineComments({
+    const [activeThreads, resolvedThreads] = await Promise.all([
+      this.inlineCommentService.listInlineComments({
         resourceId: this.resourceId,
         resolved: false,
-      })
-    );
+      }),
+      this.inlineCommentService.listInlineComments({
+        resourceId: this.resourceId,
+        resolved: true,
+      }),
+    ]);
     if (this.destroyed) return;
     this.threadsById.clear();
-    threads.forEach((thread) => this.threadsById.set(thread.threadId, thread));
+    NoteInlineCommentServicesMap.mapThreads(activeThreads).forEach((thread) =>
+      this.threadsById.set(thread.threadId, thread)
+    );
+    this.resolvedThreads = NoteInlineCommentServicesMap.mapThreads(resolvedThreads);
   }
 
   private async reloadCreatedThread(threadId: string): Promise<NoteInlineCommentThread> {
@@ -217,6 +239,7 @@ export class NoteInlineCommentSession {
   private publish(patch: Partial<NoteInlineCommentSessionSnapshot> = {}): void {
     this.updateSnapshot({
       threads: [...this.threadsById.values()].sort(compareThreads),
+      resolvedThreads: [...this.resolvedThreads].sort(compareThreads),
       ...patch,
     });
   }
