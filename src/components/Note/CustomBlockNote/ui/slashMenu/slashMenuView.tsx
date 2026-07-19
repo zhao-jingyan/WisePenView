@@ -166,7 +166,7 @@ export function SlashMenuListBoxItems({
                   data-slash-menu-index={itemIndex}
                   onMouseMove={(event) => onItemMouseMove?.(itemIndex, event.nativeEvent)}
                   onMouseDown={(event) => event.preventDefault()}
-                  onPress={() => onItemClick?.(item)}
+                  onAction={() => onItemClick?.(item)}
                 >
                   <SlashMenuItemContent item={item} />
                 </ListBoxItem>
