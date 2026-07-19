@@ -1,4 +1,4 @@
-import type { Message } from '@/components/ChatPanel/index.type';
+import type { Model } from '@/components/ChatPanel/index.type';
 import { Spin } from '@/components/Feedback';
 import {
   Marker,
@@ -13,7 +13,9 @@ import {
   useMessageScrollerScrollable,
 } from '@/components/_shadcn';
 import markerStyles from '@/components/_shadcn/marker.module.less';
+import type { WisePenUIMessage } from '@/domains/Chat';
 import { useLatest, useUpdateEffect } from 'ahooks';
+import type { ChatStatus } from 'ai';
 import { ArrowDown } from 'lucide-react';
 import { useRef, type ReactNode } from 'react';
 import MessageItem from './MessageItem';
@@ -23,12 +25,12 @@ import styles from './style.module.less';
 const AUTO_LOAD_EDGE_THRESHOLD = 96;
 
 interface MessageListProps {
-  messages: Message[];
+  messages: WisePenUIMessage[];
   canLoadMoreHistory: boolean;
   loadingMoreHistory: boolean;
   onLoadMoreHistory: () => Promise<void>;
-  /** 哪类消息作为 scrollAnchor；默认 ai */
-  scrollAnchorRole?: 'user' | 'ai';
+  status: ChatStatus;
+  model: Model | null;
   footer?: ReactNode;
 }
 
@@ -37,7 +39,8 @@ function MessageList({
   canLoadMoreHistory,
   loadingMoreHistory,
   onLoadMoreHistory,
-  scrollAnchorRole = 'ai',
+  status,
+  model,
   footer,
 }: MessageListProps) {
   return (
@@ -69,9 +72,15 @@ function MessageList({
                     <MessageScrollerItem
                       key={message.id}
                       messageId={message.id}
-                      scrollAnchor={message.role === scrollAnchorRole}
+                      scrollAnchor={message.role === 'assistant'}
                     >
-                      <MessageItem message={message} />
+                      <MessageItem
+                        message={message}
+                        model={model}
+                        streaming={
+                          message.id === messages[messages.length - 1]?.id && status === 'streaming'
+                        }
+                      />
                     </MessageScrollerItem>
                   ))}
                 </>

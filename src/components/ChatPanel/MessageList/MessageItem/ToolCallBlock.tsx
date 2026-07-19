@@ -1,49 +1,62 @@
 import { Spin } from '@/components/Feedback';
 import { Marker, MarkerContent, MarkerIcon } from '@/components/_shadcn';
 import markerStyles from '@/components/_shadcn/marker.module.less';
-import { Wrench } from 'lucide-react';
+import { getToolName, type DynamicToolUIPart, type ToolUIPart } from 'ai';
+import { AlertCircle, Ban, Check, Clock, Wrench } from 'lucide-react';
 import styles from './ToolCallBlock.module.less';
 
-interface ToolCallBlockProps {
-  content: string;
-  loading?: boolean;
+type RenderableToolPart = ToolUIPart | DynamicToolUIPart;
+
+function getToolStatus(part: RenderableToolPart): {
+  label: string;
+  loading: boolean;
+} {
+  switch (part.state) {
+    case 'input-streaming':
+      return { label: '正在准备工具输入', loading: true };
+    case 'input-available':
+      return { label: '正在调用工具', loading: true };
+    case 'approval-requested':
+      return { label: '等待批准', loading: false };
+    case 'approval-responded':
+      return {
+        label: part.approval.approved ? '已批准' : '未批准',
+        loading: false,
+      };
+    case 'output-available':
+      return { label: '调用完成', loading: false };
+    case 'output-error':
+      return { label: part.errorText || '调用失败', loading: false };
+    case 'output-denied':
+      return { label: '调用被拒绝', loading: false };
+  }
 }
 
-function ToolCallBlock({ content, loading = false }: ToolCallBlockProps) {
-  if (!content && !loading) return null;
-
-  const toolNames = Array.from(
-    new Set(
-      content
-        .split('\n')
-        .map((item) => item.trim())
-        .filter(Boolean)
-    )
-  );
-  const displayText = toolNames.join('、');
-
-  if (loading && !displayText) {
-    return (
-      <div className={styles.wrapper}>
-        <Marker role="status">
-          <MarkerIcon>
-            <Spin size="small" />
-          </MarkerIcon>
-          <MarkerContent className={markerStyles.shimmer}>正在调用工具...</MarkerContent>
-        </Marker>
-      </div>
-    );
-  }
-
-  if (!displayText) return null;
+function ToolCallBlock({ part }: { part: RenderableToolPart }) {
+  const toolName = getToolName(part);
+  const status = getToolStatus(part);
 
   return (
-    <div className={styles.wrapper}>
-      <Marker variant="border">
+    <div className={styles.wrapper} data-tool-call-id={part.toolCallId}>
+      <Marker variant="border" role="status">
         <MarkerIcon>
-          <Wrench />
+          {status.loading ? (
+            <Spin size="small" />
+          ) : part.state === 'output-available' ? (
+            <Check />
+          ) : part.state === 'output-denied' ? (
+            <Ban />
+          ) : part.state === 'output-error' ? (
+            <AlertCircle />
+          ) : part.state === 'approval-requested' ? (
+            <Clock />
+          ) : (
+            <Wrench />
+          )}
         </MarkerIcon>
-        <MarkerContent>调用工具：{displayText}</MarkerContent>
+        <MarkerContent className={status.loading ? markerStyles.shimmer : undefined}>
+          {toolName}：{status.label}
+        </MarkerContent>
       </Marker>
     </div>
   );

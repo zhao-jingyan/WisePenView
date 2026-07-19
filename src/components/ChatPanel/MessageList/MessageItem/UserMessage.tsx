@@ -1,5 +1,15 @@
-import type { Message } from '@/components/ChatPanel/index.type';
+import EntryIcon from '@/components/Icons/EntryIcon';
+import {
+  Attachment,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentTitle,
+} from '@/components/_shadcn';
+import type { WisePenUIMessage } from '@/domains/Chat';
 import { Button, toast } from '@heroui/react';
+import { isTextUIPart } from 'ai';
 import clsx from 'clsx';
 import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
@@ -9,17 +19,17 @@ import styles from './UserMessage.module.less';
 
 const MESSAGE_ACTION_ICON_SIZE = 17;
 
-interface UserMessageProps {
-  message: Message;
-  onEdit?: (content: string) => void;
-}
-
-function UserMessage({ message }: UserMessageProps) {
+function UserMessage({ message }: { message: WisePenUIMessage }) {
   const [copied, setCopied] = useState(false);
+  const content = message.parts
+    .filter(isTextUIPart)
+    .map((part) => part.text)
+    .join('');
+  const attachments = message.metadata?.selectedAttachments ?? [];
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message.content);
+      await navigator.clipboard.writeText(content);
       toast.success('复制成功');
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
@@ -32,30 +42,63 @@ function UserMessage({ message }: UserMessageProps) {
     <div className={styles.userRow}>
       <div className={styles.contentCol}>
         <div className={styles.bubbleWrap}>
-          <div className={styles.bubble}>
-            <MessageContent content={message.content} />
-          </div>
+          {attachments.length > 0 ? (
+            <AttachmentGroup className={styles.attachments} aria-label="消息附件">
+              {attachments.map((attachment) => (
+                <Attachment
+                  key={attachment.attachmentId}
+                  size="xs"
+                  state={attachment.available ? 'done' : 'error'}
+                  className={styles.attachment}
+                >
+                  <AttachmentMedia>
+                    <EntryIcon entryType="resource" resourceName={attachment.filename} size={14} />
+                  </AttachmentMedia>
+                  <AttachmentContent>
+                    <AttachmentTitle title={attachment.filename}>
+                      {attachment.filename}
+                    </AttachmentTitle>
+                    <AttachmentDescription>
+                      {attachment.available
+                        ? attachment.kind === 'resource'
+                          ? '资源附件'
+                          : '附件'
+                        : '附件已不可用'}
+                    </AttachmentDescription>
+                  </AttachmentContent>
+                </Attachment>
+              ))}
+            </AttachmentGroup>
+          ) : null}
 
-          <div className={styles.actions}>
-            <Button
-              variant="ghost"
-              isIconOnly
-              size="sm"
-              className={clsx(
-                inputStyles.toolbarCircleBtn,
-                styles.actionBtn,
-                copied && styles.actionBtnCopied
-              )}
-              onPress={handleCopy}
-              aria-label="复制"
-            >
-              {copied ? (
-                <Check size={MESSAGE_ACTION_ICON_SIZE} />
-              ) : (
-                <Copy size={MESSAGE_ACTION_ICON_SIZE} />
-              )}
-            </Button>
-          </div>
+          {content ? (
+            <div className={styles.bubble}>
+              <MessageContent content={content} />
+            </div>
+          ) : null}
+
+          {content ? (
+            <div className={styles.actions}>
+              <Button
+                variant="ghost"
+                isIconOnly
+                size="sm"
+                className={clsx(
+                  inputStyles.toolbarCircleBtn,
+                  styles.actionBtn,
+                  copied && styles.actionBtnCopied
+                )}
+                onPress={handleCopy}
+                aria-label="复制"
+              >
+                {copied ? (
+                  <Check size={MESSAGE_ACTION_ICON_SIZE} />
+                ) : (
+                  <Copy size={MESSAGE_ACTION_ICON_SIZE} />
+                )}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

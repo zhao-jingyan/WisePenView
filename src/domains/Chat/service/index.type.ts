@@ -1,6 +1,7 @@
 import type { Group, IGroupService } from '@/domains/Group';
 import type { IResourceService, ResourceSkillSummary } from '@/domains/Resource';
 import type { ChatAgentOption } from '../entity/agent';
+import type { WisePenUIMessage } from '../entity/message';
 import type { CapabilityToolOption } from '../mapper/capabilityPicker.mapper';
 import type { SkillScopeTreeGroup } from '../mapper/skillScope.mapper';
 
@@ -101,7 +102,7 @@ export interface IChatService {
   renameSession(params: RenameSessionRequest): Promise<ChatSession>;
   deleteSession(params: DeleteSessionRequest): Promise<void>;
   listSessions(params?: ListSessionsRequest): Promise<PageResult<ChatSession>>;
-  listHistoryMessages(params: ListHistoryMessagesRequest): Promise<PageResult<ChatMessage>>;
+  listHistoryMessages(params: ListHistoryMessagesRequest): Promise<PageResult<WisePenUIMessage>>;
   getTools(): Promise<ToolOption[]>;
   uploadAttachment(params: UploadAttachmentParams): Promise<UploadAttachmentResult>;
 }
@@ -153,30 +154,6 @@ export interface ListHistoryMessagesRequest {
   sessionId: string;
   page?: number;
   size?: number;
-}
-
-/** 历史消息角色 */
-export type MessageRole = 'user' | 'assistant';
-
-/** 历史消息分片 */
-export interface ChatMessagePart {
-  type: string;
-  text: string | null;
-  state: string | null;
-  toolCallId: string | null;
-  input: unknown;
-  output: unknown;
-}
-
-/** 历史消息实体 */
-export interface ChatMessage {
-  id: string;
-  role: MessageRole;
-  modelId?: string;
-  content?: string;
-  parts?: ChatMessagePart[];
-  toolCalls?: unknown[];
-  createdAt?: string;
 }
 
 /** 分页返回结构 */

@@ -1,5 +1,5 @@
 import type {
-  ChatMessage,
+  ChatMessageMetadata,
   ChatSession,
   IChatService,
   ListHistoryMessagesRequest,
@@ -8,6 +8,7 @@ import type {
   ToolOption,
   UploadAttachmentParams,
   UploadAttachmentResult,
+  WisePenUIMessage,
 } from '@/domains/Chat';
 import {
   buildAdvancedSkillTreeGroups,
@@ -169,7 +170,7 @@ let mockSessions: ChatSession[] = [
   },
 ];
 
-const buildMockHistoryMessages = (sessionId: string, total: number): ChatMessage[] => {
+const buildMockHistoryMessages = (sessionId: string, total: number): WisePenUIMessage[] => {
   return Array.from({ length: total }, (_, index) => {
     const messageNo = index + 1;
     const messageSeq = String(messageNo).padStart(4, '0');
@@ -179,22 +180,38 @@ const buildMockHistoryMessages = (sessionId: string, total: number): ChatMessage
       MOCK_HISTORY_BASE_TS + index * MOCK_HISTORY_INTERVAL_MS
     ).toISOString();
 
-    const role: ChatMessage['role'] = isUser ? 'user' : 'assistant';
+    const role: WisePenUIMessage['role'] = isUser ? 'user' : 'assistant';
+    const text = isUser
+      ? `【${sessionId}】第 ${round} 轮：请解释一下这个需求，并给出步骤。`
+      : `【${sessionId}】第 ${round} 轮回复：已整理需求背景、约束条件与执行步骤。`;
+
+    const metadata: ChatMessageMetadata = {
+      createdAt,
+      ...(isUser && messageNo === total - 1
+        ? {
+            selectedAttachments: [
+              {
+                attachmentId: `${sessionId}-resource-report`,
+                filename: 'SlideWise_Report.pdf',
+                kind: 'resource',
+                available: true,
+              },
+            ],
+          }
+        : {}),
+    };
 
     return {
       id: `${sessionId}-msg-${messageSeq}`,
       role,
-      ...(isUser ? {} : { modelId: 'mock-system-1' }),
-      content: isUser
-        ? `【${sessionId}】第 ${round} 轮：请解释一下这个需求，并给出步骤。`
-        : `【${sessionId}】第 ${round} 轮回复：已整理需求背景、约束条件与执行步骤。`,
-      createdAt,
+      parts: [{ type: 'text', text, state: 'done' }],
+      metadata,
     };
   });
 };
 
-let mockHistoryMessagesBySessionId: Record<string, ChatMessage[]> = mockSessions.reduce<
-  Record<string, ChatMessage[]>
+let mockHistoryMessagesBySessionId: Record<string, WisePenUIMessage[]> = mockSessions.reduce<
+  Record<string, WisePenUIMessage[]>
 >((acc, session) => {
   acc[session.id] = buildMockHistoryMessages(session.id, MOCK_HISTORY_SIZE);
   return acc;

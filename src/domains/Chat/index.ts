@@ -1,4 +1,9 @@
 export type { ChatAgentOption, ChatAgentType } from './entity/agent';
+export type {
+  ChatMessageMetadata,
+  MessageAttachmentSnapshot,
+  WisePenUIMessage,
+} from './entity/message';
 export { MODEL_PROVIDER_ID, MODEL_TYPE } from './enum/model';
 export type { ModelProviderId, ModelType } from './enum/model';
 export {
@@ -21,8 +26,6 @@ export {
 export type { SkillScopeTreeGroup } from './mapper/skillScope.mapper';
 export type {
   ChatInputCapabilityOptions,
-  ChatMessage,
-  ChatMessagePart,
   ChatModel,
   ChatModelProviderOption,
   ChatModelTag,
@@ -47,4 +50,5 @@ export type {
   SendSessionMessageOptions,
   UseChatSessionOptions,
 } from './session/index.type';
+export { useChatHistory } from './session/useChatHistory';
 export { useChatSession } from './session/useChatSession';
