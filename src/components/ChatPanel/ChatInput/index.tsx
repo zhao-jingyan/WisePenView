@@ -1,7 +1,7 @@
 import { TextArea } from '@heroui/react';
 import clsx from 'clsx';
 import { X } from 'lucide-react';
-import { useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { ChatInputStoreProvider } from './_store/ChatInputStoreProvider';
 import AttachmentStrip from './AttachmentStrip';
 import { ChatInputFileProvider } from './ChatInputFileContext';
@@ -29,6 +29,18 @@ function ChatInputContent({
       onStop,
       sending,
     });
+
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    const maxHeight = Number.parseFloat(window.getComputedStyle(textarea).maxHeight);
+    const nextHeight = Number.isFinite(maxHeight)
+      ? Math.min(textarea.scrollHeight, maxHeight)
+      : textarea.scrollHeight;
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = textarea.scrollHeight > nextHeight ? 'auto' : 'hidden';
+  }, [textAreaProps.value]);
 
   return (
     <div className={styles.container} {...containerProps}>

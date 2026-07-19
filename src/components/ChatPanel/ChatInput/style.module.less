@@ -109,7 +109,10 @@
 }
 
 .textarea {
-  flex: 1;
+  flex: 0 0 auto;
+  min-height: calc(1.6em + 16px);
+  max-height: calc(16em + 16px);
+  overflow-y: hidden;
   resize: none !important;
   border: none !important;
   box-shadow: none !important;
