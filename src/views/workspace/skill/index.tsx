@@ -1,7 +1,7 @@
+import { DriveCreate } from '@/components/Drive/Modals';
 import { Empty, ResultState, Spin } from '@/components/Feedback';
 import { FormField, Input, TextArea } from '@/components/Input';
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
-import CreateSkillModal from '@/components/Skill/CreateSkillModal';
 import SkillEditor from '@/components/Skill/SkillEditor';
 import SkillFileTree from '@/components/Skill/SkillFileTree';
 import type {
@@ -2063,7 +2063,8 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
             }
           />
         </div>
-        <CreateSkillModal
+        <DriveCreate
+          type="skill"
           isOpen={createModalOpen}
           onOpenChange={handleCloseCreateModal}
           onSuccess={handleCreateSuccess}
@@ -2276,7 +2277,8 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
         hidden
         onChange={(event) => void handleFileChange(event)}
       />
-      <CreateSkillModal
+      <DriveCreate
+        type="skill"
         isOpen={createModalOpen}
         onOpenChange={handleCloseCreateModal}
         onSuccess={handleCreateSuccess}

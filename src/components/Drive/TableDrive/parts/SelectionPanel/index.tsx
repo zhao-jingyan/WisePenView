@@ -111,7 +111,13 @@ function TableDriveSelectionPanel({
   const canModifyActionTarget = actionTarget != null && !isDriveSystemFolderNode(actionTarget);
   const canRename =
     actionTarget != null && !isDriveSystemFolderNode(actionTarget) && actionTarget.type !== 'link';
-  const deleteActionLabel = groupId ? '移除' : isTrashView ? '彻底删除' : '删除';
+  const deleteActionLabel = groupId
+    ? '移除'
+    : isTrashView
+      ? '永久删除'
+      : actionTarget?.type === 'link'
+        ? '删除链接'
+        : '移入回收站';
   const moveActionLabel = isTrashView ? '移动到云盘' : '移动';
   const folderTagId = node?.type === 'folder' ? node.tagId : undefined;
   const resourceId = node?.type === 'resource' ? node.resourceId : undefined;

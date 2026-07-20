@@ -5,23 +5,23 @@ import {
 import {
   getDriveNodeLabel,
   getDriveScopeGroupId,
+  isDriveTrashFolderNode,
   mountResourceToFolderTag,
   type DriveActionTarget,
 } from '@/components/Drive/common/driveComponentModel';
 import {
-  DeleteNodeModal,
-  NewFolderNodeModal,
+  DriveCreate,
+  DriveDelete,
   RenameNodeModal,
+  TrashDelete,
   UploadDocumentModal,
+  type DriveCreateType,
 } from '@/components/Drive/Modals';
 import { Empty, Spin } from '@/components/Feedback';
-import { FormField, Input } from '@/components/Input';
 import {
   MARKDOWN_NOTE_FILE_ACCEPT,
   useMarkdownNoteImport,
 } from '@/components/Note/useMarkdownNoteImport';
-import AppFormDialog from '@/components/Overlay/AppFormDialog';
-import CreateSkillModal from '@/components/Skill/CreateSkillModal';
 import type { DataNode } from '@/components/Tree';
 import Tree from '@/components/Tree';
 import { useDocumentService, useDriveService, useNoteService, useResourceService } from '@/domains';
@@ -54,6 +54,21 @@ const RENDERABLE_TYPES = new Set<'root' | 'folder' | 'resource' | 'link'>([
 const SELECTABLE_TYPES = new Set<'root' | 'folder' | 'resource' | 'link'>(['resource', 'link']);
 const EMPTY_DISABLED_IDS = new Set<string>();
 
+interface SidebarDriveCreateTarget {
+  type: DriveCreateType;
+  target: RootNode | FolderNode;
+}
+
+function isNodeInTrash(node: DriveActionTarget | null, nodeMap: Map<string, DriveNode>): boolean {
+  let parentId = node?.parentId;
+  while (parentId) {
+    const parent = nodeMap.get(parentId);
+    if (isDriveTrashFolderNode(parent)) return true;
+    parentId = parent?.parentId ?? null;
+  }
+  return false;
+}
+
 interface SidebarTreeLoadResult {
   treeData: DataNode[];
   nodeMap: Map<string, DriveNode>;
@@ -82,25 +97,25 @@ function SidebarDrive() {
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
-  const [createFolderParent, setCreateFolderParent] = useState<RootNode | FolderNode | null>(null);
   const [noteTarget, setNoteTarget] = useState<RootNode | FolderNode | null>(null);
   const [uploadTarget, setUploadTarget] = useState<RootNode | FolderNode | null>(null);
-  const [drawioTarget, setDrawioTarget] = useState<RootNode | FolderNode | null>(null);
-  const [drawioName, setDrawioName] = useState('未命名图表');
-  const [drawioNameError, setDrawioNameError] = useState('');
-  const [skillTarget, setSkillTarget] = useState<RootNode | FolderNode | null>(null);
+  const [driveCreateTarget, setDriveCreateTarget] = useState<SidebarDriveCreateTarget | null>(null);
   const [renameTarget, setRenameTarget] = useState<DriveActionTarget | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DriveActionTarget | null>(null);
   const importTargetRef = useRef<RootNode | FolderNode | null>(null);
   const activeNavKey = resolveAppHeaderNavKey(location.pathname);
 
   const existingFolderNames = useMemo(() => {
-    if (!createFolderParent) return [];
+    if (driveCreateTarget?.type !== 'folder') return [];
     return [...nodeMap.values()]
       .filter((node): node is FolderNode => node.type === 'folder')
-      .filter((node) => node.parentId === createFolderParent.id)
+      .filter((node) => node.parentId === driveCreateTarget.target.id)
       .map((node) => node.name);
-  }, [createFolderParent, nodeMap]);
+  }, [driveCreateTarget, nodeMap]);
+  const isDeleteTargetInTrash = useMemo(
+    () => isNodeInTrash(deleteTarget, nodeMap),
+    [deleteTarget, nodeMap]
+  );
 
   const resolveContainerMountTagId = (node: RootNode | FolderNode): string | undefined => {
     if (node.type === 'folder') return node.tagId;
@@ -176,7 +191,7 @@ function SidebarDrive() {
   ): void => {
     switch (action) {
       case 'folder':
-        setCreateFolderParent(node);
+        setDriveCreateTarget({ type: 'folder', target: node });
         break;
       case 'note':
         setNoteTarget(node);
@@ -187,12 +202,10 @@ function SidebarDrive() {
         openMarkdownFilePicker();
         break;
       case 'drawio':
-        setDrawioTarget(node);
-        setDrawioName('未命名图表');
-        setDrawioNameError('');
+        setDriveCreateTarget({ type: 'drawio', target: node });
         break;
       case 'skill':
-        setSkillTarget(node);
+        setDriveCreateTarget({ type: 'skill', target: node });
         break;
       case 'upload':
         setUploadTarget(node);
@@ -381,57 +394,6 @@ function SidebarDrive() {
     }
   );
 
-  const { loading: creatingDrawio, run: runCreateDrawio } = useRequest(
-    async (target: RootNode | FolderNode, title: string) => {
-      const { resourceId } = await noteService.createNote({
-        title,
-        resourceType: 'DRAWIO',
-      });
-      if (!resourceId) {
-        throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_CREATE_RESOURCE_ID_MISSING);
-      }
-      await mountCreatedResource(resourceId, target);
-      return {
-        resourceId,
-        target,
-      };
-    },
-    {
-      manual: true,
-      onSuccess: ({ resourceId, target }) => {
-        setDrawioTarget(null);
-        setDrawioNameError('');
-        openInWorkspace({
-          resourceId,
-          resourceType: RESOURCE_KIND.DRAWIO,
-          driveLocation: { scope: target.scope, parentNodeId: target.id },
-        });
-      },
-      onError: (err) => {
-        toast.danger(parseErrorMessage(err));
-      },
-    }
-  );
-
-  const handleCreateSkillSuccess = (resourceId: string): void => {
-    const target = skillTarget;
-    if (!target) return;
-
-    void (async () => {
-      try {
-        await mountCreatedResource(resourceId, target);
-        setSkillTarget(null);
-        openInWorkspace({
-          resourceId,
-          resourceType: RESOURCE_KIND.SKILL,
-          driveLocation: { scope: target.scope, parentNodeId: target.id },
-        });
-      } catch (err) {
-        toast.danger(parseErrorMessage(err));
-      }
-    })();
-  };
-
   const handleLoadData = async (treeNode: DataNode): Promise<void> => {
     const key = String(treeNode.key);
     const node = nodeMap.get(key);
@@ -516,19 +478,6 @@ function SidebarDrive() {
           loadData={handleLoadData}
         />
       )}
-      {createFolderParent ? (
-        <NewFolderNodeModal
-          isOpen={Boolean(createFolderParent)}
-          parentId={createFolderParent.id}
-          groupId={groupId}
-          parentLabel={getDriveNodeLabel(createFolderParent)}
-          existingFolderNames={existingFolderNames}
-          onOpenChange={(open) => {
-            if (!open) setCreateFolderParent(null);
-          }}
-          onSuccess={refreshTree}
-        />
-      ) : null}
       {uploadTarget ? (
         <UploadDocumentModal
           isOpen={Boolean(uploadTarget)}
@@ -540,50 +489,34 @@ function SidebarDrive() {
           onSuccess={refreshTree}
         />
       ) : null}
-      <AppFormDialog
-        isOpen={Boolean(drawioTarget)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDrawioTarget(null);
-            setDrawioNameError('');
-          }
-        }}
-        title="新建图表"
-        confirmText="创建"
-        onSubmit={() => {
-          const title = drawioName.trim();
-          if (!drawioTarget || !title) {
-            setDrawioNameError('请输入图表名称');
-            return;
-          }
-          runCreateDrawio(drawioTarget, title);
-        }}
-        isSubmitting={creatingDrawio}
-        isSubmitDisabled={creatingDrawio}
-        isDismissable={!creatingDrawio}
-      >
-        <FormField
-          aria-label="图表名称"
-          label="图表名称"
-          name="sidebarDrawioName"
-          value={drawioName}
-          onChange={(value) => {
-            setDrawioName(value);
-            setDrawioNameError('');
+      {driveCreateTarget ? (
+        <DriveCreate
+          type={driveCreateTarget.type}
+          isOpen
+          parentId={driveCreateTarget.target.id}
+          groupId={getDriveScopeGroupId(driveCreateTarget.target.scope)}
+          parentLabel={getDriveNodeLabel(driveCreateTarget.target)}
+          existingFolderNames={existingFolderNames}
+          onOpenChange={(open) => {
+            if (!open) setDriveCreateTarget(null);
           }}
-          errorMessage={drawioNameError}
-          isRequired
-        >
-          <Input placeholder="请输入名称" autoFocus />
-        </FormField>
-      </AppFormDialog>
-      <CreateSkillModal
-        isOpen={Boolean(skillTarget)}
-        onOpenChange={(open) => {
-          if (!open) setSkillTarget(null);
-        }}
-        onSuccess={handleCreateSkillSuccess}
-      />
+          onSuccess={async (createdId, type) => {
+            const target = driveCreateTarget.target;
+            if (type === 'folder') {
+              setDriveCreateTarget(null);
+              refreshTree();
+              return;
+            }
+            await mountCreatedResource(createdId, target);
+            setDriveCreateTarget(null);
+            openInWorkspace({
+              resourceId: createdId,
+              resourceType: type,
+              driveLocation: { scope: target.scope, parentNodeId: target.id },
+            });
+          }}
+        />
+      ) : null}
       <RenameNodeModal
         isOpen={Boolean(renameTarget)}
         node={renameTarget}
@@ -593,15 +526,26 @@ function SidebarDrive() {
         }}
         onSuccess={refreshTree}
       />
-      <DeleteNodeModal
-        isOpen={Boolean(deleteTarget)}
-        node={deleteTarget}
-        groupId={groupId}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-        onSuccess={refreshTree}
-      />
+      {isDeleteTargetInTrash ? (
+        <TrashDelete
+          isOpen={Boolean(deleteTarget)}
+          node={deleteTarget}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null);
+          }}
+          onSuccess={refreshTree}
+        />
+      ) : (
+        <DriveDelete
+          isOpen={Boolean(deleteTarget)}
+          node={deleteTarget}
+          groupId={groupId}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null);
+          }}
+          onSuccess={refreshTree}
+        />
+      )}
     </div>
   );
 }

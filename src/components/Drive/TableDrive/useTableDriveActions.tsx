@@ -1,21 +1,18 @@
-import CreateAgentModal from '@/components/Agent/CreateAgentModal';
 import {
-  NewFolderNodeModal,
+  DriveCreate,
   ResourcePermissionModal,
   TagMountPermissionModal,
   TagPermissionModal,
   UploadDocumentModal,
   UploadFileToGroupModal,
+  type DriveCreateType,
   type ResourcePermissionModalTarget,
 } from '@/components/Drive/Modals';
-import { FormField, Input } from '@/components/Input';
 import { useNewNoteStore } from '@/components/Note/_store/useNewNoteStore';
 import {
   MARKDOWN_NOTE_FILE_ACCEPT,
   useMarkdownNoteImport,
 } from '@/components/Note/useMarkdownNoteImport';
-import AppFormDialog from '@/components/Overlay/AppFormDialog';
-import CreateSkillModal from '@/components/Skill/CreateSkillModal';
 import { useDocumentService, useDriveService, useNoteService, useResourceService } from '@/domains';
 import type { DriveNodeScope } from '@/domains/Drive';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
@@ -83,7 +80,6 @@ export function useTableDriveActions({
   const resourceService = useResourceService();
   const toolbarConfig = { ...DEFAULT_TOOLBAR_CONFIG, ...actions?.toolbar };
 
-  const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [uploadDocumentOpen, setUploadDocumentOpen] = useState(false);
   const [uploadMountTagId, setUploadMountTagId] = useState<string>();
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -93,11 +89,7 @@ export function useTableDriveActions({
   const [resourcePermissionTarget, setResourcePermissionTarget] =
     useState<ResourcePermissionModalTarget | null>(null);
   const [resourcePermissionRefreshToken, setResourcePermissionRefreshToken] = useState(0);
-  const [drawioModalOpen, setDrawioModalOpen] = useState(false);
-  const [drawioName, setDrawioName] = useState('未命名图表');
-  const [drawioNameError, setDrawioNameError] = useState('');
-  const [skillModalOpen, setSkillModalOpen] = useState(false);
-  const [agentModalOpen, setAgentModalOpen] = useState(false);
+  const [driveCreateType, setDriveCreateType] = useState<DriveCreateType | null>(null);
 
   const existingFolderNames = useMemo(
     () => currentRows.filter((row) => row.node.type === 'folder').map((row) => row.name.trim()),
@@ -186,72 +178,21 @@ export function useTableDriveActions({
     }
   );
 
-  const { loading: creatingDrawio, run: runCreateDrawio } = useRequest(
-    async () => {
-      const title = drawioName.trim() || '未命名图表';
-      const { resourceId } = await noteService.createNote({
-        title,
-        resourceType: 'DRAWIO',
-      });
-      if (!resourceId) {
-        throw createClientError(FRONTEND_CLIENT_ERROR.NOTE_CREATE_RESOURCE_ID_MISSING);
-      }
-      await mountCreatedResource(resourceId);
-      return resourceId;
-    },
-    {
-      manual: true,
-      onSuccess: (resourceId) => {
-        setDrawioModalOpen(false);
-        setDrawioNameError('');
+  const handleDriveCreateSuccess = useCallback(
+    async (createdId: string, type: DriveCreateType) => {
+      if (type === 'folder') {
+        setDriveCreateType(null);
         refresh();
-        openInWorkspace({
-          resourceId,
-          resourceType: RESOURCE_KIND.DRAWIO,
-          driveLocation: { scope, parentNodeId: currentNodeId },
-        });
-      },
-      onError: (err) => {
-        toast.danger(parseErrorMessage(err));
-      },
-    }
-  );
-
-  const handleCreateSkillSuccess = useCallback(
-    (resourceId: string) => {
-      void (async () => {
-        try {
-          await mountCreatedResource(resourceId);
-          setSkillModalOpen(false);
-          refresh();
-          openInWorkspace({
-            resourceId,
-            resourceType: RESOURCE_KIND.SKILL,
-            driveLocation: { scope, parentNodeId: currentNodeId },
-          });
-        } catch (err) {
-          toast.danger(parseErrorMessage(err));
-        }
-      })();
-    },
-    [currentNodeId, mountCreatedResource, openInWorkspace, refresh, scope]
-  );
-  const handleCreateAgentSuccess = useCallback(
-    (resourceId: string) => {
-      void (async () => {
-        try {
-          await mountCreatedResource(resourceId);
-          setAgentModalOpen(false);
-          refresh();
-          openInWorkspace({
-            resourceId,
-            resourceType: RESOURCE_KIND.AGENT,
-            driveLocation: { scope, parentNodeId: currentNodeId },
-          });
-        } catch (error) {
-          toast.danger(parseErrorMessage(error));
-        }
-      })();
+        return;
+      }
+      await mountCreatedResource(createdId);
+      setDriveCreateType(null);
+      refresh();
+      openInWorkspace({
+        resourceId: createdId,
+        resourceType: type,
+        driveLocation: { scope, parentNodeId: currentNodeId },
+      });
     },
     [currentNodeId, mountCreatedResource, openInWorkspace, refresh, scope]
   );
@@ -266,16 +207,6 @@ export function useTableDriveActions({
           onChange={handleMarkdownFileChange}
           hidden
         />
-        {newFolderOpen ? (
-          <NewFolderNodeModal
-            isOpen={newFolderOpen}
-            parentId={currentNodeId}
-            groupId={groupId}
-            existingFolderNames={existingFolderNames}
-            onOpenChange={setNewFolderOpen}
-            onSuccess={refresh}
-          />
-        ) : null}
         <UploadDocumentModal
           isOpen={uploadDocumentOpen}
           targetTagId={uploadMountTagId ?? targetTagId}
@@ -335,85 +266,40 @@ export function useTableDriveActions({
             onSuccess={() => setResourcePermissionRefreshToken((prev) => prev + 1)}
           />
         ) : null}
-        <AppFormDialog
-          isOpen={drawioModalOpen}
-          onOpenChange={(nextOpen) => {
-            if (!nextOpen) {
-              setDrawioNameError('');
-            }
-            setDrawioModalOpen(nextOpen);
-          }}
-          title="新建图表"
-          confirmText="创建"
-          onSubmit={() => {
-            if (!drawioName.trim()) {
-              setDrawioNameError('请输入图表名称');
-              return;
-            }
-            runCreateDrawio();
-          }}
-          isSubmitting={creatingDrawio}
-          isSubmitDisabled={creatingDrawio}
-          isDismissable={!creatingDrawio}
-        >
-          <FormField
-            aria-label="图表名称"
-            label="图表名称"
-            name="drawioName"
-            value={drawioName}
-            onChange={(value) => {
-              setDrawioName(value);
-              setDrawioNameError('');
+        {driveCreateType ? (
+          <DriveCreate
+            type={driveCreateType}
+            isOpen
+            parentId={currentNodeId}
+            groupId={groupId}
+            existingFolderNames={existingFolderNames}
+            onOpenChange={(open) => {
+              if (!open) setDriveCreateType(null);
             }}
-            errorMessage={drawioNameError}
-            isRequired
-          >
-            <Input placeholder="请输入名称" autoFocus />
-          </FormField>
-        </AppFormDialog>
-        <CreateSkillModal
-          isOpen={skillModalOpen}
-          onOpenChange={setSkillModalOpen}
-          onSuccess={handleCreateSkillSuccess}
-        />
-        <CreateAgentModal
-          isOpen={agentModalOpen}
-          onOpenChange={setAgentModalOpen}
-          onSuccess={handleCreateAgentSuccess}
-        />
+            onSuccess={handleDriveCreateSuccess}
+          />
+        ) : null}
       </>
     ),
     [
-      creatingDrawio,
       currentNodeId,
-      drawioModalOpen,
-      drawioName,
-      drawioNameError,
+      driveCreateType,
       existingFolderNames,
       groupId,
-      handleCreateSkillSuccess,
+      handleDriveCreateSuccess,
       handleMarkdownFileChange,
-      handleCreateAgentSuccess,
       handleUploadSuccess,
       markdownFileInputRef,
-      newFolderOpen,
       refresh,
       resourcePermissionTarget,
-      runCreateDrawio,
       targetTagId,
       tagAccessPermissionTagId,
       tagMountPermissionTagId,
-      skillModalOpen,
-      agentModalOpen,
       uploadDocumentOpen,
       uploadMountTagId,
       uploadOpen,
     ]
   );
-
-  const openNewFolder = useCallback(() => {
-    setNewFolderOpen(true);
-  }, []);
 
   const openUploadDocument = useCallback(() => {
     const nextMountTagId = resolveCurrentFolderTagId(currentNodeId, []) ?? targetTagId;
@@ -453,23 +339,14 @@ export function useTableDriveActions({
     runCreateNote();
   }, [creatingNote, currentNodeId, groupId, openInWorkspace, runCreateNote, scope]);
 
-  const handleOpenDrawioModal = useCallback(() => {
-    if (creatingDrawio) return;
-    setDrawioName('未命名图表');
-    setDrawioNameError('');
-    setDrawioModalOpen(true);
-  }, [creatingDrawio]);
-
-  const handleOpenSkillModal = useCallback(() => {
-    setSkillModalOpen(true);
-  }, []);
-  const handleOpenAgentModal = useCallback(() => setAgentModalOpen(true), []);
-
   const handleCreateMenuSelect = useCallback(
     (id: CreateMenuItem['id']) => {
       switch (id) {
         case 'folder':
-          openNewFolder();
+        case 'drawio':
+        case 'skill':
+        case 'agent':
+          setDriveCreateType(id);
           break;
         case 'note':
           handleCreateNote();
@@ -477,29 +354,12 @@ export function useTableDriveActions({
         case 'importNote':
           openMarkdownFilePicker();
           break;
-        case 'drawio':
-          handleOpenDrawioModal();
-          break;
-        case 'skill':
-          handleOpenSkillModal();
-          break;
-        case 'agent':
-          handleOpenAgentModal();
-          break;
         case 'upload':
           openUploadDocument();
           break;
       }
     },
-    [
-      handleCreateNote,
-      handleOpenDrawioModal,
-      handleOpenSkillModal,
-      handleOpenAgentModal,
-      openNewFolder,
-      openMarkdownFilePicker,
-      openUploadDocument,
-    ]
+    [handleCreateNote, openMarkdownFilePicker, openUploadDocument]
   );
 
   const showUploadDocument = Boolean(
@@ -526,7 +386,7 @@ export function useTableDriveActions({
       items.push({ id: 'folder', label: '新建文件夹' });
     }
     if (canCreateInCurrentFolder && toolbarConfig.canCreateDrawio) {
-      items.push({ id: 'drawio', label: '新建图表', disabled: creatingDrawio });
+      items.push({ id: 'drawio', label: '新建图表' });
     }
     if (canCreateInCurrentFolder && toolbarConfig.canCreateNote) {
       items.push({ id: 'note', label: '新建笔记', disabled: creatingNote });
@@ -547,7 +407,6 @@ export function useTableDriveActions({
     return items;
   }, [
     canCreateInCurrentFolder,
-    creatingDrawio,
     creatingNote,
     importingMarkdownNote,
     showCreateMenu,
