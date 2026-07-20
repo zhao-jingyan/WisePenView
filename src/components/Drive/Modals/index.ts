@@ -1,15 +1,17 @@
-export { default as DeleteNodeModal } from './Node/DeleteNodeModal';
+export { default as DriveCreate } from './DriveCreate';
+export { default as DriveDelete } from './DriveDelete/DriveDelete';
+export { default as TrashDelete } from './DriveDelete/TrashDelete';
 export { default as MoveNodeModal } from './Node/MoveNodeModal';
-export { default as NewFolderNodeModal } from './Node/NewFolderNodeModal';
 export { default as RenameNodeModal } from './Node/RenameNodeModal';
 export { default as ResourcePermissionModal } from './ResourcePermissionModal';
 export { TagMountPermissionModal, default as TagPermissionModal } from './TagPermissionModal';
 export { default as UploadDocumentModal } from './UploadDocumentModal';
 export { default as UploadFileToGroupModal } from './UploadFileToGroupModal';
 
-export type { DeleteNodeModalProps } from './Node/DeleteNodeModal/index.type';
+export type { DriveCreateProps, DriveCreateType } from './DriveCreate';
+export type { DriveDeleteProps } from './DriveDelete/DriveDelete';
+export type { TrashDeleteProps } from './DriveDelete/TrashDelete';
 export type { MoveNodeModalProps } from './Node/MoveNodeModal/index.type';
-export type { NewFolderNodeModalProps } from './Node/NewFolderNodeModal/index.type';
 export type { RenameNodeModalProps } from './Node/RenameNodeModal/index.type';
 export type {
   ResourcePermissionModalProps,

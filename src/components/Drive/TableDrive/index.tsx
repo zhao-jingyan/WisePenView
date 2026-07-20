@@ -1,4 +1,9 @@
-import { DeleteNodeModal, MoveNodeModal, RenameNodeModal } from '@/components/Drive/Modals';
+import {
+  DriveDelete,
+  MoveNodeModal,
+  RenameNodeModal,
+  TrashDelete,
+} from '@/components/Drive/Modals';
 import EntryIcon from '@/components/Icons/EntryIcon';
 import {
   FolderTable,
@@ -405,6 +410,10 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     setDeleteTarget(node);
   }, []);
 
+  const handleDeleteModalOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
   const { loading: movingByDrag, run: runMoveRowsByDrag } = useRequest(
     async ({
       sourceRowIds,
@@ -615,7 +624,14 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
         },
         {
           key: 'delete',
-          label: finalGroupId ? '移除' : isTrashView ? '彻底删除' : '删除',
+          label:
+            finalGroupId != null
+              ? '移除'
+              : isTrashView
+                ? '永久删除'
+                : actionTarget.type === 'link'
+                  ? '删除链接'
+                  : '移入回收站',
           variant: 'danger',
           onPress: () => handleOpenDelete(actionTarget),
         }
@@ -833,16 +849,22 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
           }}
           onSuccess={handleNodeActionSuccess}
         />
-        <DeleteNodeModal
-          isOpen={Boolean(deleteTarget)}
-          node={deleteTarget}
-          groupId={finalGroupId}
-          isTrashView={isTrashView}
-          onOpenChange={(open) => {
-            if (!open) setDeleteTarget(null);
-          }}
-          onSuccess={handleNodeActionSuccess}
-        />
+        {isTrashView ? (
+          <TrashDelete
+            isOpen={Boolean(deleteTarget)}
+            node={deleteTarget}
+            onOpenChange={handleDeleteModalOpenChange}
+            onSuccess={handleNodeActionSuccess}
+          />
+        ) : (
+          <DriveDelete
+            isOpen={Boolean(deleteTarget)}
+            node={deleteTarget}
+            groupId={finalGroupId}
+            onOpenChange={handleDeleteModalOpenChange}
+            onSuccess={handleNodeActionSuccess}
+          />
+        )}
       </main>
       <DragOverlay>
         {activeDragRow && draggingRowKeys.size > 0 ? (

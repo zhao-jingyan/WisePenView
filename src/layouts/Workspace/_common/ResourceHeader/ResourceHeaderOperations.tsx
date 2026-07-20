@@ -1,5 +1,8 @@
-import type { DriveSelectionItem } from '@/components/Drive/common/driveComponentModel';
-import { DeleteNodeModal, MoveNodeModal } from '@/components/Drive/Modals';
+import {
+  isDriveTrashFolderNode,
+  type DriveSelectionItem,
+} from '@/components/Drive/common/driveComponentModel';
+import { DriveDelete, MoveNodeModal, TrashDelete } from '@/components/Drive/Modals';
 import {
   useDocumentService,
   useDriveService,
@@ -86,6 +89,18 @@ function ResourceHeaderOperations({
       refreshDeps: [resourceId, matchingLocation?.parentNodeId, matchingLocation?.nodeId, groupId],
     }
   );
+  const { data: parentPath, loading: locatingParentPath } = useRequest(
+    () =>
+      driveService.getNodePath({
+        nodeId: matchingLocation!.parentNodeId,
+        groupId,
+      }),
+    {
+      ready: Boolean(matchingLocation && !groupId),
+      refreshDeps: [matchingLocation?.parentNodeId, groupId],
+    }
+  );
+  const isTrashView = Boolean(!groupId && parentPath?.some(isDriveTrashFolderNode));
 
   const copyName = `${resourceName}_副本`;
   const normalizedType = normalizeResourceType(resourceType);
@@ -247,8 +262,15 @@ function ResourceHeaderOperations({
   };
 
   const handlers: ResourceHeaderOperationHandlers = {
-    deleteLabel: node?.type === 'link' ? '删除链接' : groupId ? '从小组移除' : '删除文件',
-    isLocating: locating,
+    deleteLabel:
+      node?.type === 'link'
+        ? '删除链接'
+        : groupId
+          ? '从小组移除'
+          : isTrashView
+            ? '永久删除'
+            : '移入回收站',
+    isLocating: locating || locatingParentPath,
     onCopy: canCopy ? () => setTargetModal('copy') : undefined,
     onCreateLink: groupId && node?.type === 'resource' ? () => setTargetModal('link') : undefined,
     onMove: node ? () => setMoveOpen(true) : undefined,
@@ -302,13 +324,22 @@ function ResourceHeaderOperations({
         onOpenChange={setMoveOpen}
         onSuccess={handleMoveSuccess}
       />
-      <DeleteNodeModal
-        isOpen={deleteOpen}
-        node={node ?? null}
-        groupId={groupId}
-        onOpenChange={setDeleteOpen}
-        onSuccess={handleDeleteSuccess}
-      />
+      {isTrashView ? (
+        <TrashDelete
+          isOpen={deleteOpen}
+          node={node ?? null}
+          onOpenChange={setDeleteOpen}
+          onSuccess={handleDeleteSuccess}
+        />
+      ) : (
+        <DriveDelete
+          isOpen={deleteOpen}
+          node={node ?? null}
+          groupId={groupId}
+          onOpenChange={setDeleteOpen}
+          onSuccess={handleDeleteSuccess}
+        />
+      )}
     </>
   );
 }

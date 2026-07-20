@@ -6,6 +6,7 @@ import {
 import AppModal from '@/components/Overlay/AppModal';
 import UploadZone from '@/components/UploadZone';
 import { useDocumentService, useDriveService, useResourceService } from '@/domains';
+import { DOCUMENT_ALLOWED_EXTENSIONS } from '@/domains/Document';
 import { isWisePenError, parseErrorMessage } from '@/utils/error';
 import { parseExtension } from '@/utils/parser/extensionParser';
 import { createUuid } from '@/utils/random/createUuid';
@@ -16,17 +17,10 @@ import { useState } from 'react';
 import styles from './index.module.less';
 import type { UploadDocumentModalProps } from './index.type';
 
-const ACCEPT_DOCUMENT_TYPES = [
-  '.pdf',
-  '.doc',
-  '.docx',
-  '.xls',
-  '.xlsx',
-  '.ppt',
-  '.pptx',
-  '.txt',
-  '.md',
-].join(',');
+const DOCUMENT_ALLOWED_EXTENSION_SET = new Set<string>(DOCUMENT_ALLOWED_EXTENSIONS);
+const ACCEPT_DOCUMENT_TYPES = DOCUMENT_ALLOWED_EXTENSIONS.map((extension) => `.${extension}`).join(
+  ','
+);
 
 const UPLOAD_STATUS_SYNC_DELAY_MS = 3000;
 const QUEUE_DONE_VISIBLE_DELAY_MS = 900;
@@ -62,6 +56,14 @@ function UploadDocumentModal({
 
   const resetState = () => {
     setSelectedFiles([]);
+  };
+
+  const handleFilesChange = (files: File[]) => {
+    const supportedFiles = files.filter(isSupportedDocument);
+    if (supportedFiles.length !== files.length) {
+      toast.warning('不支持的文件类型，仅支持 PDF 和 Office 文档');
+    }
+    setSelectedFiles(supportedFiles);
   };
 
   const completeQueuedUpload = (
@@ -340,7 +342,7 @@ function UploadDocumentModal({
         accept={ACCEPT_DOCUMENT_TYPES}
         label="点击或拖拽文档到此区域"
         description="支持一次选择多个文档，也可以逐个添加"
-        onFilesChange={setSelectedFiles}
+        onFilesChange={handleFilesChange}
       />
 
       <div className={styles.statusPanel}>
@@ -366,6 +368,14 @@ function getDisplayFileType(file: File): string {
     return parseExtension(file.name);
   } catch {
     return 'unknown';
+  }
+}
+
+function isSupportedDocument(file: File): boolean {
+  try {
+    return DOCUMENT_ALLOWED_EXTENSION_SET.has(parseExtension(file.name));
+  } catch {
+    return false;
   }
 }
 
