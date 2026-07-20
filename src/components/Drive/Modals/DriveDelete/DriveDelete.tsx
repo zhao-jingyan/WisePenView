@@ -1,5 +1,5 @@
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
-import { useDriveService, useResourceService } from '@/domains';
+import { useDriveService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
@@ -21,17 +21,12 @@ function getNodeName(node: DriveActionTarget | null): string {
 
 function DriveDelete({ isOpen, node, groupId, onOpenChange, onSuccess }: DriveDeleteProps) {
   const driveService = useDriveService();
-  const resourceService = useResourceService();
   const isGroupNode = Boolean(groupId && node);
   const isGroupResource = Boolean(groupId && node && node.type !== 'folder');
 
   const { loading, run: runDelete } = useRequest(
     async () => {
       if (!node) return;
-      if (!groupId && node.type === 'resource') {
-        await resourceService.removeResources({ resourceIds: [node.resourceId] });
-        return;
-      }
       await driveService.removeNode({ nodeId: node.id, groupId });
     },
     {

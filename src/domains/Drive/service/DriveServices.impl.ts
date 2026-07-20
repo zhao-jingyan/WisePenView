@@ -370,6 +370,15 @@ export const createDriveServices = (
     return trashTagId;
   };
 
+  const movePersonalResourceNodeToTrash = async (source: ResourceNode): Promise<void> => {
+    const trashTagId = await ensureTrashTagId();
+    await resourceService.updateResourceTags({
+      resourceId: source.resourceId,
+      tagIds: [trashTagId],
+      primaryTagId: trashTagId,
+    });
+  };
+
   const getTrashFolderNodeId: IDriveService['getTrashFolderNodeId'] = async (groupId) => {
     await readRawRoots(groupId);
     const trashTagId = tagService.getTrashTagId(groupId);
@@ -871,8 +880,7 @@ export const createDriveServices = (
         tagIds: resolveLinkTagIdsAfterUnmount(source, new Set([source.folderTagId])),
       });
     } else if (source.type === 'resource') {
-      // 删除主文件由资源服务统一软删除，确保所有辅助挂载同步失效。
-      await resourceService.removeResources({ resourceIds: [source.resourceId] });
+      await movePersonalResourceNodeToTrash(source);
     } else {
       throw createClientError(FRONTEND_CLIENT_ERROR.DRIVE_NODE_UNSUPPORTED_DELETE);
     }
