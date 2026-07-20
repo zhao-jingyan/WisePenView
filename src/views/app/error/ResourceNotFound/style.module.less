@@ -6,11 +6,12 @@
   min-height: 100dvh;
   width: 100%;
   box-sizing: border-box;
+  /* 出错页用纸面阶梯，避免再叠 accent 显得发闷 */
   background: linear-gradient(
     165deg,
-    var(--surface) 0%,
-    var(--background) 45%,
-    color-mix(in oklab, var(--accent) 6%, var(--background)) 100%
+    var(--header-surface) 0%,
+    var(--surface) 55%,
+    var(--background) 100%
   );
 }
 
