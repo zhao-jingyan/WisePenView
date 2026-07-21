@@ -33,6 +33,7 @@ import {
   sortSuggestionItemsForDisplay,
 } from '@/components/Note/CustomBlockNote/ui/slashMenu/slashMenuModel';
 import { SlashMenuDropdownItems } from '@/components/Note/CustomBlockNote/ui/slashMenu/slashMenuView';
+import { copyText } from '@/utils/browser/copyText';
 import { blockHasType, defaultProps, editorHasBlockWithType } from '@blocknote/core';
 import { SideMenuExtension, SuggestionMenu } from '@blocknote/core/extensions';
 import type { DefaultReactSuggestionItem } from '@blocknote/react';
@@ -118,16 +119,7 @@ async function writeClipboardData(data: { html: string; text: string }) {
     }
   }
 
-  if (navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(data.text);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  return false;
+  return copyText(data.text);
 }
 
 function MenuItemContent({

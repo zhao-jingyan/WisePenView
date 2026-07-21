@@ -1,24 +1,20 @@
 import type { Model } from '@/components/ChatPanel/index.type';
-import { Spin } from '@/components/Feedback';
 import {
-  Marker,
-  MarkerContent,
-  MarkerIcon,
   MessageScroller,
   MessageScrollerButton,
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
-  useMessageScrollerScrollable,
+  useMessageScroller,
 } from '@/components/_shadcn';
-import markerStyles from '@/components/_shadcn/marker.module.less';
 import type { WisePenUIMessage } from '@/domains/Chat';
-import { useLatest, useUpdateEffect } from 'ahooks';
+import { useEffectForce } from '@/hooks/useEffectForce';
 import type { ChatStatus } from 'ai';
 import { ArrowDown } from 'lucide-react';
-import { useRef, type ReactNode } from 'react';
-import MessageItem from './MessageItem';
+import { useRef, type ReactNode, type RefObject, type UIEvent } from 'react';
+import HistoryLoader from './HistoryLoader';
+import Message from './Message';
 import Welcome from './Welcome';
 import styles from './style.module.less';
 
@@ -43,6 +39,16 @@ function MessageList({
   model,
   footer,
 }: MessageListProps) {
+  const isGenerating = status === 'submitted' || status === 'streaming';
+  const isFollowingEndRef = useRef(true);
+
+  const handleViewportScroll = (event: UIEvent<HTMLDivElement>) => {
+    const viewport = event.currentTarget;
+    isFollowingEndRef.current =
+      viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <=
+      AUTO_LOAD_EDGE_THRESHOLD;
+  };
+
   return (
     <MessageScrollerProvider
       autoScroll
@@ -51,8 +57,14 @@ function MessageList({
       scrollPreviousItemPeek={72}
     >
       <MessageScroller className={styles.container}>
-        <MessageScrollerViewport className={styles.viewport}>
+        <MessageScrollerViewport className={styles.viewport} onScroll={handleViewportScroll}>
           <MessageScrollerContent className={styles.scrollColumn}>
+            <StreamingScrollFollower
+              active={isGenerating}
+              messages={messages}
+              isFollowingEndRef={isFollowingEndRef}
+            />
+
             <div className={styles.messagesBody}>
               {messages.length === 0 ? (
                 <MessageScrollerItem className={styles.welcomeItem}>
@@ -60,21 +72,15 @@ function MessageList({
                 </MessageScrollerItem>
               ) : (
                 <>
-                  <AutoLoadHistory
+                  <HistoryLoader
                     canLoadMoreHistory={canLoadMoreHistory}
                     loadingMoreHistory={loadingMoreHistory}
                     onLoadMoreHistory={onLoadMoreHistory}
                   />
 
-                  <HistoryLoadingMarker visible={loadingMoreHistory} />
-
                   {messages.map((message) => (
-                    <MessageScrollerItem
-                      key={message.id}
-                      messageId={message.id}
-                      scrollAnchor={message.role === 'assistant'}
-                    >
-                      <MessageItem
+                    <MessageScrollerItem key={message.id} messageId={message.id}>
+                      <Message
                         message={message}
                         model={model}
                         streaming={
@@ -100,46 +106,34 @@ function MessageList({
   );
 }
 
-interface AutoLoadHistoryProps {
-  canLoadMoreHistory: boolean;
-  loadingMoreHistory: boolean;
-  onLoadMoreHistory: () => Promise<void>;
+interface StreamingScrollFollowerProps {
+  active: boolean;
+  messages: WisePenUIMessage[];
+  isFollowingEndRef: RefObject<boolean>;
 }
 
-function AutoLoadHistory({
-  canLoadMoreHistory,
-  loadingMoreHistory,
-  onLoadMoreHistory,
-}: AutoLoadHistoryProps) {
-  const { start } = useMessageScrollerScrollable();
-  const loadMoreRef = useLatest(onLoadMoreHistory);
-  const pendingRef = useRef(false);
+function StreamingScrollFollower({
+  active,
+  messages,
+  isFollowingEndRef,
+}: StreamingScrollFollowerProps) {
+  const { scrollToEnd } = useMessageScroller();
 
-  useUpdateEffect(() => {
-    if (start || !canLoadMoreHistory || loadingMoreHistory || pendingRef.current) return;
+  /**
+   * 流式 Markdown 会在子组件 effect 中再次提交，外层 ResizeObserver 可能错过该帧的高度变化。
+   * 每次流消息更新后于下一帧校正到底部；仅在用户仍停留于底部时执行，避免覆盖阅读位置。
+   */
+  useEffectForce(() => {
+    if (!active || !isFollowingEndRef.current) return;
 
-    pendingRef.current = true;
-    void loadMoreRef.current().finally(() => {
-      pendingRef.current = false;
+    const frameId = window.requestAnimationFrame(() => {
+      scrollToEnd({ behavior: 'auto' });
     });
-  }, [canLoadMoreHistory, loadingMoreHistory, start]);
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [active, isFollowingEndRef, messages, scrollToEnd]);
 
   return null;
-}
-
-function HistoryLoadingMarker({ visible }: { visible: boolean }) {
-  if (!visible) return null;
-
-  return (
-    <MessageScrollerItem className={styles.loadMoreWrapper}>
-      <Marker variant="separator" role="status">
-        <MarkerIcon>
-          <Spin size="small" />
-        </MarkerIcon>
-        <MarkerContent className={markerStyles.shimmer}>正在加载更早消息...</MarkerContent>
-      </Marker>
-    </MessageScrollerItem>
-  );
 }
 
 export default MessageList;

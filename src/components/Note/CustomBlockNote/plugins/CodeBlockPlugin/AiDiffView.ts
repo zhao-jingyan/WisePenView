@@ -1,4 +1,6 @@
-import { renderHighlightedLine, tokenizeCodeLines } from './highlight';
+import { normalizeCodeLanguage, tokenizeCodeLines } from '@/utils/codeHighlight';
+
+import { renderHighlightedLine } from './highlight';
 import { getCodeBlockLanguageLabel } from './language';
 import { buildCodeLineDiff, type CodeLineDiffEntry } from './lineDiff';
 import styles from './style.module.less';
@@ -9,7 +11,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function readLanguage(aiBlock: Record<string, unknown>): string {
   const props = isRecord(aiBlock.props) ? aiBlock.props : {};
-  return typeof props.language === 'string' && props.language ? props.language : 'text';
+  return normalizeCodeLanguage(typeof props.language === 'string' ? props.language : undefined);
 }
 
 function readCode(aiBlock: Record<string, unknown>): string {

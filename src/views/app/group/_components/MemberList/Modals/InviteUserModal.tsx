@@ -1,4 +1,5 @@
 import AppDisplayDialog from '@/components/Overlay/AppDisplayDialog';
+import { copyText } from '@/utils/browser/copyText';
 import { toast } from '@heroui/react';
 import { Copy } from 'lucide-react';
 import { useState } from 'react';
@@ -22,13 +23,14 @@ function InviteUserModal({ isOpen, onOpenChange, inviteCode }: InviteUserModalPr
   };
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(inviteCode ?? '');
+    const copied = await copyText(inviteCode ?? '');
+    if (copied) {
       setCopied(true);
       toast.success('邀请码已复制到剪贴板');
-    } catch {
-      toast.danger('复制失败，请手动复制');
+      return;
     }
+
+    toast.danger('复制失败，请手动复制');
   };
 
   return (

@@ -1,3 +1,4 @@
+import { copyText } from '@/utils/browser/copyText';
 import { Check, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import {
   useId,
@@ -38,28 +39,6 @@ function filterLanguageOptions(languageOptions: CodeBlockLanguageOption[], query
   );
 }
 
-async function copyText(text: string) {
-  if (navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return;
-    } catch {
-      // 浏览器可能因为权限或非安全上下文拒绝 Clipboard API，继续走 textarea 兜底。
-    }
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.style.position = 'fixed';
-  textarea.style.left = '-9999px';
-  textarea.style.top = '0';
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  document.execCommand('copy');
-  textarea.remove();
-}
-
 export function CodeBlockToolbar({
   codeElement,
   collapsed: initialCollapsed,
@@ -90,9 +69,11 @@ export function CodeBlockToolbar({
   const handleCopy = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    await copyText(codeElement.textContent ?? '');
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION);
+    const copied = await copyText(codeElement.textContent ?? '');
+    if (copied) {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION);
+    }
   };
 
   const handleToggleCollapsed = (event: MouseEvent<HTMLButtonElement>) => {

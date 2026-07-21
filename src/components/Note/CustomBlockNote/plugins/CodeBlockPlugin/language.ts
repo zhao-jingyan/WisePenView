@@ -1,5 +1,7 @@
 import { codeBlockOptions } from '@blocknote/code-block';
 
+import { normalizeCodeLanguage } from '@/utils/codeHighlight';
+
 import type { CodeBlockLanguageOption } from './CodeBlockToolbar';
 
 const BASE_LANGUAGE_OPTIONS: CodeBlockLanguageOption[] = Object.entries(
@@ -7,15 +9,18 @@ const BASE_LANGUAGE_OPTIONS: CodeBlockLanguageOption[] = Object.entries(
 ).map(([id, { name }]) => ({ id, label: name }));
 
 export function getCodeBlockLanguageOptions(language: string): CodeBlockLanguageOption[] {
-  if (BASE_LANGUAGE_OPTIONS.some((option) => option.id === language)) {
+  const normalizedLanguage = normalizeCodeLanguage(language);
+  if (BASE_LANGUAGE_OPTIONS.some((option) => option.id === normalizedLanguage)) {
     return BASE_LANGUAGE_OPTIONS;
   }
-  return [{ id: language, label: language }, ...BASE_LANGUAGE_OPTIONS];
+  return [{ id: normalizedLanguage, label: normalizedLanguage }, ...BASE_LANGUAGE_OPTIONS];
 }
 
 export function getCodeBlockLanguageLabel(language: string): string {
+  const normalizedLanguage = normalizeCodeLanguage(language);
   return (
-    getCodeBlockLanguageOptions(language).find((option) => option.id === language)?.label ??
-    language
+    getCodeBlockLanguageOptions(normalizedLanguage).find(
+      (option) => option.id === normalizedLanguage
+    )?.label ?? normalizedLanguage
   );
 }

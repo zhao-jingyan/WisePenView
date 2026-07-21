@@ -1,0 +1,44 @@
+.row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: var(--space-lg);
+}
+
+.content {
+  position: relative;
+  max-width: 100%;
+  padding-bottom: calc(32px + var(--space-xs));
+}
+
+.attachments {
+  justify-content: flex-end;
+  margin-bottom: var(--space-xs);
+}
+
+.attachment {
+  max-width: min(280px, 100%);
+}
+
+.bubble {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-2xl) var(--radius-md) var(--radius-2xl) var(--radius-2xl);
+  background-color: var(--accent-soft);
+  color: var(--foreground);
+  font-size: var(--chat-message-font-size);
+  line-height: var(--chat-message-line-height);
+}
+
+.actions {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.row:hover .actions,
+.row:focus-within .actions {
+  opacity: 1;
+}

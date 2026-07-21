@@ -3,13 +3,29 @@ import { createCodeBlockSpec } from '@blocknote/core';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
+import { getCodeBlockHighlighter, normalizeCodeLanguage } from '@/utils/codeHighlight';
+
 import type { NoteBlockPlugin } from '../../registry/types';
 import { CodeBlockAiContentView, CodeBlockAiDiffComparisonView } from './AiDiffView';
 import { CodeBlockToolbar } from './CodeBlockToolbar';
-import { getCodeBlockHighlighter } from './highlight';
 import { getCodeBlockLanguageOptions } from './language';
 
 const collapsedCodeBlockIds = new Set<string>();
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function normalizeImportedCodeBlockLanguage(block: Record<string, unknown>) {
+  if (block.type !== 'codeBlock') return undefined;
+  if (!isRecord(block.props)) return undefined;
+  const language = block.props.language;
+  if (typeof language !== 'string') return undefined;
+
+  const normalizedLanguage = normalizeCodeLanguage(language);
+  if (normalizedLanguage === language) return undefined;
+  return { ...block, props: { ...block.props, language: normalizedLanguage } };
+}
 
 function syncPreCollapsed(preElement: HTMLPreElement, collapsed: boolean) {
   if (collapsed) {
@@ -100,11 +116,14 @@ export const codeBlockPlugin = {
     },
   },
   capabilities: {
-    markdownImport: { support: 'default' },
+    markdownImport: { support: 'custom' },
     markdownExport: { support: 'default' },
     aiDiff: { support: 'custom' },
     plainText: { support: 'default' },
     print: { support: 'custom' },
+  },
+  markdownImport: {
+    restore: (block) => normalizeImportedCodeBlockLanguage(block),
   },
   selection: {
     inspect: (_block, context) => ({ selected: context.selected, text: context.selectedText }),

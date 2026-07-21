@@ -8,6 +8,7 @@ import { mapChatCompletionRequest } from '../mapper/chatCompletion.mapper';
 import type { SendSessionMessageOptions, UseChatSessionOptions } from './index.type';
 
 const CHAT_COMPLETIONS_API = buildApiUrl('/chat/completions');
+const CHAT_STREAM_THROTTLE_MS = 50;
 
 function buildChatFetchInit(init?: RequestInit): RequestInit {
   return {
@@ -25,6 +26,7 @@ function buildChatFetchInit(init?: RequestInit): RequestInit {
  */
 export const useChatSession = ({ sessionId, model }: UseChatSessionOptions) => {
   const chat = useChat<WisePenUIMessage>({
+    experimental_throttle: CHAT_STREAM_THROTTLE_MS,
     transport: new DefaultChatTransport<WisePenUIMessage>({
       api: CHAT_COMPLETIONS_API,
       fetch: (input, init) => fetch(input, buildChatFetchInit(init)),

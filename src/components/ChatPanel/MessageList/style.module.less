@@ -1,4 +1,3 @@
-// src/components/ChatPanel/MessageList/style.module.less
 @import '@/styles/scrollbar.module.less';
 
 .container {
@@ -48,60 +47,11 @@
   );
 }
 
-.footer {
-  flex-shrink: 0;
-  padding: 0 var(--chat-message-inline-padding, var(--space-lg)) var(--space-xs);
-  background: transparent;
-}
-
 .welcomeItem {
   flex: 1 1 auto;
   min-height: 100%;
   display: flex;
   content-visibility: visible;
-}
-
-.container {
-  .welcomeWrapper {
-    flex: 1;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-
-    .logoIcon {
-      width: var(--space-2xl);
-      height: var(--space-2xl);
-      margin-bottom: var(--space-sm);
-      color: var(--foreground);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      svg {
-        width: 100%;
-        height: 100%;
-        stroke-width: 1.5px;
-      }
-    }
-
-    .title {
-      font-size: var(--font-size-lg);
-      font-weight: 600;
-      color: var(--foreground);
-      margin-bottom: var(--space-2xs);
-      line-height: var(--line-height-md);
-      letter-spacing: -0.02em;
-    }
-
-    .subtitle {
-      font-size: var(--font-size-sm);
-      font-weight: 400;
-      color: var(--muted);
-      line-height: var(--line-height-sm);
-    }
-  }
 }
 
 .loadMoreWrapper {
@@ -153,6 +103,10 @@
   &:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  &[data-active='false'] {
+    display: none;
   }
 }
 

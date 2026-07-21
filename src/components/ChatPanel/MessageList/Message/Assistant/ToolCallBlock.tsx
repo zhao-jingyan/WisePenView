@@ -7,10 +7,7 @@ import styles from './ToolCallBlock.module.less';
 
 type RenderableToolPart = ToolUIPart | DynamicToolUIPart;
 
-function getToolStatus(part: RenderableToolPart): {
-  label: string;
-  loading: boolean;
-} {
+function getToolStatus(part: RenderableToolPart): { label: string; loading: boolean } {
   switch (part.state) {
     case 'input-streaming':
       return { label: '正在准备工具输入', loading: true };
@@ -19,10 +16,7 @@ function getToolStatus(part: RenderableToolPart): {
     case 'approval-requested':
       return { label: '等待批准', loading: false };
     case 'approval-responded':
-      return {
-        label: part.approval.approved ? '已批准' : '未批准',
-        loading: false,
-      };
+      return { label: part.approval.approved ? '已批准' : '未批准', loading: false };
     case 'output-available':
       return { label: '调用完成', loading: false };
     case 'output-error':
@@ -33,9 +27,7 @@ function getToolStatus(part: RenderableToolPart): {
 }
 
 function ToolCallBlock({ part }: { part: RenderableToolPart }) {
-  const toolName = getToolName(part);
   const status = getToolStatus(part);
-
   return (
     <div className={styles.wrapper} data-tool-call-id={part.toolCallId}>
       <Marker variant="border" role="status">
@@ -55,7 +47,7 @@ function ToolCallBlock({ part }: { part: RenderableToolPart }) {
           )}
         </MarkerIcon>
         <MarkerContent className={status.loading ? markerStyles.shimmer : undefined}>
-          {toolName}：{status.label}
+          {getToolName(part)}：{status.label}
         </MarkerContent>
       </Marker>
     </div>

@@ -4,6 +4,7 @@ import { isRouteErrorResponse, useLocation, useNavigate, useRouteError } from 'r
 
 import { ResultState } from '@/components/Feedback';
 import LandingNavbar from '@/layouts/Home/_components/LandingNavbar';
+import { copyText } from '@/utils/browser/copyText';
 import { getErrorReportId } from '@/utils/error';
 import ResourceNotFound from '@/views/app/error/ResourceNotFound';
 import { Button, toast, Tooltip } from '@heroui/react';
@@ -26,12 +27,13 @@ function AppError() {
   const errorDetail = buildErrorDetail(error, location.pathname, errorId);
 
   const handleCopyDetail = async () => {
-    try {
-      await navigator.clipboard.writeText(errorDetail);
+    const copied = await copyText(errorDetail);
+    if (copied) {
       toast.success('错误详情已复制');
-    } catch {
-      toast.danger('复制失败，请手动复制');
+      return;
     }
+
+    toast.danger('复制失败，请手动复制');
   };
 
   return (
