@@ -230,7 +230,7 @@ function ChatPanel({
       return false;
     }
 
-    await sendSessionMessage(text, {
+    void sendSessionMessage(text, {
       model: targetModel.modelId,
       providerId: targetModel.providerId,
       sessionId: targetSessionId,
@@ -246,6 +246,8 @@ function ChatPanel({
         ...(opts?.selectedTools?.map((tool) => tool.toolId) ?? []),
       ],
       forceEnabledSkillIds: [...(resourceStateProvider?.forceEnabledSkillIds ?? [])],
+    }).catch((error) => {
+      toast.danger(parseErrorMessage(error));
     });
 
     if (hasResourceChatContext) {

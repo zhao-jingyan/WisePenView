@@ -161,12 +161,9 @@ function SkillMenu() {
                   aria-label="选择其他 Skill"
                   selectionMode="none"
                   className={styles.listBox}
+                  onAction={handleSelectOther}
                 >
-                  <ListBoxItem
-                    id="select-other-skill"
-                    textValue="选择其他 Skill..."
-                    onPress={handleSelectOther}
-                  >
+                  <ListBoxItem id="select-other-skill" textValue="选择其他 Skill...">
                     <span className={styles.listItemContent}>
                       <Sparkles size={16} />
                       <span>选择其他 Skill...</span>
