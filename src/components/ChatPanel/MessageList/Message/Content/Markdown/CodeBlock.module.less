@@ -1,5 +1,3 @@
-@import '@/styles/scrollbar.module.less';
-
 .shell {
   --chat-code-copy-btn-size: 32px;
   position: relative;
@@ -35,12 +33,9 @@
   margin: 0;
   padding: var(--space-sm);
   padding-top: calc(var(--space-xs) + var(--chat-code-copy-btn-size) + var(--space-2xs));
-  overflow-x: auto;
-  overscroll-behavior: contain;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-xl);
   background-color: var(--surface-secondary);
-  .appSubtleScrollbar();
 
   :global(code) {
     display: block;
@@ -52,8 +47,9 @@
       monospace;
     font-size: var(--font-size-xs);
     line-height: 1.6;
-    white-space: pre;
-    word-break: normal;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 }
 
