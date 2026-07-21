@@ -406,6 +406,7 @@ function ChatPanel({
                   <div className={styles.messageViewport}>
                     <MessageList
                       messages={messages}
+                      sessionId={currentSessionId}
                       canLoadMoreHistory={canLoadMoreHistory}
                       loadingMoreHistory={loadingMoreHistory}
                       onLoadMoreHistory={loadMoreHistoryMessages}

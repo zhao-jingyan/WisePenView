@@ -62,6 +62,13 @@
     background: var(--accent-soft);
   }
 
+  /* 行列选择与悬停高亮通过门户渲染，单元格内容需位于高亮层之上。 */
+  :global(.ProseMirror td > *),
+  :global(.ProseMirror th > *) {
+    position: relative;
+    z-index: calc(var(--note-table-selection-layer, 25) + 1);
+  }
+
   :global(.ProseMirror .column-resize-handle),
   :global(.bn-table-drop-cursor) {
     background-color: var(--accent);

@@ -28,12 +28,14 @@ interface ResourceCommentPanelProps {
 }
 
 interface OptimisticLikeState {
+  resourceId: string;
   baseCount: number;
   count: number;
   liked: boolean;
 }
 
 interface OptimisticScoreState {
+  resourceId: string;
   baseScore: number;
   score: number;
 }
@@ -183,15 +185,20 @@ function ResourceCommentPanel({ resource, onResourceChanged }: ResourceCommentPa
 
   const interactionScore = interaction?.score ?? 0;
   const activeOptimisticLike =
-    optimisticLike?.baseCount === resourceLikeCount ? optimisticLike : undefined;
+    optimisticLike?.resourceId === resourceId && optimisticLike.baseCount === resourceLikeCount
+      ? optimisticLike
+      : undefined;
   const activeOptimisticScore =
-    optimisticScore?.baseScore === interactionScore ? optimisticScore : undefined;
+    optimisticScore?.resourceId === resourceId && optimisticScore.baseScore === interactionScore
+      ? optimisticScore
+      : undefined;
   const commentCount = commentPageData?.total ?? resource.commentCount ?? 0;
   const hasMoreComments = Boolean(commentPageData && commentPage < commentPageData.totalPage);
 
   const handleResourceLikeChange = (liked: boolean) => {
     const currentCount = activeOptimisticLike?.count ?? resourceLikeCount;
     setOptimisticLike({
+      resourceId,
       baseCount: resourceLikeCount,
       count: Math.max(0, currentCount + (liked ? 1 : -1)),
       liked,
@@ -200,7 +207,7 @@ function ResourceCommentPanel({ resource, onResourceChanged }: ResourceCommentPa
   };
 
   const handleScoreChange = (score: number) => {
-    setOptimisticScore({ baseScore: interactionScore, score });
+    setOptimisticScore({ resourceId, baseScore: interactionScore, score });
     submitResourceScore(score);
   };
 

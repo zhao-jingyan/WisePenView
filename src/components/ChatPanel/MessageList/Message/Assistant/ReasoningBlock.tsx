@@ -1,7 +1,7 @@
+import { useMessageScroller } from '@/components/_shadcn';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { ChevronRight, Loader } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { useMessageScrollFollow } from '../../useMessageScrollFollow';
 import styles from './ReasoningBlock.module.less';
 
 interface ReasoningBlockProps {
@@ -12,7 +12,7 @@ interface ReasoningBlockProps {
 function ReasoningBlock({ content, loading }: ReasoningBlockProps) {
   const [collapsed, setCollapsed] = useState(!loading);
   const previousLoadingRef = useRef(loading);
-  const { scheduleScrollToEnd } = useMessageScrollFollow();
+  const { scrollToEndUnlessUserInterrupted } = useMessageScroller();
   const open = loading || !collapsed;
 
   /**
@@ -23,8 +23,8 @@ function ReasoningBlock({ content, loading }: ReasoningBlockProps) {
     const completed = previousLoadingRef.current && !loading;
     previousLoadingRef.current = loading;
 
-    if (completed) scheduleScrollToEnd();
-  }, [loading, scheduleScrollToEnd]);
+    if (completed) scrollToEndUnlessUserInterrupted();
+  }, [loading, scrollToEndUnlessUserInterrupted]);
 
   if (!content && !loading) return null;
 

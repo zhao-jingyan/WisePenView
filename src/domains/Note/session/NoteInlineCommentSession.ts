@@ -16,15 +16,12 @@ interface NoteInlineCommentSessionOptions {
   inlineCommentService: IInlineCommentService;
 }
 
-function compareThreads(a: NoteInlineCommentThread, b: NoteInlineCommentThread): number {
-  return b.updatedAt - a.updatedAt || b.createdAt - a.createdAt;
-}
-
 export class NoteInlineCommentSession {
   readonly resourceId: string;
   private readonly inlineCommentService: IInlineCommentService;
   private readonly threadsById = new Map<string, NoteInlineCommentThread>();
   private resolvedThreads: NoteInlineCommentThread[] = [];
+  private threadAnchorPositions = new Map<string, number>();
   private readonly addedItemIdsByRequestKey = new Map<string, string>();
   private readonly subscribers = new Set<() => void>();
   private snapshot: NoteInlineCommentSessionSnapshot = {
@@ -51,6 +48,12 @@ export class NoteInlineCommentSession {
   destroy(): void {
     this.destroyed = true;
     this.subscribers.clear();
+  }
+
+  setThreadAnchorPositions(positions: ReadonlyMap<string, number>): void {
+    if (this.hasSameThreadAnchorPositions(positions)) return;
+    this.threadAnchorPositions = new Map(positions);
+    this.publish();
   }
 
   async createThread(
@@ -238,9 +241,27 @@ export class NoteInlineCommentSession {
 
   private publish(patch: Partial<NoteInlineCommentSessionSnapshot> = {}): void {
     this.updateSnapshot({
-      threads: [...this.threadsById.values()].sort(compareThreads),
-      resolvedThreads: [...this.resolvedThreads].sort(compareThreads),
+      threads: [...this.threadsById.values()].sort(this.compareThreads),
+      resolvedThreads: [...this.resolvedThreads].sort(this.compareThreads),
       ...patch,
     });
+  }
+
+  private compareThreads = (a: NoteInlineCommentThread, b: NoteInlineCommentThread): number => {
+    const aPosition = this.threadAnchorPositions.get(a.threadId);
+    const bPosition = this.threadAnchorPositions.get(b.threadId);
+    if (aPosition !== undefined && bPosition !== undefined && aPosition !== bPosition) {
+      return aPosition - bPosition;
+    }
+    if (aPosition !== undefined) return -1;
+    if (bPosition !== undefined) return 1;
+    return b.updatedAt - a.updatedAt || b.createdAt - a.createdAt;
+  };
+
+  private hasSameThreadAnchorPositions(positions: ReadonlyMap<string, number>): boolean {
+    if (this.threadAnchorPositions.size !== positions.size) return false;
+    return [...positions].every(
+      ([threadId, position]) => this.threadAnchorPositions.get(threadId) === position
+    );
   }
 }

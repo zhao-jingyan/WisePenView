@@ -33,6 +33,7 @@ type MessageScrollerVisibilityState = {
   visibleMessageIds: string[];
 };
 type MessageScrollerProviderProps = {
+  autoScrollResetKey?: string;
   children?: React.ReactNode;
   autoScroll?: boolean;
   defaultScrollPosition?: MessageScrollerDefaultScrollPosition;
@@ -79,6 +80,7 @@ type MessageScrollerContextValue = {
   observeVisibility: () => void;
   preserveScrollOnPrependRef: React.MutableRefObject<boolean>;
   scrollToEnd: (options?: MessageScrollerScrollOptions) => boolean;
+  scrollToEndUnlessUserInterrupted: () => boolean;
   scrollToMessage: (messageId: string, options?: MessageScrollerScrollOptions) => boolean;
   scrollToStart: (options?: MessageScrollerScrollOptions) => boolean;
   setContentElement: (element: HTMLDivElement | null) => void;
@@ -119,6 +121,7 @@ type MessageScrollerRefs = {
   messageElementsRef: React.MutableRefObject<MessageElementRegistry>;
   modeRef: React.MutableRefObject<ScrollMode>;
   pendingScrollFrameRef: React.MutableRefObject<number | null>;
+  pendingFollowScrollFrameRef: React.MutableRefObject<number | null>;
   pendingScrollToMessageRef: React.MutableRefObject<PendingScrollToMessage | null>;
   prependRestoreRef: React.MutableRefObject<PrependRestoreState | null>;
   preserveScrollOnPrependRef: React.MutableRefObject<boolean>;
@@ -1029,6 +1032,7 @@ function useMessageScrollerRefs({
   const messageElementsRef = React.useRef<MessageElementRegistry>(new Map());
   const modeRef = React.useRef<ScrollMode>(autoScroll ? 'following-bottom' : 'free-scrolling');
   const pendingScrollFrameRef = React.useRef<number | null>(null);
+  const pendingFollowScrollFrameRef = React.useRef<number | null>(null);
   const pendingScrollToMessageRef = React.useRef<PendingScrollToMessage | null>(null);
   const prependRestoreRef = React.useRef<PrependRestoreState | null>(null);
   const preserveScrollOnPrependRef = React.useRef(true);
@@ -1073,6 +1077,7 @@ function useMessageScrollerRefs({
     messageElementsRef,
     modeRef,
     pendingScrollFrameRef,
+    pendingFollowScrollFrameRef,
     pendingScrollToMessageRef,
     prependRestoreRef,
     preserveScrollOnPrependRef,
@@ -1112,6 +1117,7 @@ function useElementRef<TElement extends HTMLElement>(
 
 function useMessageScrollerController({
   autoScroll = false,
+  autoScrollResetKey,
   defaultScrollPosition = 'end',
   scrollEdgeThreshold = DEFAULT_SCROLL_EDGE_THRESHOLD,
   scrollPreviousItemPeek = DEFAULT_SCROLL_PREVIOUS_ITEM_PEEK,
@@ -1136,6 +1142,7 @@ function useMessageScrollerController({
     messageElementsRef,
     modeRef,
     pendingScrollFrameRef,
+    pendingFollowScrollFrameRef,
     pendingScrollToMessageRef,
     prependRestoreRef,
     preserveScrollOnPrependRef,
@@ -1156,10 +1163,16 @@ function useMessageScrollerController({
   } = refs;
   const defaultScrollPositionRef =
     React.useRef<MessageScrollerDefaultScrollPosition>(defaultScrollPosition);
+  const autoScrollResetKeyRef = React.useRef(autoScrollResetKey);
 
   if (defaultScrollPositionRef.current !== defaultScrollPosition) {
     defaultScrollPositionRef.current = defaultScrollPosition;
     defaultScrollPositionAppliedRef.current = false;
+  }
+
+  if (autoScrollResetKeyRef.current !== autoScrollResetKey) {
+    autoScrollResetKeyRef.current = autoScrollResetKey;
+    modeRef.current = autoScroll ? 'following-bottom' : 'free-scrolling';
   }
 
   const syncScrollAttributes = React.useCallback(
@@ -1278,6 +1291,19 @@ function useMessageScrollerController({
     scheduleStateCommit,
     scheduleVisibilitySync,
   });
+  const scrollToEndUnlessUserInterrupted = React.useCallback(() => {
+    if (!autoScrollRef.current || modeRef.current === 'free-scrolling') return false;
+    if (pendingFollowScrollFrameRef.current !== null) return true;
+
+    pendingFollowScrollFrameRef.current = window.requestAnimationFrame(() => {
+      pendingFollowScrollFrameRef.current = null;
+      if (autoScrollRef.current && modeRef.current !== 'free-scrolling') {
+        scrollToEnd({ behavior: 'auto' });
+      }
+    });
+
+    return true;
+  }, [autoScrollRef, modeRef, pendingFollowScrollFrameRef, scrollToEnd]);
   const preservePrependScroll = React.useCallback(() => {
     const restoreState = prependRestoreRef.current;
     const viewport = viewportRef.current;
@@ -1645,6 +1671,7 @@ function useMessageScrollerController({
       observeVisibility,
       preserveScrollOnPrependRef,
       scrollToEnd,
+      scrollToEndUnlessUserInterrupted,
       scrollToMessage,
       scrollToStart,
       setContentElement,
@@ -1664,6 +1691,7 @@ function useMessageScrollerController({
       observeVisibility,
       preserveScrollOnPrependRef,
       scrollToEnd,
+      scrollToEndUnlessUserInterrupted,
       scrollToMessage,
       scrollToStart,
       setContentElement,
@@ -1705,12 +1733,18 @@ function useMessageScrollerController({
         pendingScrollFrameRef.current = null;
       }
 
+      if (pendingFollowScrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(pendingFollowScrollFrameRef.current);
+        pendingFollowScrollFrameRef.current = null;
+      }
+
       visibilityObserverRef.current?.disconnect();
       visibilityObserverRef.current = null;
     },
     [
       autoscrollingTimeoutRef,
       pendingScrollFrameRef,
+      pendingFollowScrollFrameRef,
       stateFrameRef,
       visibilityFrameRef,
       visibilityObserverRef,
@@ -1724,7 +1758,7 @@ function useMessageScrollerController({
     }
 
     commitScrollState();
-  }, [autoScroll, commitScrollState, itemCountRef, modeRef, scrollToEnd]);
+  }, [autoScroll, autoScrollResetKey, commitScrollState, itemCountRef, modeRef, scrollToEnd]);
 
   return {
     context,
@@ -1767,11 +1801,12 @@ function useMessageScrollerItemContext() {
 }
 
 function useMessageScroller() {
-  const { scrollToEnd, scrollToMessage, scrollToStart } = useMessageScrollerContext();
+  const { scrollToEnd, scrollToEndUnlessUserInterrupted, scrollToMessage, scrollToStart } =
+    useMessageScrollerContext();
 
   return React.useMemo(
-    () => ({ scrollToEnd, scrollToMessage, scrollToStart }),
-    [scrollToEnd, scrollToMessage, scrollToStart]
+    () => ({ scrollToEnd, scrollToEndUnlessUserInterrupted, scrollToMessage, scrollToStart }),
+    [scrollToEnd, scrollToEndUnlessUserInterrupted, scrollToMessage, scrollToStart]
   );
 }
 
@@ -1802,6 +1837,7 @@ function useMessageScrollerVisibility() {
 
 function MessageScrollerProvider({
   autoScroll = false,
+  autoScrollResetKey,
   children,
   defaultScrollPosition = 'end',
   scrollEdgeThreshold = DEFAULT_SCROLL_EDGE_THRESHOLD,
@@ -1810,6 +1846,7 @@ function MessageScrollerProvider({
 }: MessageScrollerProviderProps) {
   const { context, registerMessage } = useMessageScrollerController({
     autoScroll,
+    autoScrollResetKey,
     defaultScrollPosition,
     scrollEdgeThreshold,
     scrollPreviousItemPeek,

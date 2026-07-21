@@ -60,6 +60,21 @@ function buildDecorations(params: {
   return DecorationSet.create(doc, decorations);
 }
 
+function collectThreadAnchorPositions(params: {
+  fragment: XmlFragment;
+  binding: ProsemirrorBinding;
+  session: NoteInlineCommentSession;
+}): Map<string, number> {
+  const { fragment, binding, session } = params;
+  const snapshot = session.getSnapshot();
+  const positions = new Map<string, number>();
+  [...snapshot.threads, ...snapshot.resolvedThreads].forEach((thread) => {
+    const range = resolveInlineCommentAnchor({ anchor: thread.anchor, fragment, binding });
+    if (range) positions.set(thread.threadId, range.from);
+  });
+  return positions;
+}
+
 export function createInlineCommentExtension(params: {
   fragment: XmlFragment;
   session: NoteInlineCommentSession;
@@ -104,14 +119,39 @@ export function createInlineCommentExtension(params: {
           },
         },
         view: (view) => {
+          let synchronizeFrame: number | undefined;
+          const synchronizeThreadOrder = () => {
+            synchronizeFrame = undefined;
+            const binding = readBinding(view);
+            if (!binding) return;
+            session.setThreadAnchorPositions(
+              collectThreadAnchorPositions({ fragment, binding, session })
+            );
+          };
+          const scheduleThreadOrderSynchronization = () => {
+            if (synchronizeFrame !== undefined) return;
+            synchronizeFrame = window.requestAnimationFrame(synchronizeThreadOrder);
+          };
           const refresh = () => {
             view.dispatch(
               view.state.tr.setMeta(inlineCommentPluginKey, true).setMeta('addToHistory', false)
             );
           };
-          const unsubscribe = session.subscribe(refresh);
+          const unsubscribe = session.subscribe(() => {
+            scheduleThreadOrderSynchronization();
+            refresh();
+          });
+          scheduleThreadOrderSynchronization();
           refresh();
-          return { destroy: unsubscribe };
+          return {
+            update: scheduleThreadOrderSynchronization,
+            destroy: () => {
+              unsubscribe();
+              if (synchronizeFrame !== undefined) {
+                window.cancelAnimationFrame(synchronizeFrame);
+              }
+            },
+          };
         },
       }),
     ],

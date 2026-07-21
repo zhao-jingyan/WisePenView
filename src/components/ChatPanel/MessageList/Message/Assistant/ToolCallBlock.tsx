@@ -1,11 +1,10 @@
 import { Spin } from '@/components/Feedback';
-import { Marker, MarkerContent, MarkerIcon } from '@/components/_shadcn';
+import { Marker, MarkerContent, MarkerIcon, useMessageScroller } from '@/components/_shadcn';
 import markerStyles from '@/components/_shadcn/marker.module.less';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { getToolName, type DynamicToolUIPart, type ToolUIPart } from 'ai';
 import { AlertCircle, Ban, Check, Clock, Wrench } from 'lucide-react';
 import { useRef } from 'react';
-import { useMessageScrollFollow } from '../../useMessageScrollFollow';
 import styles from './ToolCallBlock.module.less';
 
 type RenderableToolPart = ToolUIPart | DynamicToolUIPart;
@@ -32,7 +31,7 @@ function getToolStatus(part: RenderableToolPart): { label: string; loading: bool
 function ToolCallBlock({ part }: { part: RenderableToolPart }) {
   const status = getToolStatus(part);
   const previousStateRef = useRef<typeof part.state | null>(null);
-  const { scheduleScrollToEnd } = useMessageScrollFollow();
+  const { scrollToEndUnlessUserInterrupted } = useMessageScroller();
 
   /**
    * 工具块首次出现或状态切换时，后续结果与正文可能在同一批次渲染。
@@ -42,8 +41,8 @@ function ToolCallBlock({ part }: { part: RenderableToolPart }) {
     const stateChanged = previousStateRef.current !== part.state;
     previousStateRef.current = part.state;
 
-    if (stateChanged) scheduleScrollToEnd();
-  }, [part.state, scheduleScrollToEnd]);
+    if (stateChanged) scrollToEndUnlessUserInterrupted();
+  }, [part.state, scrollToEndUnlessUserInterrupted]);
 
   return (
     <div className={styles.wrapper} data-tool-call-id={part.toolCallId}>
