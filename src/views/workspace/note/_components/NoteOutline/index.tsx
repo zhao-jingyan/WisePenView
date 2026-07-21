@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ChevronsRight, Menu } from 'lucide-react';
+import { ChevronsLeft, Menu } from 'lucide-react';
 
 import type { NoteOutlineItem } from '@/components/Note/CustomBlockNote/index.type';
 import { Tooltip } from '@heroui/react';
@@ -61,7 +61,7 @@ function NoteOutline({ items, activeId, onNavigate, title, open, onOpenChange }:
             aria-label="收起目录"
             onClick={() => onOpenChange(false)}
           >
-            <ChevronsRight size={20} />
+            <ChevronsLeft size={20} />
           </button>
         </div>
         <div className={styles.scrollArea}>
