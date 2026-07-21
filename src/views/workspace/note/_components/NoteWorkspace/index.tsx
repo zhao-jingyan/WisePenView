@@ -337,7 +337,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
   const handleInlineCommentCreateRequest = useCallback(
     (draft: NoteInlineCommentDraft) => {
       setInlineCommentDraft(draft);
-      setResourceSidePanelMode(resourceId, 'comment');
+      setResourceSidePanelMode(resourceId, 'inlineComment');
     },
     [resourceId, setResourceSidePanelMode]
   );
@@ -346,7 +346,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
     (threadId: string) => {
       setActiveInlineCommentThreadId(threadId);
       setInlineCommentScrollTarget({ threadId });
-      setResourceSidePanelMode(resourceId, 'comment');
+      setResourceSidePanelMode(resourceId, 'inlineComment');
     },
     [resourceId, setResourceSidePanelMode]
   );
@@ -380,9 +380,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
         ? {
             resource: noteInfoDisplay.resourceInfo,
             onResourceChanged: onRefreshNoteInfo,
-            title: '批注',
-            actionLabel: '批注栏',
-            content: (
+            inlineComment: (
               <InlineComment
                 threads={inlineCommentSnapshot.threads}
                 resolvedThreads={inlineCommentSnapshot.resolvedThreads}

@@ -67,7 +67,6 @@ function ResourceFeedbackSummary({
             onChange={onLikeChange}
           >
             <ThumbsUp size={14} aria-hidden fill={liked ? 'currentColor' : 'none'} />
-            <span>有帮助</span>
             <span className={styles.helpfulCount}>{formatReadCount(likeCount)}</span>
           </ToggleButton>
           <Rating
