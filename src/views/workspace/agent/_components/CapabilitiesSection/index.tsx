@@ -15,8 +15,11 @@ interface Props {
 
 export default function CapabilitiesSection({ spec, tools, skills, disabled, onChange }: Props) {
   const policy = spec.toolAndSkillPolicy;
-  const allowedToolSet = new Set(policy.allowToolNames);
   const deniedToolSet = new Set(policy.denyToolNames);
+  const defaultAllowedToolIds =
+    policy.allowToolNames.length === 0
+      ? tools.map((tool) => tool.toolId).filter((toolId) => !deniedToolSet.has(toolId))
+      : policy.allowToolNames;
   const onDemandSkillSet = new Set(policy.onDemandSkillIds);
   const forceSkillSet = new Set(policy.forceEnabledSkillIds);
 
@@ -61,8 +64,9 @@ export default function CapabilitiesSection({ spec, tools, skills, disabled, onC
       };
     });
 
-  const allowToolOptions = toToolOptions(deniedToolSet, '该 Tool 已加入禁用 Tool');
-  const denyToolOptions = toToolOptions(allowedToolSet, '该 Tool 已加入允许 Tool');
+  // 允许和禁用 Tool 可以在两侧直接切换，提交时再从另一侧移除，避免默认全选后无法禁用。
+  const allowToolOptions = toToolOptions(new Set(), '');
+  const denyToolOptions = toToolOptions(new Set(), '');
   const onDemandSkillOptions = toSkillOptions(forceSkillSet, '该 Skill 已加入强制启用 Skill');
   const forceSkillOptions = toSkillOptions(onDemandSkillSet, '该 Skill 已加入按需 Skill');
 
@@ -94,9 +98,14 @@ export default function CapabilitiesSection({ spec, tools, skills, disabled, onC
             emptyText="没有匹配的 Tool"
             selectedEmptyText="暂未选择 Tool"
             options={allowToolOptions}
-            selectedIds={policy.allowToolNames}
+            selectedIds={defaultAllowedToolIds}
             disabled={disabled}
-            onChange={(ids) => updatePolicy({ allowToolNames: ids })}
+            onChange={(ids) =>
+              updatePolicy({
+                allowToolNames: ids,
+                denyToolNames: policy.denyToolNames.filter((id) => !ids.includes(id)),
+              })
+            }
           />
           <CapabilityPolicyPanel
             kind="tool"
@@ -109,7 +118,12 @@ export default function CapabilitiesSection({ spec, tools, skills, disabled, onC
             options={denyToolOptions}
             selectedIds={policy.denyToolNames}
             disabled={disabled}
-            onChange={(ids) => updatePolicy({ denyToolNames: ids })}
+            onChange={(ids) =>
+              updatePolicy({
+                denyToolNames: ids,
+                allowToolNames: policy.allowToolNames.filter((id) => !ids.includes(id)),
+              })
+            }
           />
           <SettingRow
             title="启用 Skill"

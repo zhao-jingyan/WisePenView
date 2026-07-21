@@ -4,7 +4,7 @@ import { UnsavedChangesDialog } from '@/components/Overlay';
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
 import VersionDropdown from '@/components/VersionDropdown';
 import { useAgentService, useChatService, useSkillService } from '@/domains';
-import type { AgentAsset, AgentSpec } from '@/domains/Agent';
+import type { AgentAsset, AgentDetail, AgentSpec } from '@/domains/Agent';
 import type { ChatAgentOption } from '@/domains/Chat';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useWorkspaceNavigationStore } from '@/layouts/Workspace/_store/useWorkspaceNavigationStore';
@@ -64,6 +64,8 @@ export default function AgentView({ resourceId }: Props) {
   const [promptResetOpen, setPromptResetOpen] = useState(false);
   const [deleteAssetId, setDeleteAssetId] = useState<string | null>(null);
   const [assetOverride, setAssetOverride] = useState<AgentAsset[] | null>(null);
+  const [agentOverride, setAgentOverride] = useState<AgentDetail | null>(null);
+  const [viewingVersion, setViewingVersion] = useState<number | null>(null);
   const load = useRequest(
     async () => {
       if (!resourceId) return null;
@@ -75,6 +77,8 @@ export default function AgentView({ resourceId }: Props) {
       onSuccess: (data) => {
         if (!data) return;
         setAssetOverride(null);
+        setAgentOverride(null);
+        setViewingVersion(null);
         controller.initialize(data.agent, { savedDraft: data.savedDraft });
         setPromptMode(
           parseGuidedPrompt(data.agent.spec.systemPrompt).compatible ? 'guided' : 'free'
@@ -83,9 +87,29 @@ export default function AgentView({ resourceId }: Props) {
       onError: (error) => toast.danger(parseErrorMessage(error)),
     }
   );
+  const { loading: versionLoading, run: runSwitchVersion } = useRequest(
+    async (version: number) => {
+      if (!resourceId) return null;
+      return agentService.getAgentDetail(resourceId, version);
+    },
+    {
+      manual: true,
+      onSuccess: (data, params) => {
+        if (!data) return;
+        const version = params[0];
+        const isDraft = load.data?.agent.draftVersion === version;
+        setViewingVersion(isDraft ? null : version);
+        setAgentOverride(data);
+        setAssetOverride(null);
+        controller.initialize(data);
+        setPromptMode(parseGuidedPrompt(data.spec.systemPrompt).compatible ? 'guided' : 'free');
+      },
+      onError: (error) => toast.danger(parseErrorMessage(error)),
+    }
+  );
   const save = useRequest(
     async () => {
-      if (!resourceId || !controller.draft || !load.data) return;
+      if (!resourceId || !controller.draft || !load.data || viewingVersion !== null) return;
       controller.markSaving();
       await Promise.all([
         agentService.updateAgentInfo(
@@ -201,6 +225,40 @@ export default function AgentView({ resourceId }: Props) {
   });
   const handleSave = useMemoizedFn(() => save.run());
   const handlePublish = useMemoizedFn(() => publish.run());
+  const versionItems = useMemo(() => {
+    if (!load.data) return [];
+    const { draftVersion, publishedVersion } = load.data.agent;
+    const items = [
+      {
+        key: `v${draftVersion}`,
+        version: draftVersion,
+        current: viewingVersion === null,
+      },
+    ];
+    for (let version = publishedVersion; version >= 1; version -= 1) {
+      if (version === draftVersion) continue;
+      items.push({
+        key: `v${version}`,
+        version,
+        current: viewingVersion === version,
+      });
+    }
+    return items;
+  }, [load.data, viewingVersion]);
+  const disabledVersionKeys = useMemo(
+    () =>
+      load.data?.agent.isOwner ? new Set<string>() : new Set(versionItems.map((item) => item.key)),
+    [load.data?.agent.isOwner, versionItems]
+  );
+  const handleVersionSelect = useMemoizedFn((version: number) => {
+    if (!load.data || version === (viewingVersion ?? load.data.agent.draftVersion)) return;
+    if (controller.isDirty) {
+      toast.warning('请先保存或放弃当前修改，再切换版本');
+      return;
+    }
+    runSwitchVersion(version);
+  });
+  const displayAgent = agentOverride ?? load.data?.agent;
   const currentDraftAgent = useMemo<ChatAgentOption | null>(() => {
     if (!load.data || !controller.draft) return null;
     const skillPolicy = controller.draft.spec.toolAndSkillPolicy;
@@ -223,32 +281,38 @@ export default function AgentView({ resourceId }: Props) {
   const headerConfig = useMemo<ResourceHostLayoutConfig>(
     () => ({
       className: styles.pageWrap,
-      chatAgentDebug: currentDraftAgent
-        ? {
-            agent: currentDraftAgent,
-            isDirty: controller.isDirty,
-            isSaving: save.loading,
-            onSaveDraft: handleSaveDraftForDebug,
-          }
-        : undefined,
-      header: load.data
+      chatAgentDebug:
+        currentDraftAgent && viewingVersion === null
+          ? {
+              agent: currentDraftAgent,
+              isDirty: controller.isDirty,
+              isSaving: save.loading,
+              onSaveDraft: handleSaveDraftForDebug,
+            }
+          : undefined,
+      header: displayAgent
         ? {
             resource: {
-              resourceId: load.data.agent.resourceId,
-              resourceName: load.data.agent.title,
+              resourceId: displayAgent.resourceId,
+              resourceName: displayAgent.title,
               resourceIconType: 'agent',
-              currentActions: load.data.agent.currentActions,
-              copyVersion: load.data.agent.version,
+              currentActions: displayAgent.currentActions,
+              copyVersion: displayAgent.version,
               permissionResourceType: RESOURCE_KIND.AGENT,
-              ownerId: load.data.agent.ownerId,
+              ownerId: displayAgent.ownerId,
               titleMeta: (
                 <span className={styles.saveStatus}>{saveText(controller.savePhase)}</span>
               ),
-              actions: load.data.agent.isOwner ? (
+              actions: displayAgent.isOwner ? (
                 <div className={styles.headerActions}>
                   <Button
                     variant="secondary"
-                    isDisabled={!controller.isDirty || save.loading}
+                    isDisabled={
+                      viewingVersion !== null ||
+                      !controller.isDirty ||
+                      save.loading ||
+                      versionLoading
+                    }
                     onPress={handleSave}
                   >
                     <Save size={15} />
@@ -256,21 +320,19 @@ export default function AgentView({ resourceId }: Props) {
                   </Button>
                   <Button
                     variant="primary"
-                    isDisabled={publish.loading || save.loading}
+                    isDisabled={
+                      viewingVersion !== null || publish.loading || save.loading || versionLoading
+                    }
                     onPress={handlePublish}
                   >
                     <Upload size={15} />
                     发布
                   </Button>
                   <VersionDropdown
-                    items={[
-                      {
-                        key: String(load.data.agent.version),
-                        version: load.data.agent.version,
-                        current: true,
-                      },
-                    ]}
+                    items={versionItems}
+                    disabledKeys={disabledVersionKeys}
                     formatVersion={(version) => `v${version}.0`}
+                    onSelect={handleVersionSelect}
                   />
                 </div>
               ) : undefined,
@@ -285,9 +347,14 @@ export default function AgentView({ resourceId }: Props) {
       handlePublish,
       handleSave,
       handleSaveDraftForDebug,
-      load.data,
+      displayAgent,
+      disabledVersionKeys,
+      handleVersionSelect,
       publish.loading,
       save.loading,
+      versionItems,
+      versionLoading,
+      viewingVersion,
     ]
   );
   useResourceHostLayoutConfig(headerConfig);
@@ -343,7 +410,12 @@ export default function AgentView({ resourceId }: Props) {
         <span>正在加载 Agent...</span>
       </div>
     );
-  const disabled = !load.data.agent.isOwner || save.loading || publish.loading;
+  const disabled =
+    !load.data.agent.isOwner ||
+    viewingVersion !== null ||
+    save.loading ||
+    publish.loading ||
+    versionLoading;
   return (
     <div className={styles.page}>
       <AgentSectionNav items={anchors} scrollContainerId={AGENT_SCROLL_CONTAINER_ID} />
@@ -381,7 +453,7 @@ export default function AgentView({ resourceId }: Props) {
         />
         <MemorySection spec={controller.draft.spec} disabled={disabled} onChange={setSpec} />
         <AssetsSection
-          assets={assetOverride ?? load.data.agent.assets}
+          assets={assetOverride ?? displayAgent?.assets ?? []}
           disabled={disabled}
           uploading={upload.loading}
           onUpload={(files) => upload.run(files)}

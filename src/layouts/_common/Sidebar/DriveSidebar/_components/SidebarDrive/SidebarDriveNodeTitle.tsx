@@ -1,7 +1,7 @@
 import { Popover } from '@/components/Overlay';
 import { Tooltip } from '@heroui/react';
 import { CloudUpload, FileInput, FolderPlus, Pencil, Plus, Trash2 } from 'lucide-react';
-import type { KeyboardEvent, MouseEvent } from 'react';
+import { useState, type KeyboardEvent, type MouseEvent } from 'react';
 
 import { ROOT_DISPLAY } from '@/components/Drive/common/constants';
 import type { DriveActionTarget } from '@/components/Drive/common/driveComponentModel';
@@ -14,7 +14,7 @@ import type { ReactNode } from 'react';
 import styles from './style.module.less';
 
 export type SidebarDriveCreateAction =
-  'folder' | 'note' | 'importNote' | 'drawio' | 'skill' | 'upload';
+  'folder' | 'note' | 'importNote' | 'drawio' | 'skill' | 'agent' | 'upload';
 
 interface SidebarDriveNodeTitleProps {
   node: DriveNode;
@@ -59,6 +59,11 @@ function SidebarDriveNodeTitle({
   const canDelete =
     !isSystemFolder && (node.type === 'folder' || node.type === 'resource' || node.type === 'link');
   const label = getNodeDisplayName(node, resourceName);
+  const [createMenuOpen, setCreateMenuOpen] = useState(false);
+  const handleCreate = (action: SidebarDriveCreateAction) => {
+    setCreateMenuOpen(false);
+    if (node.type === 'root' || node.type === 'folder') onCreateNode(node, action);
+  };
 
   return (
     <span className={styles.nodeTitle}>
@@ -84,7 +89,7 @@ function SidebarDriveNodeTitle({
           onKeyDown={stopTreeAction}
         >
           {canCreateFolder ? (
-            <Popover>
+            <Popover isOpen={createMenuOpen} onOpenChange={setCreateMenuOpen}>
               <Tooltip>
                 <Tooltip.Trigger>
                   <Popover.Trigger>
@@ -109,7 +114,7 @@ function SidebarDriveNodeTitle({
                     <button
                       type="button"
                       className={styles.createMenuItem}
-                      onClick={() => onCreateNode(node, 'folder')}
+                      onClick={() => handleCreate('folder')}
                     >
                       <FolderPlus size={15} aria-hidden="true" />
                       <span>新建文件夹</span>
@@ -119,7 +124,7 @@ function SidebarDriveNodeTitle({
                         <button
                           type="button"
                           className={styles.createMenuItem}
-                          onClick={() => onCreateNode(node, 'note')}
+                          onClick={() => handleCreate('note')}
                         >
                           <EntryIcon entryType="resource" resourceIconType="note" size={15} />
                           <span>新建笔记</span>
@@ -127,7 +132,7 @@ function SidebarDriveNodeTitle({
                         <button
                           type="button"
                           className={styles.createMenuItem}
-                          onClick={() => onCreateNode(node, 'importNote')}
+                          onClick={() => handleCreate('importNote')}
                         >
                           <FileInput size={15} aria-hidden="true" />
                           <span>导入笔记</span>
@@ -135,7 +140,7 @@ function SidebarDriveNodeTitle({
                         <button
                           type="button"
                           className={styles.createMenuItem}
-                          onClick={() => onCreateNode(node, 'drawio')}
+                          onClick={() => handleCreate('drawio')}
                         >
                           <EntryIcon entryType="resource" resourceIconType="drawio" size={15} />
                           <span>新建图表</span>
@@ -143,7 +148,7 @@ function SidebarDriveNodeTitle({
                         <button
                           type="button"
                           className={styles.createMenuItem}
-                          onClick={() => onCreateNode(node, 'skill')}
+                          onClick={() => handleCreate('skill')}
                         >
                           <EntryIcon entryType="resource" resourceIconType="skill" size={15} />
                           <span>新建 Skill</span>
@@ -151,7 +156,15 @@ function SidebarDriveNodeTitle({
                         <button
                           type="button"
                           className={styles.createMenuItem}
-                          onClick={() => onCreateNode(node, 'upload')}
+                          onClick={() => handleCreate('agent')}
+                        >
+                          <EntryIcon entryType="resource" resourceIconType="agent" size={15} />
+                          <span>新建 Agent</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.createMenuItem}
+                          onClick={() => handleCreate('upload')}
                         >
                           <CloudUpload size={15} aria-hidden="true" />
                           <span>上传文件</span>

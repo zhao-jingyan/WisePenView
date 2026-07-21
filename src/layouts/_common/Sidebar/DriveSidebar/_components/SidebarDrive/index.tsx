@@ -207,6 +207,9 @@ function SidebarDrive() {
       case 'skill':
         setDriveCreateTarget({ type: 'skill', target: node });
         break;
+      case 'agent':
+        setDriveCreateTarget({ type: 'agent', target: node });
+        break;
       case 'upload':
         setUploadTarget(node);
         break;
