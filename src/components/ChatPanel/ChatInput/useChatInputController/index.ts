@@ -73,7 +73,8 @@ export function useChatInputController({ onSend, onStop, sending }: UseChatInput
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>): void {
-    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
+    const isCompositionEnter = e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229;
+    if (e.key === 'Enter' && !e.shiftKey && !isComposing && !isCompositionEnter) {
       e.preventDefault();
       void handleSend();
     }
