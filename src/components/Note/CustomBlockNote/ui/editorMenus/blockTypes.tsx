@@ -1,4 +1,4 @@
-import type { CustomBlockNoteEditor } from '@/components/Note/CustomBlockNote/noteEditorComposition';
+import type { CustomBlockNoteEditor } from '@/components/Note/CustomBlockNote/registry/noteEditorComposition';
 import { editorHasBlockWithType } from '@blocknote/core';
 import {
   Braces,

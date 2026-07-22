@@ -7,9 +7,9 @@ import type { Node as PMNode } from '@tiptap/pm/model';
 import { useMemoizedFn, useMount, useUnmount, useUpdateEffect } from 'ahooks';
 import { useRef } from 'react';
 
-import { subscribeToNoteTransactions } from '../engines/editor/transactionSummary';
 import type { CustomBlockNoteProps } from '../index.type';
-import type { CustomBlockNoteEditor } from '../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../registry/noteEditorComposition';
+import type { NoteTransactionService } from '../registry/types';
 import type { NoteEditorDefinition } from './useNoteEditorDefinition';
 
 interface NoteSelectionRangeSnapshot {
@@ -48,6 +48,7 @@ function buildSelectionSnapshot(selection: NoteSelectionRangeSnapshot): NoteSele
 export function useNoteDocument({
   editor,
   definition,
+  transactions,
   resourceId,
   blockLocalDocWrites,
   onAskAi,
@@ -55,6 +56,7 @@ export function useNoteDocument({
 }: {
   editor: CustomBlockNoteEditor;
   definition: NoteEditorDefinition;
+  transactions: NoteTransactionService;
   resourceId: string;
   blockLocalDocWrites: boolean;
   onAskAi: CustomBlockNoteProps['onAskAi'];
@@ -120,17 +122,17 @@ export function useNoteDocument({
       definition.setPmWriteGuardReady(true);
     };
 
-    bodyOnChangeCleanupRef.current = subscribeToNoteTransactions(editor, (summary) => {
-      if (!summary.docChanged) return;
+    bodyOnChangeCleanupRef.current = transactions.subscribe(editor, (analysis) => {
+      if (!analysis.docChanged) return;
       activateWriteGuard();
       scheduleBodyContentHashRefresh();
 
       const newNoteState = useNewNoteStore.getState();
-      if (newNoteState.newNoteResourceId !== resourceId || summary.changedBlockIds.length === 0) {
+      if (newNoteState.newNoteResourceId !== resourceId || analysis.changedBlocks.length === 0) {
         return;
       }
-      const changedBlocks = summary.changedBlockIds
-        .map((blockId) => editor.getBlock(blockId))
+      const changedBlocks = analysis.changedBlocks
+        .map(({ id }) => editor.getBlock(id))
         .filter((block): block is NonNullable<typeof block> => Boolean(block));
       if (
         changedBlocks.length > 0 &&

@@ -1,4 +1,4 @@
-import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditorComposition';
+import { blockNoteSchema } from '@/components/Note/CustomBlockNote/registry/noteEditorComposition';
 import { getSafeTableCellSelection } from '@/components/Note/CustomBlockNote/ui/tableHandles/safe';
 import {
   blockHasType,

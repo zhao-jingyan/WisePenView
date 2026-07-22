@@ -22,6 +22,7 @@ import {
 } from '../LatexEditPopover/latexPopoverGeometry';
 import { useFocusPopoverTextarea } from '../LatexEditPopover/useFocusPopoverTextarea';
 import { useLatexPopoverAnchorSync } from '../LatexEditPopover/useLatexPopoverAnchorSync';
+import { sanitizeLatexInput } from '../latexInput';
 import styles from './style.module.less';
 
 const mathBlockPropSchema = {
@@ -106,7 +107,7 @@ function MathBlockView(props: MathBlockRenderProps) {
   // TODO: 重构，不使用useEffect，使用更合适的语义以增加可读性，但是latexSupport有完全重构的可能，因此暂时保留
   useEffectForce(() => {
     if (isEditing) return;
-    setValue(props.block.props.expression);
+    setValue(sanitizeLatexInput(props.block.props.expression));
   }, [props.block.props.expression, isEditing]);
 
   useFocusPopoverTextarea(isEditing, popoverPos, inputRef);
@@ -114,8 +115,8 @@ function MathBlockView(props: MathBlockRenderProps) {
   useEffectForce(() => {
     if (readOnly) return;
     if (!props.block.props.autoEdit) return;
-    openValueRef.current = props.block.props.expression;
-    setValue(props.block.props.expression);
+    openValueRef.current = sanitizeLatexInput(props.block.props.expression);
+    setValue(openValueRef.current);
     isEditingRef.current = true;
     setIsEditing(true);
     props.editor.updateBlock(props.block, {
@@ -163,7 +164,7 @@ function MathBlockView(props: MathBlockRenderProps) {
     if (!isEditingRef.current) return;
     isEditingRef.current = false;
     props.editor.updateBlock(props.block, {
-      props: { ...props.block.props, expression: value.trim() },
+      props: { ...props.block.props, expression: sanitizeLatexInput(value).trim() },
     });
     if (focusNextLine) {
       scheduleCancelBlurCommitAndFocusNext();
@@ -190,8 +191,8 @@ function MathBlockView(props: MathBlockRenderProps) {
 
   const enterEdit = () => {
     if (readOnly) return;
-    openValueRef.current = props.block.props.expression;
-    setValue(props.block.props.expression);
+    openValueRef.current = sanitizeLatexInput(props.block.props.expression);
+    setValue(openValueRef.current);
     isEditingRef.current = true;
     setIsEditing(true);
   };
@@ -227,7 +228,7 @@ function MathBlockView(props: MathBlockRenderProps) {
       hint="Enter 确定 · Shift+Enter 换行 · Esc 取消"
       textareaClassName={`${popoverStyles.inlineEditTextarea} ${styles.blockPopoverTextarea}`}
       value={value}
-      onChange={(e) => setValue(e.target.value)}
+      onValueChange={setValue}
       onCommit={() => commit(true)}
       onOutsidePress={() => commit()}
       commitEnterUnlessShift

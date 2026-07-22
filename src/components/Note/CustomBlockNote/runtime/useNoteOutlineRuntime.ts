@@ -3,7 +3,6 @@ import { getNearestBlockPos } from '@blocknote/core';
 import { useLatest, useMemoizedFn } from 'ahooks';
 import { useRef } from 'react';
 
-import { subscribeToNoteTransactions } from '../engines/editor/transactionSummary';
 import {
   buildNoteOutlineProjection,
   projectNoteOutlineBlock,
@@ -11,8 +10,18 @@ import {
   type NoteOutlineBlockSnapshot,
   type NoteOutlineItem,
 } from '../engines/outline';
-import type { CustomBlockNoteEditor } from '../noteEditorComposition';
-import type { NotePluginRegistry } from '../registry/types';
+import type { CustomBlockNoteEditor } from '../registry/noteEditorComposition';
+import type { NotePluginRegistry, NoteTransactionAnalysis } from '../registry/types';
+
+const OUTLINE_INCREMENTAL_MAX_RANGES = 32;
+const OUTLINE_INCREMENTAL_MAX_BLOCKS = 64;
+
+function requiresOutlineFullRefresh(analysis: NoteTransactionAnalysis): boolean {
+  return (
+    analysis.changedRanges.length > OUTLINE_INCREMENTAL_MAX_RANGES ||
+    analysis.changedBlocks.length + analysis.removedBlockIds.length > OUTLINE_INCREMENTAL_MAX_BLOCKS
+  );
+}
 
 interface UseNoteOutlineRuntimeParams {
   editor: CustomBlockNoteEditor;
@@ -135,13 +144,13 @@ export function useNoteOutlineRuntime({
    * 普通文本变化只更新受影响 block，结构变化才合帧重建整个投影。
    */
   useEffectForce(() => {
-    const cleanup = subscribeToNoteTransactions(editor, (summary) => {
-      if (!summary.docChanged) return;
-      if (summary.requiresFullRebuild || summary.structureChanged) {
+    const cleanup = registry.services.transactions.subscribe(editor, (analysis) => {
+      if (!analysis.docChanged) return;
+      if (requiresOutlineFullRefresh(analysis) || analysis.structureChanged) {
         scheduleFullRefresh();
         return;
       }
-      updateChangedBlocks(summary.changedBlockIds);
+      updateChangedBlocks(analysis.changedBlocks.map(({ id }) => id));
     });
     refresh(true);
     return () => {

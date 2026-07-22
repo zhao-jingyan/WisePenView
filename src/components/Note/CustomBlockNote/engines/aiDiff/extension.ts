@@ -6,15 +6,18 @@ import type { EditorView } from '@tiptap/pm/view';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
-import { noteConfig } from '../../noteConfig';
-import { listRichTextChangeTargets } from '../../plugins/DefaultContentPlugin/aiDiff';
+import {
+  listRichTextChangeTargets,
+  type NoteRichTextAiDiffConfig,
+} from '../../plugins/DefaultContentPlugin/aiDiff';
 import type {
   NoteAiDiffAction,
   NoteAiDiffActionTarget,
   NoteEditorExtension,
   NotePluginRegistry,
+  NoteTransactionAnalysis,
+  NoteTransactionService,
 } from '../../registry/types';
-import { summarizeNoteTransactions } from '../editor/transactionSummary';
 import type { NoteAiDiffActionRequest } from './action';
 import { resolveNoteAiDiffBlock } from './contentState';
 import {
@@ -53,6 +56,16 @@ interface AiDiffExtensionState {
 }
 
 const aiDiffExtensionPluginKey = new PluginKey<AiDiffExtensionState>('noteAiDiffExtension');
+
+const AI_DIFF_INCREMENTAL_MAX_RANGES = 32;
+const AI_DIFF_INCREMENTAL_MAX_BLOCKS = 64;
+
+function requiresAiDiffFullRebuild(analysis: NoteTransactionAnalysis): boolean {
+  return (
+    analysis.changedRanges.length > AI_DIFF_INCREMENTAL_MAX_RANGES ||
+    analysis.changedBlocks.length + analysis.removedBlockIds.length > AI_DIFF_INCREMENTAL_MAX_BLOCKS
+  );
+}
 
 function encodeChangeKey(blockId: string, target?: NoteAiDiffActionTarget): string {
   if (!target) return blockId;
@@ -270,6 +283,7 @@ function buildDecorations(params: {
   };
   proseMirrorSchema: unknown;
   registry: NotePluginRegistry;
+  aiDiffConfig: NoteRichTextAiDiffConfig;
   runtime: Omit<
     AiDiffExtensionState,
     'decorations' | 'changeKeysOrdered' | 'pendingSelectIndex' | 'aiBlockPositions'
@@ -281,7 +295,8 @@ function buildDecorations(params: {
   changeKeysOrdered: readonly string[];
   aiBlockPositions: ReadonlyMap<string, { from: number; to: number }>;
 } {
-  const { doc, editorSchema, proseMirrorSchema, registry, runtime, onSelectChange } = params;
+  const { doc, editorSchema, proseMirrorSchema, registry, aiDiffConfig, runtime, onSelectChange } =
+    params;
   const decorations: Decoration[] = [];
   const aiBlockPositions = new Map<string, { from: number; to: number }>();
 
@@ -411,7 +426,7 @@ function buildDecorations(params: {
       const targets = listRichTextChangeTargets(
         item.projection.current,
         item.projection.aiBlock,
-        noteConfig.aiDiff.richText
+        aiDiffConfig
       );
       if (targets.length > 0) {
         for (const target of targets) {
@@ -473,7 +488,11 @@ function buildDecorations(params: {
   };
 }
 
-function createAiDiffExtension(registry: NotePluginRegistry) {
+function createAiDiffExtension(
+  registry: NotePluginRegistry,
+  transactionService: NoteTransactionService,
+  aiDiffConfig: NoteRichTextAiDiffConfig
+) {
   return createExtension(({ editor }) => ({
     key: 'noteAiDiffExtension',
     prosemirrorPlugins: [
@@ -520,15 +539,15 @@ function createAiDiffExtension(registry: NotePluginRegistry) {
             }
             let cachedBlockNodes: readonly { node: PMNode; pos: number }[] | undefined;
             if (tr.docChanged && !meta) {
-              const summary = summarizeNoteTransactions([tr]);
+              const analysis = transactionService.analyze([tr]);
               const touchesAiBlock =
-                summary.structureChanged ||
-                summary.requiresFullRebuild ||
-                summary.changedBlockIds.some((blockId) =>
+                analysis.structureChanged ||
+                requiresAiDiffFullRebuild(analysis) ||
+                analysis.changedBlocks.some(({ id: blockId }) =>
                   runtime.aiContentByBlockId.has(blockId)
                 ) ||
-                summary.removedBlockIds.some((blockId) => runtime.aiContentByBlockId.has(blockId));
-              if (!summary.structureChanged && !summary.requiresFullRebuild) {
+                analysis.removedBlockIds.some((blockId) => runtime.aiContentByBlockId.has(blockId));
+              if (!analysis.structureChanged && !requiresAiDiffFullRebuild(analysis)) {
                 const mappedAiBlockPositions = new Map<string, { from: number; to: number }>();
                 let canMapAiBlockPositions = true;
                 for (const [blockId, position] of previous.aiBlockPositions) {
@@ -578,6 +597,7 @@ function createAiDiffExtension(registry: NotePluginRegistry) {
                 },
                 proseMirrorSchema: newState.schema,
                 registry,
+                aiDiffConfig,
                 runtime: { ...runtime, selectedChangeKey: key },
                 onSelectChange: (changeKey) => goToAiDiffChange(editor.prosemirrorView, changeKey),
                 blockNodes,
@@ -691,14 +711,20 @@ export function hasAiDiffForBlockInEditorState(
   return Boolean(resolveNoteAiDiffBlock(block, aiContentByBlockId.get(blockId), aiDiff, registry));
 }
 
-export const aiDiffEditorExtension = {
-  id: 'ai-diff.extension',
-  print: {
-    styles: [
-      `.note-print-body [data-ai-diff-current-hidden='true'] {
+export function createAiDiffEditorExtension(
+  aiDiffConfig: NoteRichTextAiDiffConfig
+): NoteEditorExtension {
+  return {
+    id: 'ai-diff.extension',
+    print: {
+      styles: [
+        `.note-print-body [data-ai-diff-current-hidden='true'] {
   display: none !important;
 }`,
+      ],
+    },
+    extensions: ({ registry, services }) => [
+      createAiDiffExtension(registry, services.transactions, aiDiffConfig)(),
     ],
-  },
-  extensions: ({ registry }) => [createAiDiffExtension(registry)()],
-} satisfies NoteEditorExtension;
+  };
+}

@@ -98,7 +98,9 @@ const inlineMathPlugin = {
       };
     },
   },
-  extensions: ({ registry }) => [createInlineMathDollarExtension(registry)()],
+  extensions: ({ registry, services }) => [
+    createInlineMathDollarExtension(registry, services.transactions)(),
+  ],
   plainText: {
     project: (inline) => {
       const props =

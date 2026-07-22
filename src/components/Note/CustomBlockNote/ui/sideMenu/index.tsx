@@ -3,12 +3,12 @@ import {
   exportNoteFullHtml,
   exportNoteMarkdown,
 } from '@/components/Note/CustomBlockNote/engines/markdown/markdownExport';
-import type { CustomBlockNoteEditor } from '@/components/Note/CustomBlockNote/noteEditorComposition';
+import type { CustomBlockNoteEditor } from '@/components/Note/CustomBlockNote/registry/noteEditorComposition';
 import {
   blockNoteSchema,
   createDefaultNoteBlock,
   notePluginRegistry,
-} from '@/components/Note/CustomBlockNote/noteEditorComposition';
+} from '@/components/Note/CustomBlockNote/registry/noteEditorComposition';
 import type { NoteContentPlugin } from '@/components/Note/CustomBlockNote/registry/types';
 import {
   applyBlockTypeToBlocks,

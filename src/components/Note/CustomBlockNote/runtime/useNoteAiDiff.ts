@@ -5,7 +5,7 @@ import type * as Y from 'yjs';
 
 import { useAiDiffSidecar } from '../engines/aiDiff/useAiDiffSidecar';
 import type { CustomBlockNoteProps } from '../index.type';
-import { notePluginRegistry, type CustomBlockNoteEditor } from '../noteEditorComposition';
+import { notePluginRegistry, type CustomBlockNoteEditor } from '../registry/noteEditorComposition';
 import type { NoteEditorDefinition } from './useNoteEditorDefinition';
 
 export function useNoteAiDiff({

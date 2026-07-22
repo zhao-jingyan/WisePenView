@@ -14,7 +14,7 @@ import {
   type SearchExtensionMeta,
 } from '../engines/search/extension';
 import type { NoteBodyEditorHandle, NoteFindResult } from '../index.type';
-import { notePluginRegistry, type CustomBlockNoteEditor } from '../noteEditorComposition';
+import { notePluginRegistry, type CustomBlockNoteEditor } from '../registry/noteEditorComposition';
 import type { NoteScrollTargetResolver } from './useNoteEditorScroll';
 
 type NoteEditorCommands = Omit<NoteBodyEditorHandle, 'scrollToAnchor'>;

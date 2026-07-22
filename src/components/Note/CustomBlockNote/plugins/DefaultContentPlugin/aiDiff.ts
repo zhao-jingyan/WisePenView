@@ -5,7 +5,6 @@ import {
   type AiDiffTextHunk,
   type AiDiffTextSegment,
 } from '../../engines/aiDiff/wordDiff';
-import type { NoteRichTextAiDiffConfig } from '../../noteConfig';
 import type {
   NoteAiDiffActionTarget,
   NoteAiDiffComparisonContext,
@@ -19,6 +18,19 @@ import {
   discardInlineHunk,
   sliceInlineContentByTextRange,
 } from './inlineDiff';
+
+export interface NoteRichTextAiDiffConfig {
+  hunk: {
+    highChangeRatio: number;
+    maxGapCharacters: number;
+    maxGapTokens: number;
+    maxMergedCharacters: number;
+    maxHunksPerBlock: number;
+  };
+  limits: {
+    maxMatrixCells: number;
+  };
+}
 
 const BOOLEAN_STYLE_TAGS = [
   ['bold', 'strong'],

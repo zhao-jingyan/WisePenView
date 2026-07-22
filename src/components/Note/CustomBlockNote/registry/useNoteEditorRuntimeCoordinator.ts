@@ -2,9 +2,8 @@ import { toast } from '@heroui/react';
 import { useMemoizedFn } from 'ahooks';
 import { useMemo } from 'react';
 
-import { captureInlineCommentDraft } from './engines/inlineComments/relativePosition';
-import type { CustomBlockNoteProps } from './index.type';
-import { notePluginRegistry, type CustomBlockNoteEditor } from './noteEditorComposition';
+import { captureInlineCommentDraft } from '../engines/inlineComments/relativePosition';
+import type { CustomBlockNoteProps } from '../index.type';
 import {
   useNoteAiDiff,
   useNoteCollaboration,
@@ -14,7 +13,8 @@ import {
   useNoteEditorScroll,
   useNoteOutlineRuntime,
   type NoteEditorDefinition,
-} from './runtime';
+} from '../runtime';
+import { notePluginRegistry, type CustomBlockNoteEditor } from './noteEditorComposition';
 
 export function useNoteEditorRuntimeCoordinator({
   editor,
@@ -64,6 +64,7 @@ export function useNoteEditorRuntimeCoordinator({
   const document = useNoteDocument({
     editor,
     definition,
+    transactions: notePluginRegistry.services.transactions,
     resourceId,
     blockLocalDocWrites,
     onAskAi,

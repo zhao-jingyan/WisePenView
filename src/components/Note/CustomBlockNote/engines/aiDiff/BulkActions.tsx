@@ -2,7 +2,7 @@ import { Button, ButtonGroup } from '@heroui/react';
 import { createPortal } from 'react-dom';
 import type * as Y from 'yjs';
 
-import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../../registry/noteEditorComposition';
 import type { NoteAiDiffAction, NotePluginRegistry } from '../../registry/types';
 import { applyAllNoteAiDiffActions } from './action';
 import styles from './style.module.less';

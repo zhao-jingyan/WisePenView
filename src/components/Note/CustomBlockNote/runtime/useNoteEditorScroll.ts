@@ -3,7 +3,7 @@ import { useRef } from 'react';
 
 import { findInlineCommentAnchorElement } from '../engines/inlineComments/extension';
 import type { NoteEditorAnchor } from '../index.type';
-import type { CustomBlockNoteEditor } from '../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../registry/noteEditorComposition';
 
 export type NoteScrollTargetResolver = () => HTMLElement | null;
 

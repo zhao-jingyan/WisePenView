@@ -1,4 +1,4 @@
-import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditorComposition';
+import { blockNoteSchema } from '@/components/Note/CustomBlockNote/registry/noteEditorComposition';
 import {
   applyBlockTypeToBlocks,
   blockMatchesBlockTypeItem,

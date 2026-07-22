@@ -6,11 +6,8 @@ import type {
 import { createExtension, getBlockInfo, inlineContentToNodes, nodeToBlock } from '@blocknote/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
-import {
-  collectBlockContainerNodes,
-  summarizeNoteTransactions,
-} from '../../../engines/editor/transactionSummary';
-import type { NotePluginRegistry } from '../../../registry/types';
+import type { NotePluginRegistry, NoteTransactionService } from '../../../registry/types';
+import { sanitizeLatexInput } from '../latexInput';
 
 /**
  * 行内内容的结构性类型：BlockNote 默认 inline content（text/link）+ 由本扩展插入的 inlineMath。
@@ -41,7 +38,7 @@ function splitDoubleDollar(text: string): { before: string; expr: string; after:
   if (close === -1) {
     return null;
   }
-  const expr = text.slice(open + 2, close);
+  const expr = sanitizeLatexInput(text.slice(open + 2, close));
   if (expr.includes('\n')) {
     return null;
   }
@@ -92,7 +89,10 @@ function transformInlineContentOnce(content: NoteInlineContent[]): NoteInlineCon
   return null;
 }
 
-export const createInlineMathDollarExtension = (registry: NotePluginRegistry) =>
+export const createInlineMathDollarExtension = (
+  registry: NotePluginRegistry,
+  transactionService: NoteTransactionService
+) =>
   createExtension(({ editor }) => {
     return {
       key: 'wisePenInlineMathDollar',
@@ -100,10 +100,8 @@ export const createInlineMathDollarExtension = (registry: NotePluginRegistry) =>
         new Plugin({
           key: inlineMathDollarPluginKey,
           appendTransaction(transactions, _oldState, newState) {
-            const summary = summarizeNoteTransactions(transactions);
-            if (!summary.docChanged || !summary.hasDollar) {
-              return null;
-            }
+            const analysis = transactionService.analyze(transactions);
+            if (!analysis.docChanged) return null;
             if (transactions.some((t) => t.getMeta(inlineMathDollarPluginKey) === 'skip')) {
               return null;
             }
@@ -115,7 +113,8 @@ export const createInlineMathDollarExtension = (registry: NotePluginRegistry) =>
               content: NoteInlineContent[];
             }> = [];
 
-            collectBlockContainerNodes(newState.doc, summary.ranges).forEach(({ node, pos }) => {
+            analysis.changedBlocks.forEach(({ node, pos }) => {
+              if (!node.textContent.includes('$')) return;
               const block = nodeToBlock(
                 node,
                 newState.schema,
@@ -134,9 +133,7 @@ export const createInlineMathDollarExtension = (registry: NotePluginRegistry) =>
               const transformed = transformInlineContentOnce(
                 block.content as unknown as NoteInlineContent[]
               );
-              if (!transformed) {
-                return true;
-              }
+              if (!transformed) return;
 
               replacements.push({
                 beforePos: pos,
