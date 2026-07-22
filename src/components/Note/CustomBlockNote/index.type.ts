@@ -20,6 +20,11 @@ export interface NoteFindResult {
   total: number;
 }
 
+export interface NoteReplaceResult {
+  replaced: number;
+  result: NoteFindResult | null;
+}
+
 export interface NoteBodyEditorHandle {
   focus: () => void;
   scrollToAnchor: (anchor: NoteEditorAnchor) => void;
@@ -33,6 +38,12 @@ export interface NoteBodyEditorHandle {
   findNext: () => NoteFindResult | null;
   /** 跳转到上一个匹配 */
   findPrev: () => NoteFindResult | null;
+  /** 替换当前匹配，返回本次写入数量与替换后的查找结果。 */
+  replaceCurrent: (replacement: string) => NoteReplaceResult;
+  /** 替换全部匹配，作为一次协同写入和一次撤销记录提交。 */
+  replaceAll: (replacement: string) => NoteReplaceResult;
+  /** 当前状态是否允许本地写入。 */
+  canReplace: () => boolean;
   /** 清除搜索状态，保留当前文本选区 */
   clearFind: () => void;
   /** 折叠当前文本选区，隐藏选中高亮 */

@@ -74,7 +74,42 @@ export interface NoteContentCapabilityDeclarations {
   markdownExport: NoteCapabilityDeclaration;
   aiDiff: NoteCapabilityDeclaration;
   plainText: NoteCapabilityDeclaration;
+  findReplace: NoteCapabilityDeclaration;
   print: NoteCapabilityDeclaration;
+}
+
+export type NoteFindReplaceHighlight =
+  { kind: 'inline'; from: number; to: number } | { kind: 'node'; from: number; to: number };
+
+/** 插件产出的纯替换描述，由搜索协调器统一写入同一个事务。 */
+export type NoteReplaceOperation =
+  | { kind: 'inlineText'; from: number; to: number }
+  | {
+      kind: 'nodeAttributeText';
+      pos: number;
+      attribute: string;
+      fromOffset: number;
+      toOffset: number;
+    };
+
+export interface NoteFindReplaceMatch {
+  pluginId: string;
+  /** 用于排序、定位和与当前选区比对的稳定文档位置。 */
+  from: number;
+  to: number;
+  highlight: NoteFindReplaceHighlight;
+  operation: NoteReplaceOperation;
+}
+
+export interface NoteFindReplaceContext {
+  node: PMNode;
+  pos: number;
+  query: string;
+  registry: NotePluginRegistry;
+}
+
+export interface NoteFindReplaceFacet {
+  collectMatches: (context: NoteFindReplaceContext) => readonly NoteFindReplaceMatch[];
 }
 
 interface NoteBlockPlainTextFacet {
@@ -258,6 +293,7 @@ export interface NoteBlockPlugin extends NoteContentPluginBase {
   insertion?: NoteBlockInsertion;
   inputRules?: NoteBlockInputRules;
   plainText?: NoteBlockPlainTextFacet;
+  findReplace?: NoteFindReplaceFacet;
   outline?: NoteBlockOutlineFacet;
   markdownImport?: NoteMarkdownBlockImport;
   markdownExport?: NoteMarkdownExportProjection;
@@ -269,6 +305,7 @@ export interface NoteInlinePlugin extends NoteContentPluginBase {
   kind: 'inline';
   spec: InlineContentSpec<InlineContentConfig>;
   plainText?: NoteInlinePlainTextFacet;
+  findReplace?: NoteFindReplaceFacet;
   markdownImport?: NoteMarkdownInlineImport;
   markdownExport?: NoteMarkdownExportProjection;
   aiDiff: NoteInlineAiDiff;

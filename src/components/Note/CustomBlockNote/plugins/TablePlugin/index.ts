@@ -1,6 +1,7 @@
 import { defaultBlockSpecs } from '@blocknote/core';
 import { PanelLeft, PanelTop, StretchHorizontal, Table2 } from 'lucide-react';
 
+import { collectInlineTextMatches } from '../../engines/search/findReplace';
 import type { NoteBlockPlugin, NoteSideMenuAction } from '../../registry/types';
 import { readTableContent, TableAiContentView, type TableContentLike } from './AiDiffView';
 
@@ -44,6 +45,7 @@ export const tablePlugin = {
     markdownExport: { support: 'default' },
     aiDiff: { support: 'custom' },
     plainText: { support: 'custom' },
+    findReplace: { support: 'custom' },
     print: { support: 'custom' },
   },
   selection: {
@@ -65,6 +67,9 @@ export const tablePlugin = {
     ],
   },
   plainText: { project: () => '' },
+  findReplace: {
+    collectMatches: ({ node, pos, query }) => collectInlineTextMatches(node, pos, query, 'table'),
+  },
   sideMenu: {
     icon: Table2,
     inspect(block) {

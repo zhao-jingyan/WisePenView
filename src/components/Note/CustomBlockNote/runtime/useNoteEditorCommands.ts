@@ -7,12 +7,16 @@ import { useMemo, type Dispatch, type SetStateAction } from 'react';
 import { exportNoteMarkdown } from '../engines/markdown/markdownExport';
 import { printNotePdfViaBrowser, waitForEditorPaint } from '../engines/print/noteBrowserPrint';
 import {
-  collectSearchMatches,
   findActiveSearchMatchElement,
   getSearchMatchIndexAtPosition,
   searchPluginKey,
   type SearchExtensionMeta,
 } from '../engines/search/extension';
+import {
+  applyNoteReplaceOperations,
+  collectFindReplaceMatches,
+  selectNoteReplaceOperations,
+} from '../engines/search/findReplace';
 import type { NoteBodyEditorHandle, NoteFindResult } from '../index.type';
 import { notePluginRegistry, type CustomBlockNoteEditor } from '../registry/noteEditorComposition';
 import type { NoteScrollTargetResolver } from './useNoteEditorScroll';
@@ -22,7 +26,8 @@ type NoteEditorCommands = Omit<NoteBodyEditorHandle, 'scrollToAnchor'>;
 export function useNoteEditorCommands(
   editor: CustomBlockNoteEditor,
   setExportDisplayModeOverride: Dispatch<SetStateAction<AiDiffDisplayMode | null>>,
-  scrollToTarget: (resolveTarget: NoteScrollTargetResolver) => void
+  scrollToTarget: (resolveTarget: NoteScrollTargetResolver) => void,
+  canReplace: boolean
 ): NoteEditorCommands {
   const dispatchSearchMeta = useMemoizedFn((meta: SearchExtensionMeta) => {
     const view = editor.prosemirrorView;
@@ -54,7 +59,7 @@ export function useNoteEditorCommands(
     const view = editor.prosemirrorView;
     const doc = view.state.doc;
 
-    const matches = collectSearchMatches(doc, trimmedQuery);
+    const matches = collectFindReplaceMatches(doc, trimmedQuery, notePluginRegistry);
 
     if (matches.length > 0) {
       const activeIndex = getSearchMatchIndexAtPosition(matches, view.state.selection.from);
@@ -117,6 +122,37 @@ export function useNoteEditorCommands(
     return { current: activeIndex + 1, total: state.matches.length };
   });
 
+  const getSearchResult = useMemoizedFn((): NoteFindResult | null => {
+    const state = searchPluginKey.getState(editor.prosemirrorView.state);
+    if (!state || state.matches.length === 0) return null;
+    return { current: state.activeIndex + 1, total: state.matches.length };
+  });
+
+  const replaceMatches = useMemoizedFn((replacement: string, replaceAll: boolean) => {
+    if (!canReplace) return { replaced: 0, result: getSearchResult() };
+
+    const view = editor.prosemirrorView;
+    const state = searchPluginKey.getState(view.state);
+    if (!state || state.matches.length === 0) return { replaced: 0, result: null };
+
+    const operations = selectNoteReplaceOperations(
+      state.matches,
+      state.activeIndex,
+      replaceAll,
+      canReplace
+    );
+    if (operations.length === 0) return { replaced: 0, result: getSearchResult() };
+
+    const tr = applyNoteReplaceOperations(view.state.tr, operations, replacement);
+    view.dispatch(tr);
+    const result = getSearchResult();
+    if (result) scrollToTarget(() => findActiveSearchMatchElement(editor.prosemirrorView.dom));
+    return { replaced: operations.length, result };
+  });
+
+  const replaceCurrent = useMemoizedFn((replacement: string) => replaceMatches(replacement, false));
+  const replaceAll = useMemoizedFn((replacement: string) => replaceMatches(replacement, true));
+
   return useMemo(
     () => ({
       focus: () => {
@@ -147,6 +183,9 @@ export function useNoteEditorCommands(
       findMatches,
       findNext,
       findPrev,
+      replaceCurrent,
+      replaceAll,
+      canReplace: () => canReplace,
       clearFind,
       collapseSelection,
     }),
@@ -156,6 +195,9 @@ export function useNoteEditorCommands(
       findMatches,
       findNext,
       findPrev,
+      replaceCurrent,
+      replaceAll,
+      canReplace,
       clearFind,
       collapseSelection,
     ]

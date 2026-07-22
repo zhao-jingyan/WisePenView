@@ -85,7 +85,8 @@ export function useNoteEditorRuntimeCoordinator({
   const commands = useNoteEditorCommands(
     editor,
     aiDiff.setExportDisplayModeOverride,
-    scroll.scrollToTarget
+    scroll.scrollToTarget,
+    !readOnly && !blockLocalDocWrites && collaborationBinding.ready
   );
   const editorHandle = useMemo(
     () => ({ ...commands, scrollToAnchor: scroll.scrollToAnchor }),

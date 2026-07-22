@@ -10,22 +10,27 @@ function AppIconButton({
   isActive = false,
   isDisabled = false,
   onPress,
+  tooltip = {},
 }: AppIconButtonProps) {
+  const button = (
+    <button
+      type="button"
+      className={clsx(styles.root, isActive && styles.active, className)}
+      onClick={isDisabled ? undefined : onPress}
+      aria-label={label}
+      aria-pressed={isActive || undefined}
+      aria-disabled={isDisabled || undefined}
+    >
+      {icon}
+    </button>
+  );
+
+  if (tooltip === false) return button;
+
   return (
-    <Tooltip>
-      <Tooltip.Trigger>
-        <button
-          type="button"
-          className={clsx(styles.root, isActive && styles.active, className)}
-          onClick={isDisabled ? undefined : onPress}
-          aria-label={label}
-          aria-pressed={isActive || undefined}
-          aria-disabled={isDisabled || undefined}
-        >
-          {icon}
-        </button>
-      </Tooltip.Trigger>
-      <Tooltip.Content>{label}</Tooltip.Content>
+    <Tooltip delay={tooltip.delay}>
+      <Tooltip.Trigger>{button}</Tooltip.Trigger>
+      <Tooltip.Content placement={tooltip.placement}>{tooltip.content ?? label}</Tooltip.Content>
     </Tooltip>
   );
 }

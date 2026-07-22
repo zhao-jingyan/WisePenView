@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 
 import { getCodeBlockHighlighter, normalizeCodeLanguage } from '@/utils/codeHighlight';
 
+import { collectInlineTextMatches } from '../../engines/search/findReplace';
 import type { NoteBlockPlugin } from '../../registry/types';
 import { CodeBlockAiContentView, CodeBlockAiDiffComparisonView } from './AiDiffView';
 import { CodeBlockToolbar } from './CodeBlockToolbar';
@@ -124,6 +125,7 @@ export const codeBlockPlugin = {
     markdownExport: { support: 'default' },
     aiDiff: { support: 'custom' },
     plainText: { support: 'default' },
+    findReplace: { support: 'custom' },
     print: { support: 'custom' },
   },
   markdownImport: {
@@ -131,6 +133,10 @@ export const codeBlockPlugin = {
   },
   selection: {
     inspect: (_block, context) => ({ selected: context.selected, text: context.selectedText }),
+  },
+  findReplace: {
+    collectMatches: ({ node, pos, query }) =>
+      collectInlineTextMatches(node, pos, query, 'codeBlock'),
   },
   aiDiff: {
     renderAiContent: CodeBlockAiContentView,

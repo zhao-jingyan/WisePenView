@@ -182,10 +182,6 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
   const inlineCommentService = useInlineCommentService();
   const userService = useUserService();
   const setResourceSidePanelMode = useWorkspaceResourceSidePanelStore((state) => state.setMode);
-  const findMode = useNoteFindMode({
-    editorRef: bodyEditorRef,
-    scopeRef: findModeScopeRef,
-  });
   const inlineCommentSession = useMemo(
     () =>
       new NoteInlineCommentSession({
@@ -230,6 +226,11 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
   const saveStatusText = formatNoteSaveStatus(headerSaveStatus);
   const collaborationUser = useMemo(() => buildNoteCollaborationUser(currentUser), [currentUser]);
   const canRenderBodyEditor = !shouldWaitCurrentUser;
+  const findMode = useNoteFindMode({
+    editorRef: bodyEditorRef,
+    scopeRef: findModeScopeRef,
+    canReplace: isConnected && noteInfoDisplay.canCollaborativeEdit,
+  });
   useRequest(() => interactService.recordResourceRead(resourceId), {
     refreshDeps: [resourceId],
   });
@@ -541,10 +542,16 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
           <div className={styles.findBarDock}>
             <FindBar
               query={findMode.findMode.query}
+              replacement={findMode.findMode.replacement}
               result={findMode.findMode.result}
+              replaced={findMode.findMode.replaced}
+              canReplace={findMode.canReplace}
               onQueryChange={findMode.changeFindQuery}
+              onReplacementChange={findMode.changeReplacement}
               onPrevious={findMode.findPrevious}
               onNext={findMode.findNext}
+              onReplaceCurrent={findMode.replaceCurrent}
+              onReplaceAll={findMode.replaceAll}
               onClose={findMode.closeFind}
             />
           </div>

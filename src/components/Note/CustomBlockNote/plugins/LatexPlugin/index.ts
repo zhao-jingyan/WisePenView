@@ -1,3 +1,4 @@
+import { collectNodeAttributeTextMatches } from '../../engines/search/findReplace';
 import type { NoteBlockPlugin, NoteInlinePlugin, NotePluginBundle } from '../../registry/types';
 import { inlineMathAiDiff, mathBlockAiDiff } from './aiDiff';
 import { inlineMathContentSpec } from './InlineMath';
@@ -17,6 +18,7 @@ const mathBlockPlugin = {
     markdownExport: { support: 'custom' },
     aiDiff: { support: 'custom' },
     plainText: { support: 'custom' },
+    findReplace: { support: 'custom' },
     print: { support: 'custom' },
   },
   selection: {
@@ -56,6 +58,10 @@ const mathBlockPlugin = {
       return typeof props.expression === 'string' ? props.expression : '';
     },
   },
+  findReplace: {
+    collectMatches: ({ node, pos, query }) =>
+      collectNodeAttributeTextMatches(node, pos, 'expression', query, 'latex.block.math'),
+  },
   markdownImport: mathBlockMarkdownImport,
   markdownExport: {
     project: (block) => block,
@@ -81,6 +87,7 @@ const inlineMathPlugin = {
     markdownExport: { support: 'custom' },
     aiDiff: { support: 'custom' },
     plainText: { support: 'custom' },
+    findReplace: { support: 'custom' },
     print: { support: 'default' },
   },
   selection: {
@@ -109,6 +116,10 @@ const inlineMathPlugin = {
           : {};
       return typeof props.expression === 'string' ? props.expression : '';
     },
+  },
+  findReplace: {
+    collectMatches: ({ node, pos, query }) =>
+      collectNodeAttributeTextMatches(node, pos, 'expression', query, 'latex.inline.inlineMath'),
   },
   markdownImport: inlineMathMarkdownImport,
   markdownExport: { project: (inline) => inline },

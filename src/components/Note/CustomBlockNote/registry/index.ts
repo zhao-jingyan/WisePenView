@@ -100,6 +100,7 @@ export function createNotePluginRegistry(
       ['Markdown 导出', plugin.capabilities.markdownExport, plugin.markdownExport],
       ['AI Diff', plugin.capabilities.aiDiff, plugin.aiDiff],
       ['纯文本', plugin.capabilities.plainText, plugin.plainText],
+      ['查找替换', plugin.capabilities.findReplace, plugin.findReplace],
       ['打印', plugin.capabilities.print, plugin.print],
     ] as const;
     for (const [name, declaration, implementation] of executableCapabilities) {

@@ -1,3 +1,4 @@
+import { collectInlineTextMatches } from '../../engines/search/findReplace';
 import type { NoteBlockPlugin, NotePluginBundle } from '../../registry/types';
 import { createMermaidBlockSpec } from './MermaidBlock';
 import { mermaidCodeEditorExtension } from './codeEditorExtension';
@@ -25,6 +26,7 @@ const mermaidBlockPlugin = {
     markdownExport: { support: 'custom' },
     aiDiff: { support: 'unsupported', reason: '图表 DSL 暂未定义可审阅的差异语义' },
     plainText: { support: 'custom' },
+    findReplace: { support: 'custom' },
     print: { support: 'custom' },
   },
   selection: {
@@ -46,6 +48,10 @@ const mermaidBlockPlugin = {
   },
   plainText: {
     project: (block) => readMermaidSource(block.content),
+  },
+  findReplace: {
+    collectMatches: ({ node, pos, query }) =>
+      collectInlineTextMatches(node, pos, query, 'mermaid.block'),
   },
   markdownImport: mermaidMarkdownImport,
   markdownExport: {
