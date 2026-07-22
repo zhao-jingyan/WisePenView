@@ -3,12 +3,17 @@
   "private": true,
   "version": "0.6.3",
   "type": "module",
+  "main": ".electron/main/index.js",
   "packageManager": "pnpm@11.13.1",
   "scripts": {
     "dev": "vite",
+    "dev:desktop": "concurrently -k -s first \"pnpm dev\" \"pnpm build:electron --watch\" \"pnpm dev:electron\"",
+    "dev:electron": "wait-on tcp:127.0.0.1:5173 file:.electron/main/index.js file:.electron/preload/index.cjs && cross-env ELECTRON_RENDERER_URL=http://local.wisepen.oriole.cn:5173 electron .electron/main/index.js",
     "mock": "vite --mode mock",
     "build": "tsc -b && vite build",
     "build:dev": "tsc -b && vite build --mode development",
+    "build:electron": "node scripts/build-electron.mjs",
+    "package:desktop": "pnpm build && pnpm build:electron && electron-builder",
     "lint": "eslint .",
     "typecheck": "tsc -b",
     "preview": "vite preview",
@@ -69,6 +74,11 @@
     "@types/react-dom": "^19.2.3",
     "@types/spark-md5": "^3.0.5",
     "@vitejs/plugin-react": "^5.1.1",
+    "concurrently": "^10.0.3",
+    "cross-env": "^10.1.0",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.27.7",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
@@ -79,7 +89,36 @@
     "prettier": "^3.7.4",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "wait-on": "^9.1.0"
+  },
+  "build": {
+    "appId": "cn.oriole.wisepen",
+    "productName": "WisePen",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      ".electron/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
   },
   "lint-staged": {
     "*.{ts,tsx}": [
