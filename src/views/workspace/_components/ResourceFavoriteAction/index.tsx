@@ -1,26 +1,14 @@
+import FavoriteCollectionPicker from '@/components/Resource/FavoriteCollectionPicker';
 import { useInteractService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
-import CollectionPickerModal from './CollectionPickerModal';
 import ResourceFavoriteButton from './ResourceFavoriteButton';
-import { useCollectionPickerController } from './hooks/useCollectionPickerController';
 
 interface ResourceFavoriteActionProps {
   resourceId: string;
   onSuccess?: () => unknown | Promise<unknown>;
-}
-
-interface CollectionPickerControllerProps {
-  resourceId: string;
-  onOpenChange: (open: boolean) => void;
-  onConfirmed: (collectionIds: string[]) => void;
-}
-
-function CollectionPickerController(props: CollectionPickerControllerProps) {
-  const controller = useCollectionPickerController(props);
-  return <CollectionPickerModal {...controller} />;
 }
 
 function ResourceFavoriteAction({ resourceId, onSuccess }: ResourceFavoriteActionProps) {
@@ -71,7 +59,7 @@ function ResourceFavoriteAction({ resourceId, onSuccess }: ResourceFavoriteActio
         onPress={handlePress}
       />
       {pickerOpen ? (
-        <CollectionPickerController
+        <FavoriteCollectionPicker
           key={resourceId}
           resourceId={resourceId}
           onOpenChange={setPickerOpen}

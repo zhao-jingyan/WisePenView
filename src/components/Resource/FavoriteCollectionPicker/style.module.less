@@ -1,0 +1,126 @@
+.pickerBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.pickerLoading {
+  display: flex;
+  min-height: 120px;
+  align-items: center;
+  justify-content: center;
+}
+
+.collectionList {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.collectionItem {
+  min-height: 36px;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-xl);
+}
+
+.collectionItem[data-selected='true'],
+.collectionItem[data-selected='true']:hover {
+  background: var(--accent-softer);
+}
+
+.collectionItem[data-selected='true'][data-hovered='true'] {
+  background: var(--accent-soft);
+}
+
+.collectionContent {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.collectionLabel,
+.collectionCount {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collectionLabel {
+  min-width: 0;
+  flex: 1;
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.collectionCount {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+}
+
+.createInput {
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+
+.collectionItem,
+.inlineCreateRow,
+.newCollectionButton {
+  box-sizing: border-box;
+  height: 36px;
+  min-height: 36px;
+}
+
+.inlineCreateRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  padding: 0 var(--space-xs) 0 var(--space-sm);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xl);
+  background: var(--accent-softer);
+}
+
+.inlineCreateRow:focus-within {
+  border-color: var(--focus);
+}
+
+.inlineCreateRow :global(input) {
+  height: 34px;
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cancelCreateButton {
+  flex: 0 0 auto;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  color: var(--muted);
+}
+
+.cancelCreateButton:hover,
+.cancelCreateButton:focus-visible {
+  color: var(--danger);
+  background: transparent;
+}
+
+.newCollectionButton {
+  width: 100%;
+  justify-content: flex-start;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-xl);
+  color: var(--foreground);
+  background: transparent;
+}

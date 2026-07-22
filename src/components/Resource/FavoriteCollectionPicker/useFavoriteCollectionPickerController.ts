@@ -4,17 +4,17 @@ import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
 
-interface UseCollectionPickerControllerOptions {
+interface UseFavoriteCollectionPickerControllerOptions {
   resourceId: string;
   onConfirmed: (collectionIds: string[]) => void;
   onOpenChange: (open: boolean) => void;
 }
 
-export function useCollectionPickerController({
+export function useFavoriteCollectionPickerController({
   resourceId,
   onConfirmed,
   onOpenChange,
-}: UseCollectionPickerControllerOptions) {
+}: UseFavoriteCollectionPickerControllerOptions) {
   const interactService = useInteractService();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showCreateInput, setShowCreateInput] = useState(false);
@@ -77,6 +77,7 @@ export function useCollectionPickerController({
   };
 
   const handleCreateCollection = () => {
+    if (loadingCreate) return;
     const collectionName = newCollectionName.trim();
     if (!collectionName) {
       toast.warning('请输入收藏夹名称');

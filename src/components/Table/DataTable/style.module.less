@@ -165,6 +165,25 @@
   cursor: default;
 }
 
+.selectableRow {
+  cursor: pointer;
+}
+
+.selectedRow:global(.table__row) {
+  :global(.table__cell) {
+    background: var(--accent-softer);
+  }
+}
+
+@media (hover: hover) {
+  .selectedRow:global(.table__row:hover),
+  .selectedRow:global(.table__row[data-hovered='true']) {
+    :global(.table__cell) {
+      background: var(--accent-soft);
+    }
+  }
+}
+
 .bodyCell {
   overflow: hidden;
 }

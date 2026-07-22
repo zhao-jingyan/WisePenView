@@ -9,7 +9,7 @@ const PAGE_SIZE = 20;
 export function useFavoriteResources(collectionId?: string) {
   const interactService = useInteractService();
   const [page, setPage] = useState(1);
-  const { data, loading } = useRequest(
+  const { data, loading, refresh } = useRequest(
     () => interactService.listFavoritedResources({ collectionId, page, size: PAGE_SIZE }),
     {
       refreshDeps: [collectionId, page],
@@ -26,5 +26,6 @@ export function useFavoriteResources(collectionId?: string) {
     totalPage,
     loading,
     setPage,
+    refresh,
   };
 }

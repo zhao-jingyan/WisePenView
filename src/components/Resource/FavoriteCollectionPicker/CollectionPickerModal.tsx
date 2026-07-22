@@ -1,11 +1,11 @@
 import { Spin } from '@/components/Feedback';
 import AppModal from '@/components/Overlay/AppModal';
 import type { FavoriteCollection } from '@/domains/Interact';
-import { Button, Checkbox, Input, TextField } from '@heroui/react';
-import { Plus } from 'lucide-react';
+import { Button, Input, ListBox, ListBoxItem, TextField } from '@heroui/react';
+import { Plus, X } from 'lucide-react';
 import styles from './style.module.less';
 
-interface CollectionPickerModalProps {
+export interface CollectionPickerModalProps {
   collections: FavoriteCollection[];
   selectedIds: string[];
   newCollectionName: string;
@@ -38,14 +38,13 @@ function CollectionPickerModal({
   onNewCollectionNameChange,
   onCreateCollection,
 }: CollectionPickerModalProps) {
-  const selectedIdSet = new Set(selectedIds);
   const busy = loadingConfirm || loadingCreate;
   return (
     <AppModal
       isOpen
       onOpenChange={onOpenChange}
       title="收藏到"
-      size="sm"
+      size="xs"
       isDismissable={!busy}
       actions={
         <>
@@ -68,41 +67,48 @@ function CollectionPickerModal({
             <Spin />
           </div>
         ) : (
-          <div className={styles.collectionList}>
+          <ListBox
+            aria-label="收藏夹"
+            selectionMode="multiple"
+            selectedKeys={new Set(selectedIds)}
+            onSelectionChange={(keys) => {
+              const nextKeys = new Set([...keys].map(String));
+              collections.forEach((collection) => {
+                const isSelected = nextKeys.has(collection.collectionId);
+                if (isSelected !== selectedIds.includes(collection.collectionId)) {
+                  onToggle(collection.collectionId, isSelected);
+                }
+              });
+            }}
+            className={styles.collectionList}
+          >
             {collections.map((collection) => (
-              <Checkbox
+              <ListBoxItem
                 key={collection.collectionId}
-                isSelected={selectedIdSet.has(collection.collectionId)}
-                onChange={(selected) => onToggle(collection.collectionId, selected)}
-                variant="secondary"
+                id={collection.collectionId}
+                textValue={collection.collectionName ?? '我的收藏'}
                 className={styles.collectionItem}
               >
-                <Checkbox.Content className={styles.collectionContent}>
-                  <Checkbox.Control>
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
-                  <span className={styles.collectionText}>
-                    <span data-slot="label" className={styles.collectionLabel}>
-                      {collection.collectionName ?? '我的收藏'}
-                    </span>
-                    <span data-slot="description" className={styles.collectionCount}>
-                      {collection.itemCount} 个内容
-                    </span>
+                <span className={styles.collectionContent}>
+                  <span className={styles.collectionLabel}>
+                    {collection.collectionName ?? '我的收藏'}
                   </span>
-                </Checkbox.Content>
-              </Checkbox>
+                  <span className={styles.collectionCount}>{collection.itemCount} 个内容</span>
+                </span>
+              </ListBoxItem>
             ))}
-          </div>
+          </ListBox>
         )}
 
         {showCreateInput ? (
-          <div className={styles.createRow}>
-            <TextField aria-label="新建收藏夹名称" className={styles.createInput}>
+          <TextField aria-label="新建收藏夹名称" className={styles.createInput}>
+            <div className={styles.inlineCreateRow}>
               <Input
                 placeholder="收藏夹名称"
                 value={newCollectionName}
                 autoFocus
                 onChange={(event) => onNewCollectionNameChange(event.target.value)}
+                onBlur={onCreateCollection}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') {
                     event.preventDefault();
@@ -111,24 +117,20 @@ function CollectionPickerModal({
                   if (event.key === 'Escape') onShowCreateInput(false);
                 }}
               />
-            </TextField>
-            <Button
-              size="sm"
-              variant="primary"
-              isDisabled={loadingCreate}
-              onPress={onCreateCollection}
-            >
-              创建
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              isDisabled={loadingCreate}
-              onPress={() => onShowCreateInput(false)}
-            >
-              取消
-            </Button>
-          </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                aria-label="取消新建收藏夹"
+                isDisabled={loadingCreate}
+                className={styles.cancelCreateButton}
+                onPointerDown={(event) => event.preventDefault()}
+                onPress={() => onShowCreateInput(false)}
+              >
+                <X size={15} aria-hidden="true" />
+              </Button>
+            </div>
+          </TextField>
         ) : (
           <Button
             variant="ghost"
@@ -136,7 +138,7 @@ function CollectionPickerModal({
             className={styles.newCollectionButton}
             onPress={() => onShowCreateInput(true)}
           >
-            <Plus size={15} />
+            <Plus size={15} aria-hidden="true" />
             新建收藏夹
           </Button>
         )}

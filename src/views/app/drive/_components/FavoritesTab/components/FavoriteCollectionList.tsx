@@ -1,0 +1,104 @@
+import type { FavoriteCollection } from '@/domains/Interact';
+import { Button, Dropdown, ListBox, ListBoxItem } from '@heroui/react';
+import { EllipsisVertical, Plus } from 'lucide-react';
+import styles from '../style.module.less';
+
+interface FavoriteCollectionListProps {
+  collections: FavoriteCollection[];
+  selectedCollectionId?: string;
+  onSelect: (collectionId: string) => void;
+  onCreate: () => void;
+  onEdit: (collection: FavoriteCollection) => void;
+  onDelete: (collection: FavoriteCollection) => void;
+}
+
+function FavoriteCollectionList({
+  collections,
+  selectedCollectionId,
+  onSelect,
+  onCreate,
+  onEdit,
+  onDelete,
+}: FavoriteCollectionListProps) {
+  return (
+    <aside className={styles.collectionPanel} aria-label="收藏夹目录">
+      <div className={styles.collectionPanelHeader}>
+        <span className={styles.collectionPanelTitle}>收藏夹</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          isIconOnly
+          aria-label="新建收藏夹"
+          className={styles.collectionCreateButton}
+          onPress={onCreate}
+        >
+          <Plus size={17} aria-hidden="true" />
+        </Button>
+      </div>
+
+      <ListBox
+        aria-label="收藏夹"
+        selectionMode="single"
+        selectedKeys={selectedCollectionId ? [selectedCollectionId] : []}
+        onSelectionChange={(keys) => {
+          const nextKey = [...keys][0];
+          if (nextKey) onSelect(String(nextKey));
+        }}
+        className={styles.collectionList}
+      >
+        {collections.map((collection) => (
+          <ListBoxItem
+            key={collection.collectionId}
+            id={collection.collectionId}
+            textValue={collection.collectionName ?? '我的收藏'}
+            className={styles.collectionListItem}
+          >
+            <span className={styles.collectionListItemContent}>
+              <span className={styles.collectionListItemName}>
+                {collection.collectionName ?? '我的收藏'}
+              </span>
+              <span className={styles.collectionListItemMeta}>{collection.itemCount}</span>
+            </span>
+            <span
+              className={styles.collectionListItemActions}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Dropdown>
+                <Dropdown.Trigger>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    isIconOnly
+                    aria-label={`${collection.collectionName ?? '我的收藏'}操作`}
+                    className={styles.collectionMoreButton}
+                  >
+                    <EllipsisVertical size={16} aria-hidden="true" />
+                  </Button>
+                </Dropdown.Trigger>
+                <Dropdown.Popover placement="bottom end">
+                  <Dropdown.Menu aria-label="收藏夹操作">
+                    <Dropdown.Item id="edit" onAction={() => onEdit(collection)}>
+                      编辑
+                    </Dropdown.Item>
+                    {!collection.isDefault ? (
+                      <Dropdown.Item
+                        id="delete"
+                        variant="danger"
+                        onAction={() => onDelete(collection)}
+                      >
+                        删除
+                      </Dropdown.Item>
+                    ) : null}
+                  </Dropdown.Menu>
+                </Dropdown.Popover>
+              </Dropdown>
+            </span>
+          </ListBoxItem>
+        ))}
+      </ListBox>
+    </aside>
+  );
+}
+
+export default FavoriteCollectionList;

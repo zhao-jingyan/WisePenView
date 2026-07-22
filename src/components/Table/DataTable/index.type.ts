@@ -5,11 +5,14 @@ import type {
   TableColumnWidth,
   TableLoadMore,
 } from '../shared/TableBase/index.type';
+import type { TableRowPressContext } from '../shared/TableBase/rowPress';
 
 export interface DataTableRowContext<T> {
   row: T;
   rowId: string;
 }
+
+export type DataTableRowPressContext = TableRowPressContext;
 
 export interface DataTableColumn<T extends object> extends Omit<
   TableColumnBase<T, DataTableRowContext<T>>,
@@ -51,6 +54,12 @@ export interface DataTableProps<T extends object> {
   pagination?: DataTablePagination;
   summary?: ReactNode;
   getRowClassName?: (row: T, ctx: DataTableRowContext<T>) => string | undefined;
+  /** 单击行选中；再次单击当前行时触发行激活 */
+  onRowSelect?: (row: T, ctx: DataTableRowPressContext) => void;
+  /** 行激活，例如打开资源 */
+  onRowActivate?: (row: T) => void;
+  /** 当前选中的行 id */
+  selectedRowKey?: string;
   sortDescriptor?: SortDescriptor;
   onSortChange?: (descriptor: SortDescriptor) => void;
 }

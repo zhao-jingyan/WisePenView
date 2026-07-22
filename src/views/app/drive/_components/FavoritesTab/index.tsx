@@ -1,112 +1,79 @@
 import { Empty, Spin } from '@/components/Feedback';
-import SegmentedTabs from '@/components/SegmentedTabs';
-import { useInteractService } from '@/domains';
 import type { FavoriteCollection } from '@/domains/Interact';
-import { parseErrorMessage } from '@/utils/error';
-import { Button, toast } from '@heroui/react';
-import { useRequest } from 'ahooks';
-import { ChevronLeft, Plus } from 'lucide-react';
 import { useState } from 'react';
 import DeleteCollectionModal from './DeleteCollectionModal';
 import EditCollectionModal from './EditCollectionModal';
-import CollectionCard from './components/CollectionCard';
+import FavoriteCollectionList from './components/FavoriteCollectionList';
 import FavoriteResourceTable from './components/FavoriteResourceTable';
+import { useFavoriteCollections } from './hooks/useFavoriteCollections';
 import styles from './style.module.less';
 
-type TabKey = 'byContent' | 'byCollection';
-type FavoritesView =
-  | { mode: 'byContent' }
-  | { mode: 'byCollection' }
-  | { mode: 'collectionDetail'; collectionId: string; collectionName: string | null };
-
-const TAB_ITEMS: { key: TabKey; label: string }[] = [
-  { key: 'byContent', label: '按内容' },
-  { key: 'byCollection', label: '按收藏夹' },
-];
+function resolveDefaultCollection(
+  collections: FavoriteCollection[]
+): FavoriteCollection | undefined {
+  return collections.find((collection) => collection.isDefault) ?? collections[0];
+}
 
 function FavoritesTab() {
-  const interactService = useInteractService();
-  const [view, setView] = useState<FavoritesView>({ mode: 'byContent' });
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string>();
   const [editingCollection, setEditingCollection] = useState<
     FavoriteCollection | null | undefined
   >();
-  const [deletingCollection, setDeletingCollection] = useState<FavoriteCollection | undefined>();
-  const {
-    data: collections,
-    loading,
-    refresh,
-  } = useRequest(() => interactService.listFavoriteCollections(), {
-    onError: (error) => toast.danger(parseErrorMessage(error)),
-  });
+  const [deletingCollection, setDeletingCollection] = useState<FavoriteCollection>();
+  const { collections, hasLoaded, loading, refresh } = useFavoriteCollections();
 
-  const handleChanged = () => {
+  const defaultCollection = resolveDefaultCollection(collections);
+  const activeCollection =
+    collections.find((collection) => collection.collectionId === selectedCollectionId) ??
+    defaultCollection;
+
+  if (loading && !hasLoaded) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.feedbackState}>
+          <Spin />
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeCollection) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.feedbackState}>
+          <Empty description="暂无收藏夹" />
+        </div>
+      </div>
+    );
+  }
+
+  const handleCollectionChanged = () => {
     void refresh();
-    setView({ mode: 'byCollection' });
   };
+
   return (
     <div className={styles.container}>
-      <div className={styles.topBar}>
-        {view.mode === 'collectionDetail' ? (
-          <div className={styles.topLeft}>
-            <Button variant="ghost" size="sm" onPress={() => setView({ mode: 'byCollection' })}>
-              <ChevronLeft size={16} />
-              返回
-            </Button>
-            <h2 className={styles.detailTitle}>{view.collectionName ?? '我的收藏'}</h2>
-          </div>
-        ) : (
-          <SegmentedTabs<TabKey>
-            ariaLabel="收藏视图切换"
-            items={TAB_ITEMS}
-            selectedKey={view.mode}
-            onSelectionChange={(key) => setView({ mode: key })}
-            size="sm"
+      <div className={styles.favoriteFrame}>
+        <div className={styles.splitLayout}>
+          <FavoriteCollectionList
+            collections={collections}
+            selectedCollectionId={activeCollection.collectionId}
+            onSelect={setSelectedCollectionId}
+            onCreate={() => setEditingCollection(null)}
+            onEdit={setEditingCollection}
+            onDelete={setDeletingCollection}
           />
-        )}
-        {view.mode !== 'collectionDetail' ? (
-          <Button variant="secondary" size="sm" onPress={() => setEditingCollection(null)}>
-            <Plus size={14} />
-            新建收藏夹
-          </Button>
-        ) : null}
-      </div>
-
-      <div className={styles.content}>
-        {view.mode === 'byContent' ? (
-          <FavoriteResourceTable key="all" emptyDescription="收藏后会显示在这里" />
-        ) : null}
-        {view.mode === 'byCollection' ? (
-          loading ? (
-            <Spin />
-          ) : collections?.length ? (
-            <div className={styles.collectionGrid}>
-              {collections.map((collection) => (
-                <CollectionCard
-                  key={collection.collectionId}
-                  collection={collection}
-                  onOpen={() =>
-                    setView({
-                      mode: 'collectionDetail',
-                      collectionId: collection.collectionId,
-                      collectionName: collection.collectionName,
-                    })
-                  }
-                  onEdit={() => setEditingCollection(collection)}
-                  onDelete={() => setDeletingCollection(collection)}
-                />
-              ))}
-            </div>
-          ) : (
-            <Empty description="暂无收藏夹" />
-          )
-        ) : null}
-        {view.mode === 'collectionDetail' ? (
-          <FavoriteResourceTable
-            key={view.collectionId}
-            collectionId={view.collectionId}
-            emptyDescription="该收藏夹暂无内容"
-          />
-        ) : null}
+          <main className={styles.resourcePanel}>
+            <FavoriteResourceTable
+              key={activeCollection.collectionId}
+              collectionId={activeCollection.collectionId}
+              collectionName={activeCollection.collectionName ?? '我的收藏'}
+              collectionItemCount={activeCollection.itemCount}
+              onCollectionChanged={handleCollectionChanged}
+              emptyDescription="该收藏夹暂无内容"
+            />
+          </main>
+        </div>
       </div>
 
       {editingCollection !== undefined ? (
@@ -115,7 +82,7 @@ function FavoritesTab() {
             if (!open) setEditingCollection(undefined);
           }}
           collection={editingCollection}
-          onSuccess={handleChanged}
+          onSuccess={handleCollectionChanged}
         />
       ) : null}
       {deletingCollection ? (
@@ -125,7 +92,7 @@ function FavoritesTab() {
           onOpenChange={(open) => {
             if (!open) setDeletingCollection(undefined);
           }}
-          onSuccess={handleChanged}
+          onSuccess={handleCollectionChanged}
         />
       ) : null}
     </div>
