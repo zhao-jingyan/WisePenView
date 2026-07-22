@@ -35,6 +35,16 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2xs);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.root:hover .toolbarActions,
+.root:focus-within .toolbarActions,
+.root:has(.copyButton[data-copied='true']) .toolbarActions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .copyButton {
