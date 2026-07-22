@@ -20,6 +20,10 @@ function isEventInScope(event: KeyboardEvent, scope: HTMLElement | null): boolea
   return event.target instanceof Node && Boolean(scope?.contains(event.target));
 }
 
+function isFindInputEvent(event: KeyboardEvent): boolean {
+  return event.target instanceof HTMLElement && Boolean(event.target.closest('[role="search"]'));
+}
+
 export function useNoteFindMode({ editorRef, scopeRef }: UseNoteFindModeOptions) {
   const [mode, setMode] = useState<NoteFindModeState | null>(null);
 
@@ -30,11 +34,14 @@ export function useNoteFindMode({ editorRef, scopeRef }: UseNoteFindModeOptions)
   });
 
   const handleOpen = useMemoizedFn((initialQuery?: string) => {
+    const shouldCollapseSelection = mode !== null;
     if (initialQuery === undefined) {
       setMode((currentMode) => currentMode ?? { query: '', result: null });
-      return;
+    } else {
+      handleQueryChange(initialQuery);
     }
-    handleQueryChange(initialQuery);
+
+    if (shouldCollapseSelection) editorRef.current?.collapseSelection();
   });
 
   const handleNext = useMemoizedFn(() => {
@@ -55,6 +62,18 @@ export function useNoteFindMode({ editorRef, scopeRef }: UseNoteFindModeOptions)
 
   const handleModeKeyDown = useMemoizedFn((event: KeyboardEvent) => {
     if (!mode || event.isComposing || !isEventInScope(event, scopeRef.current)) return;
+
+    if (
+      !event.altKey &&
+      (event.ctrlKey || event.metaKey) &&
+      event.key.toLowerCase() === 'f' &&
+      isFindInputEvent(event)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      editorRef.current?.collapseSelection();
+      return;
+    }
 
     if (event.key === 'Enter') {
       event.preventDefault();

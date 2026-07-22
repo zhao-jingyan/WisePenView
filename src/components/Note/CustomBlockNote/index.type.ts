@@ -33,8 +33,10 @@ export interface NoteBodyEditorHandle {
   findNext: () => NoteFindResult | null;
   /** 跳转到上一个匹配 */
   findPrev: () => NoteFindResult | null;
-  /** 清除搜索状态并恢复原始光标位置 */
+  /** 清除搜索状态，保留当前文本选区 */
   clearFind: () => void;
+  /** 折叠当前文本选区，隐藏选中高亮 */
+  collapseSelection: () => void;
 }
 
 interface NoteMarkdownArtifact {
