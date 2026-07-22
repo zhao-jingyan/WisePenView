@@ -1,3 +1,4 @@
+import CopyButton from '@/components/Button/CopyButton';
 import EntryIcon from '@/components/Icons/EntryIcon';
 import {
   Attachment,
@@ -10,7 +11,6 @@ import {
 import type { WisePenUIMessage } from '@/domains/Chat';
 import { isTextUIPart } from 'ai';
 import MessageContent from '../Content';
-import CopyButton from '../CopyButton';
 import styles from './style.module.less';
 
 function UserMessage({ message }: { message: WisePenUIMessage }) {

@@ -1,4 +1,4 @@
-import AppIconButton from '@/components/AppIconButton';
+import AppIconButton from '@/components/Button/AppIconButton';
 import AppNavigationControls from '@/layouts/AppNavigation/AppNavigationControls';
 import clsx from 'clsx';
 import { PanelRightOpen, PanelsTopLeft } from 'lucide-react';

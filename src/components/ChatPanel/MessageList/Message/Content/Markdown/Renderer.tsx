@@ -1,9 +1,11 @@
+import CodeBlock from '@/components/Code/CodeBlock';
+import MermaidBlock from '@/components/Code/MermaidBlock';
+import { isMermaidLanguage } from '@/components/Code/MermaidBlock/language';
 import type { ParsedBlock, RootContent } from '@incremark/core';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { CornerUpLeft } from 'lucide-react';
 import { Fragment, memo, type MouseEvent, type ReactNode } from 'react';
-import CodeBlock from './CodeBlock';
 import { MARKDOWN_UNDERLINE_URL, type MarkdownRenderContext } from './runtime';
 import styles from './style.module.less';
 
@@ -14,12 +16,14 @@ type MarkdownDefinitions = MarkdownRenderContext['definitions'];
 interface MarkdownBlockProps {
   block: ParsedBlock;
   renderContext: MarkdownRenderContext;
+  streaming: boolean;
 }
 
 interface MarkdownRendererProps {
   blocks: ParsedBlock[];
   renderContext: MarkdownRenderContext;
   showFootnotes: boolean;
+  streaming: boolean;
 }
 
 type RuntimeMathNode = { type: 'inlineMath' | 'math'; value: string };
@@ -346,7 +350,8 @@ function renderHeading(
 function renderList(
   node: Extract<RootContent, { type: 'list' }>,
   renderContext: MarkdownRenderContext,
-  keyPrefix: string
+  keyPrefix: string,
+  streaming: boolean
 ): ReactNode {
   const items = node.children.map((item, index) => {
     const isTaskItem = typeof item.checked === 'boolean';
@@ -361,7 +366,7 @@ function renderList(
           />
         ) : null}
         {item.children.map((child, childIndex) =>
-          renderBlockNode(child, renderContext, `${keyPrefix}-${index}-${childIndex}`)
+          renderBlockNode(child, renderContext, `${keyPrefix}-${index}-${childIndex}`, streaming)
         )}
       </li>
     );
@@ -425,7 +430,8 @@ function renderTable(
 function renderBlockNode(
   node: RootContent,
   renderContext: MarkdownRenderContext,
-  key: string
+  key: string,
+  streaming: boolean
 ): ReactNode {
   const mathExpression = readMathExpression(node, 'math');
   if (mathExpression != null) {
@@ -441,17 +447,22 @@ function renderBlockNode(
       return (
         <blockquote>
           {node.children.map((child, index) =>
-            renderBlockNode(child, renderContext, `${key}-${index}`)
+            renderBlockNode(child, renderContext, `${key}-${index}`, streaming)
           )}
         </blockquote>
       );
     case 'list':
-      return renderList(node, renderContext, key);
+      return renderList(node, renderContext, key, streaming);
     case 'table':
       return renderTable(node, renderContext, key);
     case 'thematicBreak':
       return <hr />;
     case 'code':
+      if (isMermaidLanguage(node.lang ?? undefined)) {
+        return (
+          <MermaidBlock code={node.value} language={node.lang ?? undefined} streaming={streaming} />
+        );
+      }
       return <CodeBlock code={node.value} language={node.lang ?? undefined} />;
     case 'html':
       return <>{node.value}</>;
@@ -463,13 +474,16 @@ function renderBlockNode(
   }
 }
 
-function MarkdownBlockView({ block, renderContext }: MarkdownBlockProps) {
-  return renderBlockNode(block.node, renderContext, `block-${block.id}`);
+function MarkdownBlockView({ block, renderContext, streaming }: MarkdownBlockProps) {
+  return renderBlockNode(block.node, renderContext, `block-${block.id}`, streaming);
 }
 
 const MarkdownBlock = memo(
   MarkdownBlockView,
-  (previous, next) => previous.block === next.block && previous.renderContext === next.renderContext
+  (previous, next) =>
+    previous.block === next.block &&
+    previous.renderContext === next.renderContext &&
+    previous.streaming === next.streaming
 );
 
 function MarkdownFootnotes({ renderContext }: { renderContext: MarkdownRenderContext }) {
@@ -486,7 +500,7 @@ function MarkdownFootnotes({ renderContext }: { renderContext: MarkdownRenderCon
           return (
             <li key={identifier} id={`fn-${fragmentId}`}>
               {definition.children.map((child, index) =>
-                renderBlockNode(child, renderContext, `footnote-${fragmentId}-${index}`)
+                renderBlockNode(child, renderContext, `footnote-${fragmentId}-${index}`, false)
               )}
               <a
                 href={`#fnref-${fragmentId}`}
@@ -504,11 +518,21 @@ function MarkdownFootnotes({ renderContext }: { renderContext: MarkdownRenderCon
   );
 }
 
-function MarkdownRenderer({ blocks, renderContext, showFootnotes }: MarkdownRendererProps) {
+function MarkdownRenderer({
+  blocks,
+  renderContext,
+  showFootnotes,
+  streaming,
+}: MarkdownRendererProps) {
   return (
     <>
       {blocks.map((block) => (
-        <MarkdownBlock key={block.id} block={block} renderContext={renderContext} />
+        <MarkdownBlock
+          key={block.id}
+          block={block}
+          renderContext={renderContext}
+          streaming={streaming}
+        />
       ))}
       {showFootnotes ? <MarkdownFootnotes renderContext={renderContext} /> : null}
     </>

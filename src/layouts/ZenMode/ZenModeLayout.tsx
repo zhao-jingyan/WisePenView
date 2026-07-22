@@ -1,4 +1,4 @@
-import AppIconButton from '@/components/AppIconButton';
+import AppIconButton from '@/components/Button/AppIconButton';
 import ChatPanel from '@/components/ChatPanel';
 import { useCurrentChatSessionStore } from '@/components/ChatPanel/_store/useCurrentChatSessionStore';
 import { clearNewChatSessionStore } from '@/components/ChatPanel/_store/useNewChatSessionStore';

@@ -1,4 +1,4 @@
-import AppIconButton from '@/components/AppIconButton';
+import AppIconButton from '@/components/Button/AppIconButton';
 import { ArrowLeft, ArrowRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import styles from './AppNavigationControls.module.less';
 

@@ -1,3 +1,4 @@
+import CopyButton from '@/components/Button/CopyButton';
 import type { Model } from '@/components/ChatPanel/index.type';
 import { Spin } from '@/components/Feedback';
 import ProviderLogo from '@/components/Icons/ProviderLogo';
@@ -6,7 +7,6 @@ import { useInterval } from 'ahooks';
 import { isReasoningUIPart, isTextUIPart, isToolUIPart } from 'ai';
 import { useState } from 'react';
 import MessageContent from '../Content';
-import CopyButton from '../CopyButton';
 import ReasoningBlock from './ReasoningBlock';
 import ToolCallBlock from './ToolCallBlock';
 import styles from './style.module.less';

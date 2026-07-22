@@ -24,6 +24,7 @@ function MarkdownContent({ content, streaming }: MarkdownContentProps) {
         blocks={snapshot.blocks}
         renderContext={snapshot.renderContext}
         showFootnotes={!streaming}
+        streaming={streaming}
       />
     </div>
   );

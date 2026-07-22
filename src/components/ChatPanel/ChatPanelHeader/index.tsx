@@ -1,4 +1,4 @@
-import AppIconButton from '@/components/AppIconButton';
+import AppIconButton from '@/components/Button/AppIconButton';
 import clsx from 'clsx';
 import { History, PanelRightClose, Plus } from 'lucide-react';
 import styles from '../style.module.less';

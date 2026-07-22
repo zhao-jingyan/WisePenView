@@ -6,6 +6,7 @@ import styles from './style.module.less';
 function AppIconButton({
   icon,
   label,
+  className,
   isActive = false,
   isDisabled = false,
   onPress,
@@ -15,7 +16,7 @@ function AppIconButton({
       <Tooltip.Trigger>
         <button
           type="button"
-          className={clsx(styles.root, isActive && styles.active)}
+          className={clsx(styles.root, isActive && styles.active, className)}
           onClick={isDisabled ? undefined : onPress}
           aria-label={label}
           aria-pressed={isActive || undefined}
