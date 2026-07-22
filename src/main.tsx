@@ -1,4 +1,5 @@
 import '@/i18n';
+import '@fontsource-variable/noto-sans-sc/wght.css';
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from 'react-error-boundary';
 import App from './bootstrap/App';

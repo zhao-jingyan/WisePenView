@@ -209,9 +209,9 @@
 
 :root {
   --app-font-family:
-    'Inter',
+    'PingFang SC',
+    'Noto Sans SC Variable',
     -apple-system,
-    'Noto Sans SC',
     BlinkMacSystemFont,
     'Segoe UI',
     Roboto,
