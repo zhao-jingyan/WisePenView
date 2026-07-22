@@ -136,26 +136,23 @@
   top: 50%;
   right: var(--space-xs);
   transform: translateY(-50%);
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  gap: var(--space-xs);
 }
 
 .historyNavigatorRailTrigger {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  gap: var(--history-nav-bar-gap);
-  max-height: min(50vh, 320px);
-  padding: var(--space-sm) var(--space-xs);
+  position: absolute;
+  z-index: 1;
+  inset: calc(-1 * var(--space-sm));
+  inset-inline-start: calc(-1 * var(--space-lg));
+  padding: 0;
   margin: 0;
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
   cursor: pointer;
   overflow-y: auto;
+  transition:
+    opacity 0.18s ease,
+    visibility 0s linear 0s;
   .appSubtleScrollbar();
 
   &:focus-visible {
@@ -165,11 +162,10 @@
 }
 
 .historyNavigatorRailOpen .historyNavigatorRailTrigger {
+  opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  width: 0;
-  padding-inline: 0;
-  overflow: hidden;
+  transition-delay: 0s, 0.18s;
 }
 
 .historyNavigatorBar {
@@ -194,36 +190,51 @@
 .historyNavigatorRailPanel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xs, 2px);
+  gap: var(--history-nav-bar-gap);
+  box-sizing: border-box;
+  width: calc(var(--history-nav-bar-active-width) + var(--space-sm) + 2px);
   max-width: min(240px, calc(100vw - var(--space-2xl)));
   max-height: min(50vh, 320px);
-  padding: var(--space-md) var(--space-lg);
-  border: 1px solid var(--border-light);
+  padding: var(--space-sm) var(--space-xs);
+  border: 1px solid transparent;
   border-radius: var(--radius-xl, var(--radius-lg));
-  background: var(--overlay, var(--surface));
-  box-shadow: var(--card-shadow);
+  background: transparent;
+  box-shadow: none;
+  overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
+  transition:
+    width 0.24s ease,
+    padding 0.24s ease,
+    gap 0.24s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 
   &::-webkit-scrollbar {
     display: none;
     width: 0;
     height: 0;
   }
+}
 
-  &[hidden] {
-    display: none;
-  }
+.historyNavigatorRailOpen .historyNavigatorRailPanel {
+  width: min(240px, calc(100vw - var(--space-2xl)));
+  padding: var(--space-md) var(--space-xs) var(--space-md) var(--space-lg);
+  gap: var(--space-2xs, 2px);
+  border-color: var(--border-light);
+  background: var(--overlay, var(--surface));
+  box-shadow: var(--card-shadow);
 }
 
 .historyNavigatorRailItem {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-md);
+  gap: 0;
   width: 100%;
   min-width: 0;
-  padding: var(--space-2xs) var(--space-xs);
+  padding: 0;
   margin: 0;
   border: none;
   border-radius: var(--radius-sm);
@@ -234,7 +245,9 @@
   transition:
     color 0.15s ease,
     background-color 0.15s ease,
-    font-weight 0.15s ease;
+    font-weight 0.15s ease,
+    gap 0.24s ease,
+    padding 0.24s ease;
 
   &:hover,
   &:focus-visible {
@@ -261,13 +274,33 @@
 }
 
 .historyNavigatorRailPreview {
+  flex: 1;
   min-width: 0;
+  min-height: 0;
+  max-width: 0;
+  max-height: 0;
   overflow: hidden;
   font-size: var(--font-size-xs);
   font-weight: 500;
   line-height: 1.45;
+  opacity: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition:
+    max-width 0.24s ease,
+    max-height 0.24s ease,
+    opacity 0.18s ease;
+}
+
+.historyNavigatorRailOpen .historyNavigatorRailItem {
+  gap: var(--space-md);
+  padding: var(--space-2xs) var(--space-xs);
+}
+
+.historyNavigatorRailOpen .historyNavigatorRailPreview {
+  max-width: 100%;
+  max-height: 2em;
+  opacity: 1;
 }
 
 .srOnly {
