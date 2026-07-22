@@ -6,13 +6,17 @@ import type { EditorView } from '@tiptap/pm/view';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 import { AI_DIFF_DISPLAY_MODE, type AiDiffDisplayMode } from '@/domains/Note';
-import { noteConfig } from '../../noteConfig';
-import { listRichTextChangeTargets } from '../../plugins/DefaultContentPlugin/aiDiff';
+import {
+  listRichTextChangeTargets,
+  type NoteRichTextAiDiffConfig,
+} from '../../plugins/DefaultContentPlugin/aiDiff';
 import type {
   NoteAiDiffAction,
   NoteAiDiffActionTarget,
   NoteEditorExtension,
   NotePluginRegistry,
+  NoteTransactionAnalysis,
+  NoteTransactionService,
 } from '../../registry/types';
 import type { NoteAiDiffActionRequest } from './action';
 import { resolveNoteAiDiffBlock } from './contentState';
@@ -48,9 +52,20 @@ interface AiDiffExtensionState {
   /** 待按位置恢复的选中下标；装饰重建后消费 */
   pendingSelectIndex: number | null;
   decorations: DecorationSet;
+  aiBlockPositions: ReadonlyMap<string, { from: number; to: number }>;
 }
 
 const aiDiffExtensionPluginKey = new PluginKey<AiDiffExtensionState>('noteAiDiffExtension');
+
+const AI_DIFF_INCREMENTAL_MAX_RANGES = 32;
+const AI_DIFF_INCREMENTAL_MAX_BLOCKS = 64;
+
+function requiresAiDiffFullRebuild(analysis: NoteTransactionAnalysis): boolean {
+  return (
+    analysis.changedRanges.length > AI_DIFF_INCREMENTAL_MAX_RANGES ||
+    analysis.changedBlocks.length + analysis.removedBlockIds.length > AI_DIFF_INCREMENTAL_MAX_BLOCKS
+  );
+}
 
 function encodeChangeKey(blockId: string, target?: NoteAiDiffActionTarget): string {
   if (!target) return blockId;
@@ -268,14 +283,22 @@ function buildDecorations(params: {
   };
   proseMirrorSchema: unknown;
   registry: NotePluginRegistry;
-  runtime: Omit<AiDiffExtensionState, 'decorations' | 'changeKeysOrdered' | 'pendingSelectIndex'>;
+  aiDiffConfig: NoteRichTextAiDiffConfig;
+  runtime: Omit<
+    AiDiffExtensionState,
+    'decorations' | 'changeKeysOrdered' | 'pendingSelectIndex' | 'aiBlockPositions'
+  >;
   onSelectChange: (changeKey: string) => void;
+  blockNodes?: readonly { node: PMNode; pos: number }[];
 }): {
   decorations: DecorationSet;
   changeKeysOrdered: readonly string[];
+  aiBlockPositions: ReadonlyMap<string, { from: number; to: number }>;
 } {
-  const { doc, editorSchema, proseMirrorSchema, registry, runtime, onSelectChange } = params;
+  const { doc, editorSchema, proseMirrorSchema, registry, aiDiffConfig, runtime, onSelectChange } =
+    params;
   const decorations: Decoration[] = [];
+  const aiBlockPositions = new Map<string, { from: number; to: number }>();
 
   type PendingReview = {
     blockId: string;
@@ -286,10 +309,21 @@ function buildDecorations(params: {
 
   const pendingReviews: PendingReview[] = [];
 
-  doc.descendants((node, pos) => {
-    if (node.type.name !== 'blockContainer') return true;
+  const blockNodes =
+    params.blockNodes ??
+    (() => {
+      const nodes: Array<{ node: PMNode; pos: number }> = [];
+      doc.descendants((node, pos) => {
+        if (node.type.name === 'blockContainer') nodes.push({ node, pos });
+        return true;
+      });
+      return nodes;
+    })();
+
+  for (const { node, pos } of blockNodes) {
     const blockId = typeof node.attrs.id === 'string' ? node.attrs.id : '';
-    if (!runtime.aiContentByBlockId.has(blockId)) return true;
+    if (!runtime.aiContentByBlockId.has(blockId)) continue;
+    aiBlockPositions.set(blockId, { from: pos, to: pos + node.nodeSize });
     const aiContent = runtime.aiContentByBlockId.get(blockId);
 
     let block: Record<string, unknown> & { type: string };
@@ -302,12 +336,12 @@ function buildDecorations(params: {
         editorSchema.styleSchema as never
       ) as unknown as Record<string, unknown> & { type: string };
     } catch {
-      return true;
+      continue;
     }
 
     const aiDiff = registry.blockPlugins.get(block.type)?.aiDiff;
     const projection = aiDiff ? resolveNoteAiDiffBlock(block, aiContent, aiDiff, registry) : null;
-    if (!aiDiff || !projection) return true;
+    if (!aiDiff || !projection) continue;
 
     let contentFrom = pos;
     let contentTo = pos + node.nodeSize;
@@ -328,7 +362,7 @@ function buildDecorations(params: {
           contenteditable: 'false',
         })
       );
-      return false;
+      continue;
     }
 
     const hasCustomComparison = Boolean(
@@ -375,8 +409,7 @@ function buildDecorations(params: {
         contentTo,
       });
     }
-    return true;
-  });
+  }
 
   const actionableReviews =
     runtime.displayMode === AI_DIFF_DISPLAY_MODE.COMPARE && runtime.actionsEnabled
@@ -393,7 +426,7 @@ function buildDecorations(params: {
       const targets = listRichTextChangeTargets(
         item.projection.current,
         item.projection.aiBlock,
-        noteConfig.aiDiff.richText
+        aiDiffConfig
       );
       if (targets.length > 0) {
         for (const target of targets) {
@@ -451,10 +484,15 @@ function buildDecorations(params: {
   return {
     decorations: DecorationSet.create(doc, decorations),
     changeKeysOrdered: changeUnits.map((unit) => unit.key),
+    aiBlockPositions,
   };
 }
 
-function createAiDiffExtension(registry: NotePluginRegistry) {
+function createAiDiffExtension(
+  registry: NotePluginRegistry,
+  transactionService: NoteTransactionService,
+  aiDiffConfig: NoteRichTextAiDiffConfig
+) {
   return createExtension(({ editor }) => ({
     key: 'noteAiDiffExtension',
     prosemirrorPlugins: [
@@ -469,6 +507,7 @@ function createAiDiffExtension(registry: NotePluginRegistry) {
             changeKeysOrdered: [],
             pendingSelectIndex: null,
             decorations: DecorationSet.empty,
+            aiBlockPositions: new Map(),
           }),
           apply: (tr, previous, _oldState, newState) => {
             const meta = tr.getMeta(aiDiffExtensionPluginKey) as AiDiffExtensionMeta | undefined;
@@ -488,6 +527,56 @@ function createAiDiffExtension(registry: NotePluginRegistry) {
               selectedChangeKey,
             };
             if (!tr.docChanged && !meta) return previous;
+            if (runtime.aiContentByBlockId.size === 0) {
+              return {
+                ...runtime,
+                selectedChangeKey: null,
+                pendingSelectIndex: null,
+                changeKeysOrdered: [],
+                decorations: DecorationSet.empty,
+                aiBlockPositions: new Map(),
+              };
+            }
+            let cachedBlockNodes: readonly { node: PMNode; pos: number }[] | undefined;
+            if (tr.docChanged && !meta) {
+              const analysis = transactionService.analyze([tr]);
+              const touchesAiBlock =
+                analysis.structureChanged ||
+                requiresAiDiffFullRebuild(analysis) ||
+                analysis.changedBlocks.some(({ id: blockId }) =>
+                  runtime.aiContentByBlockId.has(blockId)
+                ) ||
+                analysis.removedBlockIds.some((blockId) => runtime.aiContentByBlockId.has(blockId));
+              if (!analysis.structureChanged && !requiresAiDiffFullRebuild(analysis)) {
+                const mappedAiBlockPositions = new Map<string, { from: number; to: number }>();
+                let canMapAiBlockPositions = true;
+                for (const [blockId, position] of previous.aiBlockPositions) {
+                  const from = tr.mapping.map(position.from, 1);
+                  const node = newState.doc.nodeAt(from);
+                  if (!node || node.type.name !== 'blockContainer' || node.attrs.id !== blockId) {
+                    canMapAiBlockPositions = false;
+                    break;
+                  }
+                  mappedAiBlockPositions.set(blockId, { from, to: from + node.nodeSize });
+                }
+                if (canMapAiBlockPositions) {
+                  cachedBlockNodes = [...mappedAiBlockPositions.entries()].map(([, position]) => ({
+                    node: newState.doc.nodeAt(position.from)!,
+                    pos: position.from,
+                  }));
+                }
+                if (!touchesAiBlock && canMapAiBlockPositions) {
+                  return {
+                    ...runtime,
+                    selectedChangeKey,
+                    pendingSelectIndex,
+                    changeKeysOrdered: previous.changeKeysOrdered,
+                    decorations: previous.decorations.map(tr.mapping, newState.doc),
+                    aiBlockPositions: mappedAiBlockPositions,
+                  };
+                }
+              }
+            }
             if (runtime.selectedChangeKey) {
               const selectedBlockId = runtime.selectedChangeKey.split('::')[0] ?? '';
               if (!runtime.aiContentByBlockId.has(selectedBlockId)) {
@@ -495,7 +584,10 @@ function createAiDiffExtension(registry: NotePluginRegistry) {
                 runtime.selectedChangeKey = null;
               }
             }
-            const buildWithSelection = (key: string | null) =>
+            const buildWithSelection = (
+              key: string | null,
+              blockNodes?: readonly { node: PMNode; pos: number }[]
+            ) =>
               buildDecorations({
                 doc: newState.doc as unknown as PMNode,
                 editorSchema: editor.schema as unknown as {
@@ -505,11 +597,13 @@ function createAiDiffExtension(registry: NotePluginRegistry) {
                 },
                 proseMirrorSchema: newState.schema,
                 registry,
+                aiDiffConfig,
                 runtime: { ...runtime, selectedChangeKey: key },
                 onSelectChange: (changeKey) => goToAiDiffChange(editor.prosemirrorView, changeKey),
+                blockNodes,
               });
 
-            let built = buildWithSelection(selectedChangeKey);
+            let built = buildWithSelection(selectedChangeKey, cachedBlockNodes);
             if (pendingSelectIndex != null) {
               // 等 sidecar 刷新 aiContent 后再按位置恢复，并重建装饰（否则工具条仍按未选中绘制）
               if (meta?.aiContentByBlockId !== undefined) {
@@ -520,13 +614,13 @@ function createAiDiffExtension(registry: NotePluginRegistry) {
                   ] ??
                   null;
                 pendingSelectIndex = null;
-                built = buildWithSelection(selectedChangeKey);
+                built = buildWithSelection(selectedChangeKey, cachedBlockNodes);
               } else {
                 selectedChangeKey = null;
               }
             } else if (selectedChangeKey && !built.changeKeysOrdered.includes(selectedChangeKey)) {
               selectedChangeKey = null;
-              built = buildWithSelection(null);
+              built = buildWithSelection(null, cachedBlockNodes);
             }
             return {
               ...runtime,
@@ -534,6 +628,7 @@ function createAiDiffExtension(registry: NotePluginRegistry) {
               pendingSelectIndex,
               changeKeysOrdered: built.changeKeysOrdered,
               decorations: built.decorations,
+              aiBlockPositions: built.aiBlockPositions,
             };
           },
         },
@@ -616,14 +711,20 @@ export function hasAiDiffForBlockInEditorState(
   return Boolean(resolveNoteAiDiffBlock(block, aiContentByBlockId.get(blockId), aiDiff, registry));
 }
 
-export const aiDiffEditorExtension = {
-  id: 'ai-diff.extension',
-  print: {
-    styles: [
-      `.note-print-body [data-ai-diff-current-hidden='true'] {
+export function createAiDiffEditorExtension(
+  aiDiffConfig: NoteRichTextAiDiffConfig
+): NoteEditorExtension {
+  return {
+    id: 'ai-diff.extension',
+    print: {
+      styles: [
+        `.note-print-body [data-ai-diff-current-hidden='true'] {
   display: none !important;
 }`,
+      ],
+    },
+    extensions: ({ registry, services }) => [
+      createAiDiffExtension(registry, services.transactions, aiDiffConfig)(),
     ],
-  },
-  extensions: ({ registry }) => [createAiDiffExtension(registry)()],
-} satisfies NoteEditorExtension;
+  };
+}

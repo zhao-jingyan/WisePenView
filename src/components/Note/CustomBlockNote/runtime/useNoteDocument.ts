@@ -1,26 +1,54 @@
 import { useNewNoteStore } from '@/components/Note/_store/useNewNoteStore';
 import type { NoteSelectionSnapshot, SelectedNoteScope } from '@/domains/Note';
 import { computeNoteBodyContentHash } from '@/domains/Note';
+import { getNearestBlockPos } from '@blocknote/core';
 import { toast } from '@heroui/react';
+import type { Node as PMNode } from '@tiptap/pm/model';
 import { useMemoizedFn, useMount, useUnmount, useUpdateEffect } from 'ahooks';
 import { useRef } from 'react';
 
 import type { CustomBlockNoteProps } from '../index.type';
-import type { CustomBlockNoteEditor } from '../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../registry/noteEditorComposition';
+import type { NoteTransactionService } from '../registry/types';
 import type { NoteEditorDefinition } from './useNoteEditorDefinition';
 
-function buildSelectedNoteScope(editor: CustomBlockNoteEditor): SelectedNoteScope | null {
-  const selectedBlocks = editor.getSelection()?.blocks;
-  if (!selectedBlocks?.length) return null;
-  const startBlockId = selectedBlocks[0]?.id;
-  const endBlockId = selectedBlocks[selectedBlocks.length - 1]?.id;
+interface NoteSelectionRangeSnapshot {
+  doc: PMNode;
+  from: number;
+  to: number;
+}
+
+function readSelectionRange(editor: CustomBlockNoteEditor): NoteSelectionRangeSnapshot | null {
+  const { doc, selection } = editor.prosemirrorState;
+  if (selection.empty || selection.from === selection.to) return null;
+  return { doc, from: selection.from, to: selection.to };
+}
+
+function buildSelectedNoteScope(selection: NoteSelectionRangeSnapshot): SelectedNoteScope | null {
+  let startBlockId: unknown;
+  let endBlockId: unknown;
+  try {
+    startBlockId = getNearestBlockPos(selection.doc, selection.from).node.attrs.id;
+    endBlockId = getNearestBlockPos(selection.doc, selection.to).node.attrs.id;
+  } catch {
+    return null;
+  }
   if (!startBlockId || !endBlockId) return null;
+  if (typeof startBlockId !== 'string' || typeof endBlockId !== 'string') return null;
   return { type: 'blockRange', startBlockId, endBlockId };
+}
+
+function buildSelectionSnapshot(selection: NoteSelectionRangeSnapshot): NoteSelectionSnapshot {
+  return {
+    text: selection.doc.textBetween(selection.from, selection.to),
+    scope: buildSelectedNoteScope(selection),
+  };
 }
 
 export function useNoteDocument({
   editor,
   definition,
+  transactions,
   resourceId,
   blockLocalDocWrites,
   onAskAi,
@@ -28,28 +56,55 @@ export function useNoteDocument({
 }: {
   editor: CustomBlockNoteEditor;
   definition: NoteEditorDefinition;
+  transactions: NoteTransactionService;
   resourceId: string;
   blockLocalDocWrites: boolean;
   onAskAi: CustomBlockNoteProps['onAskAi'];
   onAiDiffBodyContentHashChange: CustomBlockNoteProps['onAiDiffBodyContentHashChange'];
 }) {
   const bodyOnChangeCleanupRef = useRef<(() => void) | null>(null);
-  const selectionSnapshotRef = useRef<NoteSelectionSnapshot | undefined>(undefined);
+  const selectionRangeSnapshotRef = useRef<NoteSelectionRangeSnapshot | null>(null);
   const bodyContentHashTimerRef = useRef<number | null>(null);
+  const bodyContentHashIdleRef = useRef<number | null>(null);
+  const bodyContentHashInvalidatedRef = useRef(false);
 
   const refreshBodyContentHash = useMemoizedFn(() => {
+    bodyContentHashIdleRef.current = null;
+    bodyContentHashInvalidatedRef.current = false;
     const nextHash = computeNoteBodyContentHash(editor.document);
     onAiDiffBodyContentHashChange?.(nextHash);
   });
 
-  const scheduleBodyContentHashRefresh = useMemoizedFn(() => {
-    onAiDiffBodyContentHashChange?.(undefined);
+  const cancelPendingBodyContentHashRefresh = useMemoizedFn(() => {
     if (bodyContentHashTimerRef.current !== null) {
       window.clearTimeout(bodyContentHashTimerRef.current);
+      bodyContentHashTimerRef.current = null;
     }
+    if (bodyContentHashIdleRef.current !== null) {
+      const idleWindow = window as Window & { cancelIdleCallback?: (handle: number) => void };
+      idleWindow.cancelIdleCallback?.(bodyContentHashIdleRef.current);
+      bodyContentHashIdleRef.current = null;
+    }
+  });
+
+  const scheduleBodyContentHashRefresh = useMemoizedFn(() => {
+    if (!bodyContentHashInvalidatedRef.current) {
+      bodyContentHashInvalidatedRef.current = true;
+      onAiDiffBodyContentHashChange?.(undefined);
+    }
+    cancelPendingBodyContentHashRefresh();
     bodyContentHashTimerRef.current = window.setTimeout(() => {
       bodyContentHashTimerRef.current = null;
-      refreshBodyContentHash();
+      const idleWindow = window as Window & {
+        requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      };
+      if (idleWindow.requestIdleCallback) {
+        bodyContentHashIdleRef.current = idleWindow.requestIdleCallback(refreshBodyContentHash, {
+          timeout: 500,
+        });
+        return;
+      }
+      bodyContentHashTimerRef.current = window.setTimeout(refreshBodyContentHash, 0);
     }, 120);
   });
 
@@ -67,14 +122,21 @@ export function useNoteDocument({
       definition.setPmWriteGuardReady(true);
     };
 
-    bodyOnChangeCleanupRef.current = editor.onChange(() => {
+    bodyOnChangeCleanupRef.current = transactions.subscribe(editor, (analysis) => {
+      if (!analysis.docChanged) return;
       activateWriteGuard();
       scheduleBodyContentHashRefresh();
 
       const newNoteState = useNewNoteStore.getState();
+      if (newNoteState.newNoteResourceId !== resourceId || analysis.changedBlocks.length === 0) {
+        return;
+      }
+      const changedBlocks = analysis.changedBlocks
+        .map(({ id }) => editor.getBlock(id))
+        .filter((block): block is NonNullable<typeof block> => Boolean(block));
       if (
-        newNoteState.newNoteResourceId === resourceId &&
-        editor.blocksToMarkdownLossy().trim().length > 0
+        changedBlocks.length > 0 &&
+        editor.blocksToMarkdownLossy(changedBlocks).trim().length > 0
       ) {
         newNoteState.markNewNoteDirty(resourceId);
       }
@@ -94,30 +156,31 @@ export function useNoteDocument({
   useUnmount(() => {
     bodyOnChangeCleanupRef.current?.();
     bodyOnChangeCleanupRef.current = null;
-    if (bodyContentHashTimerRef.current !== null) {
-      window.clearTimeout(bodyContentHashTimerRef.current);
-      bodyContentHashTimerRef.current = null;
-    }
+    cancelPendingBodyContentHashRefresh();
   });
 
   const captureSelection = () => {
-    selectionSnapshotRef.current = {
-      text: editor.getSelectedText(),
-      scope: buildSelectedNoteScope(editor),
-    };
+    const selection = readSelectionRange(editor);
+    if (selection) selectionRangeSnapshotRef.current = selection;
   };
 
   const handleAskAi = () => {
-    const selectedText =
-      editor.getSelectedText().trim() || selectionSnapshotRef.current?.text.trim() || '';
+    const selection = readSelectionRange(editor) ?? selectionRangeSnapshotRef.current;
+    const snapshot = selection ? buildSelectionSnapshot(selection) : null;
+    const selectedText = snapshot?.text.trim() ?? '';
     if (!selectedText) {
       toast.info('请先选中一段文字再问 AI');
       return;
     }
 
+    if (bodyContentHashInvalidatedRef.current) {
+      cancelPendingBodyContentHashRefresh();
+      refreshBodyContentHash();
+    }
+
     onAskAi({
       text: selectedText,
-      scope: buildSelectedNoteScope(editor) ?? selectionSnapshotRef.current?.scope ?? null,
+      scope: snapshot?.scope ?? null,
     });
   };
 

@@ -1,4 +1,4 @@
-import { Avatar } from '@heroui/react';
+import AppAvatar from '@/components/Avatar';
 import type { TableMemberCellProps } from './index.type';
 import styles from './style.module.less';
 
@@ -8,10 +8,10 @@ function TableMemberCell({ name, subline, avatarSrc }: TableMemberCellProps) {
 
   return (
     <div className={styles.memberCell}>
-      <Avatar aria-label={displayName} className={styles.avatar}>
-        {avatarSrc ? <Avatar.Image alt={displayName} src={avatarSrc} /> : null}
-        <Avatar.Fallback>{avatarText}</Avatar.Fallback>
-      </Avatar>
+      <AppAvatar aria-label={displayName} className={styles.avatar}>
+        {avatarSrc ? <AppAvatar.Image alt={displayName} src={avatarSrc} /> : null}
+        <AppAvatar.Fallback>{avatarText}</AppAvatar.Fallback>
+      </AppAvatar>
       <div className={styles.meta}>
         <span className={styles.name}>{displayName}</span>
         {subline ? <span className={styles.subline}>{subline}</span> : null}

@@ -59,29 +59,29 @@ function FavoriteCollectionList({
               </span>
               <span className={styles.collectionListItemMeta}>{collection.itemCount}</span>
             </span>
-            <span
-              className={styles.collectionListItemActions}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <Dropdown>
-                <Dropdown.Trigger>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    isIconOnly
-                    aria-label={`${collection.collectionName ?? '我的收藏'}操作`}
-                    className={styles.collectionMoreButton}
-                  >
-                    <EllipsisVertical size={16} aria-hidden="true" />
-                  </Button>
-                </Dropdown.Trigger>
-                <Dropdown.Popover placement="bottom end">
-                  <Dropdown.Menu aria-label="收藏夹操作">
-                    <Dropdown.Item id="edit" onAction={() => onEdit(collection)}>
-                      编辑
-                    </Dropdown.Item>
-                    {!collection.isDefault ? (
+            {!collection.isDefault ? (
+              <span
+                className={styles.collectionListItemActions}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <Dropdown>
+                  <Dropdown.Trigger>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      isIconOnly
+                      aria-label={`${collection.collectionName ?? '我的收藏'}操作`}
+                      className={styles.collectionMoreButton}
+                    >
+                      <EllipsisVertical size={16} aria-hidden="true" />
+                    </Button>
+                  </Dropdown.Trigger>
+                  <Dropdown.Popover placement="bottom end">
+                    <Dropdown.Menu aria-label="收藏夹操作">
+                      <Dropdown.Item id="edit" onAction={() => onEdit(collection)}>
+                        编辑
+                      </Dropdown.Item>
                       <Dropdown.Item
                         id="delete"
                         variant="danger"
@@ -89,11 +89,11 @@ function FavoriteCollectionList({
                       >
                         删除
                       </Dropdown.Item>
-                    ) : null}
-                  </Dropdown.Menu>
-                </Dropdown.Popover>
-              </Dropdown>
-            </span>
+                    </Dropdown.Menu>
+                  </Dropdown.Popover>
+                </Dropdown>
+              </span>
+            ) : null}
           </ListBoxItem>
         ))}
       </ListBox>

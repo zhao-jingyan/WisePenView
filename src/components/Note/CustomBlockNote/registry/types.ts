@@ -9,6 +9,8 @@ import type {
   StyleSchema,
 } from '@blocknote/core';
 import type { DefaultReactSuggestionItem } from '@blocknote/react';
+import type { Node as PMNode } from '@tiptap/pm/model';
+import type { Transaction } from '@tiptap/pm/state';
 import type { EditorProps } from '@tiptap/pm/view';
 import type { LucideIcon } from 'lucide-react';
 
@@ -17,6 +19,49 @@ import type { AiDiffDisplayMode } from '@/domains/Note';
 export type NoteInlineContentSpecs = Record<string, InlineContentSpec<InlineContentConfig>>;
 
 export type PluginEditor = BlockNoteEditor<BlockSchema, InlineContentSchema, StyleSchema>;
+
+export interface NoteTransactionRange {
+  from: number;
+  to: number;
+}
+
+export interface NoteChangedBlock {
+  id: string;
+  node: PMNode;
+  pos: number;
+}
+
+export interface NoteTransactionAnalysis {
+  docChanged: boolean;
+  changedRanges: readonly NoteTransactionRange[];
+  changedBlocks: readonly NoteChangedBlock[];
+  removedBlockIds: readonly string[];
+  structureChanged: boolean;
+}
+
+export interface NoteTransactionUpdate {
+  transaction: Transaction;
+  appendedTransactions: Transaction[];
+}
+
+export interface NoteTransactionEditor {
+  _tiptapEditor: {
+    on: (event: 'update', listener: (update: NoteTransactionUpdate) => void) => void;
+    off: (event: 'update', listener: (update: NoteTransactionUpdate) => void) => void;
+  };
+}
+
+export interface NoteTransactionService {
+  analyze: (transactions: readonly Transaction[]) => NoteTransactionAnalysis;
+  subscribe: (
+    editor: NoteTransactionEditor,
+    listener: (analysis: NoteTransactionAnalysis) => void
+  ) => () => void;
+}
+
+export interface NoteEditorServices {
+  transactions: NoteTransactionService;
+}
 
 export type NoteCapabilityDeclaration =
   | { support: 'default' }
@@ -245,10 +290,12 @@ export interface NoteEditorExtension extends NotePluginNodeBase {
 
 interface NotePluginContext {
   registry: NotePluginRegistry;
+  services: NoteEditorServices;
 }
 
 export interface NotePluginRegistry {
   root: NotePluginBundle;
+  services: NoteEditorServices;
   contentPlugins: readonly NoteContentPlugin[];
   blockPlugins: ReadonlyMap<string, NoteBlockPlugin>;
   inlinePlugins: ReadonlyMap<string, NoteInlinePlugin>;

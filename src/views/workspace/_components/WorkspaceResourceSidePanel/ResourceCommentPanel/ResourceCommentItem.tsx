@@ -1,6 +1,7 @@
+import AppAvatar from '@/components/Avatar';
 import type { ResourceComment } from '@/domains/Interact';
 import { formatTimestampToDateTime } from '@/utils/format/formatTime';
-import { Avatar, Button, Tooltip } from '@heroui/react';
+import { Button, Tooltip } from '@heroui/react';
 import { Heart, MessageCircle, Trash2 } from 'lucide-react';
 import styles from './style.module.less';
 import { getAuthorInitial, hasVisibleCommentContent } from './utils';
@@ -35,12 +36,12 @@ function ResourceCommentItem({
 
   return (
     <article className={styles.commentItem}>
-      <Avatar aria-label={comment.author.name} className={styles.avatar}>
+      <AppAvatar aria-label={comment.author.name} className={styles.avatar}>
         {comment.author.avatar ? (
-          <Avatar.Image src={comment.author.avatar} alt={comment.author.name} />
+          <AppAvatar.Image src={comment.author.avatar} alt={comment.author.name} />
         ) : null}
-        <Avatar.Fallback>{getAuthorInitial(comment.author.name)}</Avatar.Fallback>
-      </Avatar>
+        <AppAvatar.Fallback>{getAuthorInitial(comment.author.name)}</AppAvatar.Fallback>
+      </AppAvatar>
 
       <div className={styles.commentBody}>
         <div className={styles.authorLine}>

@@ -31,7 +31,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { Button, toast, type Selection, type SortDescriptor } from '@heroui/react';
-import { useMount, useRequest, useUnmount, useUpdateEffect } from 'ahooks';
+import { useMount, useRequest, useUpdateEffect } from 'ahooks';
 import { Trash2 } from 'lucide-react';
 import {
   forwardRef,
@@ -354,14 +354,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   const [deleteTarget, setDeleteTarget] = useState<DriveActionTarget | null>(null);
   const [batchMode, setBatchMode] = useState(false);
   const beforeTrashNodeIdRef = useRef<string | null>(null);
-  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const doubleClickRef = useRef(false);
-
-  useUnmount(() => {
-    if (clickTimerRef.current) {
-      clearTimeout(clickTimerRef.current);
-    }
-  });
   const draggingRowKeysRef = useRef<Set<string>>(new Set());
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -778,22 +770,8 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     (row: DriveTableRow, ctx: FolderTableRowPressContext) => {
       if (row.node.type === 'loading') return;
 
-      // 清除上一次单击的待激活定时器
-      if (clickTimerRef.current) {
-        clearTimeout(clickTimerRef.current);
-        clickTimerRef.current = null;
-      }
-
-      // 已选中行单击：延迟激活，留给系统双击检测窗口
-      // 若在延迟内触发 dblclick 事件，handleDoubleClick 会标记 doubleClickRef 并取消激活
       if (!ctx.modifierKey && selectedRowKeys.size === 1 && selectedRowKeys.has(row.id)) {
-        doubleClickRef.current = false;
-        clickTimerRef.current = setTimeout(() => {
-          clickTimerRef.current = null;
-          if (!doubleClickRef.current) {
-            handleRowActivate(row);
-          }
-        }, 550);
+        handleRowActivate(row);
         return;
       }
 
@@ -801,42 +779,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       setSelectedRowKeys(nextSelectedRowKeys);
     },
     [handleRowActivate, selectedRowKeys]
-  );
-
-  const handleDoubleClick = useCallback(
-    (event: React.MouseEvent<HTMLElement>) => {
-      if (batchMode) return;
-
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-
-      const rowEl = target.closest<HTMLElement>('[data-folder-row-id]');
-      if (!rowEl) return;
-      const rowId = rowEl.getAttribute('data-folder-row-id');
-      if (!rowId) return;
-
-      const tableRow = rowMap.get(rowId);
-      if (!tableRow || tableRow.entryType === 'loading') return;
-
-      // 标记双击已发生，阻止 handleRowSelect 中的定时器激活
-      doubleClickRef.current = true;
-      if (clickTimerRef.current) {
-        clearTimeout(clickTimerRef.current);
-        clickTimerRef.current = null;
-      }
-
-      // 双击文件名 → 重命名；双击其他区域 → 打开/进入
-      const isNameColumn = target.closest('[data-name-column="true"]') !== null;
-      if (isNameColumn && !isDriveSystemFolderNode(tableRow.node)) {
-        const actionTarget = toDriveActionTarget(tableRow.node);
-        if (actionTarget && actionTarget.type !== 'link') {
-          handleOpenRename(actionTarget);
-          return;
-        }
-      }
-      handleRowActivate(tableRow);
-    },
-    [batchMode, rowMap, handleOpenRename, handleRowActivate]
   );
 
   const resolveDragSourceIds = useCallback(
@@ -959,7 +901,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       <main className={styles.listArea}>
         <div className={styles.driveFrame}>
           <div className={styles.driveBody}>
-            <div className={styles.tablePanel} onDoubleClick={handleDoubleClick}>
+            <div className={styles.tablePanel}>
               <FolderTable<DriveTableRow>
                 ariaLabel="云盘文件列表"
                 items={rows}

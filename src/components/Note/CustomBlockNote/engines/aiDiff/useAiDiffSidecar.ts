@@ -4,12 +4,12 @@ import type * as Y from 'yjs';
 
 import type { AiDiffDisplayMode } from '@/domains/Note';
 import { useEffectForce } from '@/hooks/useEffectForce';
-import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../../registry/noteEditorComposition';
 import type { NotePluginRegistry } from '../../registry/types';
 import { applyNoteAiDiffAction, type NoteAiDiffActionRequest } from './action';
 import { resolveNoteAiDiffBlock } from './contentState';
 import { syncAiDiffExtensionState } from './extension';
-import { observeAiContent, readAllAiContent } from './store';
+import { getAiContentStore, observeAiContent, readAllAiContent } from './store';
 
 function hasActiveAiDiff(
   editor: CustomBlockNoteEditor,
@@ -50,6 +50,8 @@ export function useAiDiffSidecar(params: {
   const [present, setPresent] = useState(false);
   const lastPresenceRef = useRef(false);
   const queuedFrameRef = useRef<number | null>(null);
+  const queuedExtensionSyncRef = useRef(false);
+  const aiContentByBlockIdRef = useRef<ReadonlyMap<string, unknown>>(new Map());
 
   const applyAction = useMemoizedFn((request: NoteAiDiffActionRequest) => {
     undoManager.stopCapturing();
@@ -58,14 +60,16 @@ export function useAiDiffSidecar(params: {
     undoManager.stopCapturing();
   });
 
-  const sync = useMemoizedFn(() => {
-    const aiContentByBlockId = readAllAiContent(doc);
-    syncAiDiffExtensionState(editor.prosemirrorView, {
-      displayMode,
-      aiContentByBlockId,
-      actionsEnabled: !readOnly,
-      onAction: applyAction,
-    });
+  const sync = useMemoizedFn((syncExtension: boolean) => {
+    const aiContentByBlockId = aiContentByBlockIdRef.current;
+    if (syncExtension) {
+      syncAiDiffExtensionState(editor.prosemirrorView, {
+        displayMode,
+        aiContentByBlockId,
+        actionsEnabled: !readOnly,
+        onAction: applyAction,
+      });
+    }
     const nextPresence = hasActiveAiDiff(editor, registry, aiContentByBlockId);
     if (lastPresenceRef.current === nextPresence) return;
     lastPresenceRef.current = nextPresence;
@@ -79,23 +83,44 @@ export function useAiDiffSidecar(params: {
    * cleanup：移除 Yjs 监听并取消待执行帧，避免旧文档继续刷新编辑器。
    */
   useEffectForce(() => {
-    const scheduleSync = () => {
-      if (queuedFrameRef.current !== null) window.cancelAnimationFrame(queuedFrameRef.current);
+    const scheduleSync = (syncExtension: boolean) => {
+      if (!syncExtension && aiContentByBlockIdRef.current.size === 0) return;
+      queuedExtensionSyncRef.current ||= syncExtension;
+      if (queuedFrameRef.current !== null) return;
       queuedFrameRef.current = window.requestAnimationFrame(() => {
         queuedFrameRef.current = null;
-        sync();
+        const shouldSyncExtension = queuedExtensionSyncRef.current;
+        queuedExtensionSyncRef.current = false;
+        sync(shouldSyncExtension);
       });
     };
-    const unobserveAiContent = observeAiContent(doc, scheduleSync);
-    noteFragment.observeDeep(scheduleSync);
-    scheduleSync();
+    const store = getAiContentStore(doc);
+    aiContentByBlockIdRef.current = readAllAiContent(doc);
+    const handleAiContentChange = (event: Y.YMapEvent<unknown>) => {
+      const next = new Map(aiContentByBlockIdRef.current);
+      event.keysChanged.forEach((key) => {
+        const blockId = String(key);
+        if (store.has(blockId)) {
+          next.set(blockId, store.get(blockId));
+        } else {
+          next.delete(blockId);
+        }
+      });
+      aiContentByBlockIdRef.current = next;
+      scheduleSync(true);
+    };
+    const unobserveAiContent = observeAiContent(doc, handleAiContentChange);
+    const observeBodyChange = () => scheduleSync(false);
+    noteFragment.observeDeep(observeBodyChange);
+    scheduleSync(true);
     return () => {
       unobserveAiContent();
-      noteFragment.unobserveDeep(scheduleSync);
+      noteFragment.unobserveDeep(observeBodyChange);
       if (queuedFrameRef.current !== null) {
         window.cancelAnimationFrame(queuedFrameRef.current);
         queuedFrameRef.current = null;
       }
+      queuedExtensionSyncRef.current = false;
     };
   }, [displayMode, doc, editor, noteFragment, readOnly, registry, sync]);
 

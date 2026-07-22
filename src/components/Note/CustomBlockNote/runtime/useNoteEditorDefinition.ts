@@ -17,7 +17,7 @@ import {
   collectNoteEditorExtensions,
   collectNoteEditorProps,
   notePluginRegistry,
-} from '../noteEditorComposition';
+} from '../registry/noteEditorComposition';
 
 type CreateBlockNoteOptions = NonNullable<Parameters<typeof useCreateBlockNote>[0]>;
 type BlockNoteCollaborationConfig = NonNullable<CreateBlockNoteOptions['collaboration']>;

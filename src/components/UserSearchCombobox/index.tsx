@@ -1,6 +1,7 @@
+import AppAvatar from '@/components/Avatar';
 import { Input } from '@/components/Input';
 import type { UserSearchUser } from '@/domains/User';
-import { Avatar, Button, TextField } from '@heroui/react';
+import { Button, TextField } from '@heroui/react';
 import { useRequest, useUnmount } from 'ahooks';
 import clsx from 'clsx';
 import type { KeyboardEvent } from 'react';
@@ -183,10 +184,10 @@ function UserSearchCombobox({
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => selectUser(user)}
       >
-        <Avatar aria-label={displayName} className={styles.avatar}>
-          {user.avatar ? <Avatar.Image alt={displayName} src={user.avatar} /> : null}
-          <Avatar.Fallback>{getDisplayInitial(displayName)}</Avatar.Fallback>
-        </Avatar>
+        <AppAvatar aria-label={displayName} className={styles.avatar}>
+          {user.avatar ? <AppAvatar.Image alt={displayName} src={user.avatar} /> : null}
+          <AppAvatar.Fallback>{getDisplayInitial(displayName)}</AppAvatar.Fallback>
+        </AppAvatar>
         <span className={styles.optionMeta}>
           <span className={styles.optionName}>{displayName}</span>
           <span className={styles.optionDescription}>{getUserDescription(user)}</span>

@@ -42,7 +42,10 @@ export function clearAiContentEntries(doc: Y.Doc, blockIds: readonly string[]): 
   blockIds.forEach((blockId) => store.delete(blockId));
 }
 
-export function observeAiContent(doc: Y.Doc, listener: () => void): () => void {
+export function observeAiContent(
+  doc: Y.Doc,
+  listener: (event: Y.YMapEvent<unknown>) => void
+): () => void {
   const store = getAiContentStore(doc);
   store.observe(listener);
   return () => store.unobserve(listener);

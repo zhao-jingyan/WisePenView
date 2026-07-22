@@ -1,4 +1,4 @@
-import { Avatar } from '@heroui/react';
+import AppAvatar from '@/components/Avatar';
 
 import type { UserCapsuleProps } from './index.type';
 import styles from './style.module.less';
@@ -9,10 +9,10 @@ function UserCapsule({ name, avatar, variant = 'bare' }: UserCapsuleProps) {
 
   return (
     <span className={`${styles.userCapsule} ${styles[variant]}`}>
-      <Avatar aria-label={displayName} className={styles.avatar}>
-        {avatar && <Avatar.Image alt={displayName} src={avatar} />}
-        <Avatar.Fallback className={styles.avatarFallback}>{avatarText}</Avatar.Fallback>
-      </Avatar>
+      <AppAvatar aria-label={displayName} className={styles.avatar}>
+        {avatar && <AppAvatar.Image alt={displayName} src={avatar} />}
+        <AppAvatar.Fallback className={styles.avatarFallback}>{avatarText}</AppAvatar.Fallback>
+      </AppAvatar>
       <span className={styles.name}>{displayName}</span>
     </span>
   );

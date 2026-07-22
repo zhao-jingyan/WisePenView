@@ -8,7 +8,7 @@ import type { XmlFragment } from 'yjs';
 import * as Y from 'yjs';
 
 import type { NoteInlineCommentAnchor, NoteInlineCommentDraft } from '@/domains/Note';
-import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../../registry/noteEditorComposition';
 import type { NotePluginRegistry } from '../../registry/types';
 import { getRootDomSelection } from '../editor/dom';
 
@@ -32,6 +32,24 @@ function decodeBytes(value: string): Uint8Array {
 
 function encodeRelativePosition(position: Y.RelativePosition): string {
   return encodeBytes(Y.encodeRelativePosition(position));
+}
+
+function createLeftAssociatedRelativePosition(
+  position: number,
+  binding: ProsemirrorBinding
+): Y.RelativePosition {
+  const previousPosition = absolutePositionToRelativePosition(
+    position - 1,
+    binding.type,
+    binding.mapping
+  );
+  // y-prosemirror 未暴露 assoc：关联到结束点左侧内容，避免边界后插入的文字扩展批注。
+  return new Y.RelativePosition(
+    previousPosition.type,
+    previousPosition.tname,
+    previousPosition.item,
+    -1
+  );
 }
 
 function readBinding(editor: CustomBlockNoteEditor): ProsemirrorBinding | null {
@@ -119,13 +137,11 @@ function readSelectedRange(
   editor: CustomBlockNoteEditor,
   registry: NotePluginRegistry
 ): SelectedRange | null {
-  const domRange = readDomSelectedRange(editor, registry);
-  if (domRange) return domRange;
   const selection = editor.prosemirrorState.selection;
   if (!selection.empty && selection.from !== selection.to) {
     return { from: selection.from, to: selection.to };
   }
-  return null;
+  return readDomSelectedRange(editor, registry);
 }
 
 function projectSelectedText(
@@ -169,9 +185,7 @@ export function captureInlineCommentDraft(
       start: encodeRelativePosition(
         absolutePositionToRelativePosition(range.from, binding.type, binding.mapping)
       ),
-      end: encodeRelativePosition(
-        absolutePositionToRelativePosition(range.to, binding.type, binding.mapping)
-      ),
+      end: encodeRelativePosition(createLeftAssociatedRelativePosition(range.to, binding)),
     },
     quoteText,
   };
@@ -181,25 +195,21 @@ export function resolveInlineCommentAnchor(params: {
   anchor: NoteInlineCommentAnchor;
   fragment: XmlFragment;
   binding: ProsemirrorBinding;
-}): { from: number; to: number } | null {
+}): { from: number; to: number; fromAssoc: -1 | 1; toAssoc: -1 | 1 } | null {
   const { anchor, fragment, binding } = params;
   const doc = fragment.doc;
   if (!doc) return null;
   try {
-    const start = relativePositionToAbsolutePosition(
-      doc,
-      fragment,
-      Y.decodeRelativePosition(decodeBytes(anchor.start)),
-      binding.mapping
-    );
-    const end = relativePositionToAbsolutePosition(
-      doc,
-      fragment,
-      Y.decodeRelativePosition(decodeBytes(anchor.end)),
-      binding.mapping
-    );
+    const relativeStart = Y.decodeRelativePosition(decodeBytes(anchor.start));
+    const relativeEnd = Y.decodeRelativePosition(decodeBytes(anchor.end));
+    const start = relativePositionToAbsolutePosition(doc, fragment, relativeStart, binding.mapping);
+    const end = relativePositionToAbsolutePosition(doc, fragment, relativeEnd, binding.mapping);
     if (start === null || end === null || start === end) return null;
-    return { from: Math.min(start, end), to: Math.max(start, end) };
+    const startAssoc = relativeStart.assoc < 0 ? -1 : 1;
+    const endAssoc = relativeEnd.assoc < 0 ? -1 : 1;
+    return start < end
+      ? { from: start, to: end, fromAssoc: startAssoc, toAssoc: endAssoc }
+      : { from: end, to: start, fromAssoc: endAssoc, toAssoc: startAssoc };
   } catch {
     return null;
   }

@@ -15,62 +15,16 @@ import { renderSortableColumnLabel } from '../shared/TableSortHeader/renderSorta
 import { TableLoadMoreRow, TableRefreshIndicator } from '../shared/TableStatusRows';
 import TableSummaryFooter from '../shared/TableSummaryFooter';
 import TableCellAlign from '../shared/cells/CellAlign';
-import type { DataTableProps, DataTableRowContext, DataTableRowPressContext } from './index.type';
+import type { DataTableProps, DataTableRowContext } from './index.type';
 import styles from './style.module.less';
 
 import { Table } from '@heroui/react';
 import { ArrowUpDown } from 'lucide-react';
-import {
-  useCallback,
-  useMemo,
-  useRef,
-  type CSSProperties,
-  type KeyboardEvent,
-  type MouseEvent,
-  type UIEvent,
-} from 'react';
+import { useCallback, useMemo, useRef, type CSSProperties, type UIEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import DataTableLoadingSkeleton from './parts/LoadingSkeleton';
 
 const LOAD_MORE_THRESHOLD_PX = 48;
-const INTERACTIVE_ROW_TARGET_SELECTOR = [
-  'a',
-  'button',
-  'input',
-  'select',
-  'textarea',
-  '[contenteditable="true"]',
-  '[role="button"]',
-  '[role="checkbox"]',
-  '[role="link"]',
-  '[role="menuitem"]',
-  '[data-row-click-ignore="true"]',
-].join(',');
-
-function toRowPressContext(
-  event: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>
-): DataTableRowPressContext {
-  const modifierKey = event.metaKey || event.ctrlKey;
-  return {
-    metaKey: event.metaKey,
-    ctrlKey: event.ctrlKey,
-    shiftKey: event.shiftKey,
-    modifierKey,
-  };
-}
-
-function getDelegatedRowId(
-  event: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>
-): string | null {
-  const target = event.target;
-  if (!(target instanceof Element) || target.closest(INTERACTIVE_ROW_TARGET_SELECTOR)) {
-    return null;
-  }
-  const row = target.closest<HTMLElement>('[data-table-row-id]');
-  if (!row || !event.currentTarget.contains(row)) return null;
-  return row.getAttribute('data-table-row-id');
-}
-
 function getRowTextValue<T extends object>(row: T, rowKey: keyof T & string): string {
   const value = row[rowKey];
   return value == null ? '' : String(value);
@@ -104,9 +58,6 @@ function DataTable<T extends object>({
   pagination,
   summary,
   getRowClassName,
-  onRowSelect,
-  onRowActivate,
-  selectedRowKey,
   sortDescriptor,
   onSortChange,
 }: DataTableProps<T>) {
@@ -178,47 +129,6 @@ function DataTable<T extends object>({
     [columns, items, rowKey, sortDescriptor]
   );
 
-  const rowMap = useMemo(
-    () => new Map(sortedItems.map((row) => [String(row[rowKey]), row])),
-    [rowKey, sortedItems]
-  );
-  const hasRowInteraction = Boolean(onRowSelect || onRowActivate);
-  const handleBodyClick = (event: MouseEvent<HTMLElement>) => {
-    if (event.defaultPrevented || !hasRowInteraction) return;
-    const rowId = getDelegatedRowId(event);
-    if (!rowId) return;
-    const row = rowMap.get(rowId);
-    if (!row) return;
-    const pressContext = toRowPressContext(event);
-    if (onRowSelect) {
-      if (!pressContext.modifierKey && selectedRowKey === rowId) {
-        onRowActivate?.(row);
-      } else {
-        onRowSelect(row, pressContext);
-      }
-      return;
-    }
-    onRowActivate?.(row);
-  };
-  const handleBodyKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if ((event.key !== 'Enter' && event.key !== ' ') || !hasRowInteraction) return;
-    const rowId = getDelegatedRowId(event);
-    if (!rowId) return;
-    const row = rowMap.get(rowId);
-    if (!row) return;
-    event.preventDefault();
-    const pressContext = toRowPressContext(event);
-    if (onRowSelect) {
-      if (!pressContext.modifierKey && selectedRowKey === rowId) {
-        onRowActivate?.(row);
-      } else {
-        onRowSelect(row, pressContext);
-      }
-      return;
-    }
-    onRowActivate?.(row);
-  };
-
   return (
     <div className={joinClassNames(styles.shell, className)}>
       {showHeaderBar ? (
@@ -246,8 +156,6 @@ function DataTable<T extends object>({
         <Table.ScrollContainer
           ref={scrollRef}
           className={styles.scrollContainer}
-          onClick={hasRowInteraction ? handleBodyClick : undefined}
-          onKeyDown={hasRowInteraction ? handleBodyKeyDown : undefined}
           {...scrollContainerProps}
         >
           <Table.Content
@@ -314,14 +222,7 @@ function DataTable<T extends object>({
                         key={rowId}
                         id={rowId}
                         textValue={getRowTextValue(row, rowKey)}
-                        data-table-row-id={rowId}
-                        data-selected={selectedRowKey === rowId ? 'true' : undefined}
-                        className={joinClassNames(
-                          styles.bodyRow,
-                          hasRowInteraction ? styles.selectableRow : undefined,
-                          selectedRowKey === rowId ? styles.selectedRow : undefined,
-                          getRowClassName?.(row, ctx)
-                        )}
+                        className={joinClassNames(styles.bodyRow, getRowClassName?.(row, ctx))}
                       >
                         {columns.map((column) => (
                           <Table.Cell

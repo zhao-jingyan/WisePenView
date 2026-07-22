@@ -12,6 +12,7 @@ const CLOSE_DELAY_MS = 280;
 
 interface MessageHistoryNavigatorProps {
   messages: WisePenUIMessage[];
+  scrollAnchorOffsetRatio: number;
 }
 
 interface UserMessageAnchor {
@@ -69,7 +70,10 @@ function scrollActiveItemIntoView(panel: HTMLDivElement | null, activeAnchorId: 
 }
 
 /** 右侧垂直居中横条轨；hover / 点击展开文案浮层 */
-function MessageHistoryNavigator({ messages }: MessageHistoryNavigatorProps) {
+function MessageHistoryNavigator({
+  messages,
+  scrollAnchorOffsetRatio,
+}: MessageHistoryNavigatorProps) {
   const anchors = useUserMessageAnchors(messages);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -101,7 +105,11 @@ function MessageHistoryNavigator({ messages }: MessageHistoryNavigatorProps) {
   };
 
   const handleJumpToMessage = (messageId: string) => {
-    scrollToMessage(messageId, { behavior: 'smooth', align: 'start' });
+    scrollToMessage(messageId, {
+      behavior: 'smooth',
+      align: 'start',
+      scrollMargin: (viewport) => viewport.clientHeight * scrollAnchorOffsetRatio,
+    });
     setOpen(false);
   };
 
@@ -165,11 +173,7 @@ function MessageHistoryNavigator({ messages }: MessageHistoryNavigatorProps) {
           clearTimers();
           setOpen((prev) => !prev);
         }}
-      >
-        {anchors.map((anchor) => (
-          <HistoryBar key={anchor.id} active={anchor.id === activeAnchorId} />
-        ))}
-      </button>
+      ></button>
 
       <div
         ref={panelRef}
@@ -177,7 +181,8 @@ function MessageHistoryNavigator({ messages }: MessageHistoryNavigatorProps) {
         className={styles.historyNavigatorRailPanel}
         role="listbox"
         aria-label="历史提问"
-        hidden={!open}
+        aria-hidden={!open}
+        inert={!open}
       >
         {anchors.map((anchor) => {
           const isActive = anchor.id === activeAnchorId;

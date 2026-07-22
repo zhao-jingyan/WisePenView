@@ -5,9 +5,9 @@ import { useAppTheme } from '@/theme';
 import { AiDiffBulkActions } from '../engines/aiDiff/BulkActions';
 import { NoteEditorReadOnlyProvider } from '../engines/editor/readOnly';
 import type { CustomBlockNoteProps } from '../index.type';
-import { notePluginRegistry, type CustomBlockNoteEditor } from '../noteEditorComposition';
+import { notePluginRegistry, type CustomBlockNoteEditor } from '../registry/noteEditorComposition';
+import type { NoteEditorRuntimeCoordinator } from '../registry/useNoteEditorRuntimeCoordinator';
 import styles from '../style.module.less';
-import type { NoteEditorRuntimeCoordinator } from '../useNoteEditorRuntimeCoordinator';
 import NoteSideMenu from './sideMenu';
 import NoteSlashMenu from './slashMenu';
 import NoteTableHandles from './tableHandles';
@@ -27,6 +27,8 @@ export function NoteEditorSurface({
     collaboration: { doc },
     state: { readOnly },
     portalContainers: { aiBulkActions: aiBulkActionsPortalContainer },
+    onOpenFind,
+    isFindModeActive,
   } = props;
 
   return (
@@ -57,6 +59,8 @@ export function NoteEditorSurface({
           <NoteToolbar
             onAskAi={runtimeCoordinator.document.handleAskAi}
             onAddComment={runtimeCoordinator.inlineComments.handleCreate}
+            onOpenFind={onOpenFind}
+            isFindModeActive={isFindModeActive}
           />
           <NoteSlashMenu editor={editor} plugins={notePluginRegistry.contentPlugins} />
           <NoteSideMenu plugins={notePluginRegistry.contentPlugins} />

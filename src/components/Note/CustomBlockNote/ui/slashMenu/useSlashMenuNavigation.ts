@@ -1,7 +1,7 @@
 import { useEffectForce } from '@/hooks/useEffectForce';
 import type { DefaultReactSuggestionItem } from '@blocknote/react';
 import { useRef, useState } from 'react';
-import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../../registry/noteEditorComposition';
 
 const EDGE_ANCHOR_ITEM_COUNT = 2;
 const SCROLL_EDGE_TOLERANCE = 1;

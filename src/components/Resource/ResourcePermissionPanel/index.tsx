@@ -1,3 +1,4 @@
+import AppAvatar from '@/components/Avatar';
 import ResourcePermissionActionIcon from '@/components/Drive/common/resourcePermissionActionIcon';
 import {
   areResourcePermissionActionsEqualByOptions,
@@ -18,7 +19,7 @@ import {
 } from '@/domains/Resource';
 import type { UserSearchUser } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
-import { Avatar, Button, Chip, ListBox, Skeleton, toast } from '@heroui/react';
+import { Button, Chip, ListBox, Skeleton, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { ChevronDown, Trash2, UserPlus } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
@@ -631,10 +632,10 @@ function ResourcePermissionPanel({
     return (
       <div key={getSubjectRenderKey(subject)} role="listitem" className={styles.subjectItem}>
         <div className={styles.subjectContent}>
-          <Avatar aria-label={subject.name} className={styles.avatar}>
-            {avatarSrc ? <Avatar.Image alt={subject.name} src={avatarSrc} /> : null}
-            <Avatar.Fallback>{getDisplayInitial(subject.name)}</Avatar.Fallback>
-          </Avatar>
+          <AppAvatar aria-label={subject.name} className={styles.avatar}>
+            {avatarSrc ? <AppAvatar.Image alt={subject.name} src={avatarSrc} /> : null}
+            <AppAvatar.Fallback>{getDisplayInitial(subject.name)}</AppAvatar.Fallback>
+          </AppAvatar>
           <div className={styles.subjectMeta}>
             <div className={styles.subjectNameRow}>
               <span className={styles.subjectName}>{subject.name}</span>

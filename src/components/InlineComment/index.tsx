@@ -1,10 +1,11 @@
+import AppAvatar from '@/components/Avatar';
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
 import AppDisplayDialog from '@/components/Overlay/AppDisplayDialog';
 import AppModal from '@/components/Overlay/AppModal';
 import type { InlineCommentItem, InlineCommentReactionGroup } from '@/domains/InlineComment';
 import { parseErrorMessage } from '@/utils/error';
 import { formatTimestampToDateTime } from '@/utils/format/formatTime';
-import { Avatar, Button, Tooltip, toast } from '@heroui/react';
+import { Button, Tooltip, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Check, RotateCcw, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
@@ -83,12 +84,12 @@ function CommentItem({
 
   return (
     <div className={styles.comment}>
-      <Avatar aria-label={item.author.name} className={styles.avatar}>
+      <AppAvatar aria-label={item.author.name} className={styles.avatar}>
         {item.author.avatar ? (
-          <Avatar.Image src={item.author.avatar} alt={item.author.name} />
+          <AppAvatar.Image src={item.author.avatar} alt={item.author.name} />
         ) : null}
-        <Avatar.Fallback>{getAuthorInitial(item.author.name)}</Avatar.Fallback>
-      </Avatar>
+        <AppAvatar.Fallback>{getAuthorInitial(item.author.name)}</AppAvatar.Fallback>
+      </AppAvatar>
       <div className={styles.commentBody}>
         <div className={styles.commentHeader}>
           <div className={styles.authorMeta}>

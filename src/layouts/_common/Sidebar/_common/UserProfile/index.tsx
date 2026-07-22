@@ -1,9 +1,10 @@
 import logoImg from '@/assets/images/logo-icon.png';
+import AppAvatar from '@/components/Avatar';
 import AppDisplayDialog from '@/components/Overlay/AppDisplayDialog';
 import { useUserService } from '@/domains';
 import type { User } from '@/domains/User';
 import { IDENTITY } from '@/domains/User';
-import { Avatar, Dropdown } from '@heroui/react';
+import { Dropdown } from '@heroui/react';
 import { useMount } from 'ahooks';
 import clsx from 'clsx';
 import {
@@ -85,10 +86,10 @@ function UserProfile({ collapsed, menuMode = 'app' }: UserProfileProps) {
   };
 
   const userAvatar = (
-    <Avatar size="sm" className={styles.avatar}>
-      {user?.avatar ? <Avatar.Image src={user.avatar} alt={displayName} /> : null}
-      <Avatar.Fallback>{displayName.charAt(0).toUpperCase()}</Avatar.Fallback>
-    </Avatar>
+    <AppAvatar size="sm" className={styles.avatar}>
+      {user?.avatar ? <AppAvatar.Image src={user.avatar} alt={displayName} /> : null}
+      <AppAvatar.Fallback>{displayName.charAt(0).toUpperCase()}</AppAvatar.Fallback>
+    </AppAvatar>
   );
 
   const userMenu = (

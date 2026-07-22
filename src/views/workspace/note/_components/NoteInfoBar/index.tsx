@@ -1,4 +1,5 @@
-import { Avatar, Separator } from '@heroui/react';
+import AppAvatar from '@/components/Avatar';
+import { Separator } from '@heroui/react';
 
 import type { NoteInfoDisplayData } from '@/domains/Note';
 import styles from './style.module.less';
@@ -30,19 +31,19 @@ function NoteInfoBar({ noteInfoDisplay }: NoteInfoBarProps) {
               <>
                 <div className={styles.avatarStack} aria-hidden="true">
                   {authors.map((author) => (
-                    <Avatar
+                    <AppAvatar
                       key={author.id}
                       aria-label={author.name}
                       className={styles.avatar}
                       title={author.name}
                     >
                       {author.avatar ? (
-                        <Avatar.Image alt={author.name} src={author.avatar} />
+                        <AppAvatar.Image alt={author.name} src={author.avatar} />
                       ) : null}
-                      <Avatar.Fallback className={styles.avatarFallback}>
+                      <AppAvatar.Fallback className={styles.avatarFallback}>
                         {getAvatarText(author.name)}
-                      </Avatar.Fallback>
-                    </Avatar>
+                      </AppAvatar.Fallback>
+                    </AppAvatar>
                   ))}
                 </div>
                 <span className={styles.authorNames} title={authorNamesText}>

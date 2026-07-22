@@ -1,7 +1,7 @@
 import { createExtension, type ExtensionFactoryInstance } from '@blocknote/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
+import { Plugin, PluginKey, type EditorState, type Transaction } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ySyncPluginKey, type ProsemirrorBinding } from 'y-prosemirror';
 import type { XmlFragment } from 'yjs';
 
@@ -10,42 +10,58 @@ import { resolveInlineCommentAnchor } from './relativePosition';
 import styles from './style.module.less';
 
 interface InlineCommentExtensionState {
+  ranges: readonly InlineCommentAnchorRange[];
   decorations: DecorationSet;
 }
 
-const inlineCommentPluginKey = new PluginKey<InlineCommentExtensionState>('noteInlineComments');
+interface InlineCommentAnchorRange {
+  threadId: string;
+  from: number;
+  to: number;
+  fromAssoc: -1 | 1;
+  toAssoc: -1 | 1;
+}
 
-function readBinding(view: EditorView): ProsemirrorBinding | null {
-  const syncState = ySyncPluginKey.getState(view.state) as
-    { binding?: ProsemirrorBinding } | undefined;
+const inlineCommentPluginKey = new PluginKey<InlineCommentExtensionState>('noteInlineComments');
+const inlineCommentDecorationSpec = { inclusiveStart: false, inclusiveEnd: false };
+
+export function findInlineCommentAnchorElement(
+  root: ParentNode,
+  threadId: string
+): HTMLElement | null {
+  return root.querySelector<HTMLElement>(
+    `[data-inline-comment-thread-id="${CSS.escape(threadId)}"]`
+  );
+}
+
+function readBinding(state: EditorState): ProsemirrorBinding | null {
+  const syncState = ySyncPluginKey.getState(state) as { binding?: ProsemirrorBinding } | undefined;
   return syncState?.binding ?? null;
 }
 
 function buildDecorations(params: {
   doc: PMNode;
-  view: EditorView;
-  fragment: XmlFragment;
-  session: NoteInlineCommentSession;
+  ranges: readonly InlineCommentAnchorRange[];
 }): DecorationSet {
-  const { doc, view, fragment, session } = params;
-  const binding = readBinding(view);
-  if (!binding) return DecorationSet.empty;
-  const decorations = session.getSnapshot().threads.flatMap((thread) => {
-    const range = resolveInlineCommentAnchor({ anchor: thread.anchor, fragment, binding });
-    if (!range) return [];
+  const { doc, ranges } = params;
+  const decorations = ranges.flatMap((range) => {
     const from = Math.max(0, Math.min(range.from, doc.content.size));
     const to = Math.max(from, Math.min(range.to, doc.content.size));
     if (from === to) return [];
     const attrs = {
       class: styles.anchor,
-      'data-inline-comment-thread-id': thread.threadId,
+      'data-inline-comment-thread-id': range.threadId,
     };
     const threadDecorations: Decoration[] = [];
     doc.nodesBetween(from, to, (node, pos) => {
       if (node.isText) {
         const textFrom = Math.max(from, pos);
         const textTo = Math.min(to, pos + node.nodeSize);
-        if (textFrom < textTo) threadDecorations.push(Decoration.inline(textFrom, textTo, attrs));
+        if (textFrom < textTo) {
+          threadDecorations.push(
+            Decoration.inline(textFrom, textTo, attrs, inlineCommentDecorationSpec)
+          );
+        }
         return;
       }
       if ((node.isInline || node.isLeaf) && node.nodeSize > 0) {
@@ -58,6 +74,29 @@ function buildDecorations(params: {
     return threadDecorations;
   });
   return DecorationSet.create(doc, decorations);
+}
+
+function resolveAnchorRanges(params: {
+  fragment: XmlFragment;
+  binding: ProsemirrorBinding;
+  session: NoteInlineCommentSession;
+}): InlineCommentAnchorRange[] {
+  const { fragment, binding, session } = params;
+  return session.getSnapshot().threads.flatMap((thread) => {
+    const range = resolveInlineCommentAnchor({ anchor: thread.anchor, fragment, binding });
+    return range ? [{ threadId: thread.threadId, ...range }] : [];
+  });
+}
+
+function mapAnchorRanges(
+  ranges: readonly InlineCommentAnchorRange[],
+  tr: Transaction
+): InlineCommentAnchorRange[] {
+  return ranges.flatMap((range) => {
+    const from = tr.mapping.map(range.from, range.fromAssoc);
+    const to = tr.mapping.map(range.to, range.toAssoc);
+    return from < to ? [{ ...range, from, to }] : [];
+  });
 }
 
 function collectThreadAnchorPositions(params: {
@@ -87,22 +126,19 @@ export function createInlineCommentExtension(params: {
       new Plugin<InlineCommentExtensionState>({
         key: inlineCommentPluginKey,
         state: {
-          init: () => ({ decorations: DecorationSet.empty }),
+          init: () => ({ ranges: [], decorations: DecorationSet.empty }),
           apply: (tr, previous, _oldState, newState) => {
             const refresh = tr.getMeta(inlineCommentPluginKey) === true;
             if (!tr.docChanged && !refresh) return previous;
-            const view = fragment.doc
-              ? (ySyncPluginKey.getState(newState) as { binding?: ProsemirrorBinding } | undefined)
-                  ?.binding?.prosemirrorView
-              : null;
-            if (!view) return previous;
+            const binding = fragment.doc ? readBinding(newState) : null;
+            const ranges = refresh
+              ? binding
+                ? resolveAnchorRanges({ fragment, binding, session })
+                : previous.ranges
+              : mapAnchorRanges(previous.ranges, tr);
             return {
-              decorations: buildDecorations({
-                doc: newState.doc as unknown as PMNode,
-                view,
-                fragment,
-                session,
-              }),
+              ranges,
+              decorations: buildDecorations({ doc: newState.doc as unknown as PMNode, ranges }),
             };
           },
         },
@@ -122,7 +158,7 @@ export function createInlineCommentExtension(params: {
           let synchronizeFrame: number | undefined;
           const synchronizeThreadOrder = () => {
             synchronizeFrame = undefined;
-            const binding = readBinding(view);
+            const binding = readBinding(view.state);
             if (!binding) return;
             session.setThreadAnchorPositions(
               collectThreadAnchorPositions({ fragment, binding, session })
@@ -138,13 +174,13 @@ export function createInlineCommentExtension(params: {
             );
           };
           const unsubscribe = session.subscribe(() => {
+            // 文本编辑不会改变批注锚点的相对顺序，仅在批注列表变更时同步侧栏排序。
             scheduleThreadOrderSynchronization();
             refresh();
           });
           scheduleThreadOrderSynchronization();
           refresh();
           return {
-            update: scheduleThreadOrderSynchronization,
             destroy: () => {
               unsubscribe();
               if (synchronizeFrame !== undefined) {

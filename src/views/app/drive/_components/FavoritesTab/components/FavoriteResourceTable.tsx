@@ -1,14 +1,10 @@
-import TableDriveSelectionPanel from '@/components/Drive/TableDrive/parts/SelectionPanel';
-import EntryIcon from '@/components/Icons/EntryIcon';
 import FavoriteCollectionPicker from '@/components/Resource/FavoriteCollectionPicker';
-import DataTable from '@/components/Table/DataTable';
-import type { DataTableColumn } from '@/components/Table/DataTable/index.type';
-import TableRowActions from '@/components/Table/shared/TableRowActions';
-import type { TableRowActionItem } from '@/components/Table/shared/TableRowActions/index.type';
+import { FolderTable, type FolderTableColumn, type FolderTableRow } from '@/components/Table';
 import type { FavoriteItem } from '@/domains/Interact';
 import { formatTimestampToDate } from '@/utils/format/formatTime';
 import { useFavoriteResourceTableController } from '../hooks/useFavoriteResourceTableController';
 import styles from '../style.module.less';
+import FavoriteResourceSelectionPanel from './FavoriteResourceSelectionPanel';
 import UnfavoriteResourceModal from './UnfavoriteResourceModal';
 
 interface FavoriteResourceTableProps {
@@ -19,6 +15,51 @@ interface FavoriteResourceTableProps {
   emptyDescription: string;
 }
 
+interface FavoriteResourceTableRow extends FolderTableRow {
+  item: FavoriteItem;
+}
+
+const FAVORITE_RESOURCE_COLUMNS: FolderTableColumn<FavoriteResourceTableRow>[] = [
+  {
+    id: 'resource',
+    label: '名称',
+    width: 'fill',
+    isNameColumn: true,
+    className: styles.resourceNameColumn,
+  },
+  {
+    id: 'type',
+    label: '类型',
+    width: 'folderType',
+    renderCell: (row) => row.typeLabel,
+  },
+  {
+    id: 'favoritedAt',
+    label: '收藏时间',
+    width: 'folderType',
+    renderCell: (row) => formatTimestampToDate(row.item.favoritedAt) || '—',
+  },
+  {
+    id: 'actions',
+    label: '操作',
+    width: 'folderAction',
+    isActionColumn: true,
+  },
+];
+
+function toFavoriteResourceTableRow(item: FavoriteItem): FavoriteResourceTableRow {
+  const resource = item.resourceInfo;
+  return {
+    id: item.resourceId,
+    name: resource?.resourceName ?? '资源已删除',
+    entryType: 'resource',
+    resourceType: resource?.resourceType,
+    resourceIconType: resource?.resourceIconType,
+    typeLabel: resource?.resourceType ?? '未知类型',
+    item,
+  };
+}
+
 function FavoriteResourceTable({
   collectionId,
   collectionName,
@@ -27,80 +68,7 @@ function FavoriteResourceTable({
   emptyDescription,
 }: FavoriteResourceTableProps) {
   const controller = useFavoriteResourceTableController({ collectionId, onCollectionChanged });
-
-  const columns: DataTableColumn<FavoriteItem>[] = [
-    {
-      id: 'resource',
-      label: '名称',
-      width: 'fill',
-      align: 'start',
-      isRowHeader: true,
-      className: styles.resourceNameColumn,
-      renderCell: (item) => {
-        if (!item.resourceInfo) {
-          return (
-            <span className={styles.resourceCellDisabled}>
-              <EntryIcon entryType="resource" size={18} />
-              <span>资源已删除</span>
-            </span>
-          );
-        }
-        const { resourceInfo } = item;
-        return (
-          <span className={styles.resourceCellButton}>
-            <EntryIcon
-              entryType="resource"
-              resourceType={resourceInfo.resourceType}
-              resourceName={resourceInfo.resourceName}
-              resourceIconType={resourceInfo.resourceIconType}
-              size={18}
-            />
-            <span className={styles.resourceCellName}>{resourceInfo.resourceName}</span>
-          </span>
-        );
-      },
-    },
-    {
-      id: 'type',
-      label: '类型',
-      width: 'md',
-      renderCell: (item) => item.resourceInfo?.resourceType ?? '未知类型',
-    },
-    {
-      id: 'favoritedAt',
-      label: '收藏时间',
-      width: 'md',
-      renderCell: (item) => formatTimestampToDate(item.favoritedAt) || '—',
-    },
-    {
-      id: 'unfavorite',
-      label: '操作',
-      width: 'sm',
-      align: 'center',
-      renderCell: (item) => {
-        const actions: TableRowActionItem[] = [
-          {
-            key: 'open',
-            label: '进入',
-            disabled: !item.resourceInfo,
-          },
-          {
-            key: 'manage',
-            label: '管理收藏',
-            disabled: !item.resourceInfo,
-          },
-          { key: 'remove', label: '移出收藏夹', variant: 'danger' },
-        ];
-        return (
-          <TableRowActions
-            ariaLabel={`${item.resourceInfo?.resourceName ?? '该资源'}操作`}
-            actions={actions}
-            onAction={(key) => controller.onRowAction(item, key)}
-          />
-        );
-      },
-    },
-  ];
+  const rows = controller.list.map(toFavoriteResourceTableRow);
 
   return (
     <div className={styles.resourceWorkspace}>
@@ -111,45 +79,57 @@ function FavoriteResourceTable({
             <p className={styles.resourcePanelDescription}>{collectionItemCount} 个内容</p>
           </div>
         </header>
-        <DataTable
+        <FolderTable<FavoriteResourceTableRow>
           ariaLabel="已收藏资源"
-          items={controller.list}
-          rowKey="resourceId"
+          items={rows}
           selectedRowKey={controller.selectedResourceId}
-          onRowSelect={controller.onRowSelect}
-          onRowActivate={controller.onRowActivate}
-          columns={columns}
+          onRowSelect={(row) => controller.onRowSelect(row.item)}
+          columns={FAVORITE_RESOURCE_COLUMNS}
+          renderNameContent={(content, row) =>
+            row.item.resourceInfo ? (
+              content
+            ) : (
+              <span className={styles.resourceCellDisabled}>{content}</span>
+            )
+          }
+          rowActions={(row) => [
+            {
+              key: 'open',
+              label: '打开',
+              disabled: !row.item.resourceInfo,
+              onPress: () => controller.onRowAction(row.item, 'open'),
+            },
+            {
+              key: 'manage',
+              label: '管理收藏',
+              disabled: !row.item.resourceInfo,
+              onPress: () => controller.onRowAction(row.item, 'manage'),
+            },
+            {
+              key: 'remove',
+              label: '移出收藏夹',
+              variant: 'danger',
+              onPress: () => controller.onRowAction(row.item, 'remove'),
+            },
+          ]}
           loading={controller.loading}
           emptyText="暂无收藏内容"
           emptyDescription={emptyDescription}
           totalCount={controller.total}
-          pagination={{
-            total: controller.total,
-            current: controller.page,
-            pageSize: controller.pageSize,
-            onChange: (nextPage) =>
-              controller.setPage(
-                Math.min(Math.max(1, nextPage), Math.max(1, controller.totalPage))
-              ),
+          loadMore={{
+            hasMore: controller.hasMore,
+            loading: controller.loadingMore,
+            onLoadMore: controller.loadMore,
           }}
           className={styles.resourceTable}
         />
       </div>
-      <aside className={styles.detailPanel}>
-        <TableDriveSelectionPanel
-          mode="favorite"
-          selectedRow={controller.selectedRow}
-          selectedCount={controller.selectedRow ? 1 : 0}
-          onEnter={() => undefined}
-          onOpen={controller.onDetailOpen}
-          onRename={() => undefined}
-          onMove={() => undefined}
-          onDelete={() => undefined}
-          onRemoveFavorite={() => {
-            if (controller.selectedItem) controller.onRequestUnfavorite(controller.selectedItem);
-          }}
-        />
-      </aside>
+      <FavoriteResourceSelectionPanel
+        item={controller.selectedItem}
+        onOpen={controller.onOpenResource}
+        onManage={(item) => controller.onRowAction(item, 'manage')}
+        onRemove={controller.onRequestUnfavorite}
+      />
       <UnfavoriteResourceModal
         item={controller.unfavoriteItem}
         collectionId={collectionId}

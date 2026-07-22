@@ -1,15 +1,4 @@
-export interface NoteRichTextAiDiffConfig {
-  hunk: {
-    highChangeRatio: number;
-    maxGapCharacters: number;
-    maxGapTokens: number;
-    maxMergedCharacters: number;
-    maxHunksPerBlock: number;
-  };
-  limits: {
-    maxMatrixCells: number;
-  };
-}
+import type { NoteRichTextAiDiffConfig } from '../plugins/DefaultContentPlugin/aiDiff';
 
 interface NoteConfig {
   aiDiff: {

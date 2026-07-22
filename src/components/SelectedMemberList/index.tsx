@@ -1,6 +1,7 @@
+import AppAvatar from '@/components/Avatar';
 import type { GroupMember } from '@/domains/Group';
 import { ROLE } from '@/domains/Group';
-import { Avatar, ListBox, ListBoxItem } from '@heroui/react';
+import { ListBox, ListBoxItem } from '@heroui/react';
 import { useMemo } from 'react';
 import type { SelectedMemberListProps } from './index.type';
 import styles from './style.module.less';
@@ -44,10 +45,12 @@ function SelectedMemberList({ members, isReadOnly = true }: SelectedMemberListPr
               className={`${styles.memberItem} ${isReadOnly ? styles.memberItemReadOnly : ''}`}
             >
               <div className={styles.memberContent}>
-                <Avatar aria-label={displayName} className={styles.avatar}>
-                  {member.avatar && <Avatar.Image alt={displayName} src={member.avatar} />}
-                  <Avatar.Fallback className={styles.avatarFallback}>{avatarText}</Avatar.Fallback>
-                </Avatar>
+                <AppAvatar aria-label={displayName} className={styles.avatar}>
+                  {member.avatar && <AppAvatar.Image alt={displayName} src={member.avatar} />}
+                  <AppAvatar.Fallback className={styles.avatarFallback}>
+                    {avatarText}
+                  </AppAvatar.Fallback>
+                </AppAvatar>
                 <div className={styles.memberInfo}>
                   <span className={styles.memberName}>{displayName}</span>
                   {description && <span className={styles.memberDescription}>{description}</span>}

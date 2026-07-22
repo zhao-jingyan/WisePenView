@@ -7,12 +7,19 @@ import type {
   NoteBlockPlugin,
   NoteContentPlugin,
   NoteEditorExtension,
+  NoteEditorServices,
   NoteInlineContentSpecs,
   NoteInlinePlugin,
   NotePluginBundle,
   NotePluginNode,
   NotePluginRegistry,
 } from './types';
+
+export interface CreateNotePluginRegistryOptions {
+  root: NotePluginBundle;
+  editorExtensions?: readonly NoteEditorExtension[];
+  services: NoteEditorServices;
+}
 
 type DOMEventHandlers = NonNullable<EditorProps['handleDOMEvents']>;
 type DOMEventName = keyof DOMEventHandlers;
@@ -65,9 +72,9 @@ function sortByDependencies<T extends { id: string; dependencies?: readonly stri
 }
 
 export function createNotePluginRegistry(
-  root: NotePluginBundle,
-  editorExtensions: readonly NoteEditorExtension[] = []
+  options: CreateNotePluginRegistryOptions
 ): NotePluginRegistry {
+  const { root, editorExtensions = [], services } = options;
   const nodes = flattenPluginTree(root);
   const allItems = [...nodes, ...editorExtensions];
   const seenIds = new Set<string>();
@@ -126,6 +133,7 @@ export function createNotePluginRegistry(
 
   return {
     root,
+    services,
     contentPlugins: sortedContentPlugins,
     blockPlugins,
     inlinePlugins,
@@ -163,7 +171,7 @@ export function collectNoteEditorExtensions(
   registry: NotePluginRegistry
 ): ExtensionFactoryInstance[] {
   return [...registry.contentPlugins, ...registry.editorExtensions].flatMap(
-    (plugin) => plugin.extensions?.({ registry }) ?? []
+    (plugin) => plugin.extensions?.({ registry, services: registry.services }) ?? []
   );
 }
 
@@ -214,7 +222,7 @@ export function collectNoteEditorProps(registry: NotePluginRegistry): Partial<Ed
   const seenScalarKeys = new Map<string, string>();
 
   contributors.forEach((contributor) => {
-    const props = contributor.editorProps?.({ registry });
+    const props = contributor.editorProps?.({ registry, services: registry.services });
     if (!props) return;
     for (const key of Object.keys(props) as Array<keyof EditorProps>) {
       const value = props[key];

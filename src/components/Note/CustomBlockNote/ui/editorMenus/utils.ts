@@ -1,4 +1,4 @@
-import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../../registry/noteEditorComposition';
 
 export type NoteBlock = ReturnType<CustomBlockNoteEditor['getTextCursorPosition']>['block'];
 export type NoteBlockUpdate = Parameters<CustomBlockNoteEditor['updateBlock']>[1];

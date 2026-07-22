@@ -1,7 +1,7 @@
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import type * as Y from 'yjs';
 
-import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../../registry/noteEditorComposition';
 import type {
   NoteAiDiffAcceptedBlockUpdate,
   NoteAiDiffAction,

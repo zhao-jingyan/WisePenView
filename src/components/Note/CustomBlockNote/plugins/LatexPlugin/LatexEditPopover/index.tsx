@@ -1,8 +1,9 @@
-import type { ChangeEvent, KeyboardEvent, RefObject } from 'react';
+import type { FormEvent, KeyboardEvent, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useEffectForce } from '@/hooks/useEffectForce';
 import popoverStyles from '../InlineMath/style.module.less';
+import { sanitizeLatexInput } from '../latexInput';
 
 interface LatexEditPopoverProps {
   /** 为 true 时挂载到 document.body */
@@ -13,7 +14,7 @@ interface LatexEditPopoverProps {
   hint: string;
   textareaClassName: string;
   value: string;
-  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  onValueChange: (value: string) => void;
   onCommit: () => void;
   /** 点击浮层和锚点以外的区域时提交并收起。 */
   onOutsidePress: () => void;
@@ -53,6 +54,13 @@ function handleTextareaKeyDown(
   }
 }
 
+function handleTextareaBeforeInput(event: FormEvent<HTMLTextAreaElement>): void {
+  const data = (event.nativeEvent as InputEvent).data;
+  if (!data?.includes('\u001b')) return;
+  event.preventDefault();
+  event.stopPropagation();
+}
+
 /**
  * 行内 / 块级公式共用的 LaTeX 编辑浮层（Portal → body，样式来自 InlineMath/style.module.less）。
  */
@@ -64,7 +72,7 @@ export function LatexEditPopover(props: LatexEditPopoverProps) {
     hint,
     textareaClassName,
     value,
-    onChange,
+    onValueChange,
     onCommit,
     onOutsidePress,
     commitEnterUnlessShift,
@@ -115,7 +123,8 @@ export function LatexEditPopover(props: LatexEditPopoverProps) {
         ref={inputRef}
         className={textareaClassName}
         value={value}
-        onChange={onChange}
+        onBeforeInput={handleTextareaBeforeInput}
+        onChange={(event) => onValueChange(sanitizeLatexInput(event.target.value))}
         onKeyDown={(e) => handleTextareaKeyDown(e, onCancel, onCommit, commitEnterUnlessShift)}
         onBlur={onBlur}
         rows={rows}

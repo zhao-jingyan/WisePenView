@@ -7,7 +7,7 @@ import {
   useNoteYjsUndoManager,
 } from '../engines/collaboration/useNoteYjsUndoStack';
 import type { CustomBlockNoteProps } from '../index.type';
-import type { CustomBlockNoteEditor } from '../noteEditorComposition';
+import type { CustomBlockNoteEditor } from '../registry/noteEditorComposition';
 import type { NoteEditorDefinition } from './useNoteEditorDefinition';
 
 type CollaborationUser = CustomBlockNoteProps['collaboration']['user'];

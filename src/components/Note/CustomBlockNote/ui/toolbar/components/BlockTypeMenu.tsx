@@ -1,4 +1,4 @@
-import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditorComposition';
+import { blockNoteSchema } from '@/components/Note/CustomBlockNote/registry/noteEditorComposition';
 import {
   applyBlockTypeToBlocks,
   blockMatchesBlockTypeItem,
@@ -77,7 +77,6 @@ export function BlockTypeMenu(buttonGroupProps: ButtonGroupChildProps) {
           {...buttonGroupProps}
           variant="ghost"
           size="sm"
-          isIconOnly
           className={styles.blockTypeTrigger}
           onMouseDown={stopToolbarMouseDown}
           aria-label="块类型"

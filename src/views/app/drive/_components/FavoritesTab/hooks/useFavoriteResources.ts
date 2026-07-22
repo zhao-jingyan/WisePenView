@@ -1,31 +1,63 @@
 import { useInteractService } from '@/domains';
+import type { FavoriteItem } from '@/domains/Interact';
 import { parseErrorMessage } from '@/utils/error';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 const PAGE_SIZE = 20;
 
-export function useFavoriteResources(collectionId?: string) {
+export function useFavoriteResources(collectionId: string) {
   const interactService = useInteractService();
-  const [page, setPage] = useState(1);
-  const { data, loading, refresh } = useRequest(
-    () => interactService.listFavoritedResources({ collectionId, page, size: PAGE_SIZE }),
+  const [loadedItems, setLoadedItems] = useState<FavoriteItem[]>([]);
+  const [lastLoadedPage, setLastLoadedPage] = useState(1);
+  const loadGenerationRef = useRef(0);
+  const {
+    data: firstPage,
+    loading,
+    refresh: refreshFirstPage,
+  } = useRequest(
+    () => interactService.listFavoritedResources({ collectionId, page: 1, size: PAGE_SIZE }),
     {
-      refreshDeps: [collectionId, page],
+      refreshDeps: [collectionId],
       onError: (error) => toast.danger(parseErrorMessage(error)),
     }
   );
 
-  const totalPage = data?.totalPage ?? 0;
+  const { loading: loadingMore, run: loadMore } = useRequest(
+    async () => {
+      const loadGeneration = loadGenerationRef.current;
+      const nextPage = lastLoadedPage + 1;
+      const nextResult = await interactService.listFavoritedResources({
+        collectionId,
+        page: nextPage,
+        size: PAGE_SIZE,
+      });
+      if (loadGeneration !== loadGenerationRef.current) return;
+      setLoadedItems((items) => [...items, ...nextResult.list]);
+      setLastLoadedPage(nextPage);
+    },
+    {
+      manual: true,
+      onError: (error) => toast.danger(parseErrorMessage(error)),
+    }
+  );
+
+  const refresh = () => {
+    loadGenerationRef.current += 1;
+    setLoadedItems([]);
+    setLastLoadedPage(1);
+    refreshFirstPage();
+  };
+
+  const totalPage = firstPage?.totalPage ?? 0;
   return {
-    list: data?.list ?? [],
-    total: data?.total ?? 0,
-    page,
-    pageSize: PAGE_SIZE,
-    totalPage,
+    list: [...(firstPage?.list ?? []), ...loadedItems],
+    total: firstPage?.total ?? 0,
     loading,
-    setPage,
+    loadingMore,
+    hasMore: lastLoadedPage < totalPage,
+    loadMore,
     refresh,
   };
 }

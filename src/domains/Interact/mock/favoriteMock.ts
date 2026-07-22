@@ -145,7 +145,7 @@ export const updateMockFavoriteCollection = async (
 ): Promise<void> => {
   await delay(100);
   const collection = collections.find((item) => item.collectionId === params.collectionId);
-  if (!collection) return;
+  if (!collection || collection.isDefault) return;
   collection.collectionName = params.collectionName;
   collection.description = params.description ?? null;
 };

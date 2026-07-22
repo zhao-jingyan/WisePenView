@@ -1,4 +1,4 @@
-import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditorComposition';
+import { blockNoteSchema } from '@/components/Note/CustomBlockNote/registry/noteEditorComposition';
 import { ColorPaletteContent } from '@/components/Note/CustomBlockNote/ui/editorMenus/colorPalette';
 import type { ColorKey } from '@/components/Note/CustomBlockNote/ui/editorMenus/colorPaletteData';
 import { useTableRailSelectionState } from '@/components/Note/CustomBlockNote/ui/tableHandles/railSelectionState';

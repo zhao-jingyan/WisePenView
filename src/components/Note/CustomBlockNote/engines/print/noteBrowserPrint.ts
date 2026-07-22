@@ -1,6 +1,6 @@
 import { createClientError, FRONTEND_CLIENT_ERROR, isWisePenError } from '@/utils/error';
-import type { CustomBlockNoteEditor } from '../../noteEditorComposition';
 import { collectNotePrintStyles } from '../../registry';
+import type { CustomBlockNoteEditor } from '../../registry/noteEditorComposition';
 import type { NotePluginRegistry } from '../../registry/types';
 import { getProseMirrorRoot } from '../editor/dom';
 

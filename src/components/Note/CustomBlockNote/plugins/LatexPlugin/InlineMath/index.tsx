@@ -18,6 +18,7 @@ import {
 } from '../LatexEditPopover/latexPopoverGeometry';
 import { useFocusPopoverTextarea } from '../LatexEditPopover/useFocusPopoverTextarea';
 import { useLatexPopoverAnchorSync } from '../LatexEditPopover/useLatexPopoverAnchorSync';
+import { sanitizeLatexInput } from '../latexInput';
 import popoverStyles from './style.module.less';
 
 const inlineMathConfig = {
@@ -146,7 +147,7 @@ function InlineMathView(
   // TODO: 重构，不使用useEffect，使用更合适的语义以增加可读性，但是latexSupport有完全重构的可能，因此暂时保留
   useEffectForce(() => {
     if (isEditing) return;
-    setValue(expression);
+    setValue(sanitizeLatexInput(expression));
   }, [expression, isEditing]);
 
   const displayLatex = isEditing ? value : expression;
@@ -154,7 +155,7 @@ function InlineMathView(
   useEffectForce(() => {
     if (readOnly) return;
     if (!autoOpenEdit) return;
-    const openExpr = inlineContent.props.expression as string;
+    const openExpr = sanitizeLatexInput(inlineContent.props.expression as string);
     updateInlineContent({
       type: 'inlineMath',
       props: {
@@ -193,7 +194,7 @@ function InlineMathView(
       type: 'inlineMath',
       props: {
         ...inlineContent.props,
-        expression: value.trim(),
+        expression: sanitizeLatexInput(value).trim(),
         autoOpenEdit: false,
       },
     });
@@ -216,7 +217,7 @@ function InlineMathView(
 
   const enterEdit = () => {
     if (readOnly) return;
-    setValue(expression);
+    setValue(sanitizeLatexInput(expression));
     isEditingRef.current = true;
     setIsEditing(true);
   };
@@ -237,10 +238,7 @@ function InlineMathView(
       hint="Enter / Shift+Enter 确定 · Esc 取消 · 不可换行"
       textareaClassName={popoverStyles.inlineEditTextarea}
       value={value}
-      onChange={(e) => {
-        const nextValue = e.target.value.replace(/\n/g, '');
-        setValue(nextValue);
-      }}
+      onValueChange={(nextValue) => setValue(nextValue.replace(/\n/g, ''))}
       onCommit={commit}
       onOutsidePress={commit}
       commitEnterUnlessShift={false}

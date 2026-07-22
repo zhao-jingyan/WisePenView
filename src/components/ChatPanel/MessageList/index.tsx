@@ -20,6 +20,7 @@ import Welcome from './Welcome';
 import styles from './style.module.less';
 
 const AUTO_LOAD_EDGE_THRESHOLD = 96;
+const HISTORY_ANCHOR_TOP_RATIO = 1 / 3;
 
 interface MessageListProps {
   messages: WisePenUIMessage[];
@@ -49,6 +50,7 @@ function MessageList({
       autoScroll
       autoScrollResetKey={sessionId}
       defaultScrollPosition="end"
+      scrollAnchorOffsetRatio={HISTORY_ANCHOR_TOP_RATIO}
       scrollEdgeThreshold={AUTO_LOAD_EDGE_THRESHOLD}
       scrollPreviousItemPeek={72}
     >
@@ -123,7 +125,10 @@ function MessageListContent({
         <ArrowDown size={14} />
         <span className={styles.srOnly}>滚动到底部</span>
       </MessageScrollerButton>
-      <MessageHistoryNavigator messages={messages} />
+      <MessageHistoryNavigator
+        messages={messages}
+        scrollAnchorOffsetRatio={HISTORY_ANCHOR_TOP_RATIO}
+      />
     </MessageScroller>
   );
 }

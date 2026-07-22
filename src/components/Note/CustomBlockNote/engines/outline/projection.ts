@@ -19,8 +19,37 @@ export interface NoteOutlineProjection {
   blocks: NoteOutlineBlockSnapshot[];
 }
 
+export interface NoteOutlineBlockProjection {
+  snapshot: NoteOutlineBlockSnapshot;
+  item?: NoteOutlineItem;
+}
+
 function toBlockRecord(block: unknown): Record<string, unknown> {
   return typeof block === 'object' && block !== null ? (block as Record<string, unknown>) : {};
+}
+
+export function projectNoteOutlineBlock(
+  block: unknown,
+  registry: NotePluginRegistry
+): NoteOutlineBlockProjection | null {
+  const record = toBlockRecord(block);
+  const id = typeof record.id === 'string' ? record.id : '';
+  if (!id) return null;
+  const type = typeof record.type === 'string' ? record.type : '';
+  const owner = registry.blockPlugins.get(type);
+  const level = owner?.outline?.getLevel(record);
+  return {
+    snapshot: { id, contributesToOutline: level !== undefined },
+    ...(level === undefined
+      ? {}
+      : {
+          item: {
+            id,
+            level,
+            text: projectBlockPlainText(block, registry).replace(/\s+/g, ' ').trim(),
+          },
+        }),
+  };
 }
 
 export function buildNoteOutlineProjection<
@@ -34,16 +63,10 @@ export function buildNoteOutlineProjection<
   const items: NoteOutlineItem[] = [];
   const blocks: NoteOutlineBlockSnapshot[] = [];
   editor.forEachBlock((block) => {
-    const owner = registry.blockPlugins.get(block.type);
-    const level = owner?.outline?.getLevel(toBlockRecord(block));
-    blocks.push({ id: block.id, contributesToOutline: level !== undefined });
-    if (level === undefined) return true;
-
-    items.push({
-      id: block.id,
-      level,
-      text: projectBlockPlainText(block, registry).replace(/\s+/g, ' ').trim(),
-    });
+    const projection = projectNoteOutlineBlock(block, registry);
+    if (!projection) return true;
+    blocks.push(projection.snapshot);
+    if (projection.item) items.push(projection.item);
     return true;
   });
   return { items, blocks };

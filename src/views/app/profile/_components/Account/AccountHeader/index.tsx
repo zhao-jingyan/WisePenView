@@ -1,3 +1,4 @@
+import AppAvatar from '@/components/Avatar';
 import AppModal from '@/components/Overlay/AppModal';
 import UploadZone from '@/components/UploadZone';
 import { useImageService, useUserService } from '@/domains';
@@ -5,7 +6,7 @@ import { assertImageProxyUploadLimit } from '@/domains/Image';
 import { getVerificationModeLabel, IDENTITY, USER_STATUS } from '@/domains/User';
 import { parseErrorMessage } from '@/utils/error';
 import { IMAGE_UPLOAD_MAX_SIZE_LABEL } from '@/utils/image/uploadLimit';
-import { Avatar, Button, toast, Tooltip } from '@heroui/react';
+import { Button, toast, Tooltip } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Check, TriangleAlert, X } from 'lucide-react';
 import { useState } from 'react';
@@ -116,14 +117,14 @@ function AccountHeader({ user, onUserInfoReload }: AccountHeaderProps) {
                   }
                 }}
               >
-                <Avatar aria-label={nickname} className={styles.avatar}>
+                <AppAvatar aria-label={nickname} className={styles.avatar}>
                   {user?.userInfo?.avatar && (
-                    <Avatar.Image alt={nickname} draggable={false} src={user.userInfo.avatar} />
+                    <AppAvatar.Image alt={nickname} draggable={false} src={user.userInfo.avatar} />
                   )}
-                  <Avatar.Fallback className={styles.avatarFallback}>
+                  <AppAvatar.Fallback className={styles.avatarFallback}>
                     {avatarLetter}
-                  </Avatar.Fallback>
-                </Avatar>
+                  </AppAvatar.Fallback>
+                </AppAvatar>
               </span>
             </Tooltip.Trigger>
             <Tooltip.Content>修改头像</Tooltip.Content>

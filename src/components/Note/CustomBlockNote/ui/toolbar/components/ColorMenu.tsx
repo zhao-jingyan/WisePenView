@@ -1,4 +1,4 @@
-import { blockNoteSchema } from '@/components/Note/CustomBlockNote/noteEditorComposition';
+import { blockNoteSchema } from '@/components/Note/CustomBlockNote/registry/noteEditorComposition';
 import { ColorPaletteContent } from '@/components/Note/CustomBlockNote/ui/editorMenus/colorPalette';
 import {
   getColorItem,
@@ -82,7 +82,6 @@ export function ColorMenu(buttonGroupProps: ButtonGroupChildProps) {
           {...buttonGroupProps}
           variant="ghost"
           size="sm"
-          isIconOnly
           className={clsx(styles.colorTrigger, open && styles.toolbarButtonActive)}
           onMouseDown={stopToolbarMouseDown}
           aria-label="颜色"

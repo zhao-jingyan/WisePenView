@@ -1,6 +1,5 @@
 import { codeBlockOptions } from '@blocknote/code-block';
 import { createCodeBlockSpec } from '@blocknote/core';
-import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
 import { getCodeBlockHighlighter, normalizeCodeLanguage } from '@/utils/codeHighlight';
@@ -76,7 +75,10 @@ export const codeBlockPlugin = {
         toolbarWrapper.dataset.wiseCodeBlockToolbar = '';
         toolbarWrapper.replaceChildren(toolbarHost);
 
-        flushSync(() => {
+        let destroyed = false;
+        // BlockNote 可能在外层 React 生命周期中创建 NodeView，延后挂载以避免跨 Root 更新冲突。
+        queueMicrotask(() => {
+          if (destroyed) return;
           reactRoot.render(
             <CodeBlockToolbar
               codeElement={codeElement}
@@ -108,8 +110,10 @@ export const codeBlockPlugin = {
             return baseRender.ignoreMutation?.(mutation) ?? false;
           },
           destroy: () => {
-            reactRoot.unmount();
+            destroyed = true;
             baseRender.destroy?.();
+            // NodeView 可能在外层 React 提交期间销毁，延后卸载可避免嵌套同步卸载冲突。
+            queueMicrotask(() => reactRoot.unmount());
           },
         };
       },
