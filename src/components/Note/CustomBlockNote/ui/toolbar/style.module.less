@@ -1,3 +1,31 @@
+.toolbarPopover {
+  position: fixed;
+  z-index: calc(var(--bn-ui-base-z-index, 0) + var(--note-editor-toolbar-layer, 120));
+  //  transform-origin: top center;
+  transform: translate(-15%, -100%);
+}
+
+.toolbar {
+  border: 1px solid var(--border-light);
+  background: var(--overlay);
+  color: var(--overlay-foreground);
+  gap: 0;
+}
+
+.toolbarSeparator {
+  width: 1px;
+  height: calc(var(--control-height-sm) - var(--space-sm));
+  align-self: center;
+  margin-inline: var(--space-2xs);
+  background: var(--separator);
+}
+
+.toolbarSeparator:first-child,
+.toolbarSeparator:last-child,
+.toolbarSeparator + .toolbarSeparator {
+  display: none;
+}
+
 .askAiBtn {
   margin-left: var(--space-xs);
   margin-right: var(--space-xs);

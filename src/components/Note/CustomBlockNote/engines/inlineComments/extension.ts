@@ -15,6 +15,15 @@ interface InlineCommentExtensionState {
 
 const inlineCommentPluginKey = new PluginKey<InlineCommentExtensionState>('noteInlineComments');
 
+export function findInlineCommentAnchorElement(
+  root: ParentNode,
+  threadId: string
+): HTMLElement | null {
+  return root.querySelector<HTMLElement>(
+    `[data-inline-comment-thread-id="${CSS.escape(threadId)}"]`
+  );
+}
+
 function readBinding(view: EditorView): ProsemirrorBinding | null {
   const syncState = ySyncPluginKey.getState(view.state) as
     { binding?: ProsemirrorBinding } | undefined;

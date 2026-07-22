@@ -11,20 +11,23 @@ interface SearchMatch {
   to: number;
 }
 
-export interface SearchExtensionState {
+interface SearchState {
   query: string;
-  decorations: DecorationSet;
   matches: SearchMatch[];
   activeIndex: number;
 }
 
-export interface SearchExtensionMeta {
-  query: string;
-  matches: SearchMatch[];
-  activeIndex: number;
+export interface SearchExtensionState extends SearchState {
+  decorations: DecorationSet;
 }
+
+export type SearchExtensionMeta = SearchState;
 
 export const searchPluginKey = new PluginKey<SearchExtensionState>('noteTextSearch');
+
+export function findActiveSearchMatchElement(root: ParentNode): HTMLElement | null {
+  return root.querySelector<HTMLElement>('[data-search-match="active"]');
+}
 
 /** 在文档中收集大小写不敏感的全文匹配区间 */
 export function collectSearchMatches(doc: PMNode, query: string): SearchMatch[] {
@@ -46,6 +49,12 @@ export function collectSearchMatches(doc: PMNode, query: string): SearchMatch[] 
     }
   });
   return matches;
+}
+
+/** 优先命中包含当前文档位置的结果，未命中时回退第一项。 */
+export function getSearchMatchIndexAtPosition(matches: SearchMatch[], position: number): number {
+  const index = matches.findIndex((match) => match.from <= position && position < match.to);
+  return index === -1 ? 0 : index;
 }
 
 function clampActiveIndex(activeIndex: number, matchCount: number): number {

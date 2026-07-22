@@ -1,5 +1,6 @@
 import { toast } from '@heroui/react';
 import { useMemoizedFn } from 'ahooks';
+import { useMemo } from 'react';
 
 import { captureInlineCommentDraft } from './engines/inlineComments/relativePosition';
 import type { CustomBlockNoteProps } from './index.type';
@@ -10,6 +11,7 @@ import {
   useNoteDocument,
   useNoteEditorCommands,
   useNoteEditorHydration,
+  useNoteEditorScroll,
   useNoteOutlineRuntime,
   type NoteEditorDefinition,
 } from './runtime';
@@ -77,7 +79,17 @@ export function useNoteEditorRuntimeCoordinator({
     aiDiffPreview,
     scheduleBodyContentHashRefresh: document.scheduleBodyContentHashRefresh,
   });
-  const commands = useNoteEditorCommands(editor, aiDiff.setExportDisplayModeOverride);
+
+  const scroll = useNoteEditorScroll(editor);
+  const commands = useNoteEditorCommands(
+    editor,
+    aiDiff.setExportDisplayModeOverride,
+    scroll.scrollToTarget
+  );
+  const editorHandle = useMemo(
+    () => ({ ...commands, scrollToAnchor: scroll.scrollToAnchor }),
+    [commands, scroll.scrollToAnchor]
+  );
   const handleSelectionChange = useMemoizedFn(() => {
     document.captureSelection();
     outlineRuntime.syncActiveItem();
@@ -97,7 +109,9 @@ export function useNoteEditorRuntimeCoordinator({
     collaboration,
     document,
     aiDiff,
+    scroll,
     commands,
+    editorHandle,
     handleSelectionChange,
     inlineComments: {
       handleCreate: handleCreateInlineComment,

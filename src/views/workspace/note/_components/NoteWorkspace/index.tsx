@@ -43,6 +43,7 @@ import {
   createNoteChatStateProvider,
   createNoteSelectionChatContext,
 } from '../../NoteChatProtocol';
+import { useNoteFindMode } from '../../_hooks/useNoteFindMode';
 import { useAiDiffDisplayStore } from '../../_store/useAiDiffDisplayStore';
 import styles from '../../style.module.less';
 import FindBar from '../FindBar';
@@ -159,6 +160,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
   const bodyEditorRef = useRef<NoteBodyEditorHandle>(null);
   const titleEditorRef = useRef<NoteTitleHandle>(null);
   const mainScrollRef = useRef<HTMLDivElement>(null);
+  const findModeScopeRef = useRef<HTMLDivElement>(null);
   const titleAnchorRef = useRef<HTMLDivElement>(null);
   const scrollBarHideTimerRef = useRef<number | null>(null);
   const [isMainScrolling, setIsMainScrolling] = useState(false);
@@ -176,11 +178,14 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
     threadId: string;
   }>();
   const [isInlineCommentHistoryOpen, setIsInlineCommentHistoryOpen] = useState(false);
-  const [isFindBarOpen, setIsFindBarOpen] = useState(false);
   const interactService = useInteractService();
   const inlineCommentService = useInlineCommentService();
   const userService = useUserService();
   const setResourceSidePanelMode = useWorkspaceResourceSidePanelStore((state) => state.setMode);
+  const findMode = useNoteFindMode({
+    editorRef: bodyEditorRef,
+    scopeRef: findModeScopeRef,
+  });
   const inlineCommentSession = useMemo(
     () =>
       new NoteInlineCommentSession({
@@ -489,7 +494,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
                 onAction: () => setIsInlineCommentHistoryOpen(true),
               },
             ],
-            onSearch: () => setIsFindBarOpen(true),
+            onSearch: findMode.openFind,
             onPrint: handlePrintPdf,
             download: {
               label: '下载为 Markdown',
@@ -520,6 +525,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
       resourceId,
       resourceName,
       headerSaveStatus,
+      findMode.openFind,
       saveStatusText,
       setAiDiffDisplayMode,
       showAiDiffDisplayModeSwitch,
@@ -530,10 +536,17 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
 
   return (
     <>
-      <div className={styles.mainScroll}>
-        {isFindBarOpen ? (
+      <div className={styles.mainScroll} ref={findModeScopeRef}>
+        {findMode.findMode ? (
           <div className={styles.findBarDock}>
-            <FindBar editorRef={bodyEditorRef} onClose={() => setIsFindBarOpen(false)} />
+            <FindBar
+              query={findMode.findMode.query}
+              result={findMode.findMode.result}
+              onQueryChange={findMode.changeFindQuery}
+              onPrevious={findMode.findPrevious}
+              onNext={findMode.findNext}
+              onClose={findMode.closeFind}
+            />
           </div>
         ) : null}
         <div
@@ -603,6 +616,8 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
                       onActiveHeadingChange={setActiveHeadingId}
                       onAiDiffPresenceChange={setHasAiDiffContent}
                       onAskAi={handleAskAi}
+                      onOpenFind={findMode.openFind}
+                      isFindModeActive={findMode.isFindModeActive}
                       portalContainers={{
                         aiBulkActions: aiBulkActionsPortalContainer,
                       }}

@@ -15,7 +15,9 @@ function CustomBlockNote({
   const editor = useCreateBlockNote(definition.editorOptions);
   const runtimeCoordinator = useNoteEditorRuntimeCoordinator({ editor, definition, props });
 
-  useImperativeHandle(ref, () => runtimeCoordinator.commands, [runtimeCoordinator.commands]);
+  useImperativeHandle(ref, () => runtimeCoordinator.editorHandle, [
+    runtimeCoordinator.editorHandle,
+  ]);
 
   return (
     <NoteEditorSurface editor={editor} runtimeCoordinator={runtimeCoordinator} props={props} />

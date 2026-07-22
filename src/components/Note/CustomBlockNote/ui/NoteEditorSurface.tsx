@@ -27,6 +27,8 @@ export function NoteEditorSurface({
     collaboration: { doc },
     state: { readOnly },
     portalContainers: { aiBulkActions: aiBulkActionsPortalContainer },
+    onOpenFind,
+    isFindModeActive,
   } = props;
 
   return (
@@ -57,6 +59,8 @@ export function NoteEditorSurface({
           <NoteToolbar
             onAskAi={runtimeCoordinator.document.handleAskAi}
             onAddComment={runtimeCoordinator.inlineComments.handleCreate}
+            onOpenFind={onOpenFind}
+            isFindModeActive={isFindModeActive}
           />
           <NoteSlashMenu editor={editor} plugins={notePluginRegistry.contentPlugins} />
           <NoteSideMenu plugins={notePluginRegistry.contentPlugins} />

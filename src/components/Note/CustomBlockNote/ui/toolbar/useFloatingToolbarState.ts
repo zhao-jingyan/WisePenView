@@ -18,8 +18,8 @@ function getDomSelectionToolbarState(view: EditorView): FloatingToolbarState {
     return { visible: false, left: 0, top: 0 };
   }
   const editorDom = view.dom;
-  const range = selection.getRangeAt(0);
-  const anchorNode = range.commonAncestorContainer;
+  const anchorNode = selection.anchorNode;
+  if (!anchorNode) return { visible: false, left: 0, top: 0 };
   if (
     !editorDom.contains(
       anchorNode.nodeType === Node.ELEMENT_NODE ? anchorNode : anchorNode.parentElement
@@ -27,13 +27,18 @@ function getDomSelectionToolbarState(view: EditorView): FloatingToolbarState {
   ) {
     return { visible: false, left: 0, top: 0 };
   }
-  const rect = range.getBoundingClientRect();
+  const ownerDocument = anchorNode.ownerDocument;
+  if (!ownerDocument) return { visible: false, left: 0, top: 0 };
+  const anchorRange = ownerDocument.createRange();
+  anchorRange.setStart(anchorNode, selection.anchorOffset);
+  anchorRange.collapse(true);
+  const rect = anchorRange.getBoundingClientRect();
   if (rect.width === 0 && rect.height === 0) {
     return { visible: false, left: 0, top: 0 };
   }
   return {
     visible: true,
-    left: rect.left + rect.width / 2,
+    left: rect.left,
     top: Math.max(8, rect.top - 10),
   };
 }
@@ -51,14 +56,11 @@ function getSafeToolbarState(view: EditorView): FloatingToolbarState {
   }
 
   try {
-    const fromRect = view.coordsAtPos(selection.from);
-    const toRect = view.coordsAtPos(selection.to);
-    const left = (fromRect.left + toRect.right) / 2;
-    const top = Math.min(fromRect.top, toRect.top);
+    const anchorRect = view.coordsAtPos(selection.anchor);
     return {
       visible: true,
-      left,
-      top: Math.max(8, top - 10),
+      left: anchorRect.left,
+      top: Math.max(8, anchorRect.top - 10),
     };
   } catch {
     return getDomSelectionToolbarState(view);

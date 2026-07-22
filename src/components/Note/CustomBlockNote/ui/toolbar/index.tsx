@@ -19,8 +19,9 @@ import {
   type GenericPopoverReference,
 } from '@blocknote/react';
 import { ButtonGroup, Separator, Toolbar } from '@heroui/react';
-import { MessageSquarePlus, Sparkles } from 'lucide-react';
-import { useMemo, type ComponentProps } from 'react';
+import { useEventListener } from 'ahooks';
+import { MessageSquarePlus, Search, Sparkles } from 'lucide-react';
+import { useCallback, useMemo, type ComponentProps } from 'react';
 import { BlockTypeMenu } from './components/BlockTypeMenu';
 import { ColorMenu } from './components/ColorMenu';
 import { FileCaptionToolbarButton } from './components/FileButtons';
@@ -37,6 +38,8 @@ import { getSelectedBlocks, stopToolbarMouseDown } from './utils';
 interface NoteToolbarProps {
   onAskAi: () => void;
   onAddComment: () => void;
+  onOpenFind: (initialQuery?: string) => void;
+  isFindModeActive: boolean;
 }
 
 const getTableRailToolbarPlacement = (
@@ -48,6 +51,29 @@ const toDOMRect = (rect: { height: number; width: number; x: number; y: number }
 
 function ToolbarSeparator() {
   return <Separator orientation="vertical" className={styles.toolbarSeparator} />;
+}
+
+function useNoteToolbarShortcuts(onOpenFind: NoteToolbarProps['onOpenFind']) {
+  const editor = useBlockNoteEditor(blockNoteSchema);
+  const handleOpenFind = useCallback(() => {
+    const selectedText = editor.getSelectedText().trim();
+    onOpenFind(selectedText || undefined);
+  }, [editor, onOpenFind]);
+  const handleEditorKeyDown = useCallback(
+    (event: Event) => {
+      if (!(event instanceof globalThis.KeyboardEvent)) return;
+      // Ctrl/Cmd + F 快捷键触发全文搜索
+      if (!event.altKey && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        handleOpenFind();
+      }
+    },
+    [handleOpenFind]
+  );
+
+  useEventListener('keydown', handleEditorKeyDown, { target: editor.domElement });
+
+  return handleOpenFind;
 }
 
 function useBlockTypeFileGroupVisible() {
@@ -78,7 +104,13 @@ function useBlockTypeFileGroupVisible() {
   });
 }
 
-function CustomFormattingToolbar({ onAskAi, onAddComment }: NoteToolbarProps) {
+type CustomFormattingToolbarProps = Omit<NoteToolbarProps, 'isFindModeActive'>;
+
+function CustomFormattingToolbar({
+  onAskAi,
+  onAddComment,
+  onOpenFind,
+}: CustomFormattingToolbarProps) {
   const readOnly = useNoteEditorReadOnlyContext();
   const showBlockTypeFileGroup = useBlockTypeFileGroupVisible();
 
@@ -114,7 +146,8 @@ function CustomFormattingToolbar({ onAskAi, onAddComment }: NoteToolbarProps) {
           <ToolbarSeparator />
         </>
       ) : null}
-      <ButtonGroup size="sm" variant="ghost" aria-label="批注和 AI">
+      <ButtonGroup size="sm" variant="ghost" aria-label="搜索、批注和 AI">
+        <ToolbarButton label="全文搜索" icon={<Search size={20} />} onPress={onOpenFind} />
         <ToolbarButton
           label="添加批注"
           icon={<MessageSquarePlus size={20} />}
@@ -160,6 +193,7 @@ type TableRailFormattingToolbarProps = NoteToolbarProps & {
 
 function TableRailFormattingToolbar({
   tableRailSelection,
+  isFindModeActive,
   ...toolbarProps
 }: TableRailFormattingToolbarProps) {
   const editor = useBlockNoteEditor();
@@ -193,7 +227,7 @@ function TableRailFormattingToolbar({
     [editor, formattingToolbar.store, show, tableRailSelection.orientation]
   );
 
-  if (!tableRailSelection.orientation || !reference) {
+  if (isFindModeActive || !tableRailSelection.orientation || !reference) {
     return null;
   }
 
@@ -210,12 +244,21 @@ function TableRailFormattingToolbar({
 }
 
 function NoteToolbar(props: NoteToolbarProps) {
+  const handleOpenFind = useNoteToolbarShortcuts(props.onOpenFind);
   const tableRailSelection = useTableRailSelectionState();
 
   return (
     <>
-      <TextSelectionFormattingToolbar {...props} hidden={tableRailSelection.orientation !== null} />
-      <TableRailFormattingToolbar {...props} tableRailSelection={tableRailSelection} />
+      <TextSelectionFormattingToolbar
+        {...props}
+        onOpenFind={handleOpenFind}
+        hidden={props.isFindModeActive || tableRailSelection.orientation !== null}
+      />
+      <TableRailFormattingToolbar
+        {...props}
+        onOpenFind={handleOpenFind}
+        tableRailSelection={tableRailSelection}
+      />
     </>
   );
 }
