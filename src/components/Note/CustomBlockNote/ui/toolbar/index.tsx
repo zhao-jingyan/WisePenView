@@ -168,15 +168,16 @@ function TextSelectionFormattingToolbar({
   ...toolbarProps
 }: TextSelectionFormattingToolbarProps) {
   const editor = useBlockNoteEditor();
-  const toolbarState = useFloatingToolbarState(editor);
+  const toolbarState = useFloatingToolbarState(editor, hidden);
 
-  if (hidden || !toolbarState.visible) {
+  if (!toolbarState.mounted) {
     return null;
   }
 
   return (
     <div
       className={styles.toolbarPopover}
+      data-visible={toolbarState.visible && !hidden}
       style={{
         left: toolbarState.left,
         top: toolbarState.top,

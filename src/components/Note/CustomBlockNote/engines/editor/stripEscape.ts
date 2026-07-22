@@ -4,6 +4,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorProps } from '@tiptap/pm/view';
 
 import type { NoteEditorExtension } from '../../registry/types';
+import { summarizeNoteTransactions } from './transactionSummary';
 
 const ESC = '\u001b';
 
@@ -42,7 +43,8 @@ const stripEscapeCharExtension = createExtension({
     new Plugin({
       key: new PluginKey('stripEscapeChar'),
       appendTransaction(transactions, _oldState, newState) {
-        if (!transactions.some((tr) => tr.docChanged)) {
+        const summary = summarizeNoteTransactions(transactions);
+        if (!summary.docChanged || !summary.hasEscape) {
           return null;
         }
 
@@ -53,17 +55,31 @@ const stripEscapeCharExtension = createExtension({
           marks: readonly Mark[];
         }> = [];
 
-        newState.doc.descendants((node, pos) => {
-          if (!node.isText || !node.text?.includes(ESC)) {
+        const textNodes = new Map<
+          number,
+          { text: string; marks: readonly Mark[]; nodeSize: number }
+        >();
+        summary.ranges.forEach((range) => {
+          const from = Math.max(0, Math.min(range.from, newState.doc.content.size));
+          const to = Math.max(from, Math.min(range.to, newState.doc.content.size));
+          newState.doc.nodesBetween(from, to, (node, pos) => {
+            if (node.isText && node.text?.includes(ESC)) {
+              textNodes.set(pos, {
+                text: node.text,
+                marks: [...node.marks],
+                nodeSize: node.nodeSize,
+              });
+            }
             return true;
-          }
-          fixes.push({
-            from: pos,
-            to: pos + node.nodeSize,
-            cleaned: node.text.replaceAll(ESC, ''),
-            marks: [...node.marks],
           });
-          return true;
+        });
+        textNodes.forEach((node, from) => {
+          fixes.push({
+            from,
+            to: from + node.nodeSize,
+            cleaned: node.text.replaceAll(ESC, ''),
+            marks: node.marks,
+          });
         });
 
         if (fixes.length === 0) {

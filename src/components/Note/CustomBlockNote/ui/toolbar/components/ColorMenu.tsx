@@ -82,7 +82,6 @@ export function ColorMenu(buttonGroupProps: ButtonGroupChildProps) {
           {...buttonGroupProps}
           variant="ghost"
           size="sm"
-          isIconOnly
           className={clsx(styles.colorTrigger, open && styles.toolbarButtonActive)}
           onMouseDown={stopToolbarMouseDown}
           aria-label="颜色"

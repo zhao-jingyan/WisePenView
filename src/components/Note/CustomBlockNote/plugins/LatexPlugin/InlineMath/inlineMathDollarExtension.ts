@@ -6,6 +6,10 @@ import type {
 import { createExtension, getBlockInfo, inlineContentToNodes, nodeToBlock } from '@blocknote/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
+import {
+  collectBlockContainerNodes,
+  summarizeNoteTransactions,
+} from '../../../engines/editor/transactionSummary';
 import type { NotePluginRegistry } from '../../../registry/types';
 
 /**
@@ -96,7 +100,8 @@ export const createInlineMathDollarExtension = (registry: NotePluginRegistry) =>
         new Plugin({
           key: inlineMathDollarPluginKey,
           appendTransaction(transactions, _oldState, newState) {
-            if (!transactions.some((t) => t.docChanged)) {
+            const summary = summarizeNoteTransactions(transactions);
+            if (!summary.docChanged || !summary.hasDollar) {
               return null;
             }
             if (transactions.some((t) => t.getMeta(inlineMathDollarPluginKey) === 'skip')) {
@@ -110,11 +115,7 @@ export const createInlineMathDollarExtension = (registry: NotePluginRegistry) =>
               content: NoteInlineContent[];
             }> = [];
 
-            newState.doc.descendants((node, pos) => {
-              if (node.type.name !== 'blockContainer') {
-                return true;
-              }
-
+            collectBlockContainerNodes(newState.doc, summary.ranges).forEach(({ node, pos }) => {
               const block = nodeToBlock(
                 node,
                 newState.schema,
@@ -124,10 +125,10 @@ export const createInlineMathDollarExtension = (registry: NotePluginRegistry) =>
               );
 
               if (!registry.blockPlugins.get(block.type)?.inputRules?.inlineMathDollar) {
-                return true;
+                return;
               }
               if (!Array.isArray(block.content)) {
-                return true;
+                return;
               }
 
               const transformed = transformInlineContentOnce(
@@ -143,7 +144,6 @@ export const createInlineMathDollarExtension = (registry: NotePluginRegistry) =>
                 blockProps: block.props,
                 content: transformed,
               });
-              return true;
             });
 
             if (replacements.length === 0) {

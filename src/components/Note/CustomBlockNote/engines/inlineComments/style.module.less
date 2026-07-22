@@ -9,3 +9,17 @@
 .anchor:hover {
   background: color-mix(in srgb, var(--warning) 28%, transparent);
 }
+
+// 搜索与批注 decoration 合并为同一元素时，搜索状态优先显示。
+:global(.wise-search-highlight).anchor,
+:global(.wise-search-highlight).anchor:hover {
+  background: var(--accent-soft);
+  border-bottom-color: transparent;
+}
+
+:global(.wise-search-highlight-active).anchor,
+:global(.wise-search-highlight-active).anchor:hover {
+  background: var(--accent);
+  border-bottom-color: transparent;
+  color: var(--paper);
+}

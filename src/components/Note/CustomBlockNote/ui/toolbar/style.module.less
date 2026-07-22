@@ -1,8 +1,48 @@
 .toolbarPopover {
   position: fixed;
   z-index: calc(var(--bn-ui-base-z-index, 0) + var(--note-editor-toolbar-layer, 120));
-  //  transform-origin: top center;
   transform: translate(-15%, -100%);
+  opacity: 0;
+  pointer-events: none;
+
+  &[data-visible='true'] {
+    pointer-events: auto;
+    animation: toolbarFadeIn 120ms ease-out both;
+  }
+
+  &[data-visible='false'] {
+    animation: toolbarFadeOut 120ms ease-in both;
+  }
+}
+
+@keyframes toolbarFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes toolbarFadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbarPopover {
+    animation: none;
+
+    &[data-visible='true'] {
+      opacity: 1;
+    }
+  }
 }
 
 .toolbar {
@@ -10,6 +50,12 @@
   background: var(--overlay);
   color: var(--overlay-foreground);
   gap: 0;
+}
+
+.blockTypeTrigger,
+.colorTrigger {
+  gap: var(--space-2xs);
+  padding-inline: var(--space-xs);
 }
 
 .toolbarSeparator {
