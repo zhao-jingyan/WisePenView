@@ -3,7 +3,12 @@ packages:
 
 allowBuilds:
   '@parcel/watcher': true
+  electron-winstaller: false
   esbuild: true
+
+minimumReleaseAgeExclude:
+  - electron@43.2.0
+  - wait-on@9.1.0
 
 patchedDependencies:
   '@blocknote/core@0.47.3': patches/@blocknote__core@0.47.3.patch
