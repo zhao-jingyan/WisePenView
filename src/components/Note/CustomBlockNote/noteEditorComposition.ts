@@ -5,6 +5,7 @@ import { noteConfig } from './noteConfig';
 import { codeBlockPlugin } from './plugins/CodeBlockPlugin';
 import { createDefaultContentPlugin } from './plugins/DefaultContentPlugin';
 import { latexPlugin } from './plugins/LatexPlugin';
+import { mermaidPlugin } from './plugins/MermaidPlugin';
 import { tablePlugin } from './plugins/TablePlugin';
 import {
   collectNoteEditorExtensions,
@@ -20,7 +21,7 @@ const defaultContentPlugin = createDefaultContentPlugin(noteConfig.aiDiff.richTe
 const notePluginTree = {
   kind: 'bundle',
   id: 'note',
-  children: [defaultContentPlugin, codeBlockPlugin, tablePlugin, latexPlugin],
+  children: [defaultContentPlugin, codeBlockPlugin, tablePlugin, latexPlugin, mermaidPlugin],
 } satisfies NotePluginBundle;
 
 export const notePluginRegistry = createNotePluginRegistry(notePluginTree, [
