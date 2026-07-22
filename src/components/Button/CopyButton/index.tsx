@@ -34,3 +34,4 @@ function CopyButton({ text, label = '复制', className }: CopyButtonProps) {
 }
 
 export default CopyButton;
+export { ICON_SIZE as MESSAGE_ACTION_ICON_SIZE };

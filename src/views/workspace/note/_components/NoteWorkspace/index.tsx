@@ -1,4 +1,4 @@
-import { Spin } from '@/components/Feedback';
+﻿import { Spin } from '@/components/Feedback';
 import InlineComment from '@/components/InlineComment';
 import SegmentedTabs from '@/components/SegmentedTabs';
 import { useMemoizedFn, useRequest, useUnmount } from 'ahooks';
@@ -45,6 +45,7 @@ import {
 } from '../../NoteChatProtocol';
 import { useAiDiffDisplayStore } from '../../_store/useAiDiffDisplayStore';
 import styles from '../../style.module.less';
+import FindBar from '../FindBar';
 import NoteInfoBar from '../NoteInfoBar';
 import NoteOutline, { NOTE_OUTLINE_TITLE_ID } from '../NoteOutline';
 import NoteTitle, { type NoteTitleHandle, type NoteTitleSaveStatus } from '../NoteTitle';
@@ -175,6 +176,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
     threadId: string;
   }>();
   const [isInlineCommentHistoryOpen, setIsInlineCommentHistoryOpen] = useState(false);
+  const [isFindBarOpen, setIsFindBarOpen] = useState(false);
   const interactService = useInteractService();
   const inlineCommentService = useInlineCommentService();
   const userService = useUserService();
@@ -487,6 +489,7 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
                 onAction: () => setIsInlineCommentHistoryOpen(true),
               },
             ],
+            onSearch: () => setIsFindBarOpen(true),
             onPrint: handlePrintPdf,
             download: {
               label: '下载为 Markdown',
@@ -528,6 +531,11 @@ function NoteWorkspace({ resourceId, noteInfoDisplay, onRefreshNoteInfo }: NoteW
   return (
     <>
       <div className={styles.mainScroll}>
+        {isFindBarOpen ? (
+          <div className={styles.findBarDock}>
+            <FindBar editorRef={bodyEditorRef} onClose={() => setIsFindBarOpen(false)} />
+          </div>
+        ) : null}
         <div
           className={`${styles.contentRow} ${
             isOutlineOpen ? styles.contentRowOutlineOpen : styles.contentRowOutlineCollapsed

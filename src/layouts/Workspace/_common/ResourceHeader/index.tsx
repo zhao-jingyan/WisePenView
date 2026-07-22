@@ -13,7 +13,9 @@ import {
   FolderInput,
   HardDrive,
   Link2,
+  MessageSquare,
   Printer,
+  Search,
   Settings2,
   Share2,
   ShieldCheck,
@@ -91,6 +93,10 @@ function ResourceHeaderMore({
       operations.onDelete?.();
       return;
     }
+    if (key === 'comment-history') {
+      menu?.onInlineCommentHistory?.();
+      return;
+    }
     if (key === 'print') {
       menu?.onPrint?.();
       return;
@@ -99,26 +105,24 @@ function ResourceHeaderMore({
       menu?.download?.onAction();
       return;
     }
-    menu?.actions?.find((action) => action.id === key)?.onAction();
+    if (key === 'search') {
+      menu?.onSearch?.();
+    }
   };
 
   return (
     <Dropdown>
       <Tooltip>
-        <Tooltip.Trigger>
-          <Dropdown.Trigger>
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              isPending={menu?.isPending || operations.isLocating}
-              isDisabled={isDisabled}
-              aria-label="更多"
-            >
-              <Ellipsis size={18} aria-hidden="true" />
-            </Button>
-          </Dropdown.Trigger>
-        </Tooltip.Trigger>
+        <Button
+          variant="ghost"
+          size="sm"
+          isIconOnly
+          isPending={menu?.isPending || operations.isLocating}
+          isDisabled={isDisabled}
+          aria-label="更多"
+        >
+          <Ellipsis size={18} aria-hidden="true" />
+        </Button>
         <Tooltip.Content>更多</Tooltip.Content>
       </Tooltip>
       <Dropdown.Popover placement="bottom end" className={styles.popover}>
@@ -164,13 +168,22 @@ function ResourceHeaderMore({
               </Dropdown.Item>
             </Dropdown.Section>
           ) : null}
-          {menu?.actions?.length ? (
+          {menu?.showInlineCommentHistory ? (
             <Dropdown.Section>
-              {menu.actions.map((action) => (
-                <Dropdown.Item key={action.id} id={action.id} textValue={action.label}>
-                  <ResourceHeaderMenuItemContent icon={action.icon} label={action.label} />
-                </Dropdown.Item>
-              ))}
+              <Dropdown.Item
+                id="comment-history"
+                textValue="历史批注"
+                isDisabled={!menu.onInlineCommentHistory}
+              >
+                <ResourceHeaderMenuItemContent icon={MessageSquare} label="历史批注" />
+              </Dropdown.Item>
+            </Dropdown.Section>
+          ) : null}
+          {menu?.onSearch ? (
+            <Dropdown.Section>
+              <Dropdown.Item id="search" textValue="全文搜索">
+                <ResourceHeaderMenuItemContent icon={Search} label="全文搜索" />
+              </Dropdown.Item>
             </Dropdown.Section>
           ) : null}
           {menu?.onPrint || menu?.download ? (
@@ -246,6 +259,7 @@ function ResourceHeader({
   leadingActions,
   actions,
   moreMenu,
+  hideBreadcrumb,
 }: ResourceHeaderProps) {
   const userService = useUserService();
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
@@ -261,22 +275,41 @@ function ResourceHeader({
     <>
       <div className={styles.root}>
         <div className={styles.title}>
-          <nav className={styles.breadcrumb} aria-label="资源路径">
-            {breadcrumbItems.map((item, index) => (
-              <span key={item.nodeId} className={styles.breadcrumbSegment}>
-                <button
-                  type="button"
-                  className={styles.breadcrumbButton}
-                  onClick={() => onBreadcrumbNavigate(item.nodeId)}
-                >
-                  {index === 0 ? (
-                    <HardDrive className={styles.breadcrumbIcon} size={14} aria-hidden />
-                  ) : null}
-                  {item.label}
-                </button>
-                <ChevronRight className={styles.breadcrumbSeparator} size={14} aria-hidden />
+          {!hideBreadcrumb ? (
+            <nav className={styles.breadcrumb} aria-label="资源路径">
+              {breadcrumbItems.map((item, index) => (
+                <span key={item.nodeId} className={styles.breadcrumbSegment}>
+                  <button
+                    type="button"
+                    className={styles.breadcrumbButton}
+                    onClick={() => onBreadcrumbNavigate(item.nodeId)}
+                  >
+                    {index === 0 ? (
+                      <HardDrive
+                        className={styles.breadcrumbIcon}
+                        size={14}
+                        aria-hidden
+                        color="var(--accent)"
+                      />
+                    ) : null}
+                    {item.label}
+                  </button>
+                  <ChevronRight className={styles.breadcrumbSeparator} size={14} aria-hidden />
+                </span>
+              ))}
+              <span className={styles.breadcrumbCurrent} aria-current="page">
+                <span className={styles.titleIcon} aria-hidden="true">
+                  <EntryIcon
+                    entryType="resource"
+                    resourceType={resourceType}
+                    resourceName={resourceName}
+                    resourceIconType={resourceIconType}
+                  />
+                </span>
+                <span className={styles.titleText}>{resourceName}</span>
               </span>
-            ))}
+            </nav>
+          ) : (
             <span className={styles.breadcrumbCurrent} aria-current="page">
               <span className={styles.titleIcon} aria-hidden="true">
                 <EntryIcon
@@ -288,7 +321,7 @@ function ResourceHeader({
               </span>
               <span className={styles.titleText}>{resourceName}</span>
             </span>
-          </nav>
+          )}
           {titleMeta ? <span className={styles.titleMeta}>{titleMeta}</span> : null}
         </div>
         <div className={styles.actions}>
