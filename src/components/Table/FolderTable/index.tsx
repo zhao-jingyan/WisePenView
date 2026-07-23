@@ -1,5 +1,4 @@
 import TableBatchFooter from '../ManageTable/parts/BatchFooter';
-import TableSelectionCheckbox from '../ManageTable/parts/SelectionCheckbox';
 import TableCellAlign from '../shared/cells/CellAlign';
 import TableTextCell from '../shared/cells/TextCell';
 import { tableCellStyles, tableStyles } from '../shared/styles';
@@ -13,11 +12,11 @@ import {
   isFolderEqLayout,
   resolveFolderColumnWidthClassForColumn,
 } from '../shared/TableBase/columnWidth';
-import { resolveSelectedCount } from '../shared/TableBase/tableSelection';
 import { sortFolderTreeRows } from '../shared/TableBase/tableSort';
 import TableBodyState from '../shared/TableBodyState';
 import TableRowActions from '../shared/TableRowActions';
 import type { TableRowActionItem } from '../shared/TableRowActions/index.type';
+import TableSelectionCheckbox from '../shared/TableSelectionCheckbox';
 import { renderSortableColumnLabel } from '../shared/TableSortHeader/renderSortableColumnLabel';
 import { TableLoadMoreRow } from '../shared/TableStatusRows';
 import TableSummaryFooter from '../shared/TableSummaryFooter';
@@ -28,14 +27,12 @@ import type {
   FolderTableRow,
   FolderTableRowAction,
   FolderTableRowContext,
-  FolderTableRowPressContext,
   FolderTableVisibleRow,
 } from './index.type';
 import FolderTableNameCell from './parts/FolderNameCell';
 import FolderTableLoadingSkeleton from './parts/LoadingSkeleton';
 import styles from './style.module.less';
 
-import type { Selection } from '@heroui/react';
 import { Table } from '@heroui/react';
 import { Folder } from 'lucide-react';
 import {
@@ -46,7 +43,6 @@ import {
   type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
-  type PointerEvent,
   type ReactNode,
   type UIEvent,
 } from 'react';
@@ -54,7 +50,6 @@ import { useTranslation } from 'react-i18next';
 
 const LOAD_MORE_THRESHOLD_PX = 48;
 const ROW_ID_ATTRIBUTE = 'data-folder-row-id';
-const IMMEDIATE_SELECTED_ATTRIBUTE = 'data-folder-row-immediate-selected';
 const INTERACTIVE_ROW_TARGET_SELECTOR = [
   'a',
   'button',
@@ -152,35 +147,8 @@ interface DelegatedRowTarget {
   rowId: string;
 }
 
-const EMPTY_ROW_PRESS_CONTEXT: FolderTableRowPressContext = {
-  metaKey: false,
-  ctrlKey: false,
-  shiftKey: false,
-  modifierKey: false,
-  detail: 0,
-  isNameColumn: false,
-};
-
-function toRowPressContext(
-  event: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement> | PointerEvent<HTMLElement>
-): FolderTableRowPressContext {
-  const modifierKey = event.metaKey || event.ctrlKey;
-  const detail = event instanceof MouseEvent ? event.detail : undefined;
-  const target = event.target;
-  const isNameColumn =
-    target instanceof Element ? target.closest('[data-name-column="true"]') !== null : false;
-  return {
-    metaKey: event.metaKey,
-    ctrlKey: event.ctrlKey,
-    shiftKey: event.shiftKey,
-    modifierKey,
-    detail,
-    isNameColumn,
-  };
-}
-
 function getDelegatedRowTarget(
-  event: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement> | PointerEvent<HTMLElement>
+  event: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>
 ): DelegatedRowTarget | null {
   const target = event.target;
   if (!(target instanceof Element)) {
@@ -197,29 +165,15 @@ function getDelegatedRowTarget(
   return rowId ? { row, rowId } : null;
 }
 
-function markImmediateSelectedRow(container: HTMLElement, selectedRow: HTMLElement) {
-  const previousRows = container.querySelectorAll<HTMLElement>(
-    `[${ROW_ID_ATTRIBUTE}][data-selected="true"], [${ROW_ID_ATTRIBUTE}][${IMMEDIATE_SELECTED_ATTRIBUTE}="true"]`
-  );
-  previousRows.forEach((row) => {
-    if (row === selectedRow) {
-      return;
-    }
-    row.removeAttribute('data-selected');
-    row.removeAttribute(IMMEDIATE_SELECTED_ATTRIBUTE);
-    row.classList.remove(styles.selectedRow);
-  });
-
-  selectedRow.setAttribute('data-selected', 'true');
-  selectedRow.setAttribute(IMMEDIATE_SELECTED_ATTRIBUTE, 'true');
-  selectedRow.classList.add(styles.selectedRow);
-}
-
 interface FolderTableBodyRowProps<T extends FolderTableRow> {
   columns: FolderTableColumn<T>[];
+  checkboxDisabled: boolean;
+  checkboxHidden: boolean;
+  onCheckboxChange: (rowId: string, selected: boolean, shiftKey: boolean) => void;
   isLoadMoreRow: boolean;
+  isCheckboxSelected: boolean;
   isSelected: boolean;
-  showBatchSelection: boolean;
+  showCheckboxSelection: boolean;
   renderCellContent: (
     column: FolderTableColumn<T>,
     row: FolderTableVisibleRow & T,
@@ -236,9 +190,13 @@ function areBodyRowPropsEqual<T extends FolderTableRow>(
   return (
     prev.row === next.row &&
     prev.columns === next.columns &&
+    prev.checkboxDisabled === next.checkboxDisabled &&
+    prev.checkboxHidden === next.checkboxHidden &&
+    prev.onCheckboxChange === next.onCheckboxChange &&
     prev.isLoadMoreRow === next.isLoadMoreRow &&
+    prev.isCheckboxSelected === next.isCheckboxSelected &&
     prev.isSelected === next.isSelected &&
-    prev.showBatchSelection === next.showBatchSelection &&
+    prev.showCheckboxSelection === next.showCheckboxSelection &&
     prev.renderCellContent === next.renderCellContent &&
     prev.resolveBodyCellClass === next.resolveBodyCellClass
   );
@@ -246,9 +204,13 @@ function areBodyRowPropsEqual<T extends FolderTableRow>(
 
 function FolderTableBodyRowBase<T extends FolderTableRow>({
   columns,
+  checkboxDisabled,
+  checkboxHidden,
+  onCheckboxChange,
   isLoadMoreRow,
+  isCheckboxSelected,
   isSelected,
-  showBatchSelection,
+  showCheckboxSelection,
   renderCellContent,
   resolveBodyCellClass,
   row,
@@ -273,16 +235,23 @@ function FolderTableBodyRowBase<T extends FolderTableRow>({
         isLoadMoreRow ? styles.inlineLoadMoreRow : undefined
       )}
     >
-      {showBatchSelection ? (
+      {showCheckboxSelection ? (
         <Table.Cell className={joinClassNames(styles.checkboxCell, tableStyles.colCheckbox)}>
-          <div
-            className={joinClassNames(
-              tableCellStyles.cellContentHostCenter,
-              styles.checkboxCellInner
-            )}
-          >
-            <TableSelectionCheckbox ariaLabel={t('aria.selectRow', { id: rowId })} />
-          </div>
+          {!checkboxHidden ? (
+            <div
+              className={joinClassNames(
+                tableCellStyles.cellContentHostCenter,
+                styles.checkboxCellInner
+              )}
+            >
+              <TableSelectionCheckbox
+                ariaLabel={t('aria.selectRow', { id: rowId })}
+                isSelected={isCheckboxSelected}
+                isDisabled={checkboxDisabled}
+                onChange={(selected, shiftKey) => onCheckboxChange(rowId, selected, shiftKey)}
+              />
+            </div>
+          ) : null}
         </Table.Cell>
       ) : null}
       {columns.map((column) => {
@@ -325,7 +294,6 @@ function FolderTable<T extends FolderTableRow>({
   expandedRowKeys = [],
   onExpandedChange,
   selectedRowKey,
-  selectedRowKeys,
   onRowSelect,
   onRowActivate,
   renderNameContent,
@@ -342,14 +310,16 @@ function FolderTable<T extends FolderTableRow>({
   sortDescriptor,
   onSortChange,
   isPinnedFirst,
-  batchSelection,
-  batchFooter,
+  isEditMode = false,
+  checkboxSelection,
+  selectionFooter,
 }: FolderTableProps<T>) {
   const { t } = useTranslation('table');
   const resolvedEmptyText = emptyText ?? t('empty.folderEmpty');
   const resolvedEmptyDescription = emptyDescription ?? t('empty.folderDescription');
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadMoreLockRef = useRef(false);
+  const selectionAnchorRef = useRef<string | undefined>(undefined);
 
   const columns = useMemo(
     () => columnsProp ?? (createDefaultFolderColumns<T>(t) as FolderTableColumn<T>[]),
@@ -359,18 +329,14 @@ function FolderTable<T extends FolderTableRow>({
   const eqColumnCount = countFolderEqColumns(columns);
 
   const expandedKeySet = useMemo(() => new Set(expandedRowKeys), [expandedRowKeys]);
-  const selectedRowKeySet = useMemo(() => {
-    const keys = new Set<string>();
-    if (selectedRowKey) {
-      keys.add(selectedRowKey);
-    }
-    if (selectedRowKeys) {
-      for (const key of selectedRowKeys) {
-        keys.add(String(key));
-      }
-    }
-    return keys;
-  }, [selectedRowKey, selectedRowKeys]);
+  const selectedEditRowKeySet = useMemo(
+    () => new Set(checkboxSelection ? [...checkboxSelection.selectedKeys].map(String) : []),
+    [checkboxSelection]
+  );
+  const selectedRowKeySet = useMemo(
+    () => (isEditMode ? selectedEditRowKeySet : new Set(selectedRowKey ? [selectedRowKey] : [])),
+    [isEditMode, selectedEditRowKeySet, selectedRowKey]
+  );
 
   const sortedItems = useMemo(
     () =>
@@ -401,29 +367,42 @@ function FolderTable<T extends FolderTableRow>({
 
   const showSkeletonBody = loading && items.length === 0;
   const showEmptyState = !loading && visibleRows.length === 0;
-  const showBatchSelection = Boolean(batchSelection);
-  const selectableVisibleRowIds = useMemo(
-    () => visibleRows.filter((row) => row.entryType !== 'loading').map((row) => row.id),
-    [visibleRows]
-  );
+  const showCheckboxSelection = Boolean(checkboxSelection);
   const disabledKeys = useMemo(() => {
-    if (!batchSelection) {
-      return undefined;
-    }
     const keys = new Set<string>();
-    if (batchSelection.disabledKeys) {
-      for (const key of batchSelection.disabledKeys) {
+    if (checkboxSelection?.disabledKeys) {
+      for (const key of checkboxSelection.disabledKeys) {
         keys.add(String(key));
       }
     }
-    if (loadMore?.loading) {
-      keys.add('__load_more');
+    return keys;
+  }, [checkboxSelection]);
+  const hiddenKeys = useMemo(() => {
+    const keys = new Set<string>();
+    if (checkboxSelection?.hiddenKeys) {
+      for (const key of checkboxSelection.hiddenKeys) {
+        keys.add(String(key));
+      }
     }
-    return keys.size > 0 ? keys : undefined;
-  }, [batchSelection, loadMore?.loading]);
-  const selectableRowCount = selectableVisibleRowIds.length;
-  const selectedCount = resolveSelectedCount(batchSelection?.selectedKeys, selectableRowCount);
-  const showBatchFooter = Boolean(batchSelection && batchFooter);
+    return keys;
+  }, [checkboxSelection]);
+  const selectableVisibleRowIds = useMemo(
+    () =>
+      visibleRows
+        .filter(
+          (row) =>
+            row.entryType !== 'loading' && !disabledKeys.has(row.id) && !hiddenKeys.has(row.id)
+        )
+        .map((row) => row.id),
+    [disabledKeys, hiddenKeys, visibleRows]
+  );
+  const selectedVisibleCount = selectableVisibleRowIds.filter((id) =>
+    selectedRowKeySet.has(id)
+  ).length;
+  const allVisibleSelected =
+    selectableVisibleRowIds.length > 0 && selectedVisibleCount === selectableVisibleRowIds.length;
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected;
+  const showSelectionFooter = Boolean(checkboxSelection && selectionFooter);
 
   const defaultSummary = useMemo(() => {
     if (summary !== undefined) {
@@ -433,21 +412,61 @@ function FolderTable<T extends FolderTableRow>({
     return count > 0 ? t('summary.totalItems', { count }) : t('summary.totalItemsZero');
   }, [summary, totalCount, items.length, t]);
 
-  const showFooter = !showSkeletonBody && Boolean(defaultSummary) && !showBatchFooter;
+  const showFooter = !showSkeletonBody && Boolean(defaultSummary) && !showSelectionFooter;
 
-  const handleBatchSelectionChange = useCallback(
-    (keys: Selection) => {
-      if (!batchSelection) {
+  const handleCheckboxChange = useCallback(
+    (rowId: string, selected: boolean, shiftKey: boolean) => {
+      if (
+        !checkboxSelection ||
+        disabledKeys.has(rowId) ||
+        hiddenKeys.has(rowId) ||
+        !selectableVisibleRowIds.includes(rowId)
+      ) {
         return;
       }
-      if (keys === 'all') {
-        batchSelection.onSelectionChange('all');
-        return;
+
+      const nextKeys = new Set(selectedEditRowKeySet);
+      const anchorId = selectionAnchorRef.current;
+      const anchorIndex = anchorId ? selectableVisibleRowIds.indexOf(anchorId) : -1;
+      const rowIndex = selectableVisibleRowIds.indexOf(rowId);
+
+      if (shiftKey && anchorIndex >= 0 && rowIndex >= 0) {
+        const start = Math.min(anchorIndex, rowIndex);
+        const end = Math.max(anchorIndex, rowIndex);
+        selectableVisibleRowIds.slice(start, end + 1).forEach((id) => {
+          if (selected) {
+            nextKeys.add(id);
+          } else {
+            nextKeys.delete(id);
+          }
+        });
+      } else if (selected) {
+        nextKeys.add(rowId);
+      } else {
+        nextKeys.delete(rowId);
       }
-      batchSelection.onSelectionChange(keys);
+
+      selectionAnchorRef.current = rowId;
+      checkboxSelection.onSelectionChange(nextKeys);
     },
-    [batchSelection]
+    [checkboxSelection, disabledKeys, hiddenKeys, selectableVisibleRowIds, selectedEditRowKeySet]
   );
+
+  const handleToggleAll = useCallback(() => {
+    if (!checkboxSelection) {
+      return;
+    }
+    const nextKeys = new Set(selectedEditRowKeySet);
+    selectableVisibleRowIds.forEach((id) => {
+      if (allVisibleSelected) {
+        nextKeys.delete(id);
+      } else {
+        nextKeys.add(id);
+      }
+    });
+    selectionAnchorRef.current = undefined;
+    checkboxSelection.onSelectionChange(nextKeys);
+  }, [allVisibleSelected, checkboxSelection, selectableVisibleRowIds, selectedEditRowKeySet]);
 
   const handleScroll = useCallback(
     (event: UIEvent<HTMLElement>) => {
@@ -491,12 +510,38 @@ function FolderTable<T extends FolderTableRow>({
       if (!onExpandedChange) {
         return;
       }
-      const next = expandedRowKeys.includes(rowId)
+      const isCollapsing = expandedRowKeys.includes(rowId);
+      if (isCollapsing && checkboxSelection) {
+        const rowIndex = visibleRows.findIndex((row) => row.id === rowId);
+        const rowDepth = visibleRows[rowIndex]?.depth;
+        if (rowIndex >= 0 && rowDepth !== undefined) {
+          const descendantIds = new Set<string>();
+          for (let index = rowIndex + 1; index < visibleRows.length; index += 1) {
+            const row = visibleRows[index];
+            if (row.depth <= rowDepth) break;
+            descendantIds.add(row.id);
+          }
+          if (descendantIds.size > 0) {
+            const nextSelectedKeys = new Set(selectedEditRowKeySet);
+            let selectionChanged = false;
+            descendantIds.forEach((id) => {
+              selectionChanged = nextSelectedKeys.delete(id) || selectionChanged;
+            });
+            if (selectionAnchorRef.current && descendantIds.has(selectionAnchorRef.current)) {
+              selectionAnchorRef.current = undefined;
+            }
+            if (selectionChanged) {
+              checkboxSelection.onSelectionChange(nextSelectedKeys);
+            }
+          }
+        }
+      }
+      const next = isCollapsing
         ? expandedRowKeys.filter((key) => key !== rowId)
         : [...expandedRowKeys, rowId];
       onExpandedChange(next);
     },
-    [expandedRowKeys, onExpandedChange]
+    [checkboxSelection, expandedRowKeys, onExpandedChange, selectedEditRowKeySet, visibleRows]
   );
 
   const handleRowAction = useCallback(
@@ -508,28 +553,29 @@ function FolderTable<T extends FolderTableRow>({
   );
 
   const handleRowPress = useCallback(
-    (row: T, ctx: FolderTableRowPressContext = EMPTY_ROW_PRESS_CONTEXT) => {
-      if (batchSelection) {
-        return;
-      }
+    (row: T) => {
       if (onRowSelect) {
-        onRowSelect(row, ctx);
+        onRowSelect(row);
         return;
       }
       onRowActivate?.(row);
     },
-    [batchSelection, onRowActivate, onRowSelect]
+    [onRowActivate, onRowSelect]
   );
 
   const handleDelegatedRowPress = useCallback(
-    (rowId: string, ctx: FolderTableRowPressContext) => {
+    (rowId: string, shiftKey: boolean) => {
       const row = visibleRowMap.get(rowId);
       if (!row) {
         return;
       }
-      handleRowPress(row as T, ctx);
+      if (isEditMode) {
+        handleCheckboxChange(rowId, !selectedEditRowKeySet.has(rowId), shiftKey);
+        return;
+      }
+      handleRowPress(row as T);
     },
-    [handleRowPress, visibleRowMap]
+    [handleCheckboxChange, handleRowPress, isEditMode, selectedEditRowKeySet, visibleRowMap]
   );
 
   const handleBodyClick = useCallback(
@@ -537,45 +583,38 @@ function FolderTable<T extends FolderTableRow>({
       if (event.defaultPrevented) {
         return;
       }
-      if (batchSelection) {
-        return;
-      }
       const target = getDelegatedRowTarget(event);
       if (!target) {
         return;
       }
-      const pressContext = toRowPressContext(event);
-      if (onRowSelect && !pressContext.modifierKey) {
-        markImmediateSelectedRow(event.currentTarget, target.row);
-      }
-      handleDelegatedRowPress(target.rowId, pressContext);
+      handleDelegatedRowPress(target.rowId, event.shiftKey);
     },
-    [batchSelection, handleDelegatedRowPress, onRowSelect]
+    [handleDelegatedRowPress]
   );
 
-  const handleBodyPointerDown = useCallback(
-    (event: PointerEvent<HTMLElement>) => {
-      if (batchSelection) {
+  const handleBodyDoubleClick = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      if (event.defaultPrevented || isEditMode || !onRowSelect) {
         return;
       }
       const target = getDelegatedRowTarget(event);
       if (!target) {
         return;
       }
-      if (!onRowSelect) return;
-      if (!toRowPressContext(event).modifierKey && !selectedRowKeySet.has(target.rowId)) {
-        markImmediateSelectedRow(event.currentTarget, target.row);
+      const row = visibleRowMap.get(target.rowId);
+      if (row) {
+        onRowActivate?.(row as T);
       }
     },
-    [batchSelection, onRowSelect, selectedRowKeySet]
+    [isEditMode, onRowActivate, onRowSelect, visibleRowMap]
   );
 
   const handleBodyKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
-      if (event.defaultPrevented || (event.key !== 'Enter' && event.key !== ' ')) {
+      if (event.defaultPrevented) {
         return;
       }
-      if (batchSelection) {
+      if (event.key !== 'Enter' && event.key !== ' ') {
         return;
       }
       const target = getDelegatedRowTarget(event);
@@ -583,13 +622,9 @@ function FolderTable<T extends FolderTableRow>({
         return;
       }
       event.preventDefault();
-      const pressContext = toRowPressContext(event);
-      if (onRowSelect && !pressContext.modifierKey) {
-        markImmediateSelectedRow(event.currentTarget, target.row);
-      }
-      handleDelegatedRowPress(target.rowId, pressContext);
+      handleDelegatedRowPress(target.rowId, event.shiftKey);
     },
-    [batchSelection, handleDelegatedRowPress, onRowSelect]
+    [handleDelegatedRowPress]
   );
 
   const renderCellContent = useCallback(
@@ -670,6 +705,7 @@ function FolderTable<T extends FolderTableRow>({
       joinClassNames(
         resolveFolderColumnWidthClassForColumn(column, eqLayout),
         column.isActionColumn ? styles.actionCell : styles.bodyCell,
+        column.isNameColumn ? styles.nameCell : undefined,
         !column.isNameColumn && !column.isActionColumn ? styles.mutedCell : undefined,
         column.className
       ),
@@ -677,7 +713,10 @@ function FolderTable<T extends FolderTableRow>({
   );
 
   return (
-    <div className={joinClassNames(styles.shell, className)}>
+    <div
+      className={joinClassNames(styles.shell, className)}
+      data-edit-mode={isEditMode ? 'true' : undefined}
+    >
       {breadcrumb || toolbar ? (
         <div className={styles.headerBar}>
           {breadcrumb ? (
@@ -693,9 +732,9 @@ function FolderTable<T extends FolderTableRow>({
         <Table.ScrollContainer
           ref={scrollRef}
           className={styles.scrollContainer}
-          onClick={showBatchSelection ? undefined : handleBodyClick}
-          onKeyDown={showBatchSelection ? undefined : handleBodyKeyDown}
-          onPointerDown={showBatchSelection ? undefined : handleBodyPointerDown}
+          onClick={handleBodyClick}
+          onDoubleClick={handleBodyDoubleClick}
+          onKeyDown={handleBodyKeyDown}
           {...scrollContainerProps}
         >
           {showEmptyState ? (
@@ -711,16 +750,11 @@ function FolderTable<T extends FolderTableRow>({
             aria-label={ariaLabel}
             className={styles.tableContent}
             data-eq-count={eqColumnCount}
-            data-has-selection={batchSelection ? 'true' : undefined}
-            selectionMode={batchSelection ? 'multiple' : undefined}
-            selectedKeys={batchSelection?.selectedKeys}
-            onSelectionChange={batchSelection ? handleBatchSelectionChange : undefined}
-            disabledKeys={disabledKeys}
             sortDescriptor={sortDescriptor}
             onSortChange={onSortChange}
           >
             <Table.Header>
-              {batchSelection ? (
+              {checkboxSelection ? (
                 <Table.Column
                   className={joinClassNames(styles.checkboxColumn, tableStyles.colCheckbox)}
                   id="__selection"
@@ -731,7 +765,15 @@ function FolderTable<T extends FolderTableRow>({
                       styles.checkboxColumnInner
                     )}
                   >
-                    <TableSelectionCheckbox ariaLabel={t('aria.selectAll')} />
+                    {isEditMode ? (
+                      <TableSelectionCheckbox
+                        ariaLabel={t('aria.selectAll')}
+                        isSelected={allVisibleSelected}
+                        isIndeterminate={someVisibleSelected}
+                        isDisabled={selectableVisibleRowIds.length === 0}
+                        onChange={() => handleToggleAll()}
+                      />
+                    ) : null}
                   </div>
                 </Table.Column>
               ) : null}
@@ -761,6 +803,7 @@ function FolderTable<T extends FolderTableRow>({
                   rowCount={skeletonRowCount}
                   columns={columns}
                   eqLayout={eqLayout}
+                  showCheckboxSelection={showCheckboxSelection}
                 />
               ) : (
                 <>
@@ -768,14 +811,19 @@ function FolderTable<T extends FolderTableRow>({
                     const rowId = row.id;
                     const isLoadMoreRow = row.entryType === 'loading';
                     const isSelected = selectedRowKeySet.has(rowId);
+                    const isCheckboxSelected = selectedEditRowKeySet.has(rowId);
 
                     return (
                       <FolderTableBodyRow
                         key={rowId}
                         columns={columns}
+                        checkboxDisabled={isLoadMoreRow || disabledKeys.has(rowId)}
+                        checkboxHidden={hiddenKeys.has(rowId)}
+                        onCheckboxChange={handleCheckboxChange}
                         isLoadMoreRow={isLoadMoreRow}
+                        isCheckboxSelected={isCheckboxSelected}
                         isSelected={isSelected}
-                        showBatchSelection={showBatchSelection}
+                        showCheckboxSelection={showCheckboxSelection}
                         renderCellContent={renderCellContent}
                         resolveBodyCellClass={resolveBodyCellClass}
                         row={row as FolderTableVisibleRow & T}
@@ -789,7 +837,7 @@ function FolderTable<T extends FolderTableRow>({
                       className={styles.loadMoreTableRow}
                     >
                       <Table.Cell
-                        colSpan={columns.length + (showBatchSelection ? 1 : 0)}
+                        colSpan={columns.length + (showCheckboxSelection ? 1 : 0)}
                         className={joinClassNames(styles.loadMoreCell, styles.bodyCell)}
                       >
                         <TableLoadMoreRow />
@@ -802,12 +850,12 @@ function FolderTable<T extends FolderTableRow>({
           </Table.Content>
         </Table.ScrollContainer>
 
-        {showBatchFooter ? (
-          <TableBatchFooter selectedCount={selectedCount} className={styles.tableFooter}>
-            {batchFooter}
+        {showSelectionFooter ? (
+          <TableBatchFooter selectedCount={selectedRowKeySet.size}>
+            {selectionFooter}
           </TableBatchFooter>
         ) : showFooter ? (
-          <TableSummaryFooter summary={defaultSummary} className={styles.tableFooter} />
+          <TableSummaryFooter summary={defaultSummary} />
         ) : null}
       </Table>
     </div>

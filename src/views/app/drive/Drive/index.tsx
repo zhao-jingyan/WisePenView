@@ -15,7 +15,6 @@ import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import FavoritesTab from '../_components/FavoritesTab';
-import GlobalSearchBox from '../_components/GlobalSearchBox';
 import UploadQueueTab from '../_components/UploadQueueTab';
 import styles from './style.module.less';
 
@@ -85,11 +84,8 @@ function Drive({ viewMode = 'tableDrive' }: DriveProps) {
           <h1 className={styles.pageTitle}>文档与云盘</h1>
           <span className={styles.pageSubtitle}>管理您的项目和文档</span>
         </div>
-        <div className={styles.actionsRow}>
-          <GlobalSearchBox
-            scope={viewMode === 'tableDrive' ? driveLocation.scope : workspaceScope}
-          />
-          {viewMode === 'tableDrive' ? (
+        {viewMode === 'tableDrive' ? (
+          <div className={styles.actionsRow}>
             <Button
               variant="primary"
               className={styles.pageTrashButton}
@@ -98,8 +94,8 @@ function Drive({ viewMode = 'tableDrive' }: DriveProps) {
               <Trash2 size={16} aria-hidden="true" />
               {isTrashView ? '返回云盘' : '回收站'}
             </Button>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       <SegmentedTabs<DriveViewMode>

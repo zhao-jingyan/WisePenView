@@ -29,41 +29,30 @@ export interface ResourceTarget {
   viewer?: string;
 }
 
-export interface ResourceResolveParams {
+export interface ResourceViewerResolveParams {
   resourceType?: string;
-  resourceName?: string;
-}
-
-export interface ResourceViewerResolveParams extends ResourceResolveParams {
   viewer?: string;
 }
 
-const DOCUMENT_EXTENSION_VALUES = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'] as const;
-const OFFICE_EXTENSION_VALUES = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'] as const;
+const DOCUMENT_RESOURCE_TYPE_VALUES = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'] as const;
+const OFFICE_RESOURCE_TYPE_VALUES = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'] as const;
 
-type DocumentExtension = (typeof DOCUMENT_EXTENSION_VALUES)[number];
-type OfficeExtension = (typeof OFFICE_EXTENSION_VALUES)[number];
+type DocumentResourceType = (typeof DOCUMENT_RESOURCE_TYPE_VALUES)[number];
+type OfficeResourceType = (typeof OFFICE_RESOURCE_TYPE_VALUES)[number];
 
-const DOCUMENT_EXTENSIONS = new Set<string>(DOCUMENT_EXTENSION_VALUES);
-const OFFICE_EXTENSIONS = new Set<string>(OFFICE_EXTENSION_VALUES);
+const DOCUMENT_RESOURCE_TYPES = new Set<string>(DOCUMENT_RESOURCE_TYPE_VALUES);
+const OFFICE_RESOURCE_TYPES = new Set<string>(OFFICE_RESOURCE_TYPE_VALUES);
 
 const normalizeToken = (value?: string): string | undefined => {
   const normalized = value?.trim().toLowerCase();
   return normalized ? normalized : undefined;
 };
 
-const readExtension = (resourceName?: string): string | undefined => {
-  const trimmed = resourceName?.trim();
-  if (!trimmed) return undefined;
-  const match = /\.([a-z0-9]+)$/i.exec(trimmed);
-  return match?.[1]?.toLowerCase();
-};
+const isDocumentResourceType = (value?: string): value is DocumentResourceType =>
+  value != null && DOCUMENT_RESOURCE_TYPES.has(value);
 
-const isDocumentExtension = (value?: string): value is DocumentExtension =>
-  value != null && DOCUMENT_EXTENSIONS.has(value);
-
-const isOfficeExtension = (value?: string): value is OfficeExtension =>
-  value != null && OFFICE_EXTENSIONS.has(value);
+export const isOfficeResourceType = (value?: string): value is OfficeResourceType =>
+  value != null && OFFICE_RESOURCE_TYPES.has(normalizeToken(value) ?? '');
 
 export const normalizeResourceKind = (resourceType?: string): ResourceKind | undefined => {
   const normalized = normalizeToken(resourceType);
@@ -75,21 +64,14 @@ export const normalizeResourceKind = (resourceType?: string): ResourceKind | und
   if (normalized === RESOURCE_KIND.SKILL) return RESOURCE_KIND.SKILL;
   if (normalized === RESOURCE_KIND.AGENT) return RESOURCE_KIND.AGENT;
 
-  if (isDocumentExtension(normalized)) return RESOURCE_KIND.FILE;
+  if (isDocumentResourceType(normalized)) return RESOURCE_KIND.FILE;
 
   return undefined;
 };
 
-export const resolveResourceKind = ({
-  resourceType,
-  resourceName,
-}: ResourceResolveParams): ResourceKind => {
+export const resolveResourceKind = (resourceType?: string): ResourceKind => {
   const normalizedType = normalizeResourceKind(resourceType);
   if (normalizedType) return normalizedType;
-
-  const extension = readExtension(resourceName);
-  if (isDocumentExtension(extension)) return RESOURCE_KIND.FILE;
-
   return RESOURCE_KIND.FILE;
 };
 
@@ -111,14 +93,13 @@ export const normalizeResourceViewer = (viewer?: string): ResourceViewer | undef
   if (normalized === RESOURCE_VIEWER.SKILL) return RESOURCE_VIEWER.SKILL;
   if (normalized === RESOURCE_VIEWER.AGENT) return RESOURCE_VIEWER.AGENT;
 
-  if (isOfficeExtension(normalized)) return RESOURCE_VIEWER.OFFICE;
+  if (isOfficeResourceType(normalized)) return RESOURCE_VIEWER.OFFICE;
 
   return undefined;
 };
 
 export const resolveResourceViewer = ({
   resourceType,
-  resourceName,
   viewer,
 }: ResourceViewerResolveParams): ResourceViewer | undefined => {
   const explicitViewer = normalizeResourceViewer(viewer);
@@ -133,12 +114,9 @@ export const resolveResourceViewer = ({
   if (normalizedType !== RESOURCE_KIND.FILE) return undefined;
 
   const resourceTypeToken = normalizeToken(resourceType);
-  const extension = isDocumentExtension(resourceTypeToken)
-    ? resourceTypeToken
-    : readExtension(resourceName);
 
-  if (extension === 'pdf') return RESOURCE_VIEWER.PDF_PREVIEW;
-  if (isOfficeExtension(extension)) return RESOURCE_VIEWER.OFFICE;
+  if (resourceTypeToken === 'pdf') return RESOURCE_VIEWER.PDF_PREVIEW;
+  if (isOfficeResourceType(resourceTypeToken)) return RESOURCE_VIEWER.OFFICE;
 
   return undefined;
 };

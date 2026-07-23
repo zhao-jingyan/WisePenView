@@ -1,9 +1,9 @@
-import { FormField, Input, PasswordInput } from '@/components/Input';
+import { Checkbox, FormField, Input, PasswordInput } from '@/components/Input';
 import { useAuthService } from '@/domains';
 import type { RegisterRequest } from '@/domains/Auth';
 import { parseErrorMessage } from '@/utils/error';
 import ServiceAgreement from '@/views/app/auth/_components/ServiceAgreement/index';
-import { Button, Checkbox, Form, toast } from '@heroui/react';
+import { Button, Form, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { User } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -199,13 +199,8 @@ function Register() {
       </Form>
 
       <div className={auth.leftBottomLinks}>
-        <Checkbox isSelected={agreement} onChange={(isSelected) => setAgreement(isSelected)}>
-          <Checkbox.Content>
-            <Checkbox.Control>
-              <Checkbox.Indicator />
-            </Checkbox.Control>
-            {t('register.agreementCheckedPrefix')}
-          </Checkbox.Content>
+        <Checkbox isSelected={agreement} onChange={setAgreement}>
+          {t('register.agreementCheckedPrefix')}
         </Checkbox>
         <Link to="#" onClick={() => setContractOpen(true)}>
           {t('register.agreementLink')}

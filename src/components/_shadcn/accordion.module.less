@@ -1,0 +1,81 @@
+.accordion {
+  width: 100%;
+  min-width: 0;
+}
+
+.item {
+  min-width: 0;
+}
+
+.header {
+  margin: 0;
+}
+
+.trigger {
+  display: flex;
+  width: 100%;
+  min-height: 32px;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-xs);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color var(--motion-duration-fast) ease,
+    color var(--motion-duration-fast) ease;
+
+  &:hover {
+    color: var(--foreground);
+    background: var(--surface-tertiary);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--focus);
+  }
+
+  &[data-disabled] {
+    color: var(--text-disabled);
+    cursor: not-allowed;
+  }
+}
+
+.triggerContent {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.indicator {
+  flex: 0 0 auto;
+  color: var(--muted);
+  transition: transform var(--motion-duration-fast) ease;
+
+  .trigger[data-panel-open] & {
+    transform: rotate(180deg);
+  }
+}
+
+.content {
+  height: var(--accordion-panel-height);
+  overflow: hidden;
+  transition: height var(--motion-duration-mid) ease;
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    height: 0;
+  }
+}
+
+.contentInner {
+  min-width: 0;
+}

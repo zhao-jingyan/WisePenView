@@ -6,6 +6,7 @@ import {
   resolveFolderSkeletonBarWidth,
 } from '../../../shared/TableBase/columnWidth';
 import TableCellAlign from '../../../shared/cells/CellAlign';
+import { tableStyles } from '../../../shared/styles';
 import folderStyles from '../../style.module.less';
 import type { FolderTableLoadingSkeletonProps } from './index.type';
 import styles from './style.module.less';
@@ -14,6 +15,7 @@ function FolderTableLoadingSkeleton({
   rowCount = 4,
   columns,
   eqLayout = false,
+  showCheckboxSelection = false,
 }: FolderTableLoadingSkeletonProps) {
   const { t } = useTranslation('table');
 
@@ -26,6 +28,11 @@ function FolderTableLoadingSkeleton({
           textValue={t('loading')}
           className={styles.skeletonRow}
         >
+          {showCheckboxSelection ? (
+            <Table.Cell
+              className={joinClassNames(folderStyles.checkboxCell, tableStyles.colCheckbox)}
+            />
+          ) : null}
           {columns.map((column) => {
             const barWidth = resolveFolderSkeletonBarWidth(column, eqLayout);
 
@@ -35,7 +42,7 @@ function FolderTableLoadingSkeleton({
                 className={joinClassNames(
                   styles.skeletonCell,
                   resolveFolderColumnWidthClassForColumn(column, eqLayout),
-                  column.isNameColumn ? folderStyles.nameColumnHeader : undefined,
+                  column.isNameColumn ? folderStyles.nameCell : undefined,
                   column.isActionColumn ? folderStyles.actionCell : undefined
                 )}
               >

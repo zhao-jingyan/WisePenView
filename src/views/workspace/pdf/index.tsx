@@ -3,26 +3,37 @@ import PdfViewer from '@/components/PdfViewer/index';
 import { useDocumentService, useInteractService } from '@/domains';
 import type { ResourceItem } from '@/domains/Resource';
 import { parseErrorMessage } from '@/utils/error';
-import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
+import {
+  isOfficeResourceType,
+  RESOURCE_KIND,
+  RESOURCE_VIEWER,
+  type ResourceViewer,
+} from '@/utils/navigation/resourceTarget';
 import { useResourceHostLayoutConfig } from '@/views/workspace/ResourceHostContext';
 import { Button } from '@heroui/react';
 import { useRequest } from 'ahooks';
+import { FilePenLine } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useDocumentViewerSwitcher } from '../_hooks/useDocumentViewerSwitcher';
 import styles from './style.module.less';
 
 interface PdfLayoutConfigProps {
   children: ReactNode;
   resourceInfo?: ResourceItem;
+  documentType?: string;
   onPermissionSuccess?: () => void;
   onResourceChanged?: () => unknown | Promise<unknown>;
+  onViewerSwitch?: (viewer: ResourceViewer) => void;
 }
 
 function PdfLayoutConfig({
   children,
   resourceInfo,
+  documentType,
   onPermissionSuccess,
   onResourceChanged,
+  onViewerSwitch,
 }: PdfLayoutConfigProps) {
   const frameConfig = useMemo(
     () => ({
@@ -38,11 +49,23 @@ function PdfLayoutConfig({
               permissionResourceType: RESOURCE_KIND.FILE,
               ownerId: resourceInfo.ownerId,
               onPermissionSuccess,
+              moreMenu: isOfficeResourceType(documentType)
+                ? {
+                    actions: [
+                      {
+                        id: 'open-with-office',
+                        label: '以 Office 编辑器打开',
+                        icon: FilePenLine,
+                        onAction: () => onViewerSwitch?.(RESOURCE_VIEWER.OFFICE),
+                      },
+                    ],
+                  }
+                : undefined,
             },
           }
         : {},
     }),
-    [onPermissionSuccess, onResourceChanged, resourceInfo]
+    [documentType, onPermissionSuccess, onResourceChanged, onViewerSwitch, resourceInfo]
   );
   useResourceHostLayoutConfig(frameConfig);
 
@@ -57,6 +80,7 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
   const [viewerErrorMap, setViewerErrorMap] = useState<Record<string, unknown>>({});
   const documentService = useDocumentService();
   const interactService = useInteractService();
+  const switchViewer = useDocumentViewerSwitcher(resourceId);
   const {
     data: docInfo,
     error: docInfoError,
@@ -169,8 +193,10 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
   return (
     <PdfLayoutConfig
       resourceInfo={docInfo.resourceInfo}
+      documentType={docInfo.docMetaInfo.uploadMeta.fileType}
       onPermissionSuccess={refreshDocInfo}
       onResourceChanged={refreshDocInfo}
+      onViewerSwitch={switchViewer}
     >
       <div className={styles.content}>
         <div className={styles.root}>

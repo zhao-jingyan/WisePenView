@@ -1,0 +1,89 @@
+.checkbox:global(.checkbox) {
+  --app-checkbox-control-bg: color-mix(
+    in oklab,
+    var(--surface-tertiary, #f0f3f6) 35%,
+    var(--surface, #ffffff) 65%
+  );
+  --app-checkbox-control-bg-hover: color-mix(
+    in oklab,
+    var(--surface-tertiary, #f0f3f6) 70%,
+    var(--surface, #ffffff) 30%
+  );
+  --app-checkbox-control-border: color-mix(
+    in oklab,
+    var(--border, #e4e7ec) 82%,
+    var(--surface, #ffffff) 18%
+  );
+  --app-checkbox-control-border-hover: color-mix(
+    in oklab,
+    var(--border, #e4e7ec) 56%,
+    var(--accent, #1e6f9f) 44%
+  );
+  --app-checkbox-control-border-focus: var(--focus, var(--accent, #1e6f9f));
+  --app-checkbox-focus-ring: 0 0 0 1px var(--app-checkbox-control-border-focus);
+
+  width: fit-content;
+}
+
+.clickTarget {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+}
+
+.checkbox:global(.checkbox) :global(.checkbox__control) {
+  width: var(--app-checkbox-control-size, 16px);
+  height: var(--app-checkbox-control-size, 16px);
+  border: 1px solid var(--app-checkbox-control-border);
+  border-radius: 4px;
+  background-color: var(--app-checkbox-control-bg);
+  box-shadow: none;
+}
+
+.checkbox:global(.checkbox):hover:not([data-disabled='true']):not([data-selected='true']):not(
+    [data-indeterminate='true']
+  )
+  :global(.checkbox__control),
+.checkbox:global(.checkbox):has(
+    :global([data-slot='checkbox-content'][data-hovered='true'])
+  ):not([data-disabled='true']):not([data-selected='true']):not([data-indeterminate='true'])
+  :global(.checkbox__control) {
+  border-color: var(--app-checkbox-control-border-hover);
+  background-color: var(--app-checkbox-control-bg-hover);
+}
+
+.checkbox:global(.checkbox):has(
+    :global([data-slot='checkbox-content'][data-focus-visible='true'])
+  )
+  :global(.checkbox__control) {
+  border-color: var(--app-checkbox-control-border-focus);
+  box-shadow: var(--app-checkbox-focus-ring);
+}
+
+.checkbox:global(.checkbox):is([data-selected='true'], [data-indeterminate='true']) {
+  --app-checkbox-control-bg-hover: var(--accent, #1e6f9f);
+  --app-checkbox-control-border-hover: var(--accent, #1e6f9f);
+  --field-border-hover: var(--accent, #1e6f9f);
+}
+
+.checkbox:global(.checkbox)[data-selected='true'] :global(.checkbox__control),
+.checkbox:global(.checkbox)[data-indeterminate='true'] :global(.checkbox__control) {
+  border-color: var(--accent, #1e6f9f);
+  background-color: var(--accent, #1e6f9f);
+}
+
+.checkbox:global(.checkbox)[data-selected='true']
+  :global([data-slot='checkbox-content'][data-hovered='true'])
+  :global(.checkbox__control),
+.checkbox:global(.checkbox)[data-indeterminate='true']
+  :global([data-slot='checkbox-content'][data-hovered='true'])
+  :global(.checkbox__control) {
+  border-color: var(--accent, #1e6f9f);
+  background-color: var(--accent, #1e6f9f);
+}
+
+.checkbox:global(.checkbox)[data-disabled='true'] :global(.checkbox__control) {
+  border-color: color-mix(in oklab, var(--app-checkbox-control-border) 76%, transparent);
+  background-color: color-mix(in oklab, var(--app-checkbox-control-bg) 78%, transparent);
+  box-shadow: none;
+}

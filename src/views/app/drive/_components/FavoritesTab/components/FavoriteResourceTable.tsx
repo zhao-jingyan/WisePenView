@@ -4,7 +4,6 @@ import type { FavoriteItem } from '@/domains/Interact';
 import { formatTimestampToDate } from '@/utils/format/formatTime';
 import { useFavoriteResourceTableController } from '../hooks/useFavoriteResourceTableController';
 import styles from '../style.module.less';
-import FavoriteResourceSelectionPanel from './FavoriteResourceSelectionPanel';
 import UnfavoriteResourceModal from './UnfavoriteResourceModal';
 
 interface FavoriteResourceTableProps {
@@ -71,64 +70,55 @@ function FavoriteResourceTable({
   const rows = controller.list.map(toFavoriteResourceTableRow);
 
   return (
-    <div className={styles.resourceWorkspace}>
-      <div className={styles.resourceTablePanel}>
-        <header className={styles.resourcePanelHeader}>
-          <div className={styles.resourcePanelCopy}>
-            <h2 className={styles.resourcePanelTitle}>{collectionName}</h2>
-            <p className={styles.resourcePanelDescription}>{collectionItemCount} 个内容</p>
-          </div>
-        </header>
-        <FolderTable<FavoriteResourceTableRow>
-          ariaLabel="已收藏资源"
-          items={rows}
-          selectedRowKey={controller.selectedResourceId}
-          onRowSelect={(row) => controller.onRowSelect(row.item)}
-          columns={FAVORITE_RESOURCE_COLUMNS}
-          renderNameContent={(content, row) =>
-            row.item.resourceInfo ? (
-              content
-            ) : (
-              <span className={styles.resourceCellDisabled}>{content}</span>
-            )
-          }
-          rowActions={(row) => [
-            {
-              key: 'open',
-              label: '打开',
-              disabled: !row.item.resourceInfo,
-              onPress: () => controller.onRowAction(row.item, 'open'),
-            },
-            {
-              key: 'manage',
-              label: '管理收藏',
-              disabled: !row.item.resourceInfo,
-              onPress: () => controller.onRowAction(row.item, 'manage'),
-            },
-            {
-              key: 'remove',
-              label: '移出收藏夹',
-              variant: 'danger',
-              onPress: () => controller.onRowAction(row.item, 'remove'),
-            },
-          ]}
-          loading={controller.loading}
-          emptyText="暂无收藏内容"
-          emptyDescription={emptyDescription}
-          totalCount={controller.total}
-          loadMore={{
-            hasMore: controller.hasMore,
-            loading: controller.loadingMore,
-            onLoadMore: controller.loadMore,
-          }}
-          className={styles.resourceTable}
-        />
-      </div>
-      <FavoriteResourceSelectionPanel
-        item={controller.selectedItem}
-        onOpen={controller.onOpenResource}
-        onManage={(item) => controller.onRowAction(item, 'manage')}
-        onRemove={controller.onRequestUnfavorite}
+    <div className={styles.resourceTablePanel}>
+      <header className={styles.resourcePanelHeader}>
+        <div className={styles.resourcePanelCopy}>
+          <h2 className={styles.resourcePanelTitle}>{collectionName}</h2>
+          <p className={styles.resourcePanelDescription}>{collectionItemCount} 个内容</p>
+        </div>
+      </header>
+      <FolderTable<FavoriteResourceTableRow>
+        ariaLabel="已收藏资源"
+        items={rows}
+        onRowActivate={(row) => controller.onOpenResource(row.item)}
+        columns={FAVORITE_RESOURCE_COLUMNS}
+        renderNameContent={(content, row) =>
+          row.item.resourceInfo ? (
+            content
+          ) : (
+            <span className={styles.resourceCellDisabled}>{content}</span>
+          )
+        }
+        rowActions={(row) => [
+          {
+            key: 'open',
+            label: '打开',
+            disabled: !row.item.resourceInfo,
+            onPress: () => controller.onRowAction(row.item, 'open'),
+          },
+          {
+            key: 'manage',
+            label: '管理收藏',
+            disabled: !row.item.resourceInfo,
+            onPress: () => controller.onRowAction(row.item, 'manage'),
+          },
+          {
+            key: 'remove',
+            label: '移出收藏夹',
+            variant: 'danger',
+            onPress: () => controller.onRowAction(row.item, 'remove'),
+          },
+        ]}
+        loading={controller.loading}
+        emptyText="暂无收藏内容"
+        emptyDescription={emptyDescription}
+        totalCount={controller.total}
+        loadMore={{
+          hasMore: controller.hasMore,
+          loading: controller.loadingMore,
+          onLoadMore: controller.loadMore,
+        }}
+        className={styles.resourceTable}
       />
       <UnfavoriteResourceModal
         item={controller.unfavoriteItem}

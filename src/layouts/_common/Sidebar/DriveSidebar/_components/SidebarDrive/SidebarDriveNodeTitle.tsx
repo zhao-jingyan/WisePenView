@@ -74,7 +74,6 @@ function SidebarDriveNodeTitle({
             entryType={node.type}
             folderIconType={folderIconType}
             resourceType={resourceType}
-            resourceName={label}
             resourceIconType={resourceIconType}
             size={16}
           />

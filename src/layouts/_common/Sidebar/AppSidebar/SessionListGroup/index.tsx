@@ -3,12 +3,12 @@ import { useNewChatSessionStore } from '@/components/ChatPanel/_store/useNewChat
 import { useChatService } from '@/domains';
 import type { ChatSession } from '@/domains/Chat';
 import { parseErrorMessage } from '@/utils/error';
-import { Button, Header, ListBox, ListBoxItem, ListBoxSection, toast } from '@heroui/react';
+import { Button, ListBox, ListBoxItem, ListBoxSection, toast } from '@heroui/react';
 import { useMount, useRequest } from 'ahooks';
 import clsx from 'clsx';
 import { useImperativeHandle, useState, type Ref } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from '../AppSessionMenu/style.module.less';
+import styles from '../AppSidebarTabs/style.module.less';
 import SessionMenuItem from '../SessionMenuItem';
 import type { SessionListGroupProps, SessionListGroupRef } from './index.type';
 
@@ -132,10 +132,10 @@ function SessionListGroup({
       className={styles.sessionMenu}
       selectedKeys={selectedKeys}
     >
-      <ListBoxSection id="recent-session" className={styles.section}>
-        <Header className={styles.sectionTitle}>会话历史</Header>
+      <ListBoxSection id="recent-session" className={styles.sessionSection}>
         {sessionListLoading && sessionItems.length === 0 ? (
           <ListBoxItem
+            key="session-loading"
             id="session-loading"
             textValue="会话加载中..."
             isDisabled
@@ -147,6 +147,7 @@ function SessionListGroup({
           <>
             {sessionItems.length === 0 ? (
               <ListBoxItem
+                key="empty-normal-session"
                 id="empty-normal-session"
                 textValue="暂无会话"
                 isDisabled
@@ -173,6 +174,7 @@ function SessionListGroup({
             )}
             {(hasMoreSessions || loadingMoreSessions) && (
               <ListBoxItem
+                key="session-load-more"
                 id="session-load-more"
                 textValue={hasMoreSessions ? '加载更多' : '没有更多了'}
                 isDisabled

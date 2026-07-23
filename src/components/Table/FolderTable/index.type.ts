@@ -1,6 +1,6 @@
 import type { FolderIconType } from '@/components/Icons/EntryIcon/index.type';
 import type { ResourceIconType } from '@/domains/Resource';
-import type { Selection, SortDescriptor } from '@heroui/react';
+import type { SortDescriptor } from '@heroui/react';
 import type { ReactNode } from 'react';
 import type { FolderColumnWidth } from '../shared/TableBase/columnWidth';
 import type { TableColumnBase, TableLoadMore } from '../shared/TableBase/index.type';
@@ -37,17 +37,6 @@ export interface FolderTableRowContext<T extends FolderTableRow> {
   depth: number;
 }
 
-export interface FolderTableRowPressContext {
-  metaKey: boolean;
-  ctrlKey: boolean;
-  shiftKey: boolean;
-  modifierKey: boolean;
-  /** MouseEvent.detail — 1 for single click, 2 for double-click */
-  detail?: number;
-  /** 点击是否发生在名称列的单元格内 */
-  isNameColumn?: boolean;
-}
-
 export interface FolderTableColumn<T extends FolderTableRow> extends Omit<
   TableColumnBase<T, FolderTableRowContext<T>>,
   'renderCell' | 'width'
@@ -64,10 +53,12 @@ export type FolderTableRowAction<T extends FolderTableRow> = TableRowAction<T>;
 
 export type FolderTableLoadMore = TableLoadMore;
 
-export interface FolderTableBatchSelection {
-  selectedKeys: Selection;
-  onSelectionChange: (keys: Selection) => void;
+export interface FolderTableCheckboxSelection {
+  selectedKeys: Iterable<string>;
+  onSelectionChange: (keys: Set<string>) => void;
   disabledKeys?: Iterable<string>;
+  /** 不展示复选框，且不参与全选、区间选择。 */
+  hiddenKeys?: Iterable<string>;
 }
 
 export interface FolderTableProps<T extends FolderTableRow> {
@@ -86,13 +77,11 @@ export interface FolderTableProps<T extends FolderTableRow> {
   /** 已展开的文件夹 id */
   expandedRowKeys?: string[];
   onExpandedChange?: (keys: string[]) => void;
-  /** 当前选中的行 id */
+  /** 浏览态选中的行 id。 */
   selectedRowKey?: string;
-  /** 当前选中的多行 id */
-  selectedRowKeys?: Iterable<string>;
-  /** 单击行选中；未传时单击沿用激活行为 */
-  onRowSelect?: (row: T, ctx: FolderTableRowPressContext) => void;
-  /** 行激活（例如进入文件夹 / 打开资源） */
+  /** 浏览态单击行，仅更新选中态。 */
+  onRowSelect?: (row: T) => void;
+  /** 浏览态双击行激活（例如进入文件夹 / 打开资源）。 */
   onRowActivate?: (row: T) => void;
   /** 包装名称列的图标与名称内容，用于在业务层扩展交互能力 */
   renderNameContent?: (content: ReactNode, row: T, ctx: FolderTableRowContext<T>) => ReactNode;
@@ -115,10 +104,12 @@ export interface FolderTableProps<T extends FolderTableRow> {
   onSortChange?: (descriptor: SortDescriptor) => void;
   /** 始终固定在同级排序最前方的行 */
   isPinnedFirst?: (row: T) => boolean;
-  /** 全局编辑：多选勾选 */
-  batchSelection?: FolderTableBatchSelection;
-  /** 批量操作区（通常配合 batchSelection） */
-  batchFooter?: ReactNode;
+  /** 是否进入编辑态；由父组件根据勾选状态派生，编辑态内仅允许勾选。 */
+  isEditMode?: boolean;
+  /** 编辑态内的多选勾选。 */
+  checkboxSelection?: FolderTableCheckboxSelection;
+  /** 选择后的操作区（通常配合 checkboxSelection）。 */
+  selectionFooter?: ReactNode;
 }
 
 export type {

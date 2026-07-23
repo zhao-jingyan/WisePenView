@@ -34,7 +34,7 @@ const mockFavoriteResources: ResourceItem[] = [
     resourceName: '示例文档.pdf',
     ownerId: '1',
     ownerInfo: {},
-    resourceType: 'file',
+    resourceType: 'pdf',
     resourceIconType: 'pdf',
   },
   {
@@ -42,7 +42,7 @@ const mockFavoriteResources: ResourceItem[] = [
     resourceName: '项目说明.md',
     ownerId: '1',
     ownerInfo: {},
-    resourceType: 'file',
+    resourceType: 'md',
     resourceIconType: 'md',
   },
 ];

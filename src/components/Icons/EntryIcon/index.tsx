@@ -58,17 +58,11 @@ function SharedFolderIcon({ size = 18, color }: { size?: number; color?: string 
 
 function renderResourceIcon(
   resourceType?: string,
-  resourceName?: string,
   resourceIconType?: EntryIconProps['resourceIconType'],
   size = 18,
   color?: string
 ) {
-  const iconType =
-    resourceIconType ??
-    resolveResourceIconType({
-      resourceType,
-      resourceName,
-    });
+  const iconType = resourceIconType ?? resolveResourceIconType(resourceType);
 
   switch (iconType) {
     case 'note':
@@ -99,7 +93,6 @@ function EntryIcon({
   entryType,
   folderIconType,
   resourceType,
-  resourceName,
   resourceIconType,
   size = 18,
   color,
@@ -113,7 +106,7 @@ function EntryIcon({
       }
       return <Folder size={size} color={color ?? COLOR_FOLDER} />;
     case 'resource':
-      return renderResourceIcon(resourceType, resourceName, resourceIconType, size, color);
+      return renderResourceIcon(resourceType, resourceIconType, size, color);
     case 'link':
       return <Link size={size} color={color ?? COLOR_SECONDARY} />;
     case 'loading':

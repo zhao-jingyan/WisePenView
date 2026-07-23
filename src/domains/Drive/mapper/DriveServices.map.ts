@@ -138,12 +138,7 @@ export const mapResourceItemToChildNode = (
     resourceType: item.resourceType,
     size: item.size,
     description: item.preview,
-    resourceIconType:
-      item.resourceIconType ??
-      resolveResourceIconType({
-        resourceType: item.resourceType,
-        resourceName: item.resourceName,
-      }),
+    resourceIconType: item.resourceIconType ?? resolveResourceIconType(item.resourceType),
     folderTagId: parentTagId,
   } as const;
   const isPrimaryMount = item.mainTagId == null || item.mainTagId === parentTagId;

@@ -57,14 +57,13 @@ export type {
 
 /** FolderTable — 文件夹列表 */
 export type {
-  FolderTableBatchSelection,
   FolderTableBreadcrumbItem,
   FolderTableBreadcrumbProps,
+  FolderTableCheckboxSelection,
   FolderTableColumn,
   FolderTableLoadMore,
   FolderTableProps,
   FolderTableRow,
   FolderTableRowAction,
   FolderTableRowContext,
-  FolderTableRowPressContext,
 } from './FolderTable/index.type';

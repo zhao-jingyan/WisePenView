@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.156",
+    "@base-ui/react": "^1.6.0",
     "@blocknote/code-block": "0.47.3",
     "@blocknote/core": "^0.47.1",
     "@blocknote/mantine": "^0.47.1",

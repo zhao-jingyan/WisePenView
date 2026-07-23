@@ -85,13 +85,6 @@ export const isDriveSharedFolderNode = (node: DriveNode | null | undefined): nod
 export const isDriveTrashFolderNode = (node: DriveNode | null | undefined): node is FolderNode =>
   node?.type === 'folder' && (node.systemType === 'trash' || node.name === '.Trash');
 
-export const getNodeDescription = (node: DriveNode): string | undefined => {
-  if (node.type === 'folder' || node.type === 'resource' || node.type === 'link') {
-    return node.description;
-  }
-  return undefined;
-};
-
 /** 从当前目录 nodeId 解析可挂载资源的 tagId */
 export const resolveCurrentFolderTagId = (
   currentNodeId: string,

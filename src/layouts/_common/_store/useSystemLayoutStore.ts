@@ -7,16 +7,13 @@ import { createStoreJSONStorage } from '@/store/persistence';
 interface SystemLayoutState {
   appSidebarWidth: number;
   adminSidebarWidth: number;
-  workspaceLeftSidebarWidth: number;
   setAppSidebarWidth: (width: number) => void;
   setAdminSidebarWidth: (width: number) => void;
-  setWorkspaceLeftSidebarWidth: (width: number) => void;
 }
 
 const DEFAULT_SYSTEM_LAYOUT_STATE = {
   appSidebarWidth: 308,
   adminSidebarWidth: 308,
-  workspaceLeftSidebarWidth: 308,
 };
 
 const setWidth =
@@ -34,8 +31,6 @@ export const useSystemLayoutStore = create<SystemLayoutState>()(
       ...DEFAULT_SYSTEM_LAYOUT_STATE,
       setAppSidebarWidth: (width) => set((state) => setWidth('appSidebarWidth', width)(state)),
       setAdminSidebarWidth: (width) => set((state) => setWidth('adminSidebarWidth', width)(state)),
-      setWorkspaceLeftSidebarWidth: (width) =>
-        set((state) => setWidth('workspaceLeftSidebarWidth', width)(state)),
     }),
     { name: 'system-layout', storage: createStoreJSONStorage('tab') }
   )

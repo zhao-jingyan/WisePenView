@@ -12,4 +12,5 @@ export interface FolderTableLoadingSkeletonProps {
   rowCount?: number;
   columns: FolderTableSkeletonColumn[];
   eqLayout?: boolean;
+  showCheckboxSelection?: boolean;
 }

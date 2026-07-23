@@ -65,7 +65,7 @@ const getDocInfo = async (documentId: string): Promise<DocDisplayInfoResponse> =
         avatar: '',
         identityType: 0,
       },
-      resourceType: 'file',
+      resourceType: 'pdf',
     },
   };
 };

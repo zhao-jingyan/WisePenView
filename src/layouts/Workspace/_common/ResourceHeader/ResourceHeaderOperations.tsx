@@ -318,7 +318,7 @@ function ResourceHeaderOperations({
       />
       <MoveNodeModal
         isOpen={moveOpen}
-        node={node ?? null}
+        nodes={node ? [node] : []}
         rootId={scope.rootId}
         groupId={groupId}
         onOpenChange={setMoveOpen}

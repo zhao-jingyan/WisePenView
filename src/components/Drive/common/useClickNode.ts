@@ -1,5 +1,6 @@
 import type { DriveNode } from '@/domains/Drive';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
+import type { ResourceViewer } from '@/utils/navigation/resourceTarget';
 import { useCallback } from 'react';
 
 export interface UseClickNodeParams {
@@ -16,7 +17,7 @@ export const useClickNode = ({ enterFolder }: UseClickNodeParams) => {
   const openInWorkspace = useOpenInWorkspace();
 
   return useCallback(
-    (node: DriveNode) => {
+    (node: DriveNode, viewer?: ResourceViewer) => {
       if (node.type === 'root' || node.type === 'folder') {
         enterFolder(node.id);
         return;
@@ -29,6 +30,7 @@ export const useClickNode = ({ enterFolder }: UseClickNodeParams) => {
         resourceId: node.resourceId,
         resourceType: node.resourceType,
         resourceName: node.title,
+        viewer,
         driveLocation: {
           scope: node.scope,
           nodeId: node.id,

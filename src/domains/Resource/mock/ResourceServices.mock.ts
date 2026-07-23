@@ -28,12 +28,7 @@ const toResourceItem = (
   item: Omit<ResourceItem, 'ownerInfo'> & { ownerInfo?: ResourceItem['ownerInfo'] }
 ): ResourceItem => ({
   ...item,
-  resourceIconType:
-    item.resourceIconType ??
-    resolveResourceIconType({
-      resourceType: item.resourceType,
-      resourceName: item.resourceName,
-    }),
+  resourceIconType: item.resourceIconType ?? resolveResourceIconType(item.resourceType),
   ownerInfo: item.ownerInfo ?? {},
 });
 
@@ -47,7 +42,7 @@ const buildStressMockItems = (count: number): ResourceItem[] =>
       resourceId: `mock-stress-${String(n).padStart(4, '0')}`,
       resourceName: `压力测试文档 ${n}.pdf`,
       ownerInfo: {},
-      resourceType: 'file',
+      resourceType: 'pdf',
       ownerId: '1',
       size: 2048 + n * 100,
       path: '/',

@@ -208,10 +208,7 @@ const mapResourceItemFromApi = (
   return {
     ...item,
     currentTags,
-    resourceIconType: resolveResourceIconType({
-      resourceType: item.resourceType,
-      resourceName: item.resourceName,
-    }),
+    resourceIconType: resolveResourceIconType(item.resourceType),
     mainTagId,
     linkTagIds: mainTagId ? tagIds.filter((tagId) => tagId !== mainTagId) : tagIds.slice(1),
   };
@@ -453,10 +450,7 @@ const normalizeResourceActionMap = (
 const mapSearchHitFromApi = (raw: GlobalSearchApiResponse['list'][number]): SearchHitItem => ({
   ...raw,
   resourceType: normalizeSearchResourceType(raw.resourceType),
-  resourceIconType: resolveResourceIconType({
-    resourceType: raw.resourceType,
-    resourceName: raw.resourceName,
-  }),
+  resourceIconType: resolveResourceIconType(raw.resourceType),
 });
 
 const mapSearchResultPageFromApi = (data: GlobalSearchApiResponse): SearchResultPage => ({

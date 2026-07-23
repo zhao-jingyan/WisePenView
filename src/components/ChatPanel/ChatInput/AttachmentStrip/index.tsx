@@ -54,12 +54,7 @@ function AttachmentStrip() {
         {resources.map((resource) => (
           <Attachment key={resource.resourceId} size="xs" className={styles.chatAttachment}>
             <AttachmentMedia>
-              <EntryIcon
-                entryType="resource"
-                resourceName={resource.resourceName}
-                resourceType={resource.resourceType}
-                size={14}
-              />
+              <EntryIcon entryType="resource" resourceType={resource.resourceType} size={14} />
             </AttachmentMedia>
             <AttachmentContent>
               <AttachmentTitle title={resource.resourceName}>
@@ -81,7 +76,7 @@ function AttachmentStrip() {
         {attachments.map((attachment) => (
           <Attachment key={attachment.attachmentId} size="xs" className={styles.chatAttachment}>
             <AttachmentMedia>
-              <EntryIcon entryType="resource" resourceName={attachment.filename} size={14} />
+              <EntryIcon entryType="resource" size={14} />
             </AttachmentMedia>
             <AttachmentContent>
               <AttachmentTitle title={attachment.filename}>{attachment.filename}</AttachmentTitle>
@@ -130,7 +125,7 @@ function AttachmentStrip() {
             className={styles.chatAttachment}
           >
             <AttachmentMedia>
-              <EntryIcon entryType="resource" resourceName={upload.filename} size={14} />
+              <EntryIcon entryType="resource" size={14} />
             </AttachmentMedia>
             <AttachmentContent>
               <AttachmentTitle title={upload.filename}>{upload.filename}</AttachmentTitle>

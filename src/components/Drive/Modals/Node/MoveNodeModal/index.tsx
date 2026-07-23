@@ -40,7 +40,7 @@ async function collectFolderDescendantIds(
 
 function MoveNodeModal({
   isOpen,
-  node,
+  nodes,
   rootId,
   groupId,
   isTrashView = false,
@@ -49,20 +49,27 @@ function MoveNodeModal({
 }: MoveNodeModalProps) {
   const driveService = useDriveService();
   const [selectedTargetId, setSelectedTargetId] = useState<string>();
-  const effectiveRootId = node?.scope.rootId ?? rootId;
-  const effectiveGroupId = groupId ?? (node ? getDriveScopeGroupId(node.scope) : undefined);
+  const nodeIdsKey = nodes.map((node) => node.id).join('\u0000');
+  const effectiveRootId = nodes[0]?.scope.rootId ?? rootId;
+  const effectiveGroupId = groupId ?? (nodes[0] ? getDriveScopeGroupId(nodes[0].scope) : undefined);
 
   const { data: blockedIds } = useRequest(
     async (): Promise<Set<string>> => {
-      if (!node) return new Set();
-      const blocked = new Set<string>([node.id]);
-      if (node.type !== 'folder') return blocked;
-      await collectFolderDescendantIds(driveService, node.id, effectiveGroupId, blocked);
+      const blocked = new Set(nodes.map((node) => node.id));
+      await Promise.all(
+        nodes
+          .filter(
+            (node): node is Extract<DriveActionTarget, { type: 'folder' }> => node.type === 'folder'
+          )
+          .map((node) =>
+            collectFolderDescendantIds(driveService, node.id, effectiveGroupId, blocked)
+          )
+      );
       return blocked;
     },
     {
-      ready: isOpen && Boolean(node),
-      refreshDeps: [isOpen, node?.id, effectiveRootId, effectiveGroupId],
+      ready: isOpen && nodes.length > 0,
+      refreshDeps: [isOpen, nodeIdsKey, effectiveRootId, effectiveGroupId],
       onBefore: () => {
         setSelectedTargetId(undefined);
       },
@@ -75,25 +82,33 @@ function MoveNodeModal({
   const finalBlockedIds = useMemo(() => blockedIds ?? new Set<string>(), [blockedIds]);
   const disabledTargetIds = useMemo(() => {
     const next = new Set(finalBlockedIds);
-    if (effectiveGroupId && node && (node.type === 'resource' || node.type === 'link')) {
+    if (
+      effectiveGroupId &&
+      nodes.some((node) => node.type === 'resource' || node.type === 'link')
+    ) {
       next.add(effectiveRootId);
     }
     return next;
-  }, [effectiveGroupId, effectiveRootId, finalBlockedIds, node]);
+  }, [effectiveGroupId, effectiveRootId, finalBlockedIds, nodes]);
 
   const { loading: moving, run: runMove } = useRequest(
     async () => {
-      if (!node || !selectedTargetId) return;
-      await driveService.moveToFolder({
-        nodeId: node.id,
+      if (nodes.length === 0 || !selectedTargetId) return;
+      return await driveService.moveNodesToFolder({
+        nodeIds: nodes.map((node) => node.id),
         targetFolderNodeId: selectedTargetId,
         groupId: effectiveGroupId,
       });
     },
     {
       manual: true,
-      onSuccess: () => {
-        toast.success(isTrashView ? '已移动到云盘' : '移动成功');
+      onSuccess: (movedCount) => {
+        if (movedCount === 0) {
+          toast.success('所选项已在目标文件夹');
+          onOpenChange(false);
+          return;
+        }
+        toast.success(isTrashView ? `已移动 ${movedCount} 项到云盘` : `已移动 ${movedCount} 项`);
         if (selectedTargetId) {
           onSuccess?.(selectedTargetId);
         }
@@ -106,7 +121,7 @@ function MoveNodeModal({
   );
 
   const handleConfirm = () => {
-    if (!node || !selectedTargetId) return;
+    if (nodes.length === 0 || !selectedTargetId) return;
     runMove();
   };
 
@@ -117,7 +132,7 @@ function MoveNodeModal({
 
   return (
     <AppModal
-      isOpen={isOpen && !!node}
+      isOpen={isOpen && nodes.length > 0}
       onOpenChange={handleOpenChange}
       title={isTrashView ? '移动到云盘' : '移动到文件夹'}
       size="md"
@@ -139,7 +154,11 @@ function MoveNodeModal({
       }
     >
       <div className={styles.wrapper}>
-        {node ? <div className={styles.hint}>即将移动：{getNodeName(node)}</div> : null}
+        {nodes.length === 1 ? (
+          <div className={styles.hint}>即将移动：{getNodeName(nodes[0])}</div>
+        ) : (
+          <div className={styles.hint}>已选择 {nodes.length} 项</div>
+        )}
         <div className={styles.treeWrap}>
           <DriveNavigator
             rootId={effectiveRootId}

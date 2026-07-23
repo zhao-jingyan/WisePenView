@@ -1,6 +1,8 @@
 @import '../shared/styles/table.module.less';
 
 .shell {
+  --table-checkbox-column-width: 28px;
+
   .tableShellTypography();
   .tableShellBorder();
   .tableShellStretch();
@@ -12,8 +14,14 @@
 
 .headerBar {
   .tableHeaderBarLayout();
-  min-height: @table-header-bar-min-height;
-  padding: @table-shell-padding-block @table-shell-padding-inline 0;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: calc(
+    @table-control-min-height + @table-toolbar-padding-block + @table-toolbar-padding-block
+  );
+  padding: @table-toolbar-padding-block @table-shell-padding-inline;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--surface);
 }
 
 .headerBarSpacer {
@@ -24,6 +32,7 @@
   display: flex;
   flex: 1;
   align-items: center;
+  gap: @table-gap-tight;
   min-width: 0;
   overflow: hidden;
 }
@@ -42,7 +51,6 @@
 
 .tableRoot {
   width: 100%;
-  padding-top: @table-gap-compact;
   background: var(--surface);
   .tableRootFlatHeader();
   .tableRootNoShadow();
@@ -74,8 +82,8 @@
     padding-block: 0;
     padding-inline: @header-cell-padding-inline;
     border-bottom: 1px solid var(--border-light);
-    background: var(--surface);
-    color: var(--foreground);
+    background: var(--surface-secondary);
+    color: var(--surface-secondary-foreground);
     font-family: @table-font-family;
     font-size: @table-font-size-header;
     font-weight: @table-font-weight-medium;
@@ -126,7 +134,7 @@
 }
 
 .nameColumnHeader:global(.table__column) {
-  padding-left: calc(var(--space-sm) + 20px + var(--space-xs));
+  padding-left: calc(20px + var(--space-xs));
 }
 
 .actionColumnHeader:global(.table__column) {
@@ -138,12 +146,13 @@
   text-align: center;
 }
 
-.checkboxColumn {
+.checkboxColumn:global(.table__column) {
   padding: 0;
   overflow: hidden;
+  text-align: center;
   vertical-align: middle;
 
-  :global(.checkbox) {
+  :global(.wisepen-table-selection-checkbox) {
     flex-shrink: 0;
   }
 }
@@ -153,14 +162,25 @@
   height: @header-row-height;
 }
 
-.checkboxCell {
+.checkboxCell:global(.table__cell) {
   padding: 0;
+  text-align: center;
   vertical-align: middle;
 }
 
 .checkboxCellInner {
   box-sizing: border-box;
   height: @row-content-height;
+
+  :global(.wisepen-table-selection-checkbox) {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.14s ease;
+  }
+}
+
+.nameCell:global(.table__cell) {
+  padding-left: 0;
 }
 
 .bodyRow {
@@ -182,12 +202,32 @@
   }
 }
 
+.shell[data-edit-mode='true'] {
+  .checkboxCellInner :global(.wisepen-table-selection-checkbox) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 @media (hover: hover) {
-  .selectedRow:global(.table__row:hover),
-  .selectedRow:global(.table__row[data-hovered='true']) {
+  .bodyRow:global(.table__row:hover) {
+    .checkboxCellInner :global(.wisepen-table-selection-checkbox) {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  .selectedRow:global(.table__row:hover) {
     :global(.table__cell) {
       background: var(--accent-soft);
     }
+  }
+}
+
+@media (hover: none) {
+  .checkboxCellInner :global(.wisepen-table-selection-checkbox) {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 
@@ -228,10 +268,6 @@
 .mutedCell {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
-}
-
-.tableFooter {
-  border-top: 0;
 }
 
 .loadMoreTableRow {

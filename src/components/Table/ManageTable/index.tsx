@@ -10,6 +10,7 @@ import TableBodyState from '../shared/TableBodyState';
 import TablePaginationFooter from '../shared/TablePaginationFooter';
 import TableRowActions from '../shared/TableRowActions';
 import type { TableRowActionItem } from '../shared/TableRowActions/index.type';
+import TableSelectionCheckbox from '../shared/TableSelectionCheckbox';
 import { renderSortableColumnLabel } from '../shared/TableSortHeader/renderSortableColumnLabel';
 import TableCellAlign from '../shared/cells/CellAlign';
 import { tableCellStyles, tableStyles } from '../shared/styles';
@@ -22,7 +23,6 @@ import type {
 } from './index.type';
 import TableBatchFooter from './parts/BatchFooter';
 import TableEditErrorToast from './parts/EditErrorToast';
-import TableSelectionCheckbox from './parts/SelectionCheckbox';
 import styles from './style.module.less';
 
 import { Button, Spinner, Table, type Selection } from '@heroui/react';
@@ -113,9 +113,10 @@ function ManageTable<T extends object>({
   const resolvedEmptyText = emptyText ?? t('empty.noData');
   const resolvedLoadingText = loadingText ?? t('loading');
 
-  const disabledKeys = batchSelection?.disabledKeys
-    ? new Set(batchSelection.disabledKeys)
-    : undefined;
+  const disabledKeys = useMemo(
+    () => (batchSelection?.disabledKeys ? new Set(batchSelection.disabledKeys) : undefined),
+    [batchSelection]
+  );
 
   const defaultSummary = useMemo(() => {
     if (!pagination) {
@@ -198,6 +199,28 @@ function ManageTable<T extends object>({
   const showEditErrorToast = Boolean(inlineEdit?.errorMessage);
   const showBatchFooter = Boolean(batchSelection && batchFooter);
   const selectedCount = resolveSelectedCount(batchSelection?.selectedKeys, items.length);
+  const selectableRowIds = useMemo(
+    () =>
+      batchSelection
+        ? items.map((row) => String(row[rowKey])).filter((rowId) => !disabledKeys?.has(rowId))
+        : [],
+    [batchSelection, disabledKeys, items, rowKey]
+  );
+  const selectedRowIdSet = useMemo(
+    () =>
+      new Set(
+        batchSelection?.selectedKeys === 'all'
+          ? selectableRowIds
+          : Array.from(batchSelection?.selectedKeys ?? [], String)
+      ),
+    [batchSelection, selectableRowIds]
+  );
+  const selectedSelectableRowCount = selectableRowIds.filter((rowId) =>
+    selectedRowIdSet.has(rowId)
+  ).length;
+  const allRowsSelected =
+    selectableRowIds.length > 0 && selectedSelectableRowCount === selectableRowIds.length;
+  const someRowsSelected = selectedSelectableRowCount > 0 && !allRowsSelected;
 
   const sortedItems = useMemo(
     () =>
@@ -220,6 +243,40 @@ function ManageTable<T extends object>({
       batchSelection.onSelectionChange(keys);
     },
     [batchSelection]
+  );
+
+  const handleRowCheckboxChange = useCallback(
+    (rowId: string, selected: boolean) => {
+      if (!batchSelection || disabledKeys?.has(rowId)) {
+        return;
+      }
+      const nextKeys = new Set(selectedRowIdSet);
+      if (selected) {
+        nextKeys.add(rowId);
+      } else {
+        nextKeys.delete(rowId);
+      }
+      batchSelection.onSelectionChange(nextKeys);
+    },
+    [batchSelection, disabledKeys, selectedRowIdSet]
+  );
+
+  const handleSelectAllCheckboxChange = useCallback(
+    (selected: boolean) => {
+      if (!batchSelection) {
+        return;
+      }
+      const nextKeys = new Set(selectedRowIdSet);
+      selectableRowIds.forEach((rowId) => {
+        if (selected) {
+          nextKeys.add(rowId);
+        } else {
+          nextKeys.delete(rowId);
+        }
+      });
+      batchSelection.onSelectionChange(nextKeys);
+    },
+    [batchSelection, selectableRowIds, selectedRowIdSet]
   );
 
   return (
@@ -277,7 +334,13 @@ function ManageTable<T extends object>({
                       styles.checkboxColumnInner
                     )}
                   >
-                    <TableSelectionCheckbox ariaLabel={t('aria.selectAll')} />
+                    <TableSelectionCheckbox
+                      ariaLabel={t('aria.selectAll')}
+                      isSelected={allRowsSelected}
+                      isIndeterminate={someRowsSelected}
+                      isDisabled={selectableRowIds.length === 0}
+                      onChange={handleSelectAllCheckboxChange}
+                    />
                   </div>
                 </Table.Column>
               ) : null}
@@ -366,7 +429,12 @@ function ManageTable<T extends object>({
                             styles.checkboxCellInner
                           )}
                         >
-                          <TableSelectionCheckbox ariaLabel={t('aria.selectRow', { id: rowId })} />
+                          <TableSelectionCheckbox
+                            ariaLabel={t('aria.selectRow', { id: rowId })}
+                            isSelected={selectedRowIdSet.has(rowId)}
+                            isDisabled={disabledKeys?.has(rowId)}
+                            onChange={(selected) => handleRowCheckboxChange(rowId, selected)}
+                          />
                         </div>
                       </Table.Cell>
                     ) : null}

@@ -99,10 +99,7 @@ const normalizeNode = (node: LegacyNode): DriveNode | null => {
       resourceId: node.resourceId,
       title: node.title ?? '未命名文件',
       resourceType: node.resourceType,
-      resourceIconType: resolveResourceIconType({
-        resourceType: node.resourceType,
-        resourceName: node.title,
-      }),
+      resourceIconType: resolveResourceIconType(node.resourceType),
       folderTagId: node.tagId ?? node.parentId ?? '',
     };
   }
@@ -115,10 +112,7 @@ const normalizeNode = (node: LegacyNode): DriveNode | null => {
       resourceId: node.resourceId,
       title: node.title ?? '未命名文件',
       resourceType: node.resourceType,
-      resourceIconType: resolveResourceIconType({
-        resourceType: node.resourceType,
-        resourceName: node.title,
-      }),
+      resourceIconType: resolveResourceIconType(node.resourceType),
       folderTagId: node.tagId ?? node.parentId ?? '',
       primaryTagId: node.primaryTagId,
     };

@@ -106,14 +106,13 @@
 }
 
 .checkbox {
+  --app-checkbox-control-size: 14px;
+
   flex: 0 0 auto;
-  width: 14px;
-  height: 14px;
   margin: 0 6px 0 0;
-  accent-color: var(--accent);
   cursor: pointer;
 
-  &:disabled {
+  &[data-disabled='true'] {
     cursor: not-allowed;
   }
 }

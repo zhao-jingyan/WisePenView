@@ -3,13 +3,15 @@
 .footer {
   padding: @table-toolbar-padding-block @table-shell-padding-inline;
   border-top: 1px solid var(--border-light);
-  background: var(--surface);
+  background: var(--surface-secondary);
 }
 
 .inner {
   display: flex;
+  width: 100%;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: @table-gap-compact;
   min-height: @table-control-min-height;
 }
@@ -24,6 +26,7 @@
 
 .actions {
   display: flex;
+  margin-left: auto;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-xs);
