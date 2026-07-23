@@ -2,7 +2,7 @@ import type { DriveActionTarget } from '../../../common/driveComponentModel';
 
 export interface MoveNodeModalProps {
   isOpen: boolean;
-  node: DriveActionTarget | null;
+  nodes: DriveActionTarget[];
   rootId: string;
   groupId?: string;
   isTrashView?: boolean;

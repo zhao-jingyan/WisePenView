@@ -45,8 +45,6 @@ export interface UseTableDriveActionsReturn {
   openTagAccessPermission: (tagId: string) => void;
   openTagMountPermission: (tagId: string) => void;
   openResourcePermission: (target: ResourcePermissionModalTarget) => void;
-  tagPermissionRefreshToken: number;
-  resourcePermissionRefreshToken: number;
   ModalHost: ReactElement;
 }
 
@@ -81,10 +79,8 @@ export function useTableDriveActions({
   const [uploadOpen, setUploadOpen] = useState(false);
   const [tagAccessPermissionTagId, setTagAccessPermissionTagId] = useState<string>();
   const [tagMountPermissionTagId, setTagMountPermissionTagId] = useState<string>();
-  const [tagPermissionRefreshToken, setTagPermissionRefreshToken] = useState(0);
   const [resourcePermissionTarget, setResourcePermissionTarget] =
     useState<ResourcePermissionModalTarget | null>(null);
-  const [resourcePermissionRefreshToken, setResourcePermissionRefreshToken] = useState(0);
   const [driveCreateType, setDriveCreateType] = useState<DriveCreateType | null>(null);
 
   const existingFolderNames = useMemo(
@@ -221,7 +217,7 @@ export function useTableDriveActions({
                 setTagAccessPermissionTagId(undefined);
               }
             }}
-            onSuccess={() => setTagPermissionRefreshToken((prev) => prev + 1)}
+            onSuccess={refresh}
           />
         ) : null}
         {groupId && tagMountPermissionTagId ? (
@@ -234,7 +230,7 @@ export function useTableDriveActions({
                 setTagMountPermissionTagId(undefined);
               }
             }}
-            onSuccess={() => setTagPermissionRefreshToken((prev) => prev + 1)}
+            onSuccess={refresh}
           />
         ) : null}
         {groupId && resourcePermissionTarget ? (
@@ -247,7 +243,7 @@ export function useTableDriveActions({
                 setResourcePermissionTarget(null);
               }
             }}
-            onSuccess={() => setResourcePermissionRefreshToken((prev) => prev + 1)}
+            onSuccess={refresh}
           />
         ) : null}
         {driveCreateType ? (
@@ -404,8 +400,6 @@ export function useTableDriveActions({
     openTagAccessPermission,
     openTagMountPermission,
     openResourcePermission,
-    tagPermissionRefreshToken,
-    resourcePermissionRefreshToken,
     ModalHost,
   };
 }

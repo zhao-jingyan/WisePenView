@@ -82,8 +82,7 @@ function FileViewerResolver({ target, onTargetChange, onClose }: ResourceRendere
     refreshDeps: [resourceId],
     onSuccess: (data) => {
       const viewer = resolveResourceViewer({
-        resourceType: RESOURCE_KIND.FILE,
-        resourceName: data.resourceInfo.resourceName,
+        resourceType: data.resourceInfo.resourceType,
       });
       if (!viewer) return;
       onTargetChange({

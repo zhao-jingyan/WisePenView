@@ -70,13 +70,9 @@ export const useOpenInWorkspace = (): OpenInWorkspaceFn => {
         navigationStore.navigateToScope(scope);
       }
 
-      const resourceType = resolveResourceKind({
-        resourceType: target.resourceType,
-        resourceName: target.resourceName,
-      });
+      const resourceType = resolveResourceKind(target.resourceType);
       const viewer = resolveResourceViewer({
         resourceType: target.resourceType ?? resourceType,
-        resourceName: target.resourceName,
         viewer: target.viewer,
       });
       const basePath = buildWorkspaceResourcePath({ resourceType, resourceId, viewer });

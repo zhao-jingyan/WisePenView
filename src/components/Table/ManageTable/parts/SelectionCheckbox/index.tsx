@@ -1,11 +1,22 @@
 import { Checkbox } from '@heroui/react';
+import type { ComponentProps } from 'react';
 import styles from './style.module.less';
 
 export interface TableSelectionCheckboxProps {
   ariaLabel: string;
+  isSelected?: boolean;
+  isIndeterminate?: boolean;
+  isDisabled?: boolean;
+  onClick?: ComponentProps<typeof Checkbox>['onClick'];
 }
 
-function TableSelectionCheckbox({ ariaLabel }: TableSelectionCheckboxProps) {
+function TableSelectionCheckbox({
+  ariaLabel,
+  isSelected,
+  isIndeterminate,
+  isDisabled,
+  onClick,
+}: TableSelectionCheckboxProps) {
   return (
     <Checkbox
       slot="selection"
@@ -13,6 +24,10 @@ function TableSelectionCheckbox({ ariaLabel }: TableSelectionCheckboxProps) {
       variant="primary"
       className={styles.checkbox}
       data-row-click-ignore="true"
+      isSelected={isSelected}
+      isIndeterminate={isIndeterminate}
+      isDisabled={isDisabled}
+      onClick={onClick}
     >
       <Checkbox.Content className={styles.content}>
         <Checkbox.Control className={styles.control}>

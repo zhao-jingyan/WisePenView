@@ -17,8 +17,6 @@ export function useFavoriteResourceTableController({
     useFavoriteResources(collectionId);
   const [unfavoriteItem, setUnfavoriteItem] = useState<FavoriteItem>();
   const [manageFavoriteItem, setManageFavoriteItem] = useState<FavoriteItem>();
-  const [selectedResourceId, setSelectedResourceId] = useState<string>();
-  const selectedItem = list.find((item) => item.resourceId === selectedResourceId);
   const openResource = (item: FavoriteItem) => {
     if (!item.resourceInfo) return;
     openInWorkspace({
@@ -54,23 +52,12 @@ export function useFavoriteResourceTableController({
     loadingMore,
     hasMore,
     loadMore,
-    selectedResourceId,
-    selectedItem,
     unfavoriteItem,
     manageFavoriteItem,
-    onRowSelect: (item: FavoriteItem) => {
-      if (selectedResourceId === item.resourceId) {
-        openResource(item);
-        return;
-      }
-      setSelectedResourceId(item.resourceId);
-    },
     onOpenResource: openResource,
     onRowAction: handleRowAction,
-    onRequestUnfavorite: setUnfavoriteItem,
     onCloseUnfavorite: () => setUnfavoriteItem(undefined),
     onUnfavoriteSuccess: () => {
-      setSelectedResourceId(undefined);
       refreshCollections();
     },
     onCloseManageFavorite: () => setManageFavoriteItem(undefined),

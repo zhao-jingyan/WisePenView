@@ -20,7 +20,7 @@
       {
         "resourceId": "res-001",
         "resourceName": "示例文档.pdf",
-        "resourceType": "file",
+        "resourceType": "pdf",
         "ownerId": "1",
         "preview": "",
         "size": 102400,
@@ -30,7 +30,7 @@
       {
         "resourceId": "res-002",
         "resourceName": "报告.docx",
-        "resourceType": "file",
+        "resourceType": "docx",
         "ownerId": "1",
         "size": 51200,
         "path": "/documents",

@@ -111,13 +111,9 @@ function ZenResourcePane({
     (next: OpenResourceTarget) => {
       const resourceId = next.resourceId.trim();
       if (!resourceId) return;
-      const resourceType = resolveResourceKind({
-        resourceType: next.resourceType,
-        resourceName: next.resourceName,
-      });
+      const resourceType = resolveResourceKind(next.resourceType);
       const viewer = resolveResourceViewer({
         resourceType: next.resourceType ?? resourceType,
-        resourceName: next.resourceName,
         viewer: next.viewer,
       });
       setPaneTarget(pane.paneId, {

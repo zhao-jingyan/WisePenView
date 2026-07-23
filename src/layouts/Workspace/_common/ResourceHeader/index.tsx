@@ -302,7 +302,6 @@ function ResourceHeader({
                   <EntryIcon
                     entryType="resource"
                     resourceType={resourceType}
-                    resourceName={resourceName}
                     resourceIconType={resourceIconType}
                   />
                 </span>
@@ -315,7 +314,6 @@ function ResourceHeader({
                 <EntryIcon
                   entryType="resource"
                   resourceType={resourceType}
-                  resourceName={resourceName}
                   resourceIconType={resourceIconType}
                 />
               </span>

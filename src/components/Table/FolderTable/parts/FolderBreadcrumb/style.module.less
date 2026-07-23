@@ -2,16 +2,25 @@
 
 .breadcrumb {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 4px;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .segment {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 4px;
+}
+
+.segment:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .separator {
@@ -45,8 +54,11 @@
 }
 
 .current {
+  max-width: 100%;
+  overflow: hidden;
   color: var(--foreground);
   font-weight: @table-font-weight-medium;
+  text-overflow: ellipsis;
   cursor: default;
 
   @media (hover: hover) {

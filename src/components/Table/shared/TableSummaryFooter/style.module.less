@@ -1,13 +1,21 @@
 @import '../styles/table.module.less';
 
 .footer {
-  padding: var(--table-footer-padding-block, var(--space-2xs)) var(--space-md);
-  min-height: var(--table-footer-row-height, var(--line-height-xs));
-  border-top: 0;
-  background: var(--surface);
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  min-height: calc(
+    @table-control-min-height + @table-toolbar-padding-block + @table-toolbar-padding-block
+  );
+  padding: @table-toolbar-padding-block @table-shell-padding-inline;
+  border-top: 1px solid var(--border-light);
+  background: var(--surface-secondary);
 }
 
 .summary {
+  display: flex;
+  align-items: center;
+  min-height: @table-control-min-height;
   color: var(--muted);
   font-family: @table-font-family;
   font-size: @table-font-size-xs;

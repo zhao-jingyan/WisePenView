@@ -33,7 +33,7 @@ function UserAttachmentChip({ attachment }: { attachment: MessageAttachmentSnaps
       className={styles.attachment}
     >
       <AttachmentMedia>
-        <EntryIcon entryType="resource" resourceName={attachment.filename} size={16} />
+        <EntryIcon entryType="resource" size={16} />
       </AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle title={attachment.filename}>{attachment.filename}</AttachmentTitle>
@@ -80,11 +80,7 @@ function UserMessageAttachments({
                   {attachments.map((attachment) => (
                     <li key={attachment.attachmentId} className={styles.moreItem}>
                       <span className={styles.moreItemIcon} aria-hidden>
-                        <EntryIcon
-                          entryType="resource"
-                          resourceName={attachment.filename}
-                          size={16}
-                        />
+                        <EntryIcon entryType="resource" size={16} />
                       </span>
                       <span className={styles.moreItemText}>
                         <span className={styles.moreItemName} title={attachment.filename}>

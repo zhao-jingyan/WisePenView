@@ -10,13 +10,13 @@ import {
   type FolderTableBreadcrumbItem,
   type FolderTableColumn,
   type FolderTableRowAction,
-  type FolderTableRowPressContext,
 } from '@/components/Table';
 import { useDriveService } from '@/domains';
 import type { DriveNode } from '@/domains/Drive';
 import SidebarDriveScopeSwitcher from '@/layouts/_common/Sidebar/DriveSidebar/_components/SidebarDrive/SidebarDriveScopeSwitcher';
 import { parseErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format/formatFileSize';
+import { resolveResourceKind } from '@/utils/navigation/resourceTarget';
 import { findTreeNodeById } from '@/utils/tree/findTreeNodeById';
 import {
   DndContext,
@@ -30,7 +30,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { Button, toast, type Selection, type SortDescriptor } from '@heroui/react';
+import { Button, toast, type SortDescriptor } from '@heroui/react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
 import { Trash2 } from 'lucide-react';
 import {
@@ -54,7 +54,6 @@ import {
 import { useClickNode } from '../common/useClickNode';
 import type { DriveRow, DriveTableRow, TableDriveHandle, TableDriveProps } from './index.type';
 import CreateMenu from './parts/CreateMenu';
-import TableDriveSelectionPanel from './parts/SelectionPanel';
 import styles from './style.module.less';
 import { useTableDrive } from './useTableDrive';
 import { useTableDriveActions } from './useTableDriveActions';
@@ -167,7 +166,7 @@ function toDriveActionTarget(node: DriveNode): DriveActionTarget | null {
 }
 
 function isDriveDragSource(row: DriveTableRow): boolean {
-  return isDriveActionTarget(row.node);
+  return isDriveActionTarget(row.node) && !isDriveSharedFolderNode(row.node);
 }
 
 function isDriveMoveTarget(row: DriveTableRow): boolean {
@@ -175,7 +174,7 @@ function isDriveMoveTarget(row: DriveTableRow): boolean {
 }
 
 function isDriveMoveTargetNode(node: DriveNode): boolean {
-  return node.type === 'folder' || node.type === 'root';
+  return (node.type === 'folder' || node.type === 'root') && !isDriveSharedFolderNode(node);
 }
 
 function isDrivePinnedFirstRow(row: DriveTableRow): boolean {
@@ -277,24 +276,6 @@ function DriveDragOverlay({ row, count }: { row: DriveTableRow; count: number })
   );
 }
 
-function resolveSelectionKeysAfterRowPress(
-  currentKeys: Set<string>,
-  rowId: string,
-  ctx: FolderTableRowPressContext
-): Set<string> {
-  if (!ctx.modifierKey) {
-    return new Set([rowId]);
-  }
-
-  const nextKeys = new Set(currentKeys);
-  if (nextKeys.has(rowId)) {
-    nextKeys.delete(rowId);
-    return nextKeys;
-  }
-  nextKeys.add(rowId);
-  return nextKeys;
-}
-
 const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableDrive(
   {
     groupId,
@@ -328,7 +309,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     initialNodeId,
     scope: resolvedScope.scope,
   });
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Set<string>>(new Set());
+  const [checkedRowKeys, setCheckedRowKeys] = useState<Set<string>>(new Set());
   const [draggingRowKeys, setDraggingRowKeys] = useState<Set<string>>(new Set());
   const [activeDragRowId, setActiveDragRowId] = useState<string | null>(null);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor | undefined>();
@@ -350,9 +331,8 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     setSortDescriptor(descriptor);
   }, []);
   const [renameTarget, setRenameTarget] = useState<DriveActionTarget | null>(null);
-  const [moveTarget, setMoveTarget] = useState<DriveActionTarget | null>(null);
+  const [moveNodes, setMoveNodes] = useState<DriveActionTarget[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<DriveActionTarget | null>(null);
-  const [batchMode, setBatchMode] = useState(false);
   const beforeTrashNodeIdRef = useRef<string | null>(null);
   const draggingRowKeysRef = useRef<Set<string>>(new Set());
   const sensors = useSensors(
@@ -367,7 +347,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   }, []);
 
   const handleClearSelection = useCallback(() => {
-    setSelectedRowKeys(new Set());
+    setCheckedRowKeys(new Set());
   }, []);
 
   const refreshDrive = useCallback(() => {
@@ -376,7 +356,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
 
   const handleEnterFolder = useCallback(
     (nodeId: string) => {
-      setSelectedRowKeys(new Set());
+      setCheckedRowKeys(new Set());
       updateDraggingRowKeys(new Set());
       setActiveDragRowId(null);
       onCurrentNodeChange?.(nodeId);
@@ -389,6 +369,25 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   });
   const rows = useMemo(() => dataSource.map((node) => toDriveTableRow(node)), [dataSource]);
   const rowMap = useMemo(() => buildDriveTableRowMap(rows), [rows]);
+  const selectedActionTargets = useMemo(() => {
+    const targets: DriveActionTarget[] = [];
+    checkedRowKeys.forEach((rowId) => {
+      const node = rowMap.get(rowId)?.node;
+      if (node && isDriveActionTarget(node) && !isDriveSystemFolderNode(node)) {
+        targets.push(node);
+      }
+    });
+    return targets;
+  }, [checkedRowKeys, rowMap]);
+  const canBatchMove =
+    checkedRowKeys.size > 0 && selectedActionTargets.length === checkedRowKeys.size;
+  const sharedRowKeys = useMemo(
+    () =>
+      new Set(
+        [...rowMap.values()].filter((row) => isDriveSharedFolderNode(row.node)).map((row) => row.id)
+      ),
+    [rowMap]
+  );
   const driveNodeMap = useMemo(() => {
     const map = new Map<string, DriveNode>();
     rowMap.forEach((row) => {
@@ -400,30 +399,9 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     return map;
   }, [pathNodes, rowMap]);
 
-  const handleToggleBatchMode = useCallback(() => {
-    setBatchMode((prev) => {
-      if (prev) {
-        setSelectedRowKeys(new Set());
-      }
-      return !prev;
-    });
-  }, []);
-
-  const handleBatchSelectionChange = useCallback(
-    (keys: Selection) => {
-      if (keys === 'all') {
-        const allIds = rows.filter((r) => r.entryType !== 'loading').map((r) => r.id);
-        setSelectedRowKeys(new Set(allIds));
-        return;
-      }
-      setSelectedRowKeys(new Set([...keys].map(String)));
-    },
-    [rows]
-  );
-
   const { loading: batchDeleting, run: runBatchDelete } = useRequest(
     async () => {
-      const ids = [...selectedRowKeys];
+      const ids = [...checkedRowKeys];
       await Promise.all(
         ids.map((nodeId) => driveService.removeNode({ nodeId, groupId: finalGroupId }))
       );
@@ -431,9 +409,8 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     {
       manual: true,
       onSuccess: () => {
-        toast.success(`已删除 ${selectedRowKeys.size} 项`);
-        setSelectedRowKeys(new Set());
-        setBatchMode(false);
+        toast.success(`已删除 ${checkedRowKeys.size} 项`);
+        setCheckedRowKeys(new Set());
         refreshDrive();
       },
       onError: (err) => {
@@ -442,41 +419,15 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     }
   );
 
-  const batchSelection = useMemo(() => {
-    if (!batchMode) return undefined;
-    return {
-      selectedKeys: selectedRowKeys as Set<string | number>,
-      onSelectionChange: handleBatchSelectionChange,
-    };
-  }, [batchMode, selectedRowKeys, handleBatchSelectionChange]);
+  const checkboxSelection = useMemo(
+    () => ({
+      selectedKeys: checkedRowKeys,
+      onSelectionChange: setCheckedRowKeys,
+      hiddenKeys: sharedRowKeys,
+    }),
+    [checkedRowKeys, sharedRowKeys]
+  );
 
-  const batchFooter = useMemo(() => {
-    if (!batchMode) return null;
-    return (
-      <div className={styles.batchFooter}>
-        <div className={styles.batchActions}>
-          <Button
-            variant="danger"
-            size="sm"
-            isDisabled={selectedRowKeys.size === 0 || batchDeleting}
-            onPress={() => runBatchDelete()}
-          >
-            删除
-          </Button>
-          <Button variant="secondary" size="sm" onPress={handleToggleBatchMode}>
-            取消
-          </Button>
-        </div>
-      </div>
-    );
-  }, [batchMode, selectedRowKeys, batchDeleting, runBatchDelete, handleToggleBatchMode]);
-
-  const selectedNode = useMemo(() => {
-    if (selectedRowKeys.size !== 1) {
-      return undefined;
-    }
-    return rowMap.get(selectedRowKeys.values().next().value ?? '');
-  }, [rowMap, selectedRowKeys]);
   const activeDragRow = useMemo(
     () => (activeDragRowId ? rowMap.get(activeDragRowId) : undefined),
     [activeDragRowId, rowMap]
@@ -496,8 +447,13 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   }, []);
 
   const handleOpenMove = useCallback((node: DriveActionTarget) => {
-    setMoveTarget(node);
+    setMoveNodes([node]);
   }, []);
+
+  const handleOpenBatchMove = useCallback(() => {
+    if (!canBatchMove) return;
+    setMoveNodes(selectedActionTargets);
+  }, [canBatchMove, selectedActionTargets]);
 
   const handleOpenDelete = useCallback((node: DriveActionTarget) => {
     setDeleteTarget(node);
@@ -555,6 +511,40 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     (currentNodeId === trashFolderNodeId ||
       pathNodes.some((pathNode) => pathNode.id === trashFolderNodeId))
   );
+  const selectionFooter = useMemo(() => {
+    if (checkedRowKeys.size === 0) return null;
+    return (
+      <div className={styles.selectionActions}>
+        {canBatchMove ? (
+          <Button variant="secondary" size="sm" onPress={handleOpenBatchMove}>
+            移动
+          </Button>
+        ) : null}
+        {!isTrashView ? (
+          <Button
+            variant="danger"
+            size="sm"
+            isDisabled={batchDeleting}
+            onPress={() => runBatchDelete()}
+          >
+            删除
+          </Button>
+        ) : null}
+        <Button variant="secondary" size="sm" onPress={handleClearSelection}>
+          清除选择
+        </Button>
+      </div>
+    );
+  }, [
+    batchDeleting,
+    canBatchMove,
+    checkedRowKeys.size,
+    handleClearSelection,
+    handleOpenBatchMove,
+    isTrashView,
+    runBatchDelete,
+  ]);
+  const isEditMode = checkedRowKeys.size > 0;
 
   const openTrash = useCallback(async () => {
     if (!canOpenTrash) {
@@ -614,8 +604,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     openTagAccessPermission,
     openTagMountPermission,
     openResourcePermission,
-    tagPermissionRefreshToken,
-    resourcePermissionRefreshToken,
     ModalHost,
   } = useTableDriveActions({
     currentNodeId,
@@ -629,21 +617,12 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   const toolbar = useMemo(
     () => (
       <div className={styles.toolbarActions}>
-        {showCreateMenu ? (
+        {!isEditMode && showCreateMenu ? (
           <CreateMenu items={createMenuItems} onSelect={handleCreateMenuSelect} />
         ) : null}
         {showUploadToGroup ? (
           <Button variant="secondary" size="sm" onPress={openUploadToGroup}>
             从个人云盘添加
-          </Button>
-        ) : null}
-        {!isTrashView ? (
-          <Button
-            variant={batchMode ? 'primary' : 'secondary'}
-            size="sm"
-            onPress={handleToggleBatchMode}
-          >
-            批量操作
           </Button>
         ) : null}
         {showToolbarTrash && canOpenTrash ? (
@@ -655,10 +634,9 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       </div>
     ),
     [
-      batchMode,
       createMenuItems,
       handleCreateMenuSelect,
-      handleToggleBatchMode,
+      isEditMode,
       isTrashView,
       openUploadToGroup,
       openTrash,
@@ -700,16 +678,16 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
 
   const resolveRowActions = useCallback(
     (row: DriveTableRow): FolderTableRowAction<DriveTableRow>[] => {
-      if (batchMode) return [];
       const actionTarget = toDriveActionTarget(row.node);
       if (!actionTarget) return [];
+      if (actionTarget.type === 'folder' && actionTarget.systemType === 'shared') return [];
 
       const openAction: FolderTableRowAction<DriveTableRow> =
-        row.node.type === 'folder'
+        actionTarget.type === 'folder'
           ? {
               key: 'enter',
               label: '进入',
-              onPress: () => handleEnterFolder(row.node.id),
+              onPress: () => handleEnterFolder(actionTarget.id),
             }
           : {
               key: 'open',
@@ -718,6 +696,35 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
             };
 
       const actions: FolderTableRowAction<DriveTableRow>[] = [openAction];
+
+      if (showManagePermission && !isTrashView) {
+        if (actionTarget.type === 'folder') {
+          actions.push(
+            {
+              key: 'tag-access-permission',
+              label: '访问权限',
+              onPress: () => openTagAccessPermission(actionTarget.tagId),
+            },
+            {
+              key: 'tag-mount-permission',
+              label: '挂载权限',
+              onPress: () => openTagMountPermission(actionTarget.tagId),
+            }
+          );
+        } else if (actionTarget.type === 'resource') {
+          actions.push({
+            key: 'resource-permission',
+            label: '资源权限',
+            onPress: () =>
+              openResourcePermission({
+                resourceId: actionTarget.resourceId,
+                resourceType: resolveResourceKind(actionTarget.resourceType),
+                resourceName: row.name,
+                fallbackTagId: actionTarget.folderTagId,
+              }),
+          });
+        }
+      }
 
       if (isDriveSystemFolderNode(actionTarget)) {
         return actions;
@@ -755,7 +762,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       return actions;
     },
     [
-      batchMode,
       finalGroupId,
       handleClickNode,
       handleEnterFolder,
@@ -763,22 +769,11 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       handleOpenMove,
       handleOpenRename,
       isTrashView,
+      openResourcePermission,
+      openTagAccessPermission,
+      openTagMountPermission,
+      showManagePermission,
     ]
-  );
-
-  const handleRowSelect = useCallback(
-    (row: DriveTableRow, ctx: FolderTableRowPressContext) => {
-      if (row.node.type === 'loading') return;
-
-      if (!ctx.modifierKey && selectedRowKeys.size === 1 && selectedRowKeys.has(row.id)) {
-        handleRowActivate(row);
-        return;
-      }
-
-      const nextSelectedRowKeys = resolveSelectionKeysAfterRowPress(selectedRowKeys, row.id, ctx);
-      setSelectedRowKeys(nextSelectedRowKeys);
-    },
-    [handleRowActivate, selectedRowKeys]
   );
 
   const resolveDragSourceIds = useCallback(
@@ -786,13 +781,13 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       if (!isDriveDragSource(row)) {
         return [];
       }
-      const sourceIds = selectedRowKeys.has(row.id) ? [...selectedRowKeys] : [row.id];
+      const sourceIds = checkedRowKeys.has(row.id) ? [...checkedRowKeys] : [row.id];
       return sourceIds.filter((rowId) => {
         const sourceRow = rowMap.get(rowId);
         return sourceRow ? isDriveDragSource(sourceRow) : false;
       });
     },
-    [rowMap, selectedRowKeys]
+    [checkedRowKeys, rowMap]
   );
 
   const handleDragStart = useCallback(
@@ -813,11 +808,11 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       const nextDraggingRowKeys = new Set(sourceRowIds);
       updateDraggingRowKeys(nextDraggingRowKeys);
       setActiveDragRowId(row.id);
-      if (!selectedRowKeys.has(row.id)) {
-        setSelectedRowKeys(nextDraggingRowKeys);
+      if (!checkedRowKeys.has(row.id)) {
+        setCheckedRowKeys(nextDraggingRowKeys);
       }
     },
-    [movingByDrag, resolveDragSourceIds, rowMap, selectedRowKeys, updateDraggingRowKeys]
+    [checkedRowKeys, movingByDrag, resolveDragSourceIds, rowMap, updateDraggingRowKeys]
   );
 
   const handleDragEnd = useCallback(
@@ -827,7 +822,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       const targetNode =
         typeof targetNodeId === 'string' ? driveNodeMap.get(targetNodeId) : undefined;
 
-      if (targetNode && sourceRowIds.length > 0) {
+      if (targetNode && isDriveMoveTargetNode(targetNode) && sourceRowIds.length > 0) {
         runMoveRowsByDrag({
           sourceRowIds,
           targetFolderNodeId: targetNode.id,
@@ -854,7 +849,9 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       return (
         <DriveDroppableBreadcrumb
           targetNode={targetNode}
-          disabled={movingByDrag || draggingRowKeys.size === 0}
+          disabled={
+            movingByDrag || draggingRowKeys.size === 0 || !isDriveMoveTargetNode(targetNode)
+          }
         >
           {content}
         </DriveDroppableBreadcrumb>
@@ -900,54 +897,27 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     >
       <main className={styles.listArea}>
         <div className={styles.driveFrame}>
-          <div className={styles.driveBody}>
-            <div className={styles.tablePanel}>
-              <FolderTable<DriveTableRow>
-                ariaLabel="云盘文件列表"
-                items={rows}
-                columns={DRIVE_TABLE_COLUMNS}
-                loading={loading}
-                breadcrumb={breadcrumb}
-                toolbar={toolbar}
-                expandedRowKeys={expandedRowKeys}
-                onExpandedChange={handleExpandedChange}
-                selectedRowKeys={selectedRowKeys}
-                onRowSelect={handleRowSelect}
-                onRowActivate={handleRowActivate}
-                renderNameContent={renderNameContent}
-                totalCount={currentDirectoryItemCount}
-                summary={`当前目录共 ${currentDirectoryItemCount} 项`}
-                className={styles.table}
-                sortDescriptor={sortDescriptor}
-                onSortChange={handleSortChange}
-                isPinnedFirst={isDrivePinnedFirstRow}
-                rowActions={resolveRowActions}
-                batchSelection={batchSelection}
-                batchFooter={batchFooter}
-              />
-            </div>
-
-            <div className={styles.detailPanel}>
-              <TableDriveSelectionPanel
-                selectedRow={selectedRowKeys.size > 1 ? undefined : selectedNode}
-                selectedCount={selectedRowKeys.size}
-                groupId={finalGroupId}
-                isTrashView={isTrashView}
-                canManageTagPermission={showManagePermission && !isTrashView}
-                tagPermissionRefreshToken={tagPermissionRefreshToken}
-                resourcePermissionRefreshToken={resourcePermissionRefreshToken}
-                onEnter={handleEnterFolder}
-                onOpen={handleClickNode}
-                onRename={handleOpenRename}
-                onMove={handleOpenMove}
-                onDelete={handleOpenDelete}
-                onManageTagAccessPermission={openTagAccessPermission}
-                onManageTagMountPermission={openTagMountPermission}
-                onManageResourcePermission={openResourcePermission}
-                onTagPermissionChange={refreshDrive}
-              />
-            </div>
-          </div>
+          <FolderTable<DriveTableRow>
+            ariaLabel="云盘文件列表"
+            items={rows}
+            columns={DRIVE_TABLE_COLUMNS}
+            loading={loading}
+            breadcrumb={breadcrumb}
+            toolbar={toolbar}
+            expandedRowKeys={expandedRowKeys}
+            onExpandedChange={handleExpandedChange}
+            onRowActivate={handleRowActivate}
+            renderNameContent={renderNameContent}
+            totalCount={currentDirectoryItemCount}
+            summary={`当前目录共 ${currentDirectoryItemCount} 项`}
+            className={styles.table}
+            sortDescriptor={sortDescriptor}
+            onSortChange={handleSortChange}
+            isPinnedFirst={isDrivePinnedFirstRow}
+            rowActions={resolveRowActions}
+            checkboxSelection={checkboxSelection}
+            selectionFooter={selectionFooter}
+          />
         </div>
         {ModalHost}
         <RenameNodeModal
@@ -960,13 +930,13 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
           onSuccess={refreshDrive}
         />
         <MoveNodeModal
-          isOpen={Boolean(moveTarget)}
-          node={moveTarget}
+          isOpen={moveNodes.length > 0}
+          nodes={moveNodes}
           rootId={finalRootId}
           groupId={finalGroupId}
           isTrashView={isTrashView}
           onOpenChange={(open) => {
-            if (!open) setMoveTarget(null);
+            if (!open) setMoveNodes([]);
           }}
           onSuccess={handleNodeActionSuccess}
         />

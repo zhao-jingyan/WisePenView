@@ -145,7 +145,7 @@ function UploadZone({
                 key={getFileKey(selectedFile)}
               >
                 <AttachmentMedia>
-                  <EntryIcon entryType="resource" resourceName={selectedFile.name} size={18} />
+                  <EntryIcon entryType="resource" size={18} />
                 </AttachmentMedia>
                 <AttachmentContent className={styles.fileInfo}>
                   <div className={styles.fileTextRow}>

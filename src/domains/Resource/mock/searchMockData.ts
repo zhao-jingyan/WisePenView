@@ -10,7 +10,7 @@ import { SEARCH_SCOPE, resolveResourceIconType } from '@/domains/Resource';
 /** 一篇可被搜索的 mock 资源；content 仅 mock 内部用，后端不返回 */
 interface SearchCorpusItem {
   resourceId: string;
-  /** 小写扩展名，与后端 ResourceType 序列化值一致：pdf/doc/docx/ppt/pptx/xls/xlsx/note */
+  /** 小写资源类型，与后端 ResourceType 序列化值一致。 */
   resourceType: SearchResourceType;
   resourceName: string;
   content: string;
@@ -262,10 +262,7 @@ export function simulateGlobalSearch(params: SearchQueryRequest): SearchResultPa
       const hit: SearchHitItem = {
         resourceId: item.resourceId,
         resourceType: item.resourceType,
-        resourceIconType: resolveResourceIconType({
-          resourceType: item.resourceType,
-          resourceName: item.resourceName,
-        }),
+        resourceIconType: resolveResourceIconType(item.resourceType),
         resourceName: highlight(item.resourceName, keyword),
         highlightContent: contentSnippet,
         updateTime: item.updateTime,

@@ -217,7 +217,7 @@
       "parentId": "folder-icon-samples",
       "resourceId": "res-icon-file",
       "title": "通用文件.bin",
-      "resourceType": "file"
+      "resourceType": "pdf"
     },
     "res-icon-pdf": {
       "id": "res-icon-pdf",
@@ -225,7 +225,7 @@
       "parentId": "folder-icon-samples",
       "resourceId": "res-icon-pdf",
       "title": "PDF 白皮书.pdf",
-      "resourceType": "file"
+      "resourceType": "docx"
     },
     "res-icon-doc": {
       "id": "res-icon-doc",
@@ -233,7 +233,7 @@
       "parentId": "folder-icon-samples",
       "resourceId": "res-icon-doc",
       "title": "Word 方案.docx",
-      "resourceType": "file"
+      "resourceType": "pptx"
     },
     "res-icon-ppt": {
       "id": "res-icon-ppt",
@@ -241,7 +241,7 @@
       "parentId": "folder-icon-samples",
       "resourceId": "res-icon-ppt",
       "title": "演示文稿.pptx",
-      "resourceType": "file"
+      "resourceType": "xlsx"
     },
     "res-icon-xls": {
       "id": "res-icon-xls",

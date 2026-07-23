@@ -6,45 +6,23 @@
   min-height: 0;
 }
 
-.listAreaNoPadding {
-  padding-left: 0;
-}
-
-/* 单帧 Master–Detail：外框统一 border/radius，左右内部分栏 */
 .driveFrame {
   display: flex;
   flex-direction: column;
   width: 100%;
   flex: 0 0 auto;
   min-width: 0;
-  min-height: var(--table-drive-detail-layout-max-height, calc(100dvh - 240px));
-  height: var(--table-drive-detail-layout-max-height, calc(100dvh - 240px));
-  max-height: var(--table-drive-detail-layout-max-height, calc(100dvh - 240px));
+  min-height: var(--table-drive-layout-max-height, calc(100dvh - 240px));
+  height: var(--table-drive-layout-max-height, calc(100dvh - 240px));
+  max-height: var(--table-drive-layout-max-height, calc(100dvh - 240px));
   overflow: hidden;
   border: 1px solid var(--border-light);
   border-radius: var(--table-shell-radius, var(--radius-xl));
   background: var(--surface);
 }
 
-.driveBody {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  overflow: hidden;
-}
-
-.tablePanel {
-  position: relative;
-  z-index: 2;
-  flex: 1 1 auto;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  overflow: visible;
-}
-
 .table {
+  flex: 1;
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -56,21 +34,6 @@
   background: transparent;
 }
 
-/* 详情列：全高贴右，无上方 header，仅左侧分隔线 */
-.detailPanel {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 var(--table-drive-detail-panel-width, 300px);
-  width: var(--table-drive-detail-panel-width, 300px);
-  max-width: min(42vw, 420px);
-  height: 100%;
-  min-height: 0;
-  align-self: stretch;
-  overflow: hidden;
-  border-left: 1px solid var(--border-light);
-  background: var(--surface);
-}
-
 .toolbarActions {
   position: relative;
   z-index: 2;
@@ -79,20 +42,7 @@
   gap: var(--space-xs);
 }
 
-.batchFooter {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: var(--space-sm) var(--space-md);
-  border-top: 1px solid var(--border-light);
-}
-
-.batchCount {
-  color: var(--muted);
-  font-size: var(--font-size-sm);
-}
-
-.batchActions {
+.selectionActions {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
@@ -179,22 +129,7 @@
     overflow: visible;
   }
 
-  .driveBody {
-    flex-direction: column;
-  }
-
-  .tablePanel {
+  .table {
     height: auto;
-  }
-
-  .detailPanel {
-    flex-basis: auto;
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    height: auto;
-    min-height: 200px;
-    border-left: 0;
-    border-top: 1px solid var(--border-light);
   }
 }
