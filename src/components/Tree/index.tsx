@@ -1,3 +1,4 @@
+import { Checkbox } from '@/components/Input';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import clsx from 'clsx';
 import { ChevronRight, LoaderCircle } from 'lucide-react';
@@ -401,11 +402,10 @@ function Tree({
             )}
 
             {showCheckbox ? (
-              <input
+              <Checkbox
                 className={clsx(styles.checkbox, 'wisepen-tree__checkbox')}
-                type="checkbox"
-                checked={checked}
-                disabled={!canCheck}
+                isSelected={checked}
+                isDisabled={!canCheck}
                 aria-label="选择节点"
                 onChange={() => toggleCheck(node)}
                 onClick={(event) => event.stopPropagation()}

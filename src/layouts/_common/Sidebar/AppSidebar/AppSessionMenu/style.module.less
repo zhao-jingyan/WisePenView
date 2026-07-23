@@ -2,6 +2,7 @@
 
 .menuContainer {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding-top: 8px;
@@ -13,32 +14,36 @@
   pointer-events: none;
 }
 
+.sections {
+  padding: 0 8px;
+}
+
+.section {
+  min-width: 0;
+}
+
+.sectionTrigger {
+  min-height: 32px;
+}
+
+.sectionContent {
+  overflow: visible;
+}
+
 .sessionMenu {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
-  padding: 0 8px;
+  padding: 0;
   background: transparent;
   outline: none;
 }
 
-.section {
+.sessionSection {
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
-  margin-top: 8px;
-
-  &:first-child {
-    margin-top: 0;
-  }
-}
-
-.sectionTitle {
-  padding: 8px 12px 6px;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  line-height: 18px;
 }
 
 .sessionItem {

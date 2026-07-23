@@ -1,5 +1,5 @@
 import ResourcePermissionActionIcon from '@/components/Drive/common/resourcePermissionActionIcon';
-import { Input, TextArea } from '@/components/Input';
+import { Checkbox, Input, TextArea } from '@/components/Input';
 import AppModal from '@/components/Overlay/AppModal';
 import UploadZone from '@/components/UploadZone';
 import { useGroupService, useImageService } from '@/domains';
@@ -17,7 +17,7 @@ import {
   assertImageProxyUploadLimit,
   IMAGE_UPLOAD_MAX_SIZE_LABEL,
 } from '@/utils/image/uploadLimit';
-import { Button, Checkbox, Label, TextField, toast } from '@heroui/react';
+import { Button, Label, TextField, toast } from '@heroui/react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
 import { useState } from 'react';
 import type { EditGroupInfoModalProps } from './index.type';
@@ -309,17 +309,11 @@ function EditGroupInfoModal({
                 <Checkbox
                   isSelected={selectedActionSet.has(action)}
                   onChange={(isSelected) => handleActionToggle(action, isSelected)}
-                  variant="secondary"
                 >
-                  <Checkbox.Control>
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
-                  <Checkbox.Content>
-                    <span data-slot="label" className={styles.actionLabel}>
-                      <ResourcePermissionActionIcon action={action} className={styles.actionIcon} />
-                      <span className={styles.actionText}>{item.label}</span>
-                    </span>
-                  </Checkbox.Content>
+                  <span data-slot="label" className={styles.actionLabel}>
+                    <ResourcePermissionActionIcon action={action} className={styles.actionIcon} />
+                    <span className={styles.actionText}>{item.label}</span>
+                  </span>
                 </Checkbox>
               </div>
             );

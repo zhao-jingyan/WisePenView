@@ -1,7 +1,8 @@
+import { Checkbox } from '@/components/Input';
 import AppAlertDialog from '@/components/Overlay/AppAlertDialog';
 import { useInteractService } from '@/domains';
 import { parseErrorMessage } from '@/utils/error';
-import { Checkbox, toast } from '@heroui/react';
+import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { useState } from 'react';
 
@@ -47,13 +48,8 @@ function DeleteCollectionModal({
       isConfirmLoading={loading}
       onConfirm={remove}
     >
-      <Checkbox isSelected={keepResources} onChange={setKeepResources} variant="secondary">
-        <Checkbox.Content>
-          <Checkbox.Control>
-            <Checkbox.Indicator />
-          </Checkbox.Control>
-          <span data-slot="label">将该收藏夹内的资源保留到我的收藏</span>
-        </Checkbox.Content>
+      <Checkbox isSelected={keepResources} onChange={setKeepResources}>
+        <span data-slot="label">将该收藏夹内的资源保留到我的收藏</span>
       </Checkbox>
     </AppAlertDialog>
   );

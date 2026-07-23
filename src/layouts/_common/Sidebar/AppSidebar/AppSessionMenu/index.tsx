@@ -1,5 +1,6 @@
 import { useChatSessionHistoryRefreshStore } from '@/components/ChatPanel/_store/useChatSessionHistoryRefreshStore';
 import { useCurrentChatSessionStore } from '@/components/ChatPanel/_store/useCurrentChatSessionStore';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/_shadcn';
 import {
   APP_HEADER_NAV_KEY,
   resolveAppHeaderNavKey,
@@ -33,7 +34,14 @@ function AppSessionMenu({ collapsed }: AppSessionMenuProps) {
       className={clsx(styles.menuContainer, collapsed && styles.menuContainerCollapsed)}
       aria-hidden={collapsed}
     >
-      <SessionListGroup ref={sessionListGroupRef} selectedKeys={selectedKeys} />
+      <Accordion defaultValue={['session-history']} className={styles.sections}>
+        <AccordionItem value="session-history" className={styles.section}>
+          <AccordionTrigger className={styles.sectionTrigger}>会话历史</AccordionTrigger>
+          <AccordionContent className={styles.sectionContent}>
+            <SessionListGroup ref={sessionListGroupRef} selectedKeys={selectedKeys} />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }

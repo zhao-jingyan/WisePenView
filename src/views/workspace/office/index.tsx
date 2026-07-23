@@ -3,7 +3,12 @@ import { ResultState, Spin } from '@/components/Feedback';
 import { useDocumentService, useInteractService } from '@/domains';
 import type { ResourceItem } from '@/domains/Resource';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
-import { RESOURCE_KIND } from '@/utils/navigation/resourceTarget';
+import {
+  isOfficeResourceType,
+  RESOURCE_KIND,
+  RESOURCE_VIEWER,
+  type ResourceViewer,
+} from '@/utils/navigation/resourceTarget';
 import {
   DEFAULT_RESOURCE_HOST_ID,
   useResourceHostId,
@@ -14,15 +19,19 @@ import { Button } from '@heroui/react';
 import type { Config } from '@onlyoffice/doceditor-types';
 import { DocumentEditor } from '@onlyoffice/document-editor-react';
 import { useRequest } from 'ahooks';
+import { FileText } from 'lucide-react';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useDocumentViewerSwitcher } from '../_hooks/useDocumentViewerSwitcher';
 import styles from './style.module.less';
 
 interface OfficeLayoutConfigProps {
   children: ReactNode;
   resourceInfo?: ResourceItem;
+  documentType?: string;
   onPermissionSuccess?: () => void;
   onResourceChanged?: () => unknown | Promise<unknown>;
+  onViewerSwitch?: (viewer: ResourceViewer) => void;
 }
 
 interface OfficeEditorHostProps {
@@ -40,8 +49,10 @@ interface OfficeViewProps {
 function OfficeLayoutConfig({
   children,
   resourceInfo,
+  documentType,
   onPermissionSuccess,
   onResourceChanged,
+  onViewerSwitch,
 }: OfficeLayoutConfigProps) {
   const frameConfig = useMemo<ResourceHostLayoutConfig>(
     () => ({
@@ -57,11 +68,23 @@ function OfficeLayoutConfig({
               permissionResourceType: RESOURCE_KIND.FILE,
               ownerId: resourceInfo.ownerId,
               onPermissionSuccess,
+              moreMenu: isOfficeResourceType(documentType)
+                ? {
+                    actions: [
+                      {
+                        id: 'open-with-pdf-preview',
+                        label: '以 PDF 预览打开',
+                        icon: FileText,
+                        onAction: () => onViewerSwitch?.(RESOURCE_VIEWER.PDF_PREVIEW),
+                      },
+                    ],
+                  }
+                : undefined,
             },
           }
         : {},
     }),
-    [onPermissionSuccess, onResourceChanged, resourceInfo]
+    [documentType, onPermissionSuccess, onResourceChanged, onViewerSwitch, resourceInfo]
   );
   useResourceHostLayoutConfig(frameConfig);
 
@@ -117,6 +140,7 @@ function OfficeEditorHost({
 function OfficeView({ resourceId }: OfficeViewProps = {}) {
   const documentService = useDocumentService();
   const interactService = useInteractService();
+  const switchViewer = useDocumentViewerSwitcher(resourceId);
   const [editorReady, setEditorReady] = useState(false);
   const [editorError, setEditorError] = useState<unknown>(null);
 
@@ -233,8 +257,10 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
   return (
     <OfficeLayoutConfig
       resourceInfo={data.docInfo.resourceInfo}
+      documentType={data.docInfo.docMetaInfo.uploadMeta.fileType}
       onPermissionSuccess={refreshOfficeData}
       onResourceChanged={refreshResourceInfo}
+      onViewerSwitch={switchViewer}
     >
       <div className={styles.content}>
         <OfficeEditorHost

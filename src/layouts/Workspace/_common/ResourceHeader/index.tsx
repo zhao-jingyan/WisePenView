@@ -107,7 +107,10 @@ function ResourceHeaderMore({
     }
     if (key === 'search') {
       menu?.onSearch?.();
+      return;
     }
+
+    menu?.actions?.find((action) => action.id === key)?.onAction();
   };
 
   return (
@@ -184,6 +187,15 @@ function ResourceHeaderMore({
               <Dropdown.Item id="search" textValue="全文搜索">
                 <ResourceHeaderMenuItemContent icon={Search} label="全文搜索" />
               </Dropdown.Item>
+            </Dropdown.Section>
+          ) : null}
+          {menu?.actions?.length ? (
+            <Dropdown.Section>
+              {menu.actions.map((action) => (
+                <Dropdown.Item key={action.id} id={action.id} textValue={action.label}>
+                  <ResourceHeaderMenuItemContent icon={action.icon} label={action.label} />
+                </Dropdown.Item>
+              ))}
             </Dropdown.Section>
           ) : null}
           {menu?.onPrint || menu?.download ? (

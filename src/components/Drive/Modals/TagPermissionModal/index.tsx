@@ -7,7 +7,7 @@ import {
   TAG_PERMISSION_RESOURCE_STRATEGIES,
 } from '@/components/Drive/common/tagPermissionPreset';
 import { Empty, Spin } from '@/components/Feedback';
-import { Input } from '@/components/Input';
+import { Checkbox, Input } from '@/components/Input';
 import AppModal from '@/components/Overlay/AppModal';
 import { useGroupService, useTagService } from '@/domains';
 import { mapTagToFolderNode } from '@/domains/Drive/mapper/DriveServices.map';
@@ -26,7 +26,7 @@ import {
 } from '@/domains/Tag';
 import { useEffectForce } from '@/hooks/useEffectForce';
 import { createClientError, FRONTEND_CLIENT_ERROR, parseErrorMessage } from '@/utils/error';
-import { Button, Checkbox, ListBox, Tabs, TextField, toast, type Selection } from '@heroui/react';
+import { Button, ListBox, Tabs, TextField, toast, type Selection } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Check, X } from 'lucide-react';
 import { useState, type Key } from 'react';
@@ -514,19 +514,12 @@ const TagPolicyModalBase = ({
                     onClick={() => handleActionToggle(row.action, !selected)}
                   >
                     <Checkbox
+                      className={styles.permissionCheckbox}
                       aria-label={row.label}
                       isSelected={selected}
-                      onChange={(checked) => handleActionToggle(row.action, checked)}
-                      variant="secondary"
-                      className={styles.permissionCheckbox}
+                      onChange={(isSelected) => handleActionToggle(row.action, isSelected)}
                       onClick={(event) => event.stopPropagation()}
-                    >
-                      <Checkbox.Content className={styles.permissionCheckboxContent}>
-                        <Checkbox.Control>
-                          <Checkbox.Indicator />
-                        </Checkbox.Control>
-                      </Checkbox.Content>
-                    </Checkbox>
+                    />
                   </td>
                   {TAG_PERMISSION_RESOURCE_STRATEGIES.map((strategy) => {
                     const supported = row.supportedStrategyKeys.includes(strategy.key);

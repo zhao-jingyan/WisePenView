@@ -1,3 +1,4 @@
+import { Checkbox } from '@/components/Input';
 import type { ParsedBlock, RootContent } from '@incremark/core';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
@@ -449,12 +450,7 @@ function renderList(
     return (
       <li key={`${keyPrefix}-${index}`} className={isTaskItem ? styles.taskListItem : undefined}>
         {isTaskItem ? (
-          <input
-            type="checkbox"
-            checked={item.checked ?? false}
-            disabled
-            className={styles.taskCheckbox}
-          />
+          <Checkbox isSelected={item.checked ?? false} isDisabled className={styles.taskCheckbox} />
         ) : null}
         {item.children.map((child, childIndex) =>
           renderBlockNode(

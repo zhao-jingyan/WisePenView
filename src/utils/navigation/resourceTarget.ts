@@ -51,8 +51,8 @@ const normalizeToken = (value?: string): string | undefined => {
 const isDocumentResourceType = (value?: string): value is DocumentResourceType =>
   value != null && DOCUMENT_RESOURCE_TYPES.has(value);
 
-const isOfficeResourceType = (value?: string): value is OfficeResourceType =>
-  value != null && OFFICE_RESOURCE_TYPES.has(value);
+export const isOfficeResourceType = (value?: string): value is OfficeResourceType =>
+  value != null && OFFICE_RESOURCE_TYPES.has(normalizeToken(value) ?? '');
 
 export const normalizeResourceKind = (resourceType?: string): ResourceKind | undefined => {
   const normalized = normalizeToken(resourceType);

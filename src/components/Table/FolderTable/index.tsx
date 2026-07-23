@@ -1,5 +1,4 @@
 import TableBatchFooter from '../ManageTable/parts/BatchFooter';
-import TableSelectionCheckbox from '../ManageTable/parts/SelectionCheckbox';
 import TableCellAlign from '../shared/cells/CellAlign';
 import TableTextCell from '../shared/cells/TextCell';
 import { tableCellStyles, tableStyles } from '../shared/styles';
@@ -17,6 +16,7 @@ import { sortFolderTreeRows } from '../shared/TableBase/tableSort';
 import TableBodyState from '../shared/TableBodyState';
 import TableRowActions from '../shared/TableRowActions';
 import type { TableRowActionItem } from '../shared/TableRowActions/index.type';
+import TableSelectionCheckbox from '../shared/TableSelectionCheckbox';
 import { renderSortableColumnLabel } from '../shared/TableSortHeader/renderSortableColumnLabel';
 import { TableLoadMoreRow } from '../shared/TableStatusRows';
 import TableSummaryFooter from '../shared/TableSummaryFooter';
@@ -248,12 +248,7 @@ function FolderTableBodyRowBase<T extends FolderTableRow>({
                 ariaLabel={t('aria.selectRow', { id: rowId })}
                 isSelected={isCheckboxSelected}
                 isDisabled={checkboxDisabled}
-                onClick={(event) => {
-                  const shiftKey = event.shiftKey;
-                  event.stopPropagation();
-                  const nextSelected = !isCheckboxSelected;
-                  onCheckboxChange(rowId, nextSelected, shiftKey);
-                }}
+                onChange={(selected, shiftKey) => onCheckboxChange(rowId, selected, shiftKey)}
               />
             </div>
           ) : null}
@@ -776,10 +771,7 @@ function FolderTable<T extends FolderTableRow>({
                         isSelected={allVisibleSelected}
                         isIndeterminate={someVisibleSelected}
                         isDisabled={selectableVisibleRowIds.length === 0}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleToggleAll();
-                        }}
+                        onChange={() => handleToggleAll()}
                       />
                     ) : null}
                   </div>
