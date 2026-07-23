@@ -5,7 +5,13 @@ import { clearNewChatSessionStore } from '@/components/ChatPanel/_store/useNewCh
 import { createResourceChatStateProvider } from '@/components/ChatPanel/ResourceChatProtocol';
 import { useOpenInWorkspace } from '@/hooks/useOpenInWorkspace';
 import { useSystemLayoutStore } from '@/layouts/_common/_store/useSystemLayoutStore';
-import DriveSidebar from '@/layouts/_common/Sidebar/DriveSidebar';
+import AppSidebar from '@/layouts/_common/Sidebar/AppSidebar';
+import {
+  clampSidebarWidth,
+  SIDEBAR_COLLAPSED_WIDTH,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+} from '@/layouts/_common/Sidebar/sidebarLayoutConfig';
 import {
   SystemResizableHandle,
   SystemResizablePanel,
@@ -39,8 +45,6 @@ import { useWorkspaceNavigationStore } from './_store/useWorkspaceNavigationStor
 import { useWorkspaceResourceBreadcrumb } from './useWorkspaceResourceBreadcrumb';
 import styles from './WorkspaceLayout.module.less';
 
-const WORKSPACE_LEFT_SIDEBAR_MIN_WIDTH = 240;
-const WORKSPACE_LEFT_SIDEBAR_MAX_WIDTH = 420;
 const WORKSPACE_MAIN_MIN_WIDTH = 360;
 const CHAT_PANEL_MIN_WIDTH = 480;
 const CHAT_PANEL_MAX_WIDTH = 1020;
@@ -49,22 +53,19 @@ const RESIZE_TARGET_MINIMUM_SIZE = { fine: 16, coarse: 32 };
 const clampPanelWidth = (width: number, min: number, max: number): number =>
   Math.min(Math.max(Math.round(width), min), max);
 
-const clampWorkspaceLeftSidebarWidth = (width: number): number =>
-  clampPanelWidth(width, WORKSPACE_LEFT_SIDEBAR_MIN_WIDTH, WORKSPACE_LEFT_SIDEBAR_MAX_WIDTH);
-
 function WorkspaceLayout() {
   const appNavigation = useAppNavigation();
   const openResource = useOpenInWorkspace();
   const enterZenMode = useEnterZenMode();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [layoutConfig, setLayoutConfigState] = useState<ResourceHostLayoutConfig>({});
-  const storedLeftSidebarWidth = useSystemLayoutStore((state) => state.workspaceLeftSidebarWidth);
-  const setLeftSidebarWidth = useSystemLayoutStore((state) => state.setWorkspaceLeftSidebarWidth);
+  const storedLeftSidebarWidth = useSystemLayoutStore((state) => state.appSidebarWidth);
+  const setLeftSidebarWidth = useSystemLayoutStore((state) => state.setAppSidebarWidth);
   const leftSidebarPanelRef = useRef<PanelImperativeHandle | null>(null);
   const rightDockPanelRef = useRef<PanelImperativeHandle | null>(null);
   const pendingLeftSidebarWidthRef = useRef<number | null>(null);
   const pendingRightDockWidthRef = useRef<number | null>(null);
-  const leftSidebarWidth = clampWorkspaceLeftSidebarWidth(storedLeftSidebarWidth);
+  const leftSidebarWidth = clampSidebarWidth(storedLeftSidebarWidth);
   const chatPanelCollapsed = useChatPanelStore((state) => state.chatPanelCollapsed);
   const chatPanelDraftOpen = useChatPanelStore((state) => state.chatPanelDraftOpen);
   const chatPanelWidth = useChatPanelStore((state) => state.chatPanelWidth);
@@ -84,7 +85,7 @@ function WorkspaceLayout() {
     CHAT_PANEL_MIN_WIDTH,
     CHAT_PANEL_MAX_WIDTH
   );
-  const sidebarPanelSize = sidebarCollapsed ? 0 : leftSidebarWidth;
+  const sidebarPanelSize = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : leftSidebarWidth;
   const rightDockPanelSize = chatPanelOpen ? normalizedChatPanelWidth : 0;
   const location = useLocation();
   const resourceRouteMatch = useMatch('/app/workspace/:resourceType/:resourceId');
@@ -160,11 +161,8 @@ function WorkspaceLayout() {
       if (!collapsed) {
         const currentWidth = leftSidebarPanelRef.current?.getSize().inPixels;
         if (currentWidth != null) {
-          const nextSidebarWidth = clampWorkspaceLeftSidebarWidth(currentWidth);
-          if (
-            nextSidebarWidth > WORKSPACE_LEFT_SIDEBAR_MIN_WIDTH ||
-            leftSidebarWidth === WORKSPACE_LEFT_SIDEBAR_MIN_WIDTH
-          ) {
+          const nextSidebarWidth = clampSidebarWidth(currentWidth);
+          if (nextSidebarWidth > SIDEBAR_MIN_WIDTH || leftSidebarWidth === SIDEBAR_MIN_WIDTH) {
             setLeftSidebarWidth(nextSidebarWidth);
           }
         }
@@ -198,7 +196,7 @@ function WorkspaceLayout() {
   const handleLeftSidebarResize = useCallback(
     (panelSize: PanelSize) => {
       if (sidebarCollapsed) return;
-      pendingLeftSidebarWidthRef.current = clampWorkspaceLeftSidebarWidth(panelSize.inPixels);
+      pendingLeftSidebarWidthRef.current = clampSidebarWidth(panelSize.inPixels);
     },
     [sidebarCollapsed]
   );
@@ -331,15 +329,15 @@ function WorkspaceLayout() {
         id="workspace-left-sidebar"
         panelRef={leftSidebarPanelRef}
         defaultSize={sidebarPanelSize}
-        minSize={sidebarCollapsed ? 0 : WORKSPACE_LEFT_SIDEBAR_MIN_WIDTH}
-        maxSize={sidebarCollapsed ? 0 : WORKSPACE_LEFT_SIDEBAR_MAX_WIDTH}
+        minSize={sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_MIN_WIDTH}
+        maxSize={sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_MAX_WIDTH}
         groupResizeBehavior="preserve-pixel-size"
         className={styles.leftSider}
-        aria-label="资源侧边栏"
+        aria-label="应用侧边栏"
         aria-hidden={sidebarCollapsed ? true : undefined}
         onResize={handleLeftSidebarResize}
       >
-        <DriveSidebar
+        <AppSidebar
           collapsed={sidebarCollapsed}
           canGoBack={appNavigation.canGoBack}
           canGoForward={appNavigation.canGoForward}

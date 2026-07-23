@@ -117,14 +117,34 @@
 .detailBody {
   flex: 1;
   min-height: 0;
-  padding: var(--space-md);
   overflow: auto;
+}
+
+.detailAccordion {
+  width: 100%;
+}
+
+.detailSection {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.detailSectionTrigger {
+  min-height: 36px;
+  padding: 0 var(--space-sm);
+  border-radius: 0;
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-md);
+}
+
+.detailSectionContent > div {
+  padding: var(--space-2xs) var(--space-sm) var(--space-sm);
 }
 
 .detailMeta {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-xs);
   margin: 0;
 
   div {
@@ -132,10 +152,36 @@
   }
 
   dd {
-    margin: var(--space-2xs) 0 0;
+    margin: 2px 0 0;
     overflow-wrap: anywhere;
     font-size: var(--font-size-sm);
     line-height: var(--line-height-md);
+  }
+}
+
+.detailSectionActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.detailSectionActions,
+.detailSectionButton {
+  :global([data-slot='button']) {
+    justify-content: flex-start;
+  }
+}
+
+.detailSectionButton {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.openWithOptions {
+  width: 100%;
+
+  :global(.toggle-button) {
+    flex: 1 1 0;
   }
 }
 
@@ -158,13 +204,12 @@
 
 .detailActions {
   display: flex;
-  flex-direction: column;
   gap: var(--space-xs);
-  padding: var(--space-md);
+  padding: var(--space-sm);
   border-top: 1px solid var(--border-light);
 
   :global([data-slot='button']) {
-    justify-content: flex-start;
+    flex: 1 1 0;
   }
 }
 

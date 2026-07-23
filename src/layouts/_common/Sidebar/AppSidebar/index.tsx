@@ -4,7 +4,7 @@ import SidebarHeader from '../_common/SidebarHeader';
 import UserProfile from '../_common/UserProfile';
 import styles from '../_common/sidebarShell.module.less';
 import AppHeaderNav from './AppHeaderNav';
-import AppSessionMenu from './AppSessionMenu';
+import AppSidebarTabs from './AppSidebarTabs';
 import type { AppSidebarProps } from './index.type';
 
 function AppSidebar({
@@ -26,7 +26,7 @@ function AppSidebar({
         onGoForward={onGoForward}
         onToggle={onToggle}
       />
-      <AppSessionMenu collapsed={collapsed} />
+      <AppSidebarTabs collapsed={collapsed} />
       <UserProfile collapsed={collapsed} />
     </div>
   );

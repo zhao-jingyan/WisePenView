@@ -1,16 +1,15 @@
-import { Button, Kbd } from '@heroui/react';
+import AppIconButton from '@/components/Button/AppIconButton';
 import { useKeyPress } from 'ahooks';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 import SearchModal from './SearchModal';
-import type { GlobalSearchBoxProps } from './index.type';
-import styles from './style.module.less';
+import type { GlobalSearchProps } from './index.type';
 
 const IS_MAC = navigator.platform.toLowerCase().includes('mac');
 const SHORTCUT_LABEL = IS_MAC ? '⌘+K' : 'Ctrl+K';
 
-/** 工具栏图标按钮触发器 + 受控 Modal；监听 ctrl/⌘+K 打开 */
-function GlobalSearchBox({ className, scope }: GlobalSearchBoxProps) {
+/** 侧边栏图标按钮触发器 + 受控 Modal；监听 ctrl/⌘+K 打开 */
+function GlobalSearch({ scope }: GlobalSearchProps) {
   const [open, setOpen] = useState(false);
 
   useKeyPress(
@@ -24,18 +23,15 @@ function GlobalSearchBox({ className, scope }: GlobalSearchBoxProps) {
 
   return (
     <>
-      <Button
-        variant="secondary"
-        className={`${styles.searchButton} ${className ?? ''}`}
+      <AppIconButton
+        icon={<Search size={18} aria-hidden="true" />}
+        label="全局搜索"
+        tooltip={{ content: `全局搜索（${SHORTCUT_LABEL}）`, placement: 'bottom' }}
         onPress={() => setOpen(true)}
-      >
-        <Search size={16} aria-hidden="true" />
-        搜索
-        <Kbd>{SHORTCUT_LABEL}</Kbd>
-      </Button>
+      />
       <SearchModal isOpen={open} scope={scope} onOpenChange={setOpen} />
     </>
   );
 }
 
-export default GlobalSearchBox;
+export default GlobalSearch;

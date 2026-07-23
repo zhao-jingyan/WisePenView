@@ -8,7 +8,7 @@ import { useMount, useRequest } from 'ahooks';
 import clsx from 'clsx';
 import { useImperativeHandle, useState, type Ref } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from '../AppSessionMenu/style.module.less';
+import styles from '../AppSidebarTabs/style.module.less';
 import SessionMenuItem from '../SessionMenuItem';
 import type { SessionListGroupProps, SessionListGroupRef } from './index.type';
 

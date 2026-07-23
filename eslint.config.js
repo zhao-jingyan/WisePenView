@@ -215,7 +215,7 @@ export default defineConfig([
   },
   {
     // 全局搜索是 command palette 形态，允许直接使用底层 Modal。
-    files: ['src/views/app/drive/_components/GlobalSearchBox/SearchModal/**/*.{ts,tsx}'],
+    files: ['src/components/Drive/GlobalSearch/SearchModal/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': buildRestrictedImportsRule({ allowOverlayPrimitive: true }),
     },

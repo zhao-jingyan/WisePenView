@@ -1,8 +1,10 @@
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/_shadcn';
 import {
   DriveDelete,
   MoveNodeModal,
   RenameNodeModal,
   TrashDelete,
+  type ResourcePermissionModalTarget,
 } from '@/components/Drive/Modals';
 import EntryIcon from '@/components/Icons/EntryIcon';
 import {
@@ -16,7 +18,13 @@ import type { DriveNode } from '@/domains/Drive';
 import SidebarDriveScopeSwitcher from '@/layouts/_common/Sidebar/DriveSidebar/_components/SidebarDrive/SidebarDriveScopeSwitcher';
 import { parseErrorMessage } from '@/utils/error';
 import { formatFileSize } from '@/utils/format/formatFileSize';
-import { resolveResourceKind } from '@/utils/navigation/resourceTarget';
+import {
+  RESOURCE_KIND,
+  RESOURCE_VIEWER,
+  resolveResourceKind,
+  resolveResourceViewer,
+  type ResourceViewer,
+} from '@/utils/navigation/resourceTarget';
 import { findTreeNodeById } from '@/utils/tree/findTreeNodeById';
 import {
   DndContext,
@@ -30,9 +38,17 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { Button, toast, type SortDescriptor } from '@heroui/react';
+import { Button, ToggleButton, ToggleButtonGroup, toast, type SortDescriptor } from '@heroui/react';
 import { useMount, useRequest, useUpdateEffect } from 'ahooks';
-import { FolderOpen, PanelRightClose, PanelRightOpen, Pencil, Trash2 } from 'lucide-react';
+import {
+  FolderInput,
+  FolderOpen,
+  PanelRightClose,
+  PanelRightOpen,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
 import {
   forwardRef,
   useCallback,
@@ -282,10 +298,14 @@ interface DriveDetailPanelProps {
   selectedCount: number;
   groupId?: string;
   isTrashView: boolean;
-  onActivate: (row: DriveTableRow) => void;
+  showManagePermission: boolean;
+  onActivate: (row: DriveTableRow, viewer?: ResourceViewer) => void;
   onRename: (node: DriveActionTarget) => void;
   onMove: (node: DriveActionTarget) => void;
   onDelete: (node: DriveActionTarget) => void;
+  onOpenTagAccessPermission: (tagId: string) => void;
+  onOpenTagMountPermission: (tagId: string) => void;
+  onOpenResourcePermission: (target: ResourcePermissionModalTarget) => void;
 }
 
 function DriveDetailPanel({
@@ -294,11 +314,25 @@ function DriveDetailPanel({
   selectedCount,
   groupId,
   isTrashView,
+  showManagePermission,
   onActivate,
   onRename,
   onMove,
   onDelete,
+  onOpenTagAccessPermission,
+  onOpenTagMountPermission,
+  onOpenResourcePermission,
 }: DriveDetailPanelProps) {
+  const [selectedViewer, setSelectedViewer] = useState<ResourceViewer>(() => {
+    if (selectedRow && (selectedRow.node.type === 'resource' || selectedRow.node.type === 'link')) {
+      return (
+        resolveResourceViewer({ resourceType: selectedRow.node.resourceType }) ??
+        RESOURCE_VIEWER.PDF_PREVIEW
+      );
+    }
+    return RESOURCE_VIEWER.PDF_PREVIEW;
+  });
+
   if (isEditMode) {
     return (
       <div className={styles.detailContent}>
@@ -335,6 +369,17 @@ function DriveDetailPanel({
       : selectedRow.node.type === 'link'
         ? '删除链接'
         : '移入回收站';
+  const resourceKind =
+    selectedRow.node.type === 'resource' || selectedRow.node.type === 'link'
+      ? resolveResourceKind(selectedRow.node.resourceType)
+      : undefined;
+  const isFileResource = resourceKind === RESOURCE_KIND.FILE;
+  const permissionTarget =
+    showManagePermission &&
+    !isTrashView &&
+    (actionTarget?.type === 'folder' || actionTarget?.type === 'resource')
+      ? actionTarget
+      : undefined;
 
   return (
     <div className={styles.detailContent}>
@@ -353,33 +398,131 @@ function DriveDetailPanel({
         </div>
       </div>
       <div className={styles.detailBody}>
-        <dl className={styles.detailMeta}>
-          <div>
-            <dt>节点 ID</dt>
-            <dd>{selectedRow.node.id}</dd>
-          </div>
-          <div>
-            <dt>大小</dt>
-            <dd>{selectedRow.sizeLabel ?? '—'}</dd>
-          </div>
-        </dl>
+        <Accordion multiple defaultValue={['details']} className={styles.detailAccordion}>
+          <AccordionItem value="details" className={styles.detailSection}>
+            <AccordionTrigger className={styles.detailSectionTrigger}>详情</AccordionTrigger>
+            <AccordionContent className={styles.detailSectionContent}>
+              <dl className={styles.detailMeta}>
+                <div>
+                  <dt>节点 ID</dt>
+                  <dd>{selectedRow.node.id}</dd>
+                </div>
+                <div>
+                  <dt>大小</dt>
+                  <dd>{selectedRow.sizeLabel ?? '—'}</dd>
+                </div>
+              </dl>
+            </AccordionContent>
+          </AccordionItem>
+
+          {permissionTarget ? (
+            <AccordionItem value="permission" className={styles.detailSection}>
+              <AccordionTrigger className={styles.detailSectionTrigger}>权限</AccordionTrigger>
+              <AccordionContent className={styles.detailSectionContent}>
+                {permissionTarget.type === 'folder' ? (
+                  <div className={styles.detailSectionActions}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onPress={() => onOpenTagAccessPermission(permissionTarget.tagId)}
+                    >
+                      <ShieldCheck size={16} aria-hidden="true" />
+                      访问权限
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onPress={() => onOpenTagMountPermission(permissionTarget.tagId)}
+                    >
+                      <FolderInput size={16} aria-hidden="true" />
+                      挂载权限
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className={styles.detailSectionButton}
+                    onPress={() =>
+                      onOpenResourcePermission({
+                        resourceId: permissionTarget.resourceId,
+                        resourceType: resolveResourceKind(permissionTarget.resourceType),
+                        resourceName: selectedRow.name,
+                        fallbackTagId: permissionTarget.folderTagId,
+                      })
+                    }
+                  >
+                    <ShieldCheck size={16} aria-hidden="true" />
+                    资源权限
+                  </Button>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          ) : null}
+
+          {modifiableActionTarget ? (
+            <AccordionItem value="operations" className={styles.detailSection}>
+              <AccordionTrigger className={styles.detailSectionTrigger}>操作</AccordionTrigger>
+              <AccordionContent className={styles.detailSectionContent}>
+                <div className={styles.detailSectionActions}>
+                  {modifiableActionTarget.type !== 'link' ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onPress={() => onRename(modifiableActionTarget)}
+                    >
+                      <Pencil size={16} aria-hidden="true" />
+                      重命名
+                    </Button>
+                  ) : null}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onPress={() => onMove(modifiableActionTarget)}
+                  >
+                    <FolderInput size={16} aria-hidden="true" />
+                    {isTrashView ? '移动到云盘' : '移动'}
+                  </Button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ) : null}
+
+          {isFileResource ? (
+            <AccordionItem value="open-with" className={styles.detailSection}>
+              <AccordionTrigger className={styles.detailSectionTrigger}>打开方式</AccordionTrigger>
+              <AccordionContent className={styles.detailSectionContent}>
+                <ToggleButtonGroup
+                  aria-label="打开方式"
+                  selectionMode="single"
+                  selectedKeys={new Set([selectedViewer])}
+                  onSelectionChange={(keys) => {
+                    const [key] = [...keys];
+                    if (key != null) setSelectedViewer(String(key) as ResourceViewer);
+                  }}
+                  orientation="horizontal"
+                  size="sm"
+                  fullWidth
+                  disallowEmptySelection
+                  className={styles.openWithOptions}
+                >
+                  <ToggleButton id={RESOURCE_VIEWER.PDF_PREVIEW}>PDF 预览</ToggleButton>
+                  <ToggleButton id={RESOURCE_VIEWER.OFFICE}>Office</ToggleButton>
+                </ToggleButtonGroup>
+              </AccordionContent>
+            </AccordionItem>
+          ) : null}
+        </Accordion>
       </div>
       <div className={styles.detailActions}>
-        <Button variant="primary" size="sm" onPress={() => onActivate(selectedRow)}>
+        <Button
+          variant="primary"
+          size="sm"
+          onPress={() => onActivate(selectedRow, isFileResource ? selectedViewer : undefined)}
+        >
           <FolderOpen size={16} aria-hidden="true" />
           {activateLabel}
         </Button>
-        {modifiableActionTarget?.type !== 'link' && modifiableActionTarget ? (
-          <Button variant="secondary" size="sm" onPress={() => onRename(modifiableActionTarget)}>
-            <Pencil size={16} aria-hidden="true" />
-            重命名
-          </Button>
-        ) : null}
-        {modifiableActionTarget ? (
-          <Button variant="secondary" size="sm" onPress={() => onMove(modifiableActionTarget)}>
-            移动
-          </Button>
-        ) : null}
         {modifiableActionTarget ? (
           <Button variant="danger" size="sm" onPress={() => onDelete(modifiableActionTarget)}>
             <Trash2 size={16} aria-hidden="true" />
@@ -808,8 +951,8 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
   );
 
   const handleRowActivate = useCallback(
-    (row: DriveTableRow) => {
-      handleClickNode(row.node);
+    (row: DriveTableRow, viewer?: ResourceViewer) => {
+      handleClickNode(row.node, viewer);
     },
     [handleClickNode]
   );
@@ -1082,15 +1225,20 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
             >
               {!isDetailPanelCollapsed ? (
                 <DriveDetailPanel
+                  key={selectedRow?.id ?? (isEditMode ? 'edit-mode' : 'empty')}
                   selectedRow={selectedRow}
                   isEditMode={isEditMode}
                   selectedCount={checkedRowKeys.size}
                   groupId={finalGroupId}
                   isTrashView={isTrashView}
+                  showManagePermission={showManagePermission}
                   onActivate={handleRowActivate}
                   onRename={handleOpenRename}
                   onMove={handleOpenMove}
                   onDelete={handleOpenDelete}
+                  onOpenTagAccessPermission={openTagAccessPermission}
+                  onOpenTagMountPermission={openTagMountPermission}
+                  onOpenResourcePermission={openResourcePermission}
                 />
               ) : null}
             </aside>
