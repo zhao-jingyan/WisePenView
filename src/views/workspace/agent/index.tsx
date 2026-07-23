@@ -375,7 +375,7 @@ export default function AgentView({ resourceId }: Props) {
           isOpen={createOpen}
           onOpenChange={(open) => {
             setCreateOpen(open);
-            if (!open) navigate('/app/drive', { replace: true });
+            if (!open) navigate('/app/drive/personal', { replace: true });
           }}
           onSuccess={(id) =>
             openInWorkspace({
@@ -396,7 +396,7 @@ export default function AgentView({ resourceId }: Props) {
           title="无法打开 Agent"
           subTitle={parseErrorMessage(load.error)}
           extra={
-            <Link to="/app/drive">
+            <Link to="/app/drive/personal">
               <Button variant="secondary">返回云盘</Button>
             </Link>
           }

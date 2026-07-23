@@ -99,7 +99,7 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
               status="warning"
               title="无法打开文档"
               extra={
-                <Link to="/app/drive">
+                <Link to="/app/drive/personal">
                   <Button variant="secondary">返回云盘</Button>
                 </Link>
               }
@@ -120,7 +120,7 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
               title="无法打开文档"
               subTitle={parseErrorMessage(docInfoError)}
               extra={
-                <Link to="/app/drive">
+                <Link to="/app/drive/personal">
                   <Button variant="secondary">返回云盘</Button>
                 </Link>
               }
@@ -155,7 +155,7 @@ function DocumentPreview({ resourceId }: DocumentPreviewProps = {}) {
               title="无法打开文档"
               subTitle="文档信息为空，请稍后重试"
               extra={
-                <Link to="/app/drive">
+                <Link to="/app/drive/personal">
                   <Button variant="secondary">返回云盘</Button>
                 </Link>
               }

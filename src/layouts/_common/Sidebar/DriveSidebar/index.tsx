@@ -11,7 +11,7 @@ function DriveSidebar({ collapsed, onToggle }: DriveSidebarProps) {
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
-    navigate('/app/drive');
+    navigate('/app/drive/personal');
   }, [navigate]);
 
   return (

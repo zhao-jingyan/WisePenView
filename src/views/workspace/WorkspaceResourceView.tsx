@@ -46,7 +46,7 @@ function WorkspaceResourceView() {
   );
 
   const handleClose = useCallback(() => {
-    navigate('/app/drive');
+    navigate('/app/drive/personal');
   }, [navigate]);
 
   const sidePanelConfig =

@@ -300,6 +300,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     groupId,
     rootId,
     initialNodeId,
+    onCurrentNodeChange,
     scope,
     actions,
     onTrashViewChange,
@@ -379,9 +380,10 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       setSelectedRowKeys(new Set());
       updateDraggingRowKeys(new Set());
       setActiveDragRowId(null);
+      onCurrentNodeChange?.(nodeId);
       enterFolder(nodeId);
     },
-    [enterFolder, updateDraggingRowKeys]
+    [enterFolder, onCurrentNodeChange, updateDraggingRowKeys]
   );
   const handleClickNode = useClickNode({
     enterFolder: handleEnterFolder,

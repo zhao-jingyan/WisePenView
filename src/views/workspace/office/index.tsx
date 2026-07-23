@@ -173,7 +173,7 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
               status="warning"
               title="无法打开 Office 文档"
               extra={
-                <Link to="/app/drive">
+                <Link to="/app/drive/personal">
                   <Button variant="secondary">返回云盘</Button>
                 </Link>
               }
@@ -194,7 +194,7 @@ function OfficeView({ resourceId }: OfficeViewProps = {}) {
               title="ONLYOFFICE 编辑器加载失败"
               subTitle={parseErrorMessage(error)}
               extra={
-                <Link to="/app/drive">
+                <Link to="/app/drive/personal">
                   <Button variant="secondary">返回云盘</Button>
                 </Link>
               }

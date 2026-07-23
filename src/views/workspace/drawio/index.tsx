@@ -580,7 +580,7 @@ function DrawioView({ resourceId }: DrawioViewProps) {
             status="warning"
             title="无法打开 Draw.io 图"
             extra={
-              <Link to="/app/drive">
+              <Link to="/app/drive/personal">
                 <Button variant="secondary">返回云盘</Button>
               </Link>
             }
@@ -599,7 +599,7 @@ function DrawioView({ resourceId }: DrawioViewProps) {
             title="Draw.io 图加载失败"
             subTitle={parseErrorMessage(error)}
             extra={
-              <Link to="/app/drive">
+              <Link to="/app/drive/personal">
                 <Button variant="secondary">返回云盘</Button>
               </Link>
             }

@@ -2,7 +2,7 @@ import { FileText, MessageSquarePlus, Users, type LucideIcon } from 'lucide-reac
 
 export const APP_HEADER_NAV_KEY = {
   CHAT: '/app/chat',
-  DRIVE: '/app/drive',
+  DRIVE: '/app/drive/personal',
   GROUP: '/app/my-group',
 } as const;
 

@@ -1914,7 +1914,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
   const handleCloseCreateModal = (open: boolean) => {
     setCreateModalOpen(open);
     if (!open && !resourceId) {
-      navigate('/app/drive', { replace: true });
+      navigate('/app/drive/personal', { replace: true });
     }
   };
 
@@ -2066,7 +2066,7 @@ function SkillView({ resourceId = '' }: SkillViewProps = {}) {
             title="无法打开 Skill"
             subTitle={parseErrorMessage(error)}
             extra={
-              <Link to="/app/drive">
+              <Link to="/app/drive/personal">
                 <Button variant="secondary">返回云盘</Button>
               </Link>
             }

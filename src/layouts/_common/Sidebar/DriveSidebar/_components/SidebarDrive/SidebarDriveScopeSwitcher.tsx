@@ -3,6 +3,7 @@ import { useGroupService } from '@/domains';
 import { buildDriveNodeScope } from '@/domains/Drive';
 import type { Group } from '@/domains/Group';
 import { useWorkspaceNavigationStore } from '@/layouts/Workspace/_store/useWorkspaceNavigationStore';
+import { buildDrivePath } from '@/utils/navigation/driveRoute';
 import { toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { Check, ChevronsUpDown, HardDrive, UsersRound } from 'lucide-react';
@@ -17,7 +18,6 @@ const GROUP_SCOPE_PAGE_SIZE = 100;
 function SidebarDriveScopeSwitcher() {
   const groupService = useGroupService();
   const activeScope = useWorkspaceNavigationStore((state) => state.location.scope);
-  const navigateToScope = useWorkspaceNavigationStore((state) => state.navigateToScope);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const selectedKey = activeScope.type === 'group' ? activeScope.groupId : PERSONAL_SCOPE_KEY;
@@ -46,12 +46,7 @@ function SidebarDriveScopeSwitcher() {
   );
 
   const handleSelectScope = (nextGroupId?: string): void => {
-    navigateToScope(buildDriveNodeScope(nextGroupId));
-    if (nextGroupId) {
-      navigate(`/app/drive?group=${encodeURIComponent(nextGroupId)}`);
-    } else {
-      navigate('/app/drive');
-    }
+    navigate(buildDrivePath({ scope: buildDriveNodeScope(nextGroupId) }));
     setOpen(false);
   };
 

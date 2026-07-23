@@ -29,7 +29,7 @@ function NoteOpenFailure({ subTitle }: { subTitle?: string }) {
             title="无法打开笔记"
             subTitle={subTitle}
             extra={
-              <Link to="/app/drive">
+              <Link to="/app/drive/personal">
                 <Button variant="secondary">返回云盘</Button>
               </Link>
             }

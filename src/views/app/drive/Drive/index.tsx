@@ -1,11 +1,13 @@
 import TableDrive from '@/components/Drive/TableDrive';
 import type { TableDriveHandle } from '@/components/Drive/TableDrive/index.type';
 import SegmentedTabs from '@/components/SegmentedTabs';
-import { parseDriveRouteLocation } from '@/utils/navigation/driveRoute';
+import { useEffectForce } from '@/hooks/useEffectForce';
+import { useWorkspaceNavigationStore } from '@/layouts/Workspace/_store/useWorkspaceNavigationStore';
+import { buildDrivePath, parseDriveRouteLocation } from '@/utils/navigation/driveRoute';
 import { Button } from '@heroui/react';
 import { Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useDrivePreferencesStore, type DriveViewMode } from '../_store/useDrivePreferencesStore';
 
 import FavoritesTab from '../_components/FavoritesTab';
@@ -21,21 +23,45 @@ const VIEW_TABS: { key: DriveViewMode; label: string }[] = [
 ];
 
 function Drive() {
-  const location = useLocation();
-  const driveLocation = useMemo(() => parseDriveRouteLocation(location.search), [location.search]);
+  const navigate = useNavigate();
+  const { folderId, groupId } = useParams();
+  const driveLocation = useMemo(
+    () => parseDriveRouteLocation({ groupId, folderId }),
+    [folderId, groupId]
+  );
   const viewMode = useDrivePreferencesStore((s) => s.viewMode);
   const setViewMode = useDrivePreferencesStore((s) => s.setViewMode);
   const tableDriveRef = useRef<TableDriveHandle>(null);
   const uploadQueueRef = useRef<UploadQueueTabRef>(null);
   const [isTrashView, setIsTrashView] = useState(false);
 
+  /**
+   * URL 在浏览器前进、后退和外部链接进入时变化，侧栏仍依赖 workspace store，
+   * 因此必须在路由提交后同步 scope；该同步不能由用户事件或渲染派生替代，且无需 cleanup。
+   */
+  useEffectForce(() => {
+    const currentScope = useWorkspaceNavigationStore.getState().location.scope;
+    const currentGroupId = currentScope.type === 'group' ? currentScope.groupId : undefined;
+    const nextGroupId =
+      driveLocation.scope.type === 'group' ? driveLocation.scope.groupId : undefined;
+    if (currentScope.rootId === driveLocation.scope.rootId && currentGroupId === nextGroupId) {
+      return;
+    }
+    useWorkspaceNavigationStore.getState().navigateToScope(driveLocation.scope);
+  }, [driveLocation.scope]);
+
   const handleUploadSuccess = () => {
     uploadQueueRef.current?.refresh();
+  };
+
+  const handleCurrentNodeChange = (nodeId: string) => {
+    navigate(buildDrivePath({ scope: driveLocation.scope, nodeId }));
   };
 
   const activeViewMode: DriveViewMode = VIEW_TABS.some((tab) => tab.key === viewMode)
     ? viewMode
     : 'tableDrive';
+  const tableDriveLocationKey = `${driveLocation.scope.rootId}\u0000${driveLocation.initialNodeId ?? driveLocation.scope.rootId}`;
 
   return (
     <div className={styles.pageContainer}>
@@ -70,9 +96,11 @@ function Drive() {
       <div className={styles.previewContent}>
         {activeViewMode === 'tableDrive' && (
           <TableDrive
+            key={tableDriveLocationKey}
             ref={tableDriveRef}
             scope={driveLocation.scope}
             initialNodeId={driveLocation.initialNodeId}
+            onCurrentNodeChange={handleCurrentNodeChange}
             showToolbarTrash={false}
             onTrashViewChange={setIsTrashView}
             onUploadSuccess={handleUploadSuccess}
