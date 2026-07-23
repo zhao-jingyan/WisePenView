@@ -8,13 +8,26 @@ import type {
   GetDocInfoApiResponse,
   ListPendingDocsApiResponse,
   PendingDocItemApiResponse,
+  PendingDocumentStatusApiResponse,
 } from '../apis/DocumentApi.type';
-import type { DocDisplayInfoResponse, DocMetaInfo, PendingDocItem } from '../service/index.type';
+import type {
+  DocDisplayInfoResponse,
+  DocMetaInfo,
+  DocumentProcessStatus,
+  PendingDocItem,
+} from '../service/index.type';
 
 const normalizeOptionalId = (value: string | number | null | undefined): string | null => {
   const normalized = normalizeId(value);
   return normalized || null;
 };
+
+const mapDocumentProcessStatusFromApi = (
+  data: PendingDocumentStatusApiResponse
+): DocumentProcessStatus => ({
+  status: data.status,
+  errorMessage: data.errorMessage,
+});
 
 const mapDocMetaInfoFromApi = (
   data: DocMetaInfoApiResponse & { version?: number }
@@ -25,6 +38,7 @@ const mapDocMetaInfoFromApi = (
     uploaderId: normalizeOptionalId(data.uploadMeta.uploaderId),
     size: normalizeNonNegativeNumber(data.uploadMeta.size) ?? 0,
   },
+  documentStatus: mapDocumentProcessStatusFromApi(data.documentStatus),
 });
 
 const mapPendingDocItemFromApi = (item: PendingDocItemApiResponse): PendingDocItem => ({
@@ -58,6 +72,7 @@ const mapGetDocInfoFromApi = (data: GetDocInfoApiResponse): DocDisplayInfoRespon
 });
 
 export const DocumentServicesMap = {
+  mapDocumentProcessStatusFromApi,
   mapListPendingDocsFromApi,
   mapGetDocInfoFromApi,
 };

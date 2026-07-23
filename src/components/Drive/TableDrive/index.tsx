@@ -304,7 +304,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     scope,
     actions,
     onTrashViewChange,
-    onUploadSuccess,
     showToolbarTrash = true,
   },
   ref
@@ -624,7 +623,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     scope: resolvedScope.scope,
     actions,
     refresh: refreshDrive,
-    onUploadSuccess,
     targetTagId,
     isTrashView,
   });
@@ -636,7 +634,7 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
         ) : null}
         {showUploadToGroup ? (
           <Button variant="secondary" size="sm" onPress={openUploadToGroup}>
-            上传到小组
+            从个人云盘添加
           </Button>
         ) : null}
         {!isTrashView ? (

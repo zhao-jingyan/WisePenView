@@ -54,7 +54,7 @@ function UploadFileToGroupModal({
     {
       manual: true,
       onSuccess: (count) => {
-        toast.success(`已上传 ${count} 个文件`);
+        toast.success(`已添加 ${count} 个文件到小组`);
         onSuccess?.();
         onOpenChange(false);
       },
@@ -95,7 +95,7 @@ function UploadFileToGroupModal({
     <AppModal
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
-      title="上传文件到小组"
+      title="从个人云盘添加文件"
       size="md"
       isDismissable={!submitting}
       actions={
@@ -132,7 +132,7 @@ function UploadFileToGroupModal({
           <div className={`${styles.slideTrack} ${step === 1 ? styles.slideTrackShift : ''}`}>
             <div className={styles.slidePane}>
               <div className={styles.treeSection}>
-                <div className={styles.hint}>选择要上传的文件（可多选）</div>
+                <div className={styles.hint}>选择要添加的文件（可多选）</div>
                 <div className={styles.navTree}>
                   <DriveNavigator
                     key={`personal-${navRefreshKey}`}
@@ -146,7 +146,7 @@ function UploadFileToGroupModal({
             </div>
             <div className={styles.slidePane}>
               <div className={styles.treeSection}>
-                <div className={styles.hint}>选择文件要上传到的小组文件夹（只能选择一个）</div>
+                <div className={styles.hint}>选择文件要添加到的小组文件夹（只能选择一个）</div>
                 <div className={styles.navTree}>
                   <DriveNavigator
                     key={`group-tree-tag-${groupId}-${navRefreshKey}`}

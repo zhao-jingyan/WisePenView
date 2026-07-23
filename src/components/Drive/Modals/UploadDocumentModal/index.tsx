@@ -1,19 +1,22 @@
 import { useDriveUploadQueueStore } from '@/components/Drive/_store/useDriveUploadQueueStore';
-import {
-  buildUploadedResourceMountTagIds,
-  resolveResourcePrimaryTagId,
-} from '@/components/Drive/common/driveComponentModel';
 import AppModal from '@/components/Overlay/AppModal';
 import UploadZone from '@/components/UploadZone';
-import { useDocumentService, useDriveService, useResourceService } from '@/domains';
-import { DOCUMENT_ALLOWED_EXTENSIONS } from '@/domains/Document';
-import { isWisePenError, parseErrorMessage } from '@/utils/error';
+import { useDocumentService } from '@/domains';
+import type { DocumentProcessStatus } from '@/domains/Document';
+import {
+  DOCUMENT_ALLOWED_EXTENSIONS,
+  DOCUMENT_PROCESS,
+  isDocumentTerminalStatus,
+} from '@/domains/Document';
+import { parseErrorMessage } from '@/utils/error';
+import { DRIVE_UPLOAD_QUEUE_PATH } from '@/utils/navigation/driveRoute';
 import { parseExtension } from '@/utils/parser/extensionParser';
 import { createUuid } from '@/utils/random/createUuid';
 import { Button, toast } from '@heroui/react';
 import { useRequest } from 'ahooks';
 import { CloudUpload, X } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './index.module.less';
 import type { UploadDocumentModalProps } from './index.type';
 
@@ -24,35 +27,17 @@ const ACCEPT_DOCUMENT_TYPES = DOCUMENT_ALLOWED_EXTENSIONS.map((extension) => `.$
 
 const UPLOAD_STATUS_SYNC_DELAY_MS = 3000;
 const QUEUE_DONE_VISIBLE_DELAY_MS = 900;
-const FOLDER_MOUNT_RETRY_DELAY_MS = 2000;
-const FOLDER_MOUNT_MAX_ATTEMPTS = 15;
-const QUEUE_HASH_PROGRESS_WEIGHT = 0.08;
-const QUEUE_UPLOAD_PROGRESS_START = 8;
-const QUEUE_UPLOAD_PROGRESS_WEIGHT = 0.32;
-const QUEUE_PROCESSING_PROGRESS_START = 40;
-const RESOURCE_NOT_READY_CODES = new Set([5411, 6111, 8111]);
+const PROCESS_STATUS_SYNC_INTERVAL_MS = 2000;
+const PROCESS_STATUS_SYNC_MAX_ATTEMPTS = 15;
 
-interface SubmitUploadPayload {
-  files: File[];
-  mountTagId?: string;
-}
-
-/** 文档上传：MD5 -> init -> OSS PUT；可选挂载到当前文件夹 tag。 */
-function UploadDocumentModal({
-  isOpen,
-  onOpenChange,
-  onSuccess,
-  targetTagId,
-  groupId,
-}: UploadDocumentModalProps) {
+/** 文档上传：MD5 -> init -> OSS PUT；后端注册成功后保存在个人根目录。 */
+function UploadDocumentModal({ isOpen, onOpenChange, onSuccess }: UploadDocumentModalProps) {
+  const navigate = useNavigate();
   const documentService = useDocumentService();
-  const driveService = useDriveService();
-  const resourceService = useResourceService();
   const startUploads = useDriveUploadQueueStore((s) => s.startUploads);
   const updateQueuedUpload = useDriveUploadQueueStore((s) => s.updateUpload);
   const removeQueuedUpload = useDriveUploadQueueStore((s) => s.removeUpload);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const mountsToFolder = Boolean(targetTagId?.trim());
 
   const resetState = () => {
     setSelectedFiles([]);
@@ -66,135 +51,64 @@ function UploadDocumentModal({
     setSelectedFiles(supportedFiles);
   };
 
-  const completeQueuedUpload = (
-    uploadId: string,
-    patch: { documentId?: string; objectKey?: string } = {}
-  ) => {
+  const completeQueuedUpload = (uploadId: string) => {
     updateQueuedUpload(uploadId, {
-      ...patch,
       phase: 'done',
-      progress: 100,
     });
     window.setTimeout(() => {
       removeQueuedUpload(uploadId);
     }, QUEUE_DONE_VISIBLE_DELAY_MS);
   };
 
-  const scheduleUploadStatusSync = (documentId: string, uploadId: string) => {
-    window.setTimeout(() => {
-      void documentService
-        .syncPendingDocStatus(documentId)
-        .catch(() => undefined)
-        .finally(() => {
-          completeQueuedUpload(uploadId);
-        });
-    }, UPLOAD_STATUS_SYNC_DELAY_MS);
+  const settleQueuedUpload = (uploadId: string, documentStatus: DocumentProcessStatus) => {
+    if (documentStatus.status === DOCUMENT_PROCESS.READY) {
+      completeQueuedUpload(uploadId);
+      onSuccess?.();
+      return;
+    }
+    updateQueuedUpload(uploadId, {
+      phase: 'failed',
+      errorMessage: documentStatus.errorMessage ?? DOCUMENT_PROCESS.getLabel(documentStatus.status),
+    });
   };
 
-  const scheduleFolderMount = (documentId: string, mountTagId: string, uploadId: string) => {
-    const tagId = mountTagId.trim();
-    if (!tagId) return;
-
-    window.setTimeout(() => {
-      void (async () => {
-        try {
-          const mounted = groupId
-            ? await mountUploadedGroupDocument(documentId, tagId)
-            : await mountToPersonalFolderWhenReady(documentId, tagId);
-          if (mounted) {
-            onSuccess?.();
-          }
-        } finally {
-          completeQueuedUpload(uploadId);
-        }
-      })();
-    }, UPLOAD_STATUS_SYNC_DELAY_MS);
-  };
-
-  const mountToPersonalFolderWhenReady = async (
-    resourceId: string,
-    tagId: string,
-    failureTargetName = '当前文件夹'
-  ): Promise<boolean> => {
-    for (let attempt = 1; attempt <= FOLDER_MOUNT_MAX_ATTEMPTS; attempt += 1) {
-      try {
-        // 首次同步可能早于 OSS 回调完成；未就绪时仍继续查询，并在下一轮重新同步。
-        await documentService.syncPendingDocStatus(resourceId).catch((err: unknown) => {
-          if (!isResourceNotReadyError(err)) {
-            throw err;
-          }
-        });
-        const { resourceInfo } = await documentService.getDocInfo(resourceId);
-        const primaryTagId = resolveResourcePrimaryTagId(resourceInfo);
-        if (primaryTagId === tagId) {
-          return true;
-        }
-        const tagIds = buildUploadedResourceMountTagIds(resourceInfo, tagId);
-        await resourceService.updateResourceTags({
-          resourceId,
-          tagIds,
-          primaryTagId: tagId,
-        });
-        return true;
-      } catch (err) {
-        const shouldRetry = isResourceNotReadyError(err) && attempt < FOLDER_MOUNT_MAX_ATTEMPTS;
-        if (!shouldRetry) {
-          toast.warning(`文件已上传，但未能放入${failureTargetName}：${parseErrorMessage(err)}`);
-          return false;
-        }
-        await delay(FOLDER_MOUNT_RETRY_DELAY_MS);
+  const waitForDocumentTerminalStatus = async (
+    documentId: string
+  ): Promise<DocumentProcessStatus | null> => {
+    for (let attempt = 1; attempt <= PROCESS_STATUS_SYNC_MAX_ATTEMPTS; attempt += 1) {
+      const documentStatus = await documentService.syncPendingDocStatus(documentId);
+      if (isDocumentTerminalStatus(documentStatus.status)) {
+        return documentStatus;
+      }
+      if (attempt < PROCESS_STATUS_SYNC_MAX_ATTEMPTS) {
+        await delay(PROCESS_STATUS_SYNC_INTERVAL_MS);
       }
     }
-    return false;
+    return null;
   };
 
-  const mountToGroupFolderWhenReady = async (
-    resourceId: string,
-    tagId: string
-  ): Promise<boolean> => {
-    if (!groupId) return false;
-
-    for (let attempt = 1; attempt <= FOLDER_MOUNT_MAX_ATTEMPTS; attempt += 1) {
-      try {
-        await resourceService.mountResourcesToGroupTag({
-          resourceIds: [resourceId],
-          groupId,
-          tagId,
-        });
-        return true;
-      } catch (err) {
-        const shouldRetry = isResourceNotReadyError(err) && attempt < FOLDER_MOUNT_MAX_ATTEMPTS;
-        if (!shouldRetry) {
-          toast.warning(`文件已上传，但未能放入当前文件夹：${parseErrorMessage(err)}`);
-          return false;
-        }
-        await delay(FOLDER_MOUNT_RETRY_DELAY_MS);
-      }
+  const settleUploadedDocument = async (documentId: string, uploadId: string) => {
+    const documentStatus = await waitForDocumentTerminalStatus(documentId);
+    if (documentStatus == null) {
+      removeQueuedUpload(uploadId);
+      toast.warning('文件已上传，处理仍在进行，请稍后查看上传队列');
+      return;
     }
-    return false;
+    settleQueuedUpload(uploadId, documentStatus);
   };
 
-  const mountUploadedGroupDocument = async (resourceId: string, groupTargetTagId: string) => {
-    let sharedTagId: string;
-    try {
-      sharedTagId = await driveService.ensureSharedFolder();
-    } catch (err) {
-      toast.warning(`文件已上传，但未能准备共享文件夹：${parseErrorMessage(err)}`);
-      return false;
-    }
-    const mountedToShared = await mountToPersonalFolderWhenReady(
-      resourceId,
-      sharedTagId,
-      '共享文件夹'
-    );
-    if (!mountedToShared) return false;
-    return mountToGroupFolderWhenReady(resourceId, groupTargetTagId);
+  const scheduleUploadSettlement = (documentId: string, uploadId: string) => {
+    window.setTimeout(() => {
+      void settleUploadedDocument(documentId, uploadId).catch((err: unknown) => {
+        removeQueuedUpload(uploadId);
+        toast.warning(`文件已上传，但未能确认处理状态：${parseErrorMessage(err)}`);
+      });
+    }, UPLOAD_STATUS_SYNC_DELAY_MS);
   };
 
   const { run: submitUpload } = useRequest(
-    async ({ files, mountTagId }: SubmitUploadPayload) => {
+    async (files: File[]) => {
       if (files.length === 0) return 0;
-      const shouldMountToFolder = Boolean(mountTagId?.trim());
       const uploadIds = files.map(() => createUuid());
 
       startUploads(
@@ -208,7 +122,7 @@ function UploadDocumentModal({
         }))
       );
 
-      const uploadResults = await Promise.allSettled(
+      await Promise.all(
         files.map(async (file, index) => {
           const uploadId = uploadIds[index];
           try {
@@ -217,37 +131,22 @@ function UploadDocumentModal({
               onUploadInitialized: (payload) => {
                 updateQueuedUpload(uploadId, {
                   documentId: payload.documentId,
-                  objectKey: payload.objectKey,
                   phase: payload.flashUploaded ? 'confirming' : 'uploading',
-                  progress: payload.flashUploaded
-                    ? QUEUE_PROCESSING_PROGRESS_START
-                    : QUEUE_UPLOAD_PROGRESS_START,
-                });
-              },
-              onHashProgress: (p) => {
-                updateQueuedUpload(uploadId, {
-                  phase: 'hashing',
-                  progress: p * QUEUE_HASH_PROGRESS_WEIGHT,
+                  progress: 0,
                 });
               },
               onUploadProgress: (p) => {
                 updateQueuedUpload(uploadId, {
                   phase: 'uploading',
-                  progress: getQueueUploadProgress(p),
+                  progress: p,
                 });
               },
             });
             updateQueuedUpload(uploadId, {
-              documentId: result.documentId,
-              objectKey: result.objectKey,
+              documentId: result,
               phase: 'confirming',
-              progress: QUEUE_PROCESSING_PROGRESS_START,
             });
-            if (shouldMountToFolder && mountTagId) {
-              scheduleFolderMount(result.documentId, mountTagId, uploadId);
-            } else {
-              scheduleUploadStatusSync(result.documentId, uploadId);
-            }
+            scheduleUploadSettlement(result, uploadId);
           } catch (err) {
             updateQueuedUpload(uploadId, {
               phase: 'failed',
@@ -258,23 +157,10 @@ function UploadDocumentModal({
         })
       );
 
-      const failedResult = uploadResults.find(
-        (result): result is PromiseRejectedResult => result.status === 'rejected'
-      );
-      if (failedResult != null) {
-        throw failedResult.reason;
-      }
       return files.length;
     },
     {
       manual: true,
-      onSuccess: (count) => {
-        if (count > 0) {
-          toast.success(
-            mountsToFolder ? `已开始上传 ${count} 个文件到当前文件夹` : `已完成 ${count} 个文件上传`
-          );
-        }
-      },
       onError: (err: unknown) => {
         toast.danger(parseErrorMessage(err));
       },
@@ -300,13 +186,11 @@ function UploadDocumentModal({
       return;
     }
     const filesToUpload = selectedFiles;
-    const mountTagId = targetTagId?.trim();
-    submitUpload({ files: filesToUpload, mountTagId });
-    if (!mountsToFolder) {
-      toast.success(`已添加 ${filesToUpload.length} 个文件到上传队列`);
-    }
+    submitUpload(filesToUpload);
+    toast.success(`已添加 ${filesToUpload.length} 个文件到上传队列`);
     resetState();
     onOpenChange(false);
+    navigate(DRIVE_UPLOAD_QUEUE_PATH);
   };
 
   return (
@@ -314,11 +198,7 @@ function UploadDocumentModal({
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
       title="上传文档"
-      description={
-        mountsToFolder
-          ? '文件将上传到当前文件夹，并同步显示在上传队列'
-          : '上传完成后会同步刷新上传队列'
-      }
+      description="文件将上传到个人云盘根目录，并同步显示在上传队列"
       size="lg"
       containerClassName={styles.container}
       dialogClassName={styles.dialog}
@@ -331,7 +211,7 @@ function UploadDocumentModal({
           </Button>
           <Button variant="primary" isDisabled={selectedFiles.length === 0} onPress={handleOk}>
             <CloudUpload size={15} strokeWidth={1.8} />
-            {mountsToFolder ? '开始上传' : '添加到上传队列'}
+            添加到上传队列
           </Button>
         </>
       }
@@ -356,13 +236,6 @@ function UploadDocumentModal({
   );
 }
 
-function getQueueUploadProgress(value: number): number {
-  return Math.min(
-    QUEUE_PROCESSING_PROGRESS_START,
-    QUEUE_UPLOAD_PROGRESS_START + value * QUEUE_UPLOAD_PROGRESS_WEIGHT
-  );
-}
-
 function getDisplayFileType(file: File): string {
   try {
     return parseExtension(file.name);
@@ -377,10 +250,6 @@ function isSupportedDocument(file: File): boolean {
   } catch {
     return false;
   }
-}
-
-function isResourceNotReadyError(err: unknown): boolean {
-  return isWisePenError(err) && RESOURCE_NOT_READY_CODES.has(err.code);
 }
 
 function delay(ms: number): Promise<void> {

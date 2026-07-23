@@ -6,10 +6,7 @@ const CHUNK_SIZE = 2 * 1024 * 1024;
 /**
  * 浏览器端分块计算文件 MD5（十六进制小写），与文档上传初始化接口 `md5` 字段一致。
  */
-export const computeFileMd5 = (
-  file: File,
-  onProgress?: (percent: number) => void
-): Promise<string> => {
+export const computeFileMd5 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const chunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
     let currentChunk = 0;
@@ -30,7 +27,6 @@ export const computeFileMd5 = (
       }
       spark.append(result);
       currentChunk += 1;
-      onProgress?.(Math.min(100, Math.round((currentChunk / chunks) * 100)));
       if (currentChunk < chunks) {
         loadNext();
       } else {

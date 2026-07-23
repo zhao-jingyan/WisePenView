@@ -15,23 +15,6 @@ export const DOCUMENT_ALLOWED_EXTENSIONS = [
 
 export type DocumentAllowedExtension = (typeof DOCUMENT_ALLOWED_EXTENSIONS)[number];
 
-/** `POST /document/initDocUpload` 请求体，与后端 DocumentUploadInitRequest 一致 */
-export interface DocumentUploadInitRequestBody {
-  filename: string;
-  extension: string;
-  md5: string;
-  expectedSize: number;
-}
-
-/** `POST /document/initDocUpload` 的 `data`，与后端 DocumentUploadInitResponse 一致 */
-export interface DocumentUploadInitResponse {
-  documentId: string;
-  putUrl: string | null;
-  callbackHeader: string | null;
-  objectKey: string;
-  flashUploaded: boolean;
-}
-
 interface DocumentUploadMeta {
   documentName: string;
   uploaderId: string | null;
@@ -39,7 +22,7 @@ interface DocumentUploadMeta {
   size: number;
 }
 
-interface PendingDocumentStatus {
+export interface DocumentProcessStatus {
   status: string;
   errorMessage?: string | null;
 }
@@ -47,7 +30,7 @@ interface PendingDocumentStatus {
 /** 文档元信息（对齐后端 DocumentInfoBase） */
 export interface DocMetaInfo {
   uploadMeta: DocumentUploadMeta;
-  documentStatus: PendingDocumentStatus;
+  documentStatus: DocumentProcessStatus;
   maxPreviewPages: number | null;
   version?: number;
 }
@@ -73,15 +56,11 @@ export interface OnlyOfficeEditorConfigResponse {
 /** DocumentService：文档上传、重试转换、删除（路径与当前后端 DocumentController 一致） */
 export interface IDocumentService {
   /** 计算 MD5 → 初始化上传 → 非秒传时 PUT 至 OSS，返回 documentId（即 resourceId） */
-  uploadDocument(params: UploadDocumentParams): Promise<UploadDocumentResult>;
-  /** 仅 FAILED 状态可调用 */
-  retryConvert(documentId: string): Promise<void>;
-  /** 取消上传或删除文档 */
-  deleteDocument(documentId: string): Promise<void>;
+  uploadDocument(params: UploadDocumentParams): Promise<string>;
   /** 拉取待处理文档队列 */
   listPendingDocs(): Promise<PendingDocItem[]>;
-  /** 触发单条文档状态同步 */
-  syncPendingDocStatus(documentId: string): Promise<void>;
+  /** 同步并返回单条文档处理状态 */
+  syncPendingDocStatus(documentId: string): Promise<DocumentProcessStatus>;
   /** 重试待处理文档 */
   retryPendingDoc(documentId: string): Promise<void>;
   /** 取消待处理文档 */
@@ -104,20 +83,11 @@ export interface UploadDocumentParams {
   file: File;
   /** 初始化上传成功后触发，供上传队列提前关联后端任务 */
   onUploadInitialized?: (payload: UploadDocumentInitializedPayload) => void;
-  /** MD5 分块计算进度 0–100 */
-  onHashProgress?: (percent: number) => void;
   /** 直传 OSS 进度 0–100（秒传时不触发） */
   onUploadProgress?: (percent: number) => void;
 }
 
 export interface UploadDocumentInitializedPayload {
   documentId: string;
-  objectKey: string;
-  flashUploaded: boolean;
-}
-
-export interface UploadDocumentResult {
-  documentId: string;
-  objectKey: string;
   flashUploaded: boolean;
 }

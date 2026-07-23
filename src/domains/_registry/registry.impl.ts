@@ -34,6 +34,7 @@ import type { ServicesContextValue } from './registry.types';
 // Level 0：无跨 service 依赖
 const adminService = createAdminServices();
 const authService = createAuthServices();
+const documentService = createDocumentServices();
 const groupService = createGroupServices();
 const imageService = createImageServices();
 const inlineCommentService = createInlineCommentServices();
@@ -45,7 +46,6 @@ const userService = createUserServices();
 const walletService = createWalletServices();
 
 // Level 1：依赖 Level 0
-const documentService = createDocumentServices({ resourceService: resourceService });
 const noteService = createNoteServices({ resourceService: resourceService });
 const skillService = createSkillServices({
   resourceService: resourceService,

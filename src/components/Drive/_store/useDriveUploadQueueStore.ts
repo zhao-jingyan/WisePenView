@@ -11,23 +11,17 @@ export interface DriveUploadQueueItem {
   size: number;
   phase: DriveUploadQueuePhase;
   progress: number;
-  updatedAt?: number;
-  phaseStartedAt?: number;
   documentId?: string;
-  objectKey?: string;
   errorMessage?: string;
 }
 
-type DriveUploadQueuePatch = Partial<
-  Omit<DriveUploadQueueItem, 'id' | 'updatedAt' | 'phaseStartedAt'>
->;
+type DriveUploadQueuePatch = Partial<Omit<DriveUploadQueueItem, 'id'>>;
 
 interface DriveUploadQueueState {
   uploads: DriveUploadQueueItem[];
   startUploads: (uploads: DriveUploadQueueItem[]) => void;
   updateUpload: (id: string, patch: DriveUploadQueuePatch) => void;
   removeUpload: (id: string) => void;
-  clearUploads: () => void;
 }
 
 const initialState = {
@@ -39,15 +33,12 @@ export const useDriveUploadQueueStore = create<DriveUploadQueueState>()((set) =>
 
   startUploads: (uploads) =>
     set((state) => {
-      const now = Date.now();
       return {
         uploads: [
           ...state.uploads,
           ...uploads.map((upload) => ({
             ...upload,
             progress: clampProgress(upload.progress),
-            updatedAt: now,
-            phaseStartedAt: now,
           })),
         ],
       };
@@ -55,7 +46,6 @@ export const useDriveUploadQueueStore = create<DriveUploadQueueState>()((set) =>
 
   updateUpload: (id, patch) =>
     set((state) => {
-      const now = Date.now();
       const normalizedPatch = normalizeUploadPatch(patch);
       return {
         uploads: state.uploads.map((upload) =>
@@ -63,11 +53,6 @@ export const useDriveUploadQueueStore = create<DriveUploadQueueState>()((set) =>
             ? {
                 ...upload,
                 ...normalizedPatch,
-                updatedAt: now,
-                phaseStartedAt:
-                  normalizedPatch.phase != null && normalizedPatch.phase !== upload.phase
-                    ? now
-                    : (upload.phaseStartedAt ?? now),
               }
             : upload
         ),
@@ -78,8 +63,6 @@ export const useDriveUploadQueueStore = create<DriveUploadQueueState>()((set) =>
     set((state) => ({
       uploads: state.uploads.filter((upload) => upload.id !== id),
     })),
-
-  clearUploads: () => set(initialState),
 }));
 
 const resetDriveUploadQueueStore = (): void => {

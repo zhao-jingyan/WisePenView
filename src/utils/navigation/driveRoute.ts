@@ -4,6 +4,9 @@ const APP_DRIVE_PATH = '/app/drive';
 const PERSONAL_DRIVE_PATH = `${APP_DRIVE_PATH}/personal`;
 const GROUP_DRIVE_PATH = `${APP_DRIVE_PATH}/group`;
 
+export const DRIVE_UPLOAD_QUEUE_PATH = `${APP_DRIVE_PATH}/upload-queue`;
+export const DRIVE_FAVORITES_PATH = `${APP_DRIVE_PATH}/favorites`;
+
 export interface DriveRouteLocation {
   scope: DriveNodeScope;
   initialNodeId?: string;

@@ -157,6 +157,14 @@ const router = createBrowserRouter([
                 element: <Drive />,
               },
               {
+                path: 'drive/upload-queue',
+                element: <Drive viewMode="uploadQueue" />,
+              },
+              {
+                path: 'drive/favorites',
+                element: <Drive viewMode="favorites" />,
+              },
+              {
                 path: 'my-group',
                 element: <MyGroup />,
               },

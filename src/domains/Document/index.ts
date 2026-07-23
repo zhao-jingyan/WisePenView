@@ -7,15 +7,10 @@ export {
 export { DOCUMENT_ALLOWED_EXTENSIONS } from './service/index.type';
 export type {
   DocDisplayInfoResponse,
-  DocumentAllowedExtension,
-  DocumentUploadInitRequestBody,
-  DocumentUploadInitResponse,
+  DocumentProcessStatus,
   ForkDocumentRequest,
   IDocumentService,
   OnlyOfficeEditorConfig,
   OnlyOfficeEditorConfigResponse,
   PendingDocItem,
-  UploadDocumentInitializedPayload,
-  UploadDocumentParams,
-  UploadDocumentResult,
 } from './service/index.type';

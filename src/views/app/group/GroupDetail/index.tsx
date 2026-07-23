@@ -119,7 +119,6 @@ function GroupDetail() {
                   canCreateDrawio: groupDisplayConfig.canCreateResource,
                   canCreateSkill: groupDisplayConfig.canCreateResource,
                   canCreateAgent: groupDisplayConfig.canCreateResource,
-                  canUploadDocument: groupDisplayConfig.canUploadDocument,
                   canUploadToGroup: groupDisplayConfig.canUploadToGroup,
                   canManageTagPermission: groupDisplayConfig.canManageTag,
                 },

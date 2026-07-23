@@ -98,7 +98,7 @@ function SidebarDrive() {
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [noteTarget, setNoteTarget] = useState<RootNode | FolderNode | null>(null);
-  const [uploadTarget, setUploadTarget] = useState<RootNode | FolderNode | null>(null);
+  const [uploadDocumentOpen, setUploadDocumentOpen] = useState(false);
   const [driveCreateTarget, setDriveCreateTarget] = useState<SidebarDriveCreateTarget | null>(null);
   const [renameTarget, setRenameTarget] = useState<DriveActionTarget | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DriveActionTarget | null>(null);
@@ -211,7 +211,7 @@ function SidebarDrive() {
         setDriveCreateTarget({ type: 'agent', target: node });
         break;
       case 'upload':
-        setUploadTarget(node);
+        setUploadDocumentOpen(true);
         break;
     }
   };
@@ -480,16 +480,8 @@ function SidebarDrive() {
           loadData={handleLoadData}
         />
       )}
-      {uploadTarget ? (
-        <UploadDocumentModal
-          isOpen={Boolean(uploadTarget)}
-          targetTagId={resolveContainerMountTagId(uploadTarget)}
-          groupId={getDriveScopeGroupId(uploadTarget.scope)}
-          onOpenChange={(open) => {
-            if (!open) setUploadTarget(null);
-          }}
-          onSuccess={refreshTree}
-        />
+      {uploadDocumentOpen ? (
+        <UploadDocumentModal isOpen onOpenChange={setUploadDocumentOpen} onSuccess={refreshTree} />
       ) : null}
       {driveCreateTarget ? (
         <DriveCreate

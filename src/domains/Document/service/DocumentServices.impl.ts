@@ -1,25 +1,18 @@
-import type { IResourceService } from '@/domains/Resource';
 import { createClientError, FRONTEND_CLIENT_ERROR } from '@/utils/error';
 import { computeFileMd5 } from '@/utils/oss/computeFileMd5';
 import { putOssPresignedUrl } from '@/utils/oss/ossPresignedPut';
 import { parseExtension } from '@/utils/parser/extensionParser';
 import { DocumentApi } from '../apis/DocumentApi';
+import type { UploadDocApiRequest, UploadDocApiResponse } from '../apis/DocumentApi.type';
 import { DocumentServicesMap } from '../mapper/DocumentServices.map';
 import type {
   DocDisplayInfoResponse,
   DocumentAllowedExtension,
-  DocumentUploadInitRequestBody,
-  DocumentUploadInitResponse,
   IDocumentService,
   PendingDocItem,
   UploadDocumentParams,
-  UploadDocumentResult,
 } from './index.type';
 import { DOCUMENT_ALLOWED_EXTENSIONS } from './index.type';
-
-interface DocumentServicesDeps {
-  resourceService: IResourceService;
-}
 
 const ALLOWED_EXT_SET = new Set<string>(DOCUMENT_ALLOWED_EXTENSIONS);
 
@@ -38,9 +31,7 @@ const assertDocumentUploadAllowed = (file: File): void => {
   }
 };
 
-const initUpload = async (
-  body: DocumentUploadInitRequestBody
-): Promise<DocumentUploadInitResponse> => {
+const initUpload = async (body: UploadDocApiRequest): Promise<UploadDocApiResponse> => {
   const res = await DocumentApi.uploadDoc(body);
   if (res == null) {
     throw createClientError(FRONTEND_CLIENT_ERROR.DOCUMENT_UPLOAD_INIT_EMPTY);
@@ -48,11 +39,11 @@ const initUpload = async (
   return res;
 };
 
-const uploadDocument = async (params: UploadDocumentParams): Promise<UploadDocumentResult> => {
-  const { file, onHashProgress, onUploadInitialized, onUploadProgress } = params;
+const uploadDocument = async (params: UploadDocumentParams): Promise<string> => {
+  const { file, onUploadInitialized, onUploadProgress } = params;
   assertDocumentUploadAllowed(file);
 
-  const md5 = await computeFileMd5(file, onHashProgress);
+  const md5 = await computeFileMd5(file);
   const extension = parseExtension(file.name);
 
   const init = await initUpload({
@@ -64,16 +55,11 @@ const uploadDocument = async (params: UploadDocumentParams): Promise<UploadDocum
 
   onUploadInitialized?.({
     documentId: init.documentId,
-    objectKey: init.objectKey,
     flashUploaded: init.flashUploaded,
   });
 
   if (init.flashUploaded) {
-    return {
-      documentId: init.documentId,
-      objectKey: init.objectKey,
-      flashUploaded: true,
-    };
+    return init.documentId;
   }
 
   if (
@@ -92,15 +78,7 @@ const uploadDocument = async (params: UploadDocumentParams): Promise<UploadDocum
     onProgress: onUploadProgress,
   });
 
-  return {
-    documentId: init.documentId,
-    objectKey: init.objectKey,
-    flashUploaded: false,
-  };
-};
-
-const retryConvert = async (documentId: string): Promise<void> => {
-  await DocumentApi.retryDocProcess({ documentId });
+  return init.documentId;
 };
 
 const listPendingDocs = async (): Promise<PendingDocItem[]> => {
@@ -108,8 +86,9 @@ const listPendingDocs = async (): Promise<PendingDocItem[]> => {
   return DocumentServicesMap.mapListPendingDocsFromApi(data);
 };
 
-const syncPendingDocStatus = async (documentId: string): Promise<void> => {
-  await DocumentApi.syncDocStatus({ documentId });
+const syncPendingDocStatus: IDocumentService['syncPendingDocStatus'] = async (documentId) => {
+  const data = await DocumentApi.syncDocStatus({ documentId });
+  return DocumentServicesMap.mapDocumentProcessStatusFromApi(data);
 };
 
 const retryPendingDoc = async (documentId: string): Promise<void> => {
@@ -133,23 +112,13 @@ const getOnlyOfficeEditorConfig = async (resourceId: string) => {
   return await DocumentApi.getOnlyOfficeEditorConfig({ resourceId });
 };
 
-export const createDocumentServices = (deps: DocumentServicesDeps): IDocumentService => {
-  const { resourceService } = deps;
-
-  const deleteDocument = async (documentId: string): Promise<void> => {
-    await resourceService.removeResources({ resourceIds: [documentId] });
-  };
-
-  return {
-    uploadDocument,
-    retryConvert,
-    deleteDocument,
-    listPendingDocs,
-    syncPendingDocStatus,
-    retryPendingDoc,
-    cancelPendingDoc,
-    getDocInfo,
-    forkDocument,
-    getOnlyOfficeEditorConfig,
-  };
-};
+export const createDocumentServices = (): IDocumentService => ({
+  uploadDocument,
+  listPendingDocs,
+  syncPendingDocStatus,
+  retryPendingDoc,
+  cancelPendingDoc,
+  getDocInfo,
+  forkDocument,
+  getOnlyOfficeEditorConfig,
+});
