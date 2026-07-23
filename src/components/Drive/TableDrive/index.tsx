@@ -1081,9 +1081,6 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
-      if (isEditMode) {
-        return;
-      }
       const rowId = event.active.data.current?.rowId;
       if (typeof rowId !== 'string') {
         return;
@@ -1100,11 +1097,8 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       const nextDraggingRowKeys = new Set(sourceRowIds);
       updateDraggingRowKeys(nextDraggingRowKeys);
       setActiveDragRowId(row.id);
-      if (!checkedRowKeys.has(row.id)) {
-        setCheckedRowKeys(nextDraggingRowKeys);
-      }
     },
-    [checkedRowKeys, isEditMode, movingByDrag, resolveDragSourceIds, rowMap, updateDraggingRowKeys]
+    [movingByDrag, resolveDragSourceIds, rowMap, updateDraggingRowKeys]
   );
 
   const handleDragEnd = useCallback(
@@ -1114,7 +1108,12 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
       const targetNode =
         typeof targetNodeId === 'string' ? driveNodeMap.get(targetNodeId) : undefined;
 
-      if (targetNode && isDriveMoveTargetNode(targetNode) && sourceRowIds.length > 0) {
+      if (
+        targetNode &&
+        isDriveMoveTargetNode(targetNode) &&
+        sourceRowIds.length > 0 &&
+        !sourceRowIds.includes(targetNode.id)
+      ) {
         runMoveRowsByDrag({
           sourceRowIds,
           targetFolderNodeId: targetNode.id,
@@ -1170,15 +1169,13 @@ const TableDrive = forwardRef<TableDriveHandle, TableDriveProps>(function TableD
     (content: ReactNode, row: DriveTableRow) => (
       <DriveDndNameContent
         row={row}
-        draggableDisabled={isEditMode || movingByDrag || !isDriveDragSource(row)}
-        droppableDisabled={
-          isEditMode || movingByDrag || draggingRowKeys.size === 0 || !isDriveMoveTarget(row)
-        }
+        draggableDisabled={movingByDrag || !isDriveDragSource(row)}
+        droppableDisabled={movingByDrag || draggingRowKeys.size === 0 || !isDriveMoveTarget(row)}
       >
         {content}
       </DriveDndNameContent>
     ),
-    [draggingRowKeys.size, isEditMode, movingByDrag]
+    [draggingRowKeys.size, movingByDrag]
   );
 
   return (
