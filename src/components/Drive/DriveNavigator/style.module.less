@@ -32,8 +32,15 @@
     min-width: 100%;
     min-height: 32px;
     padding: 2px var(--space-xs);
-    color: var(--muted);
     box-sizing: border-box;
+  }
+
+  :global(.wisepen-tree__item[data-selectable='true']) {
+    color: var(--foreground);
+  }
+
+  :global(.wisepen-tree__item[aria-disabled='true']) {
+    color: var(--text-disabled, #9ca3af);
   }
 
   :global(.wisepen-tree__switcher),
@@ -54,6 +61,11 @@
   :global(.wisepen-tree__item[aria-selected='true'] .wisepen-tree__content) {
     color: var(--accent);
     background: var(--accent-softer);
+  }
+
+  :global(.wisepen-tree__item[aria-disabled='true'] .wisepen-tree__content) {
+    color: inherit;
+    background: transparent;
   }
 
   @media (hover: hover) {
