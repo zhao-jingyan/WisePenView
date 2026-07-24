@@ -30,7 +30,7 @@ export interface ComputeWalletProps {
    */
   showOperatorColumn?: boolean;
   /**
-   * `card`：独立卡片（小组详情等）；`plain`：无外层卡片，由父级统一铺底（个人「余额与使用量」与外层 formSection 合一，避免叠两层）。
+   * `card`：独立卡片（小组详情等）；`plain`：无外层卡片，由内部表格提供视觉边界。
    */
   surface?: 'card' | 'plain';
 }

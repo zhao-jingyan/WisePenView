@@ -1,6 +1,6 @@
 /**
- * 个人中心「余额与使用量」（左下角入口）：个人钱包 + 各小组配额放在同一 formSection，
- * 钱包使用 ComputeWallet surface="plain"，避免外层盒子与组件内 card 叠成双层页签感。
+ * 个人中心「余额与使用量」（左下角入口）：展示个人钱包和各小组配额。
+ * 两个区块直接铺在页面中，视觉边界由表格自身提供。
  */
 import { WALLET_TARGET_TYPE } from '@/domains/Wallet';
 import ComputeWallet from '@/views/app/_common/Wallet/ComputeWallet';
@@ -16,9 +16,8 @@ function Usage() {
           查看个人计算点余额、点卡充值记录，以及在各小组中的配额使用情况
         </span>
       </div>
-      <div className={layout.formSection}>
+      <div className={layout.usageContent}>
         <ComputeWallet targetType={WALLET_TARGET_TYPE.USER} canRecharge surface="plain" />
-        <div className={layout.sectionDivider} />
         <QuotaByGroup
           pagination={{
             defaultPageSize: 10,
