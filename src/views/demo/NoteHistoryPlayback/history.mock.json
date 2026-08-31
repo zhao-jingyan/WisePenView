@@ -1,0 +1,648 @@
+{
+  "note": {
+    "title": "The Influence of Social Media on College Students' Academic Performance",
+    "owner": "林予安",
+    "startedAt": "2026-08-28 09:12"
+  },
+  "versions": [
+    { "id": "version-0", "time": "09:12", "actor": null, "summary": "空白文档", "delta": [] },
+    {
+      "id": "version-1",
+      "time": "09:13",
+      "actor": "human",
+      "summary": "写下中文标题开头",
+      "delta": [
+        {
+          "type": "insertBlock",
+          "afterBlockId": null,
+          "block": {
+            "id": "title",
+            "type": "heading",
+            "level": 1,
+            "fragments": [{ "id": "title-human-1", "source": "human", "text": "社交媒体" }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "version-2",
+      "time": "09:13",
+      "actor": "human",
+      "summary": "补充研究对象",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "title",
+          "afterFragmentId": "title-human-1",
+          "fragment": { "id": "title-human-2", "source": "human", "text": "对大学生" }
+        }
+      ]
+    },
+    {
+      "id": "version-3",
+      "time": "09:14",
+      "actor": "human",
+      "summary": "完成中文标题",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "title",
+          "afterFragmentId": "title-human-2",
+          "fragment": { "id": "title-human-3", "source": "human", "text": "成绩影响" }
+        }
+      ]
+    },
+    {
+      "id": "version-4",
+      "time": "09:15",
+      "actor": "human",
+      "summary": "添加中文引言标题",
+      "delta": [
+        {
+          "type": "insertBlock",
+          "afterBlockId": "title",
+          "block": {
+            "id": "intro-heading",
+            "type": "heading",
+            "level": 2,
+            "fragments": [{ "id": "intro-heading-human", "source": "human", "text": "一、引言" }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "version-5",
+      "time": "09:16",
+      "actor": "human",
+      "summary": "写下中文背景",
+      "delta": [
+        {
+          "type": "insertBlock",
+          "afterBlockId": "intro-heading",
+          "block": {
+            "id": "intro",
+            "type": "paragraph",
+            "fragments": [{ "id": "intro-human-1", "source": "human", "text": "现在，社交" }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "version-6",
+      "time": "09:16",
+      "actor": "human",
+      "summary": "补充平台普及情况",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-1",
+          "fragment": { "id": "intro-human-2", "source": "human", "text": "媒体在大学" }
+        }
+      ]
+    },
+    {
+      "id": "version-7",
+      "time": "09:17",
+      "actor": "human",
+      "summary": "完成学生主语",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-2",
+          "fragment": { "id": "intro-human-3", "source": "human", "text": "生很流行。" }
+        }
+      ]
+    },
+    {
+      "id": "version-8",
+      "time": "09:17",
+      "actor": "human",
+      "summary": "写下日常使用",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-3",
+          "fragment": { "id": "intro-human-4", "source": "human", "text": "每天，学生" }
+        }
+      ]
+    },
+    {
+      "id": "version-9",
+      "time": "09:18",
+      "actor": "human",
+      "summary": "记录常用平台",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-4",
+          "fragment": { "id": "intro-human-5", "source": "human", "text": "用微信、" }
+        }
+      ]
+    },
+    {
+      "id": "version-10",
+      "time": "09:18",
+      "actor": "human",
+      "summary": "补充短视频平台",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-5",
+          "fragment": { "id": "intro-human-6", "source": "human", "text": "微博、抖音" }
+        }
+      ]
+    },
+    {
+      "id": "version-11",
+      "time": "09:19",
+      "actor": "human",
+      "summary": "写下沉迷现象",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-6",
+          "fragment": { "id": "intro-human-7", "source": "human", "text": "。很多人" }
+        }
+      ]
+    },
+    {
+      "id": "version-12",
+      "time": "09:19",
+      "actor": "human",
+      "summary": "补充沉迷描述",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-7",
+          "fragment": { "id": "intro-human-8", "source": "human", "text": "会太沉迷" }
+        }
+      ]
+    },
+    {
+      "id": "version-13",
+      "time": "09:20",
+      "actor": "human",
+      "summary": "写下学习影响",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-8",
+          "fragment": { "id": "intro-human-9", "source": "human", "text": "它，影响" }
+        }
+      ]
+    },
+    {
+      "id": "version-14",
+      "time": "09:20",
+      "actor": "human",
+      "summary": "提出研究必要性",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-9",
+          "fragment": { "id": "intro-human-10", "source": "human", "text": "学习，所以" }
+        }
+      ]
+    },
+    {
+      "id": "version-15",
+      "time": "09:21",
+      "actor": "human",
+      "summary": "补充研究关系",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-10",
+          "fragment": { "id": "intro-human-11", "source": "human", "text": "要研究它和" }
+        }
+      ]
+    },
+    {
+      "id": "version-16",
+      "time": "09:21",
+      "actor": "human",
+      "summary": "写下成绩关系",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-11",
+          "fragment": { "id": "intro-human-12", "source": "human", "text": "成绩关系。" }
+        }
+      ]
+    },
+    {
+      "id": "version-17",
+      "time": "09:22",
+      "actor": "human",
+      "summary": "写下结尾计划",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-12",
+          "fragment": { "id": "intro-human-13", "source": "human", "text": "最后建议。" }
+        }
+      ]
+    },
+    {
+      "id": "version-18",
+      "time": "09:23",
+      "actor": "human",
+      "summary": "补充调查依据",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-12",
+          "fragment": { "id": "intro-human-14", "source": "human", "text": "根据调查，" }
+        }
+      ]
+    },
+    {
+      "id": "version-19",
+      "time": "09:23",
+      "actor": "human",
+      "summary": "写下调查比例",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-14",
+          "fragment": { "id": "intro-human-15", "source": "human", "text": "大约百分" }
+        }
+      ]
+    },
+    {
+      "id": "version-20",
+      "time": "09:24",
+      "actor": "human",
+      "summary": "完成调查比例",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-15",
+          "fragment": { "id": "intro-human-16", "source": "human", "text": "之九十五" }
+        }
+      ]
+    },
+    {
+      "id": "version-21",
+      "time": "09:24",
+      "actor": "human",
+      "summary": "补充每日使用",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-16",
+          "fragment": { "id": "intro-human-17", "source": "human", "text": "学生每天" }
+        }
+      ]
+    },
+    {
+      "id": "version-22",
+      "time": "09:25",
+      "actor": "human",
+      "summary": "完成调查描述",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-17",
+          "fragment": { "id": "intro-human-18", "source": "human", "text": "都使用它。" }
+        }
+      ]
+    },
+    {
+      "id": "version-23",
+      "time": "09:25",
+      "actor": "human",
+      "summary": "写下关注群体",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-18",
+          "fragment": { "id": "intro-human-19", "source": "human", "text": "老师、父母" }
+        }
+      ]
+    },
+    {
+      "id": "version-24",
+      "time": "09:26",
+      "actor": "human",
+      "summary": "补充担忧态度",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-19",
+          "fragment": { "id": "intro-human-20", "source": "human", "text": "很担心学" }
+        }
+      ]
+    },
+    {
+      "id": "version-25",
+      "time": "09:26",
+      "actor": "human",
+      "summary": "写明担忧对象",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-20",
+          "fragment": { "id": "intro-human-21", "source": "human", "text": "生的成绩。" }
+        }
+      ]
+    },
+    {
+      "id": "version-26",
+      "time": "09:27",
+      "actor": "human",
+      "summary": "写下论文结构",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-21",
+          "fragment": { "id": "intro-human-22", "source": "human", "text": "本文先看" }
+        }
+      ]
+    },
+    {
+      "id": "version-27",
+      "time": "09:27",
+      "actor": "human",
+      "summary": "补充文献部分",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-22",
+          "fragment": { "id": "intro-human-23", "source": "human", "text": "相关研究，" }
+        }
+      ]
+    },
+    {
+      "id": "version-28",
+      "time": "09:28",
+      "actor": "human",
+      "summary": "继续列出论文结构",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-23",
+          "fragment": { "id": "intro-human-24", "source": "human", "text": "然后再写" }
+        }
+      ]
+    },
+    {
+      "id": "version-29",
+      "time": "09:28",
+      "actor": "human",
+      "summary": "完成中文初稿",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-24",
+          "fragment": { "id": "intro-human-25", "source": "human", "text": "研究方法，" }
+        }
+      ]
+    },
+    {
+      "id": "version-30",
+      "time": "09:31",
+      "actor": "ai",
+      "summary": "AI 一次性翻译英文初稿",
+      "delta": [
+        { "type": "deleteBlock", "blockId": "title" },
+        { "type": "deleteBlock", "blockId": "intro-heading" },
+        { "type": "deleteBlock", "blockId": "intro" },
+        {
+          "type": "insertBlock",
+          "afterBlockId": null,
+          "block": {
+            "id": "title",
+            "type": "heading",
+            "level": 1,
+            "fragments": [
+              {
+                "id": "title-ai",
+                "source": "ai",
+                "text": "The Influence of Social Media on College Students' Academic Performance"
+              }
+            ]
+          }
+        },
+        {
+          "type": "insertBlock",
+          "afterBlockId": "title",
+          "block": {
+            "id": "intro-heading",
+            "type": "heading",
+            "level": 2,
+            "fragments": [{ "id": "intro-heading-ai", "source": "ai", "text": "1. Introduction" }]
+          }
+        },
+        {
+          "type": "insertBlock",
+          "afterBlockId": "intro-heading",
+          "block": {
+            "id": "intro",
+            "type": "paragraph",
+            "fragments": [
+              { "id": "intro-ai-1", "source": "ai", "text": "Nowadays, social media is " },
+              { "id": "intro-ai-2", "source": "ai", "text": "very " },
+              { "id": "intro-ai-3", "source": "ai", "text": "popular among college students. " },
+              { "id": "intro-ai-4", "source": "ai", "text": "Every day, students use " },
+              { "id": "intro-ai-5", "source": "ai", "text": "WeChat, Weibo" },
+              { "id": "intro-ai-6", "source": "ai", "text": " and TikTok. " },
+              { "id": "intro-ai-7", "source": "ai", "text": "According to a survey, about 95% " },
+              {
+                "id": "intro-ai-8",
+                "source": "ai",
+                "text": "college students use social media every day. "
+              },
+              {
+                "id": "intro-ai-9",
+                "source": "ai",
+                "text": "Because social media is interesting and convenient, many students "
+              },
+              { "id": "intro-ai-10", "source": "ai", "text": "become addicted to it. " },
+              {
+                "id": "intro-ai-11",
+                "source": "ai",
+                "text": "This phenomenon makes teachers and parents worry about students' academic performance. "
+              },
+              {
+                "id": "intro-ai-12",
+                "source": "ai",
+                "text": "Therefore, it is important to study the "
+              },
+              { "id": "intro-ai-13", "source": "ai", "text": "relationship " },
+              { "id": "intro-ai-14", "source": "ai", "text": "of " },
+              {
+                "id": "intro-ai-15",
+                "source": "ai",
+                "text": "social media use and academic performance. "
+              },
+              {
+                "id": "intro-ai-16",
+                "source": "ai",
+                "text": "This paper first reviews related research, then describes the research method, and finally presents the conclusions and suggestions."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "version-31",
+      "time": "09:36",
+      "actor": "human",
+      "summary": "把程度改得更准确",
+      "delta": [
+        { "type": "deleteFragment", "blockId": "intro", "fragmentId": "intro-ai-2" },
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-ai-1",
+          "fragment": { "id": "intro-human-1", "source": "human", "text": "extre" }
+        }
+      ]
+    },
+    {
+      "id": "version-32",
+      "time": "09:36",
+      "actor": "human",
+      "summary": "完成程度副词",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-1",
+          "fragment": { "id": "intro-human-2", "source": "human", "text": "mely " }
+        }
+      ]
+    },
+    {
+      "id": "version-33",
+      "time": "09:37",
+      "actor": "human",
+      "summary": "补充平台类别",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-ai-4",
+          "fragment": { "id": "intro-human-3", "source": "human", "text": "such " }
+        }
+      ]
+    },
+    {
+      "id": "version-34",
+      "time": "09:37",
+      "actor": "human",
+      "summary": "补全列举表达",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-3",
+          "fragment": { "id": "intro-human-4", "source": "human", "text": "as " }
+        }
+      ]
+    },
+    {
+      "id": "version-35",
+      "time": "09:38",
+      "actor": "human",
+      "summary": "补上百分比介词",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-ai-7",
+          "fragment": { "id": "intro-human-5", "source": "human", "text": "of " }
+        }
+      ]
+    },
+    {
+      "id": "version-36",
+      "time": "09:38",
+      "actor": "human",
+      "summary": "修正完成时态",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-ai-9",
+          "fragment": { "id": "intro-human-6", "source": "human", "text": "have " }
+        }
+      ]
+    },
+    {
+      "id": "version-37",
+      "time": "09:39",
+      "actor": "human",
+      "summary": "替换关系介词开头",
+      "delta": [
+        { "type": "deleteFragment", "blockId": "intro", "fragmentId": "intro-ai-14" },
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-ai-13",
+          "fragment": { "id": "intro-human-7", "source": "human", "text": "betw" }
+        }
+      ]
+    },
+    {
+      "id": "version-38",
+      "time": "09:39",
+      "actor": "human",
+      "summary": "完成关系介词",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-human-7",
+          "fragment": { "id": "intro-human-8", "source": "human", "text": "een " }
+        }
+      ]
+    },
+    {
+      "id": "version-39",
+      "time": "09:40",
+      "actor": "ai",
+      "summary": "AI 润色英文引言",
+      "delta": [
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-ai-4",
+          "fragment": { "id": "intro-polish-1", "source": "ai", "text": "platforms " }
+        },
+        {
+          "type": "insertFragment",
+          "blockId": "intro",
+          "afterFragmentId": "intro-ai-5",
+          "fragment": { "id": "intro-polish-2", "source": "ai", "text": "," }
+        }
+      ]
+    }
+  ]
+}

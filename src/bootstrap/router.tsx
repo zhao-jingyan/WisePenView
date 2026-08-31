@@ -61,6 +61,7 @@ const AuthBindingOnboarding = lazy(() => import('@/views/app/auth/AuthBindingOnb
 const ResetPassword = lazy(() => import('@/views/app/auth/ResetPassword'));
 const NewPassword = lazy(() => import('@/views/app/auth/NewPassword'));
 const VerifyEmail = lazy(() => import('@/views/app/auth/VerifyEmail'));
+const NoteHistoryPlayback = lazy(() => import('@/views/demo/NoteHistoryPlayback'));
 const ResourceRouteView = lazy(() => import('@/views/resource/ResourceRouteView'));
 const ChatPage = lazy(() => import('@/views/app/chat'));
 const NotificationsPage = lazy(() => import('@/views/app/notifications'));
@@ -128,6 +129,10 @@ const profileHandle = appRouteHandle({
   pageKey: 'profile',
   contentContainer: 'scrollable',
 });
+const noteHistoryDemoHandle = appRouteHandle({
+  pageKey: 'demo.note-history',
+  headerNav: APP_HEADER_NAV_KEY.CHAT,
+});
 
 const router = createBrowserRouter([
   {
@@ -184,6 +189,11 @@ const router = createBrowserRouter([
             element: <AppLayout />,
             errorElement: <RouteError />,
             children: [
+              {
+                path: 'demo/note-history',
+                element: <NoteHistoryPlayback />,
+                handle: noteHistoryDemoHandle,
+              },
               { path: 'chat', element: <ChatPage />, handle: chatHandle },
               { path: 'chat/:sessionId', element: <ChatPage />, handle: chatSessionHandle },
               {
