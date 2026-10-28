@@ -15,7 +15,19 @@ const config: StorybookConfig = {
   },
   viteFinal: async (config) => ({
     ...config,
-    plugins: [...(config.plugins ?? []), tailwindcss()],
+    plugins: [
+      // 私有 source map 属于应用发布产物，Storybook 应只构建可预览的静态站点。
+      ...(config.plugins ?? []).filter(
+        (plugin) =>
+          !(
+            plugin &&
+            typeof plugin === 'object' &&
+            'name' in plugin &&
+            plugin.name === 'wisepen-private-source-maps'
+          )
+      ),
+      tailwindcss(),
+    ],
     resolve: {
       ...config.resolve,
       alias: {

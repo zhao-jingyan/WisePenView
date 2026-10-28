@@ -76,9 +76,8 @@ const mapNoteInfoDisplayFromApi = (data: GetNoteInfoApiResponse): NoteInfoDispla
   const authorsById = Object.fromEntries(
     authorIds.map((authorId) => [authorId, mapAuthorDisplay(authorId, authorsDisplay[authorId])])
   );
-  const lastEditedAtText = data.noteInfo?.lastUpdatedAt
-    ? formatTimestampToDateTime(data.noteInfo.lastUpdatedAt)
-    : '';
+  const lastUpdatedAt = data.updateTime ?? data.noteInfo?.lastUpdatedAt;
+  const lastEditedAtText = lastUpdatedAt ? formatTimestampToDateTime(lastUpdatedAt) : '';
 
   return {
     noteTitle: resourceInfo.resourceName,

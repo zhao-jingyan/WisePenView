@@ -25,6 +25,9 @@ export interface GetNoteInfoApiResponse {
   resourceInfo: ResourceItemApiResponse;
   /** 当前笔记版本号。 */
   version?: number;
+  /** 后端当前返回的最后编辑时间。 */
+  updateTime?: string | null;
+  /** 兼容旧响应结构；新请求优先使用顶层 updateTime。 */
   noteInfo?: NoteMetaInfoApiResponse;
 }
 

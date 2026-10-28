@@ -15,7 +15,7 @@ export const NoteApi: typeof NoteApiContract = {
     mockResponse({
       resourceInfo: getMockResource(resourceId),
       version: 0,
-      noteInfo: { authors: ['1'], lastUpdatedAt: '2026-03-01T00:00:00Z' },
+      updateTime: '2026-03-01T00:00:00Z',
       authorsDisplay: { '1': { nickname: '示例用户' } },
     }),
   getDrawIoLatestSnapshot: ({ resourceId }) =>

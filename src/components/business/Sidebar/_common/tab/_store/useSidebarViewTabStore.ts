@@ -6,6 +6,7 @@ import { createStoreJSONStorage } from '@/store/persistence';
 
 export const SIDEBAR_VIEW_TAB = {
   SESSIONS: 'session-history',
+  NOTES: 'notes',
   DRIVE: 'drive',
   COURSES: 'courses',
 } as const;

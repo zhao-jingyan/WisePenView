@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { BookOpen, FolderOpen, type LucideIcon, MessageSquare } from 'lucide-react';
+import { BookOpen, FolderOpen, type LucideIcon, MessageSquare, NotebookPen } from 'lucide-react';
 import { type ComponentPropsWithRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -19,6 +19,7 @@ import {
 } from './_store/useSidebarViewTabStore';
 import CourseTab from './CourseTab';
 import DriveTab from './DriveTab';
+import NotesTab from './NotesTab';
 import SessionTab from './SessionTab';
 import styles from './style.module.scss';
 
@@ -113,6 +114,12 @@ function AppSidebarTabs() {
                   selected
                 />
                 <SidebarViewTab
+                  id={SIDEBAR_VIEW_TAB.NOTES}
+                  label={t('sidebar.notes')}
+                  icon={NotebookPen}
+                  selected={false}
+                />
+                <SidebarViewTab
                   id={SIDEBAR_VIEW_TAB.DRIVE}
                   label={t('sidebar.drive')}
                   icon={FolderOpen}
@@ -161,6 +168,12 @@ function AppSidebarTabs() {
                   toolId={GUIDE_TOOL_ID.sidebarSessionsTab}
                 />
                 <SidebarViewTab
+                  id={SIDEBAR_VIEW_TAB.NOTES}
+                  label={t('sidebar.notes')}
+                  icon={NotebookPen}
+                  selected={selectedTab === SIDEBAR_VIEW_TAB.NOTES}
+                />
+                <SidebarViewTab
                   id={SIDEBAR_VIEW_TAB.DRIVE}
                   label={t('sidebar.drive')}
                   icon={FolderOpen}
@@ -186,6 +199,7 @@ function AppSidebarTabs() {
           <div
             className={clsx(
               styles.panelTrack,
+              selectedTab === SIDEBAR_VIEW_TAB.NOTES && styles.panelTrackNotes,
               selectedTab === SIDEBAR_VIEW_TAB.DRIVE && styles.panelTrackDrive,
               selectedTab === SIDEBAR_VIEW_TAB.COURSES && styles.panelTrackCourses
             )}
@@ -196,6 +210,13 @@ function AppSidebarTabs() {
               shouldForceMount
             >
               <SessionTab />
+            </Tabs.Panel>
+            <Tabs.Panel
+              id={SIDEBAR_VIEW_TAB.NOTES}
+              className={clsx(styles.tabPanel, styles.notesPanel)}
+              shouldForceMount
+            >
+              <NotesTab active={selectedTab === SIDEBAR_VIEW_TAB.NOTES} />
             </Tabs.Panel>
             <Tabs.Panel
               id={SIDEBAR_VIEW_TAB.DRIVE}
